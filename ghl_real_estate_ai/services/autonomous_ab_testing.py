@@ -1054,7 +1054,9 @@ class AutonomousABTesting:
 
         for candidate in candidates:
             target_ontario_mills = "Buyer" if candidate["source"] == "Seller" else "Seller"
-            logger.info(f"Applying successful {candidate['variant'].variant_name} hook to {target_ontario_mills} ontario_mills.")
+            logger.info(
+                f"Applying successful {candidate['variant'].variant_name} hook to {target_ontario_mills} ontario_mills."
+            )
             await self._create_adapted_ontario_mills_test(candidate["variant"], target_ontario_mills)
 
     async def _create_adapted_ontario_mills_test(self, variant: TestVariant, target_ontario_mills: str):

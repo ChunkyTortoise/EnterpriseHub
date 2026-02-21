@@ -152,9 +152,7 @@ class TestLLMProcessor:
         # Mock the httpx client used inside generate_response
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
-        mock_response.json.return_value = {
-            "content": [{"text": "This is the response"}]
-        }
+        mock_response.json.return_value = {"content": [{"text": "This is the response"}]}
 
         with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
@@ -199,6 +197,7 @@ class TestVoicePipeline:
     def mock_tts(self):
         """Mock TTS processor."""
         mock = AsyncMock(spec=ElevenLabsTTSProcessor)
+
         # Make synthesize return an async generator
         async def fake_synth(text):
             yield b"audio1"

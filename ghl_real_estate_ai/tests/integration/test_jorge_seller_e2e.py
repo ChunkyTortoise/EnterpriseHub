@@ -58,12 +58,8 @@ def _mock_seller_deps():
         intent_instance.analyze_lead = MagicMock(return_value=mock_profile)
 
         claude_instance = MockClaude.return_value
-        claude_instance.analyze_with_context = AsyncMock(
-            return_value={"content": "Mocked Jorge Response"}
-        )
-        claude_instance.generate_response = AsyncMock(
-            return_value={"content": "Mocked Jorge Response"}
-        )
+        claude_instance.analyze_with_context = AsyncMock(return_value={"content": "Mocked Jorge Response"})
+        claude_instance.generate_response = AsyncMock(return_value={"content": "Mocked Jorge Response"})
 
         yield {
             "intent": intent_instance,
@@ -77,6 +73,7 @@ def _mock_seller_deps():
 # ---------------------------------------------------------------------------
 # Happy Path: HOT seller
 # ---------------------------------------------------------------------------
+
 
 class TestSellerHotPath:
     """All 4 questions answered well -> HOT classification -> handoff message."""
@@ -140,6 +137,7 @@ class TestSellerHotPath:
 # Warm Path
 # ---------------------------------------------------------------------------
 
+
 class TestSellerWarmPath:
     """3 of 4 questions answered -> WARM classification."""
 
@@ -179,6 +177,7 @@ class TestSellerWarmPath:
 # Cold Path
 # ---------------------------------------------------------------------------
 
+
 class TestSellerColdPath:
     """Vague or short responses -> COLD classification."""
 
@@ -213,6 +212,7 @@ class TestSellerColdPath:
 # Opt-Out (TCPA)
 # ---------------------------------------------------------------------------
 
+
 class TestSellerOptOut:
     """'stop' at any point -> TCPA opt-out handling."""
 
@@ -242,6 +242,7 @@ class TestSellerOptOut:
 # ---------------------------------------------------------------------------
 # Stall Detection
 # ---------------------------------------------------------------------------
+
 
 class TestSellerStallDetection:
     """Stall / hesitation messages trigger stall-breaking response."""
@@ -296,6 +297,7 @@ class TestSellerStallDetection:
 # Error Resilience
 # ---------------------------------------------------------------------------
 
+
 class TestSellerErrorResilience:
     """Bot returns graceful fallback on internal errors."""
 
@@ -319,10 +321,7 @@ class TestSellerErrorResilience:
         """Very long conversation history should not crash."""
         bot = JorgeSellerBot()
 
-        history = [
-            {"role": "user" if i % 2 == 0 else "assistant", "content": f"Message {i}"}
-            for i in range(50)
-        ]
+        history = [{"role": "user" if i % 2 == 0 else "assistant", "content": f"Message {i}"} for i in range(50)]
 
         result = await bot.process_seller_message(
             conversation_id="resilience_002",
@@ -449,15 +448,9 @@ class TestSellerCircuitBreakerFallback:
     @pytest.mark.asyncio
     async def test_circuit_breaker_open_sends_fallback_sms(self, _mock_seller_deps):
         """When Claude circuit is open, bot returns a safe fallback response."""
-        _mock_seller_deps["claude"].analyze_with_context = AsyncMock(
-            side_effect=LLMCircuitOpenError("Circuit open")
-        )
-        _mock_seller_deps["claude"].generate_response = AsyncMock(
-            side_effect=LLMCircuitOpenError("Circuit open")
-        )
-        _mock_seller_deps["intent"].analyze_lead = MagicMock(
-            side_effect=LLMCircuitOpenError("Circuit open")
-        )
+        _mock_seller_deps["claude"].analyze_with_context = AsyncMock(side_effect=LLMCircuitOpenError("Circuit open"))
+        _mock_seller_deps["claude"].generate_response = AsyncMock(side_effect=LLMCircuitOpenError("Circuit open"))
+        _mock_seller_deps["intent"].analyze_lead = MagicMock(side_effect=LLMCircuitOpenError("Circuit open"))
 
         bot = JorgeSellerBot()
         # Should NOT raise — must return a fallback result dict

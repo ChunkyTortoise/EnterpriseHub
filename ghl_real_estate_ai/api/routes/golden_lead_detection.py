@@ -48,11 +48,12 @@ def get_detector_service() -> GoldenLeadDetector:
     """Get GoldenLeadDetector singleton instance."""
     # Note: detector_service requires async initialization
     import asyncio
+
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
             # If loop is running, we might need a different approach for true async,
-            # but for FastAPI Depends this sync wrapper with run_until_complete 
+            # but for FastAPI Depends this sync wrapper with run_until_complete
             # is often used for lazy singleton initialization of async objects.
             # In a production environment, you'd typically initialize this on startup.
             return loop.run_until_complete(create_golden_lead_detector())
@@ -430,7 +431,7 @@ async def filter_golden_leads(
         except Exception as e:
             logger.debug(f"Redis scan fallback: {e}")
 
-        for key in cached_keys[:limit * 2]:
+        for key in cached_keys[: limit * 2]:
             try:
                 cached_data = await cache.get(key)
                 if not cached_data:

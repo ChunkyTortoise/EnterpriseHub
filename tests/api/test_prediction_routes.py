@@ -42,13 +42,21 @@ def test_client_behavior_uses_repository_history_fetch():
     strategy = {"jorge_methodology_fit_score": 0.88}
 
     with (
-        patch.object(prediction_module, "_fetch_client_interaction_history", AsyncMock(return_value=[{"content": "msg"}])) as mock_fetch,
-        patch.object(prediction_module.client_analyzer, "analyze_client_psychology", AsyncMock(return_value=psychology)),
+        patch.object(
+            prediction_module, "_fetch_client_interaction_history", AsyncMock(return_value=[{"content": "msg"}])
+        ) as mock_fetch,
+        patch.object(
+            prediction_module.client_analyzer, "analyze_client_psychology", AsyncMock(return_value=psychology)
+        ),
         patch.object(prediction_module.client_analyzer, "predict_purchase_behavior", AsyncMock(return_value=purchase)),
         patch.object(prediction_module.client_analyzer, "assess_behavioral_patterns", AsyncMock(return_value=patterns)),
-        patch.object(prediction_module.client_analyzer, "evaluate_financial_readiness", AsyncMock(return_value=financial)),
+        patch.object(
+            prediction_module.client_analyzer, "evaluate_financial_readiness", AsyncMock(return_value=financial)
+        ),
         patch.object(prediction_module.client_analyzer, "predict_client_value", AsyncMock(return_value=value)),
-        patch.object(prediction_module.client_analyzer, "determine_optimal_engagement_strategy", AsyncMock(return_value=strategy)),
+        patch.object(
+            prediction_module.client_analyzer, "determine_optimal_engagement_strategy", AsyncMock(return_value=strategy)
+        ),
         patch.object(prediction_module.ws_manager, "broadcast_to_group", AsyncMock()),
     ):
         resp = client.post(
@@ -87,11 +95,27 @@ def test_business_forecast_uses_profile_repository_values():
             ),
         ),
         patch.object(prediction_module.business_forecaster, "forecast_revenue", AsyncMock(return_value=revenue)),
-        patch.object(prediction_module.business_forecaster, "project_market_share_growth", AsyncMock(return_value=market_share)),
-        patch.object(prediction_module.business_forecaster, "forecast_team_performance", AsyncMock(return_value=team_projection)),
-        patch.object(prediction_module.business_forecaster, "analyze_territory_expansion", AsyncMock(return_value=territory_analysis)),
-        patch.object(prediction_module.business_forecaster, "identify_business_opportunities", AsyncMock(return_value=[opportunity])),
-        patch.object(prediction_module.business_forecaster, "generate_strategic_business_plan", AsyncMock(return_value=strategic_plan)),
+        patch.object(
+            prediction_module.business_forecaster, "project_market_share_growth", AsyncMock(return_value=market_share)
+        ),
+        patch.object(
+            prediction_module.business_forecaster, "forecast_team_performance", AsyncMock(return_value=team_projection)
+        ),
+        patch.object(
+            prediction_module.business_forecaster,
+            "analyze_territory_expansion",
+            AsyncMock(return_value=territory_analysis),
+        ),
+        patch.object(
+            prediction_module.business_forecaster,
+            "identify_business_opportunities",
+            AsyncMock(return_value=[opportunity]),
+        ),
+        patch.object(
+            prediction_module.business_forecaster,
+            "generate_strategic_business_plan",
+            AsyncMock(return_value=strategic_plan),
+        ),
         patch.object(prediction_module.ws_manager, "broadcast_to_group", AsyncMock()),
     ):
         resp = client.post(
@@ -115,7 +139,11 @@ async def test_continuous_monitoring_broadcast_payload_shape():
     import asyncio
 
     with (
-        patch.object(prediction_module, "prediction_health_check", AsyncMock(return_value={"engine_status": "healthy", "websocket_connections": 4})),
+        patch.object(
+            prediction_module,
+            "prediction_health_check",
+            AsyncMock(return_value={"engine_status": "healthy", "websocket_connections": 4}),
+        ),
         patch.object(prediction_module.ws_manager, "broadcast_to_group", AsyncMock()) as mock_broadcast,
         patch.object(prediction_module.asyncio, "sleep", _break_sleep),
     ):

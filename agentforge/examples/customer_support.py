@@ -6,6 +6,7 @@ No API keys required — fully self-contained.
 Run:
     python examples/customer_support.py
 """
+
 import asyncio
 from dataclasses import dataclass, field
 

@@ -46,6 +46,7 @@ class DAGConfig(BaseModel):
         timeout: Optional timeout in seconds for the entire DAG execution.
         fail_fast: If True, cancel all pending nodes on first failure.
     """
+
     name: str = "default_dag"
     max_retries: int = 3
     timeout: float | None = None
@@ -341,9 +342,7 @@ class DAG:
 
         # If we couldn't process all nodes, there's a cycle
         if len(result) != len(self._nodes):
-            raise DAGValidationError(
-                ["Graph contains a cycle, cannot perform topological sort"]
-            )
+            raise DAGValidationError(["Graph contains a cycle, cannot perform topological sort"])
 
         return result
 
@@ -416,11 +415,7 @@ class DAG:
         Returns:
             List of node IDs that have no incoming edges.
         """
-        return [
-            node_id
-            for node_id in self._nodes
-            if not self._reverse_adjacency[node_id]
-        ]
+        return [node_id for node_id in self._nodes if not self._reverse_adjacency[node_id]]
 
     def get_leaf_nodes(self) -> list[str]:
         """Get nodes with no successors (exit points).
@@ -428,11 +423,7 @@ class DAG:
         Returns:
             List of node IDs that have no outgoing edges.
         """
-        return [
-            node_id
-            for node_id in self._nodes
-            if not self._adjacency[node_id]
-        ]
+        return [node_id for node_id in self._nodes if not self._adjacency[node_id]]
 
     # ==================== Serialization ====================
 
@@ -532,9 +523,7 @@ class DAG:
         # Check from all nodes (handles disconnected components)
         return any(state[node] == 0 and dfs(node) for node in self._nodes)
 
-    def _find_cycle_path(
-        self, source: str, target: str
-    ) -> list[str] | None:
+    def _find_cycle_path(self, source: str, target: str) -> list[str] | None:
         """Find a cycle path after adding edge source -> target.
 
         After adding an edge that creates a cycle, find the actual
@@ -570,10 +559,7 @@ class DAG:
 
     def __repr__(self) -> str:
         """String representation of the DAG."""
-        return (
-            f"DAG(name={self.config.name!r}, "
-            f"nodes={len(self._nodes)}, edges={len(self.edges)})"
-        )
+        return f"DAG(name={self.config.name!r}, nodes={len(self._nodes)}, edges={len(self.edges)})"
 
     def __len__(self) -> int:
         """Return the number of nodes in the DAG."""

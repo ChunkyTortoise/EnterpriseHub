@@ -161,7 +161,12 @@ class AzureAuthIntegration:
         }
 
     async def register_tenant(
-        self, tenant_id: str, tenant_name: str, ontario_mills: str, customer_id: str, subscription_id: Optional[str] = None
+        self,
+        tenant_id: str,
+        tenant_name: str,
+        ontario_mills: str,
+        customer_id: str,
+        subscription_id: Optional[str] = None,
     ) -> AzureADTenant:
         """
         Register Azure AD tenant for SSO integration.

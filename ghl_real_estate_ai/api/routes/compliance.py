@@ -807,8 +807,13 @@ async def continuous_compliance_monitoring():
 
 _TCPA_OPT_OUT_RATE_THRESHOLD = 2.0
 _FAIR_HOUSING_KEYWORDS = [
-    "race", "religion", "national origin", "sex", "handicap",
-    "familial status", "color",
+    "race",
+    "religion",
+    "national origin",
+    "sex",
+    "handicap",
+    "familial status",
+    "color",
 ]
 _DRE_LICENSE_REQUIRED_ACTIONS = ["property_listing", "price_negotiation", "contract_signing"]
 
@@ -819,30 +824,55 @@ async def _scan_compliance_violations() -> None:
         tcpa = await _check_tcpa_compliance()
         for v in tcpa:
             await audit_system.log_audit_event(
-                AuditEventType.SECURITY_INCIDENT, AuditSeverity.HIGH,
-                "system", None, "compliance_scanner", "tcpa_check",
-                "violation_detected", v.get("resource", "sms_compliance"), "alert", v,
+                AuditEventType.SECURITY_INCIDENT,
+                AuditSeverity.HIGH,
+                "system",
+                None,
+                "compliance_scanner",
+                "tcpa_check",
+                "violation_detected",
+                v.get("resource", "sms_compliance"),
+                "alert",
+                v,
             )
             await ws_manager.broadcast_to_group(
                 "compliance_monitoring",
-                {"type": "compliance_violation", "regulation": "TCPA",
-                 "details": v, "timestamp": datetime.now().isoformat()},
+                {
+                    "type": "compliance_violation",
+                    "regulation": "TCPA",
+                    "details": v,
+                    "timestamp": datetime.now().isoformat(),
+                },
             )
 
         fh = await _check_fair_housing_compliance()
         for v in fh:
             await audit_system.log_audit_event(
-                AuditEventType.SECURITY_INCIDENT, AuditSeverity.HIGH,
-                "system", None, "compliance_scanner", "fair_housing_check",
-                "violation_detected", v.get("resource", "messaging"), "alert", v,
+                AuditEventType.SECURITY_INCIDENT,
+                AuditSeverity.HIGH,
+                "system",
+                None,
+                "compliance_scanner",
+                "fair_housing_check",
+                "violation_detected",
+                v.get("resource", "messaging"),
+                "alert",
+                v,
             )
 
         dre = await _check_dre_compliance()
         for v in dre:
             await audit_system.log_audit_event(
-                AuditEventType.SECURITY_INCIDENT, AuditSeverity.MEDIUM,
-                "system", None, "compliance_scanner", "dre_check",
-                "violation_detected", v.get("resource", "agent_action"), "alert", v,
+                AuditEventType.SECURITY_INCIDENT,
+                AuditSeverity.MEDIUM,
+                "system",
+                None,
+                "compliance_scanner",
+                "dre_check",
+                "violation_detected",
+                v.get("resource", "agent_action"),
+                "alert",
+                v,
             )
 
         total = len(tcpa) + len(fh) + len(dre)
@@ -864,13 +894,15 @@ async def _check_tcpa_compliance() -> List[Dict[str, Any]]:
         if total_sent > 0:
             rate = (recent_opt_outs / total_sent) * 100
             if rate > _TCPA_OPT_OUT_RATE_THRESHOLD:
-                violations.append({
-                    "type": "tcpa_opt_out_rate",
-                    "rate_pct": round(rate, 2),
-                    "threshold_pct": _TCPA_OPT_OUT_RATE_THRESHOLD,
-                    "opt_outs": recent_opt_outs,
-                    "total_sent": total_sent,
-                })
+                violations.append(
+                    {
+                        "type": "tcpa_opt_out_rate",
+                        "rate_pct": round(rate, 2),
+                        "threshold_pct": _TCPA_OPT_OUT_RATE_THRESHOLD,
+                        "opt_outs": recent_opt_outs,
+                        "total_sent": total_sent,
+                    }
+                )
     except Exception as e:
         logger.debug(f"TCPA check encountered non-critical error: {e}")
     return violations
@@ -880,15 +912,17 @@ async def _check_fair_housing_compliance() -> List[Dict[str, Any]]:
     violations: List[Dict[str, Any]] = []
     try:
         records = await audit_system.search_audit_records({"event_type": "message_sent"}, None)
-        for record in (records or []):
+        for record in records or []:
             content = str(getattr(record, "details", {}).get("content", "")).lower()
             matched = [kw for kw in _FAIR_HOUSING_KEYWORDS if kw in content]
             if matched:
-                violations.append({
-                    "type": "fair_housing_keyword",
-                    "keywords": matched,
-                    "record_id": getattr(record, "record_id", "unknown"),
-                })
+                violations.append(
+                    {
+                        "type": "fair_housing_keyword",
+                        "keywords": matched,
+                        "record_id": getattr(record, "record_id", "unknown"),
+                    }
+                )
     except Exception as e:
         logger.debug(f"Fair Housing check encountered non-critical error: {e}")
     return violations
@@ -899,15 +933,17 @@ async def _check_dre_compliance() -> List[Dict[str, Any]]:
     try:
         for action_type in _DRE_LICENSE_REQUIRED_ACTIONS:
             records = await audit_system.search_audit_records({"action": action_type}, None)
-            for record in (records or []):
+            for record in records or []:
                 user_id = getattr(record, "user_id", None)
                 if user_id and user_id.startswith("bot_"):
-                    violations.append({
-                        "type": "dre_unlicensed_action",
-                        "action": action_type,
-                        "user_id": user_id,
-                        "record_id": getattr(record, "record_id", "unknown"),
-                    })
+                    violations.append(
+                        {
+                            "type": "dre_unlicensed_action",
+                            "action": action_type,
+                            "user_id": user_id,
+                            "record_id": getattr(record, "record_id", "unknown"),
+                        }
+                    )
     except Exception as e:
         logger.debug(f"DRE check encountered non-critical error: {e}")
     return violations
@@ -926,12 +962,23 @@ async def _scan_security_anomalies() -> None:
         auth_records = await audit_system.search_audit_records({"event_type": "authentication_failure"}, None)
         auth_failures = len(auth_records) if auth_records else 0
         if auth_failures >= _AUTH_FAILURE_THRESHOLD:
-            event = {"type": "auth_failure_spike", "count": auth_failures,
-                     "threshold": _AUTH_FAILURE_THRESHOLD, "severity": "high"}
+            event = {
+                "type": "auth_failure_spike",
+                "count": auth_failures,
+                "threshold": _AUTH_FAILURE_THRESHOLD,
+                "severity": "high",
+            }
             await audit_system.log_audit_event(
-                AuditEventType.SECURITY_INCIDENT, AuditSeverity.HIGH,
-                "system", None, "security_scanner", "auth_monitor",
-                "anomaly_detected", "auth_service", "alert", event,
+                AuditEventType.SECURITY_INCIDENT,
+                AuditSeverity.HIGH,
+                "system",
+                None,
+                "security_scanner",
+                "auth_monitor",
+                "anomaly_detected",
+                "auth_service",
+                "alert",
+                event,
             )
             await ws_manager.broadcast_to_group(
                 "security_events",
@@ -942,12 +989,23 @@ async def _scan_security_anomalies() -> None:
         pii_records = await audit_system.search_audit_records({"event_type": "pii_access"}, None)
         pii_count = len(pii_records) if pii_records else 0
         if pii_count >= _BULK_PII_ACCESS_THRESHOLD:
-            event = {"type": "bulk_pii_access", "count": pii_count,
-                     "threshold": _BULK_PII_ACCESS_THRESHOLD, "severity": "critical"}
+            event = {
+                "type": "bulk_pii_access",
+                "count": pii_count,
+                "threshold": _BULK_PII_ACCESS_THRESHOLD,
+                "severity": "critical",
+            }
             await audit_system.log_audit_event(
-                AuditEventType.SECURITY_INCIDENT, AuditSeverity.CRITICAL,
-                "system", None, "security_scanner", "pii_monitor",
-                "anomaly_detected", "data_access", "alert", event,
+                AuditEventType.SECURITY_INCIDENT,
+                AuditSeverity.CRITICAL,
+                "system",
+                None,
+                "security_scanner",
+                "pii_monitor",
+                "anomaly_detected",
+                "data_access",
+                "alert",
+                event,
             )
             logger.critical(f"Security anomaly: {pii_count} PII accesses in monitoring window")
     except Exception as e:
@@ -965,10 +1023,11 @@ _EXPORT_SLA_DAYS = 7
 async def _process_privacy_requests() -> None:
     try:
         pending = await audit_system.search_audit_records(
-            {"event_type": "privacy_request", "result": "pending"}, None,
+            {"event_type": "privacy_request", "result": "pending"},
+            None,
         )
         now = datetime.now()
-        for req in (pending or []):
+        for req in pending or []:
             req_type = getattr(req, "details", {}).get("request_type", "")
             submitted = getattr(req, "timestamp", now)
             req_id = getattr(req, "record_id", "unknown")
@@ -981,7 +1040,8 @@ async def _process_privacy_requests() -> None:
                     logger.warning(f"Privacy deletion request {req_id} due in {(deadline - now).days} days")
                 try:
                     await privacy_system.process_privacy_request(
-                        subject_ids, PrivacyRight("erasure"),
+                        subject_ids,
+                        PrivacyRight("erasure"),
                         PrivacyRegulation(regulation),
                         f"Auto-processed: deletion request {req_id}",
                     )
@@ -994,7 +1054,8 @@ async def _process_privacy_requests() -> None:
                     logger.warning(f"Privacy export request {req_id} due in {(deadline - now).days} days")
                 try:
                     await privacy_system.process_privacy_request(
-                        subject_ids, PrivacyRight("access"),
+                        subject_ids,
+                        PrivacyRight("access"),
                         PrivacyRegulation(regulation),
                         f"Auto-processed: export request {req_id}",
                     )
@@ -1015,19 +1076,22 @@ async def _aggregate_and_archive_audit_trail() -> None:
     try:
         cutoff = datetime.now() - timedelta(days=_ARCHIVE_AFTER_DAYS)
         old_records = await audit_system.search_audit_records(
-            {}, (datetime(2020, 1, 1), cutoff),
+            {},
+            (datetime(2020, 1, 1), cutoff),
         )
         archived_count = 0
-        for record in (old_records or []):
+        for record in old_records or []:
             try:
                 await audit_system.create_compliance_document(
                     DocumentType("audit_archive"),
                     f"Archived audit record: {getattr(record, 'record_id', 'unknown')}",
                     str(getattr(record, "details", {})),
                     "system",
-                    {"original_record_id": getattr(record, "record_id", "unknown"),
-                     "original_timestamp": getattr(record, "timestamp", cutoff).isoformat(),
-                     "archived_at": datetime.now().isoformat()},
+                    {
+                        "original_record_id": getattr(record, "record_id", "unknown"),
+                        "original_timestamp": getattr(record, "timestamp", cutoff).isoformat(),
+                        "archived_at": datetime.now().isoformat(),
+                    },
                 )
                 archived_count += 1
             except Exception as e:
@@ -1035,9 +1099,15 @@ async def _aggregate_and_archive_audit_trail() -> None:
         if archived_count > 0:
             logger.info(f"Archived {archived_count} audit records older than {_ARCHIVE_AFTER_DAYS} days")
         await audit_system.log_audit_event(
-            AuditEventType.SYSTEM_CONFIGURATION, AuditSeverity.INFORMATIONAL,
-            "system", None, "audit_archiver", "audit_aggregation",
-            "archive_cycle_complete", "audit_trail", "success",
+            AuditEventType.SYSTEM_CONFIGURATION,
+            AuditSeverity.INFORMATIONAL,
+            "system",
+            None,
+            "audit_archiver",
+            "audit_aggregation",
+            "archive_cycle_complete",
+            "audit_trail",
+            "success",
             {"archived_count": archived_count, "cutoff_date": cutoff.isoformat()},
         )
     except Exception as e:

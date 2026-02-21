@@ -341,7 +341,13 @@ class AcceptancePredictorService:
             reasons.append("challenging buyer's market dynamics")
 
         probability_desc = (
-            "very likely" if probability >= 0.80 else "likely" if probability >= 0.60 else "possible" if probability >= 0.40 else "unlikely"
+            "very likely"
+            if probability >= 0.80
+            else "likely"
+            if probability >= 0.60
+            else "possible"
+            if probability >= 0.40
+            else "unlikely"
         )
 
         return f"{probability_desc.capitalize()} to accept based on {', '.join(reasons)}."

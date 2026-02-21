@@ -1222,11 +1222,59 @@ class VoiceAIIntegration:
         text_lower = transcript.lower()
 
         # Spanish indicators
-        spanish_words = {"el", "la", "de", "en", "que", "los", "las", "por", "con", "una", "para", "como", "pero", "esta", "tiene"}
+        spanish_words = {
+            "el",
+            "la",
+            "de",
+            "en",
+            "que",
+            "los",
+            "las",
+            "por",
+            "con",
+            "una",
+            "para",
+            "como",
+            "pero",
+            "esta",
+            "tiene",
+        }
         # French indicators
-        french_words = {"le", "la", "de", "les", "des", "une", "est", "que", "dans", "pour", "avec", "pas", "sur", "sont", "nous"}
+        french_words = {
+            "le",
+            "la",
+            "de",
+            "les",
+            "des",
+            "une",
+            "est",
+            "que",
+            "dans",
+            "pour",
+            "avec",
+            "pas",
+            "sur",
+            "sont",
+            "nous",
+        }
         # English indicators
-        english_words = {"the", "and", "is", "to", "a", "in", "that", "have", "for", "it", "with", "was", "are", "this", "from"}
+        english_words = {
+            "the",
+            "and",
+            "is",
+            "to",
+            "a",
+            "in",
+            "that",
+            "have",
+            "for",
+            "it",
+            "with",
+            "was",
+            "are",
+            "this",
+            "from",
+        }
 
         words = set(text_lower.split())
 
@@ -1259,7 +1307,9 @@ class VoiceAIIntegration:
                     interruption_count += 1
         return interruption_count
 
-    def _detect_silence_periods(self, segments: List[VoiceSegment], min_silence_sec: float = 2.0) -> List[Tuple[float, float]]:
+    def _detect_silence_periods(
+        self, segments: List[VoiceSegment], min_silence_sec: float = 2.0
+    ) -> List[Tuple[float, float]]:
         """ROADMAP-065: Detect significant silence periods between segments.
 
         Returns list of (start_time, duration) tuples for gaps longer than
@@ -1274,7 +1324,9 @@ class VoiceAIIntegration:
                 silence_periods.append((gap_start, gap_duration))
         return silence_periods
 
-    def _score_agent_performance(self, agent_segments: List[VoiceSegment], lead_segments: List[VoiceSegment]) -> Dict[str, float]:
+    def _score_agent_performance(
+        self, agent_segments: List[VoiceSegment], lead_segments: List[VoiceSegment]
+    ) -> Dict[str, float]:
         """ROADMAP-066: NLP-based agent performance scoring.
 
         Scores rapport, professionalism, and response quality by analyzing
@@ -1284,8 +1336,17 @@ class VoiceAIIntegration:
             return {"rapport": 0.0, "professionalism": 0.0, "response_quality": 0.0}
 
         # Rapport: presence of empathetic / relationship-building language
-        rapport_phrases = ["understand", "great question", "appreciate", "help you", "let me",
-                           "tell me more", "that makes sense", "absolutely", "of course"]
+        rapport_phrases = [
+            "understand",
+            "great question",
+            "appreciate",
+            "help you",
+            "let me",
+            "tell me more",
+            "that makes sense",
+            "absolutely",
+            "of course",
+        ]
         rapport_hits = 0
         for seg in agent_segments:
             text_lower = seg.text.lower()
@@ -1355,10 +1416,12 @@ class VoiceAIIntegration:
         very_low_count = sum(1 for v in volumes if v < -60)
         low_volume_penalty = very_low_count / max(len(volumes), 1)
 
-        quality = (avg_confidence * 0.5 + volume_consistency * 0.3 + (1.0 - low_volume_penalty) * 0.2)
+        quality = avg_confidence * 0.5 + volume_consistency * 0.3 + (1.0 - low_volume_penalty) * 0.2
         return round(min(max(quality, 0.0), 1.0), 2)
 
-    def _detect_missed_opportunities(self, segments: List[VoiceSegment], agent_segments: List[VoiceSegment]) -> List[str]:
+    def _detect_missed_opportunities(
+        self, segments: List[VoiceSegment], agent_segments: List[VoiceSegment]
+    ) -> List[str]:
         """ROADMAP-068: Detect missed opportunities from call segments.
 
         Looks for lead buying signals, questions, and urgency cues that
@@ -1381,7 +1444,9 @@ class VoiceAIIntegration:
                     closing_words = ["schedule", "book", "tour", "viewing", "next step", "offer", "move forward"]
                     has_closing = any(w in next_agent.text.lower() for w in closing_words)
                     if not has_closing:
-                        missed.append(f"High interest signal at {lead_seg.start_time:.0f}s not met with closing attempt")
+                        missed.append(
+                            f"High interest signal at {lead_seg.start_time:.0f}s not met with closing attempt"
+                        )
                 else:
                     missed.append(f"High interest signal at {lead_seg.start_time:.0f}s — no agent follow-up")
 
@@ -1769,16 +1834,18 @@ class VoiceAIIntegration:
 
             # Auto-sync call outcome to bot state
             call_outcome = {
-                "sentiment": analysis.lead_sentiment_progression[-1]
-                if analysis.lead_sentiment_progression
-                else 0.0,
+                "sentiment": analysis.lead_sentiment_progression[-1] if analysis.lead_sentiment_progression else 0.0,
                 "objections": analysis.lead_objections,
                 "appointment_booked": analysis.conversion_probability > 0.7,
                 "interest_level": analysis.lead_interest_level,
                 "urgency_level": analysis.lead_urgency_signals,
                 "qualification_complete": analysis.conversion_probability > 0.5,
                 "qualified_status": (
-                    "hot" if analysis.conversion_probability > 0.7 else "warm" if analysis.conversion_probability > 0.4 else "cold"
+                    "hot"
+                    if analysis.conversion_probability > 0.7
+                    else "warm"
+                    if analysis.conversion_probability > 0.4
+                    else "cold"
                 ),
                 "next_action": analysis.optimal_follow_up_timing,
             }

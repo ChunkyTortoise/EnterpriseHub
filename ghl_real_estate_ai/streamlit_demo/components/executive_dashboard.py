@@ -3,7 +3,6 @@ Executive Command Center - Real-time dashboard for Jorge
 Beautiful, actionable, single-pane-of-glass view
 """
 
-
 import streamlit as st
 
 

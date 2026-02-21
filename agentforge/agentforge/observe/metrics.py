@@ -35,6 +35,7 @@ class TokenUsage(BaseModel):
         total = usage1 + usage2  # TokenUsage(prompt_tokens=300, completion_tokens=150)
         ```
     """
+
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
@@ -87,6 +88,7 @@ class CostRecord(BaseModel):
         )
         ```
     """
+
     amount: float = Field(ge=0.0, description="Cost in USD")
     model: str = Field(description="LLM model name")
     provider: str = Field(default="unknown", description="LLM provider")
@@ -107,6 +109,7 @@ class LatencyStats(BaseModel):
         avg: Average latency.
         count: Number of samples.
     """
+
     p50: float = 0.0
     p95: float = 0.0
     p99: float = 0.0
@@ -181,12 +184,14 @@ class MetricsCollector:
             provider: LLM provider name.
             tokens: Optional token usage.
         """
-        self.record_cost(CostRecord(
-            amount=amount,
-            model=model,
-            provider=provider,
-            tokens=tokens,
-        ))
+        self.record_cost(
+            CostRecord(
+                amount=amount,
+                model=model,
+                provider=provider,
+                tokens=tokens,
+            )
+        )
 
     def start_timer(self, operation: str) -> None:
         """Start timing an operation.
@@ -304,10 +309,7 @@ class MetricsCollector:
             "tokens": self.get_total_tokens().model_dump(),
             "cost_usd": self.get_total_cost(),
             "cost_by_model": self.get_cost_by_model(),
-            "latencies": {
-                k: self.get_latency_stats(k).model_dump()
-                for k in self._latencies
-            },
+            "latencies": {k: self.get_latency_stats(k).model_dump() for k in self._latencies},
             "agent_tokens": {k: v.model_dump() for k, v in self._token_usage.items()},
         }
 

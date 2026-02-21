@@ -494,9 +494,7 @@ class EnvFieldMapper:
             print()
 
             for field in cat_fields:
-                value = self.env_vars.get(field.env_var, "") or os.environ.get(
-                    field.env_var, ""
-                )
+                value = self.env_vars.get(field.env_var, "") or os.environ.get(field.env_var, "")
                 is_set = bool(value.strip())
 
                 if is_set:
@@ -518,28 +516,16 @@ class EnvFieldMapper:
         # Summary
         print()
         print(_bold("=" * 72))
-        print(
-            _bold(
-                f"  SUMMARY: {len(result.present)}/{result.total} configured"
-            )
-        )
+        print(_bold(f"  SUMMARY: {len(result.present)}/{result.total} configured"))
         if result.missing_required:
-            print(
-                _red(
-                    f"  MISSING REQUIRED: {len(result.missing_required)} field(s)"
-                )
-            )
+            print(_red(f"  MISSING REQUIRED: {len(result.missing_required)} field(s)"))
             for f in result.missing_required:
                 print(_red(f"    - {f.env_var}  ({f.description})"))
         else:
             print(_green("  All required fields are configured."))
 
         if result.missing_optional:
-            print(
-                _yellow(
-                    f"  MISSING OPTIONAL: {len(result.missing_optional)} field(s)"
-                )
-            )
+            print(_yellow(f"  MISSING OPTIONAL: {len(result.missing_optional)} field(s)"))
         print(_bold("=" * 72))
         print()
 
@@ -582,11 +568,7 @@ class EnvFieldMapper:
                 print()
 
         if result.missing_optional:
-            print(
-                _yellow(
-                    f"  Step 2: Optionally configure {len(result.missing_optional)} field(s)"
-                )
-            )
+            print(_yellow(f"  Step 2: Optionally configure {len(result.missing_optional)} field(s)"))
             print()
             for f in result.missing_optional:
                 print(f"    {f.env_var}=<your_value>")
@@ -663,11 +645,7 @@ def main() -> int:
     if args.check_only:
         result = mapper.audit(category=args.category)
         if not result.is_healthy:
-            print(
-                _red(
-                    f"  FAILED: {len(result.missing_required)} required field(s) missing.\n"
-                )
-            )
+            print(_red(f"  FAILED: {len(result.missing_required)} required field(s) missing.\n"))
             return 1
         print(_green("  PASSED: All required fields are configured.\n"))
         return 0

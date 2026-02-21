@@ -1,6 +1,7 @@
 """
 Temperature Prediction Engine for predicting lead temperature changes.
 """
+
 from typing import Dict, List
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

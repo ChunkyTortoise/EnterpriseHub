@@ -55,7 +55,11 @@ def sample_interaction_context():
         "lead_id": "test_lead_123",
         "interaction_type": VoiceInteractionType.LEAD_QUALIFICATION,
         "context": {
-            "lead_preferences": {"budget_max": 500000, "location": "Rancho Cucamonga, CA", "property_type": "Single Family"}
+            "lead_preferences": {
+                "budget_max": 500000,
+                "location": "Rancho Cucamonga, CA",
+                "property_type": "Single Family",
+            }
         },
     }
 

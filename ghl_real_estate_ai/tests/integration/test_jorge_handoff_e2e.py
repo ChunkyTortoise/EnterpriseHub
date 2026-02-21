@@ -42,6 +42,7 @@ def handoff_service(mock_analytics_service):
 # Lead -> Seller Handoff
 # ---------------------------------------------------------------------------
 
+
 class TestLeadToSellerHandoff:
     """Lead bot detects seller intent -> handoff to seller bot with context."""
 
@@ -125,6 +126,7 @@ class TestLeadToSellerHandoff:
 # Lead -> Buyer Handoff
 # ---------------------------------------------------------------------------
 
+
 class TestLeadToBuyerHandoff:
     """Lead bot detects buyer intent -> handoff to buyer bot with context."""
 
@@ -191,6 +193,7 @@ class TestLeadToBuyerHandoff:
 # ---------------------------------------------------------------------------
 # Seller -> Buyer Cross-Qualification
 # ---------------------------------------------------------------------------
+
 
 class TestSellerToBuyerHandoff:
     """Seller bot detects buyer intent -> cross-qualification handoff."""
@@ -267,6 +270,7 @@ class TestSellerToBuyerHandoff:
 # ---------------------------------------------------------------------------
 # Circular Prevention
 # ---------------------------------------------------------------------------
+
 
 class TestCircularPrevention:
     """Same route blocked within 30min window."""
@@ -372,6 +376,7 @@ class TestCircularPrevention:
 # Rate Limiting
 # ---------------------------------------------------------------------------
 
+
 class TestRateLimiting:
     """4th handoff in 1 hour should be blocked."""
 
@@ -439,6 +444,7 @@ class TestRateLimiting:
 # Self-Handoff Prevention
 # ---------------------------------------------------------------------------
 
+
 class TestSelfHandoffPrevention:
     """Bot cannot hand off to itself."""
 
@@ -483,6 +489,7 @@ class TestSelfHandoffPrevention:
 # Intent Signal Extraction
 # ---------------------------------------------------------------------------
 
+
 class TestIntentSignalExtraction:
     """Verify extract_intent_signals produces correct scores."""
 
@@ -496,17 +503,13 @@ class TestIntentSignalExtraction:
 
     def test_seller_phrases_detected(self):
         """Seller phrases produce positive seller_intent_score."""
-        signals = JorgeHandoffService.extract_intent_signals(
-            "What's my home worth? I want to sell my house."
-        )
+        signals = JorgeHandoffService.extract_intent_signals("What's my home worth? I want to sell my house.")
         assert signals["seller_intent_score"] > 0
         assert "seller intent detected" in signals["detected_intent_phrases"]
 
     def test_neutral_message_no_intent(self):
         """Neutral messages produce zero scores."""
-        signals = JorgeHandoffService.extract_intent_signals(
-            "Hello, how are you?"
-        )
+        signals = JorgeHandoffService.extract_intent_signals("Hello, how are you?")
         assert signals["buyer_intent_score"] == 0.0
         assert signals["seller_intent_score"] == 0.0
         assert len(signals["detected_intent_phrases"]) == 0
@@ -515,6 +518,7 @@ class TestIntentSignalExtraction:
 # ---------------------------------------------------------------------------
 # Analytics Tracking
 # ---------------------------------------------------------------------------
+
 
 class TestHandoffAnalytics:
     """Verify analytics are recorded for handoff operations."""

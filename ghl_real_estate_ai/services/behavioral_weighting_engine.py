@@ -70,7 +70,7 @@ class BehavioralWeightingEngine:
         # Ensure data is loaded
         if not self.interaction_data:
             await self._load_interaction_data()
-        
+
         if not self.property_lookup:
             await self._load_property_listings()
 
@@ -848,11 +848,21 @@ def demo_behavioral_weighting():
     test_scenarios = [
         {
             "lead_id": "test_contact_api",
-            "preferences": {"budget": 600000, "location": "Rancho Cucamonga", "bedrooms": 3, "property_type": "Single Family"},
+            "preferences": {
+                "budget": 600000,
+                "location": "Rancho Cucamonga",
+                "bedrooms": 3,
+                "property_type": "Single Family",
+            },
         },
         {
             "lead_id": "test_interactions_api",
-            "preferences": {"budget": 450000, "location": "East Rancho Cucamonga", "bedrooms": 2, "property_type": "Condo"},
+            "preferences": {
+                "budget": 450000,
+                "location": "East Rancho Cucamonga",
+                "bedrooms": 2,
+                "property_type": "Condo",
+            },
         },
     ]
 

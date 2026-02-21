@@ -41,7 +41,9 @@ class TestRegexScanning:
     def test_no_pii_clean_text(self, detector):
         result = detector.scan("The weather is nice today.")
         # Filter out false positives from broad patterns
-        real_entities = [e for e in result.entities if e.entity_type in ("EMAIL", "SSN", "CREDIT_CARD")]
+        real_entities = [
+            e for e in result.entities if e.entity_type in ("EMAIL", "SSN", "CREDIT_CARD")
+        ]
         assert len(real_entities) == 0
 
     def test_multiple_pii_types(self, detector):
@@ -55,7 +57,7 @@ class TestRegexScanning:
         email_entities = [e for e in result.entities if e.entity_type == "EMAIL"]
         assert len(email_entities) >= 1
         e = email_entities[0]
-        assert text[e.start:e.end] == "test@example.com"
+        assert text[e.start : e.end] == "test@example.com"
 
 
 class TestRedaction:

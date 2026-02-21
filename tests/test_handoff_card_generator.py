@@ -332,7 +332,6 @@ class TestEdgeCases:
             },
         }
 
-
         start = time.time()
         pdf_bytes = generate_card(data)
         elapsed = time.time() - start

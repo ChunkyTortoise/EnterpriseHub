@@ -171,6 +171,7 @@ class OpsOptimizationHub:
             feedback_stats = rlhf_service.get_feedback_summary()
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).debug(f"Failed to fetch RLHF summary: {str(e)}")
             feedback_stats = {"total_feedback": 0, "positive_rate": 0, "needs_review": 0}
 

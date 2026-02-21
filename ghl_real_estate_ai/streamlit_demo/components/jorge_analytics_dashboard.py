@@ -60,6 +60,7 @@ class JorgeAnalyticsAPIClient:
                     return response.json()
         except Exception as e:
             import logging
+
             logging.getLogger(__name__).error(f"Error getting analytics dashboard metrics: {e}")
             pass
 

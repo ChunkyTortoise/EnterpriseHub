@@ -11,7 +11,7 @@ Provides strongly-typed dictionary structures for:
 
 Usage:
     from ghl_real_estate_ai.models.api_analytics_types import AnalyticsMetrics, DashboardWidget
-    
+
     metrics: AnalyticsMetrics = {
         "total_leads": 150,
         "qualified_leads": 45,
@@ -38,7 +38,7 @@ from typing_extensions import NotRequired
 
 class AnalyticsMetrics(TypedDict, total=False):
     """Core analytics metrics for business intelligence."""
-    
+
     total_leads: int
     qualified_leads: int
     conversion_rate: float
@@ -55,7 +55,7 @@ class AnalyticsMetrics(TypedDict, total=False):
 
 class PerformanceMetrics(TypedDict, total=False):
     """System and component performance metrics."""
-    
+
     processing_time_ms: int
     cache_hit_rate: float
     error_rate: float
@@ -68,7 +68,7 @@ class PerformanceMetrics(TypedDict, total=False):
 
 class KPIMetrics(TypedDict, total=False):
     """Key Performance Indicator metrics."""
-    
+
     metric_name: str
     current_value: float
     target_value: float
@@ -85,7 +85,7 @@ class KPIMetrics(TypedDict, total=False):
 
 class DashboardWidget(TypedDict, total=False):
     """Dashboard widget configuration and data."""
-    
+
     widget_id: str
     widget_type: str  # "chart", "table", "metric", "map", "timeline"
     title: str
@@ -97,7 +97,7 @@ class DashboardWidget(TypedDict, total=False):
 
 class ChartData(TypedDict, total=False):
     """Chart visualization data structure."""
-    
+
     chart_type: str  # "line", "bar", "pie", "scatter", "area"
     labels: list[str]
     datasets: list[dict[str, Any]]
@@ -109,7 +109,7 @@ class ChartData(TypedDict, total=False):
 
 class TimeSeriesData(TypedDict, total=False):
     """Time series data point."""
-    
+
     timestamp: str  # ISO format
     value: float
     label: str
@@ -123,7 +123,7 @@ class TimeSeriesData(TypedDict, total=False):
 
 class EnterpriseConfig(TypedDict, total=False):
     """Enterprise platform configuration."""
-    
+
     location_id: str
     tenant_id: str
     features: list[str]
@@ -135,7 +135,7 @@ class EnterpriseConfig(TypedDict, total=False):
 
 class TierConfig(TypedDict, total=False):
     """Partnership tier configuration."""
-    
+
     tier_name: str
     max_users: int
     max_relocations_per_month: int
@@ -146,7 +146,7 @@ class TierConfig(TypedDict, total=False):
 
 class PricingStructure(TypedDict, total=False):
     """Pricing structure for enterprise contracts."""
-    
+
     base_rate: float
     volume_discounts: dict[str, float]
     revenue_share_percentage: float
@@ -162,7 +162,7 @@ class PricingStructure(TypedDict, total=False):
 
 class ConversationInsights(TypedDict, total=False):
     """Conversation intelligence analysis data."""
-    
+
     engagement_score: float
     sentiment_score: float
     key_topics: list[str]
@@ -174,7 +174,7 @@ class ConversationInsights(TypedDict, total=False):
 
 class PreferenceData(TypedDict, total=False):
     """Client preference learning data."""
-    
+
     preference_type: str
     confidence: float
     source: str
@@ -185,7 +185,7 @@ class PreferenceData(TypedDict, total=False):
 
 class MatchingWeights(TypedDict, total=False):
     """Behavioral matching weight configuration."""
-    
+
     feature_weight: float
     location_weight: float
     price_weight: float
@@ -201,7 +201,7 @@ class MatchingWeights(TypedDict, total=False):
 
 class CompetitiveIntelligenceData(TypedDict, total=False):
     """Competitive intelligence analysis data."""
-    
+
     competitor_name: str
     market_share: float
     listings_count: int
@@ -214,7 +214,7 @@ class CompetitiveIntelligenceData(TypedDict, total=False):
 
 class MarketTrendData(TypedDict, total=False):
     """Market trend analysis data."""
-    
+
     trend_name: str
     trend_direction: str  # "up", "down", "stable"
     confidence: float
@@ -230,7 +230,7 @@ class MarketTrendData(TypedDict, total=False):
 
 class RevenueMetrics(TypedDict, total=False):
     """Revenue and financial metrics."""
-    
+
     total_revenue: float
     jorge_commission: float
     commission_rate: float
@@ -241,7 +241,7 @@ class RevenueMetrics(TypedDict, total=False):
 
 class RevenueAttribution(TypedDict, total=False):
     """Revenue attribution analysis."""
-    
+
     direct_revenue: float
     indirect_revenue: float
     attributed_to: dict[str, float]
@@ -251,7 +251,7 @@ class RevenueAttribution(TypedDict, total=False):
 
 class CostMetrics(TypedDict, total=False):
     """Cost and expense metrics."""
-    
+
     total_cost: float
     cost_per_lead: float
     cost_per_acquisition: float
@@ -267,7 +267,7 @@ class CostMetrics(TypedDict, total=False):
 
 class ForecastData(TypedDict, total=False):
     """Forecasting and prediction data."""
-    
+
     forecast_period: str
     predicted_value: float
     confidence_interval_lower: float
@@ -279,7 +279,7 @@ class ForecastData(TypedDict, total=False):
 
 class PredictiveInsight(TypedDict, total=False):
     """Predictive analytics insight."""
-    
+
     insight_type: str
     prediction: Any
     confidence: float
@@ -296,7 +296,7 @@ class PredictiveInsight(TypedDict, total=False):
 
 class SystemHealthData(TypedDict, total=False):
     """System health monitoring data."""
-    
+
     overall_status: str  # "healthy", "degraded", "critical"
     component_statuses: dict[str, str]
     active_alerts: list[str]
@@ -306,7 +306,7 @@ class SystemHealthData(TypedDict, total=False):
 
 class AlertConfig(TypedDict, total=False):
     """Alert configuration and rules."""
-    
+
     alert_name: str
     condition: str
     threshold: float
@@ -322,7 +322,7 @@ class AlertConfig(TypedDict, total=False):
 
 class RelocationMetrics(TypedDict, total=False):
     """Employee relocation tracking metrics."""
-    
+
     total_relocations: int
     in_progress: int
     completed: int
@@ -333,7 +333,7 @@ class RelocationMetrics(TypedDict, total=False):
 
 class PartnershipMetrics(TypedDict, total=False):
     """Partnership performance metrics."""
-    
+
     partnership_id: str
     volume_ytd: int
     revenue_ytd: float
@@ -349,7 +349,7 @@ class PartnershipMetrics(TypedDict, total=False):
 
 class TimelineMetric(TypedDict, total=False):
     """Timeline milestone metric."""
-    
+
     milestone_name: str
     target_date: str
     actual_date: NotRequired[str]
@@ -359,7 +359,7 @@ class TimelineMetric(TypedDict, total=False):
 
 class JourneyStageData(TypedDict, total=False):
     """Customer journey stage data."""
-    
+
     stage_name: str
     entry_date: str
     duration_days: int
@@ -375,7 +375,7 @@ class JourneyStageData(TypedDict, total=False):
 
 class QualityMetrics(TypedDict, total=False):
     """Data and service quality metrics."""
-    
+
     data_completeness: float
     data_accuracy: float
     data_freshness_hours: float
@@ -385,7 +385,7 @@ class QualityMetrics(TypedDict, total=False):
 
 class ComplianceMetrics(TypedDict, total=False):
     """Compliance and regulatory metrics."""
-    
+
     compliance_status: str
     violations: int
     audit_trail_complete: bool
@@ -400,7 +400,7 @@ class ComplianceMetrics(TypedDict, total=False):
 
 class EfficiencyMetrics(TypedDict, total=False):
     """Operational efficiency metrics."""
-    
+
     automation_rate: float
     manual_intervention_rate: float
     avg_processing_time_seconds: float
@@ -410,7 +410,7 @@ class EfficiencyMetrics(TypedDict, total=False):
 
 class SatisfactionMetrics(TypedDict, total=False):
     """Satisfaction and experience metrics."""
-    
+
     nps_score: float
     satisfaction_rating: float
     feedback_sentiment: str
@@ -426,7 +426,7 @@ class SatisfactionMetrics(TypedDict, total=False):
 
 class AnalysisContext(TypedDict, total=False):
     """Analysis context and metadata."""
-    
+
     analysis_id: str
     analysis_type: str
     start_date: str
@@ -439,7 +439,7 @@ class AnalysisContext(TypedDict, total=False):
 
 class DataQuality(TypedDict, total=False):
     """Data quality assessment."""
-    
+
     completeness_percentage: float
     accuracy_score: float
     timeliness_score: float
@@ -454,7 +454,7 @@ class DataQuality(TypedDict, total=False):
 
 class BenchmarkData(TypedDict, total=False):
     """Benchmark comparison data."""
-    
+
     metric_name: str
     current_value: float
     benchmark_value: float
@@ -465,7 +465,7 @@ class BenchmarkData(TypedDict, total=False):
 
 class ComparisonData(TypedDict, total=False):
     """Period-over-period comparison data."""
-    
+
     current_period_value: float
     previous_period_value: float
     change_absolute: float

@@ -2,7 +2,6 @@
 Property Routes for GHL Real Estate AI.
 """
 
-
 from functools import lru_cache
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -31,8 +30,8 @@ def _get_memory_service() -> MemoryService:
 
 @router.get("/match/{location_id}/{contact_id}")
 async def match_properties(
-    location_id: str, 
-    contact_id: str, 
+    location_id: str,
+    contact_id: str,
     limit: int = 3,
     memory_service: MemoryService = Depends(_get_memory_service),
     property_matcher: PropertyMatcher = Depends(_get_property_matcher),
@@ -68,9 +67,7 @@ async def match_properties(
 
 
 @router.get("/all")
-async def list_all_properties(
-    property_matcher: PropertyMatcher = Depends(_get_property_matcher)
-):
+async def list_all_properties(property_matcher: PropertyMatcher = Depends(_get_property_matcher)):
     """List all available property listings."""
     return {
         "total": len(property_matcher.listings),

@@ -29,8 +29,16 @@ def upgrade() -> None:
         sa.Column("experiment_id", sa.String(255), nullable=False, index=True, comment="Experiment name/identifier"),
         sa.Column("promoted_variant", sa.String(255), nullable=False, comment="Winning variant promoted to default"),
         sa.Column("previous_default", sa.String(255), nullable=True, comment="Previous default variant (for rollback)"),
-        sa.Column("promotion_type", sa.String(50), nullable=False, server_default="automatic", comment="automatic or manual"),
-        sa.Column("promoted_by", sa.String(255), nullable=False, server_default="system", comment="User ID or 'system' for auto-promotion"),
+        sa.Column(
+            "promotion_type", sa.String(50), nullable=False, server_default="automatic", comment="automatic or manual"
+        ),
+        sa.Column(
+            "promoted_by",
+            sa.String(255),
+            nullable=False,
+            server_default="system",
+            comment="User ID or 'system' for auto-promotion",
+        ),
         # Metrics snapshot at promotion time
         sa.Column("p_value", sa.Float(), nullable=False, comment="Statistical significance p-value"),
         sa.Column("lift_percent", sa.Float(), nullable=False, comment="Percentage improvement over control"),
@@ -41,17 +49,45 @@ def upgrade() -> None:
         sa.Column("confidence_interval_lower", sa.Float(), nullable=True, comment="95% CI lower bound for winner"),
         sa.Column("confidence_interval_upper", sa.Float(), nullable=True, comment="95% CI upper bound for winner"),
         # Canary rollout tracking
-        sa.Column("canary_status", sa.String(50), nullable=False, server_default="pending", comment="pending, canary, monitoring, completed, rolled_back"),
-        sa.Column("canary_start_time", sa.DateTime(timezone=True), nullable=True, comment="When canary rollout started (20% traffic)"),
-        sa.Column("canary_end_time", sa.DateTime(timezone=True), nullable=True, comment="When canary completed or rolled back"),
-        sa.Column("full_rollout_time", sa.DateTime(timezone=True), nullable=True, comment="When promoted to 100% traffic"),
-        sa.Column("rollback_time", sa.DateTime(timezone=True), nullable=True, comment="When rolled back (if applicable)"),
+        sa.Column(
+            "canary_status",
+            sa.String(50),
+            nullable=False,
+            server_default="pending",
+            comment="pending, canary, monitoring, completed, rolled_back",
+        ),
+        sa.Column(
+            "canary_start_time",
+            sa.DateTime(timezone=True),
+            nullable=True,
+            comment="When canary rollout started (20% traffic)",
+        ),
+        sa.Column(
+            "canary_end_time", sa.DateTime(timezone=True), nullable=True, comment="When canary completed or rolled back"
+        ),
+        sa.Column(
+            "full_rollout_time", sa.DateTime(timezone=True), nullable=True, comment="When promoted to 100% traffic"
+        ),
+        sa.Column(
+            "rollback_time", sa.DateTime(timezone=True), nullable=True, comment="When rolled back (if applicable)"
+        ),
         sa.Column("rollback_reason", sa.Text(), nullable=True, comment="Why rollback occurred"),
         # Full metrics snapshot (JSON)
-        sa.Column("metrics_snapshot", postgresql.JSONB(), nullable=True, comment="Complete experiment results at promotion time"),
+        sa.Column(
+            "metrics_snapshot",
+            postgresql.JSONB(),
+            nullable=True,
+            comment="Complete experiment results at promotion time",
+        ),
         # Timestamps
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), onupdate=sa.func.now(), nullable=False),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            server_default=sa.func.now(),
+            onupdate=sa.func.now(),
+            nullable=False,
+        ),
     )
 
     # Create indexes for common query patterns

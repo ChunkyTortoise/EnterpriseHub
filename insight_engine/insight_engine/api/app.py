@@ -5,6 +5,7 @@ Exposes Obsidian-themed dashboard components as a REST API.
 Run:
     uvicorn insight_engine.api.app:app --host 0.0.0.0 --port 8080
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -24,12 +25,14 @@ app = FastAPI(
 
 # -- Request/Response Models ------------------------------------------------
 
+
 class MetricRequest(BaseModel):
     value: str = Field(..., example="$2.4M")
     label: str = Field(..., example="Revenue This Quarter")
     variant: Literal["default", "success", "warning", "error", "info"] = "default"
     trend: Optional[Literal["up", "down", "neutral"]] = None
     comparison_value: Optional[str] = None
+
 
 class CardRequest(BaseModel):
     title: str = Field(..., example="Hot Leads")
@@ -38,14 +41,17 @@ class CardRequest(BaseModel):
     glow_color: Optional[str] = Field(None, example="#EF4444")
     icon: Optional[str] = None
 
+
 class DashboardRequest(BaseModel):
     title: str = Field(..., example="Sales Dashboard")
     metrics: list[MetricRequest] = Field(default_factory=list)
     cards: list[CardRequest] = Field(default_factory=list)
 
+
 class RenderResponse(BaseModel):
     html: str
     component_type: str
+
 
 class HealthResponse(BaseModel):
     status: str
@@ -76,14 +82,22 @@ body { background: var(--bg-primary); color: var(--text-primary); font-family: -
 """
 
 TREND_ICONS = {"up": "\u2191", "down": "\u2193", "neutral": "\u2192"}
-VARIANT_COLORS = {"success": "#3fb950", "warning": "#d29922", "error": "#f85149", "info": "#58a6ff", "default": "#8b949e"}
+VARIANT_COLORS = {
+    "success": "#3fb950",
+    "warning": "#d29922",
+    "error": "#f85149",
+    "info": "#58a6ff",
+    "default": "#8b949e",
+}
 
 
 def render_metric_html(req: MetricRequest) -> str:
     trend_html = ""
     if req.trend and req.comparison_value:
         color = "#3fb950" if req.trend == "up" else "#f85149" if req.trend == "down" else "#8b949e"
-        trend_html = f'<div class="ie-metric-trend" style="color:{color}">{TREND_ICONS[req.trend]} {req.comparison_value}</div>'
+        trend_html = (
+            f'<div class="ie-metric-trend" style="color:{color}">{TREND_ICONS[req.trend]} {req.comparison_value}</div>'
+        )
 
     color = VARIANT_COLORS.get(req.variant, "#58a6ff")
     return f"""
@@ -118,6 +132,7 @@ def build_dashboard_html(title: str, metric_htmls: list[str], card_htmls: list[s
 
 
 # -- Routes ------------------------------------------------------------------
+
 
 @app.get("/health", response_model=HealthResponse, tags=["system"])
 async def health_check() -> HealthResponse:

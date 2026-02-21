@@ -186,7 +186,12 @@ class UltraPremiumDashboard:
         """Generate competitive analysis data"""
         competitors = [
             {"name": "Elite Luxury Realty", "market_share": 0.18, "avg_commission": 0.032, "luxury_focus": True},
-            {"name": "Rancho Cucamonga Premier Properties", "market_share": 0.15, "avg_commission": 0.029, "luxury_focus": True},
+            {
+                "name": "Rancho Cucamonga Premier Properties",
+                "market_share": 0.15,
+                "avg_commission": 0.029,
+                "luxury_focus": True,
+            },
             {"name": "Luxury Home Specialists", "market_share": 0.12, "avg_commission": 0.035, "luxury_focus": True},
             {"name": "Traditional Realty Co", "market_share": 0.25, "avg_commission": 0.026, "luxury_focus": False},
             {"name": "Jorge's AI-Enhanced Luxury", "market_share": 0.08, "avg_commission": 0.038, "luxury_focus": True},

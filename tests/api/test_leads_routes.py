@@ -21,6 +21,7 @@ pytestmark = pytest.mark.unit
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_client():
     """Create TestClient with main app."""
     from ghl_real_estate_ai.api.main import app
@@ -30,6 +31,7 @@ def _make_client():
 
 def _get_app():
     from ghl_real_estate_ai.api.main import app
+
     return app
 
 
@@ -41,6 +43,7 @@ def _get_dep_functions():
         get_memory_service,
         get_property_matcher,
     )
+
     return get_ghl_client, get_memory_service, get_lead_scorer, get_property_matcher
 
 
@@ -71,14 +74,10 @@ def _mock_ghl_api_client(contacts=None):
         ]
 
     mock = MagicMock()
-    mock.get_contacts = AsyncMock(
-        return_value={"success": True, "data": {"contacts": contacts}}
-    )
+    mock.get_contacts = AsyncMock(return_value={"success": True, "data": {"contacts": contacts}})
     mock.add_tag_to_contact = AsyncMock(return_value={"success": True})
     mock.update_custom_field = AsyncMock(return_value={"success": True})
-    mock.get_conversations = AsyncMock(
-        return_value={"success": True, "data": {"conversations": []}}
-    )
+    mock.get_conversations = AsyncMock(return_value={"success": True, "data": {"conversations": []}})
     return mock
 
 
@@ -132,10 +131,10 @@ def _set_overrides(ghl=None, mem=None, scorer=None, matcher=None):
     app = _get_app()
     get_ghl_client, get_memory_service, get_lead_scorer, get_property_matcher = _get_dep_functions()
 
-    app.dependency_overrides[get_ghl_client] = lambda: (ghl or _mock_ghl_api_client())
-    app.dependency_overrides[get_memory_service] = lambda: (mem or _mock_memory_service())
-    app.dependency_overrides[get_lead_scorer] = lambda: (scorer or _mock_lead_scorer())
-    app.dependency_overrides[get_property_matcher] = lambda: (matcher or _mock_property_matcher())
+    app.dependency_overrides[get_ghl_client] = lambda: ghl or _mock_ghl_api_client()
+    app.dependency_overrides[get_memory_service] = lambda: mem or _mock_memory_service()
+    app.dependency_overrides[get_lead_scorer] = lambda: scorer or _mock_lead_scorer()
+    app.dependency_overrides[get_property_matcher] = lambda: matcher or _mock_property_matcher()
 
 
 @pytest.fixture(autouse=True)
@@ -145,10 +144,10 @@ def _leads_cleanup_overrides():
     _get_app().dependency_overrides.clear()
 
 
-
 # ---------------------------------------------------------------------------
 # GET /api/leads — List leads
 # ---------------------------------------------------------------------------
+
 
 class TestListLeads:
     """Tests for the list leads endpoint."""
@@ -218,6 +217,7 @@ class TestListLeads:
 # PATCH /api/leads/{lead_id}/status — Update lead status
 # ---------------------------------------------------------------------------
 
+
 class TestUpdateLeadStatus:
     """Tests for updating lead status."""
 
@@ -281,6 +281,7 @@ class TestUpdateLeadStatus:
 # GET /api/leads/{lead_id}/property-matches
 # ---------------------------------------------------------------------------
 
+
 class TestPropertyMatches:
     """Tests for property matching endpoint."""
 
@@ -337,9 +338,7 @@ class TestPropertyMatches:
     def test_property_matches_respects_limit(self):
         """Limit parameter controls max results."""
         mem = _mock_memory_service()
-        mem.get_context = AsyncMock(
-            return_value={"extracted_preferences": {"budget_max": 700000}}
-        )
+        mem.get_context = AsyncMock(return_value={"extracted_preferences": {"budget_max": 700000}})
         _set_overrides(mem=mem)
 
         client = _make_client()
@@ -351,6 +350,7 @@ class TestPropertyMatches:
 # ---------------------------------------------------------------------------
 # GET /api/conversations/{conversation_id}/messages
 # ---------------------------------------------------------------------------
+
 
 class TestConversationMessages:
     """Tests for conversation message retrieval."""

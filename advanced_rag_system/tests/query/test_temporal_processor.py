@@ -13,8 +13,6 @@ from src.query.temporal_processor import (
 
 
 @pytest.mark.unit
-
-
 class TestTemporalConstraint:
     """Test TemporalConstraint class."""
 

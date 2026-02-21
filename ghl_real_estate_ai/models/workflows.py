@@ -6,6 +6,7 @@ from ghl_real_estate_ai.models.lead_scoring import LeadIntentProfile
 
 class ConversationTurn(TypedDict, total=False):
     """TypedDict for a single conversation turn."""
+
     role: str  # "user" or "assistant"
     content: str
     timestamp: Optional[str]
@@ -13,6 +14,7 @@ class ConversationTurn(TypedDict, total=False):
 
 class CrossBotPreference(TypedDict, total=False):
     """TypedDict for cross-bot shared preferences."""
+
     preferred_contact_method: str
     best_contact_time: str
     decision_maker_present: bool
@@ -22,6 +24,7 @@ class CrossBotPreference(TypedDict, total=False):
 
 class SellerData(TypedDict, total=False):
     """TypedDict for seller workflow data."""
+
     motivation: str
     timeline: str
     price_expectation: float
@@ -32,6 +35,7 @@ class SellerData(TypedDict, total=False):
 
 class ClosingMilestone(TypedDict, total=False):
     """TypedDict for closing milestone."""
+
     milestone_type: str  # "inspection", "appraisal", "financing", "title", "closing"
     scheduled_date: Optional[str]
     completed: bool

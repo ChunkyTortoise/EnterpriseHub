@@ -59,6 +59,7 @@ class TestToolDecorator:
 
     def test_basic_decorator(self):
         """Test basic @tool decorator usage."""
+
         @tool
         def greet(name: str) -> str:
             """Greet someone."""
@@ -70,6 +71,7 @@ class TestToolDecorator:
 
     def test_decorator_with_custom_name(self):
         """Test @tool decorator with custom name."""
+
         @tool(name="custom_name")
         def func() -> str:
             """A function."""
@@ -79,6 +81,7 @@ class TestToolDecorator:
 
     def test_decorator_with_custom_description(self):
         """Test @tool decorator with custom description."""
+
         @tool(description="Custom description")
         def func() -> str:
             """Original docstring."""
@@ -88,6 +91,7 @@ class TestToolDecorator:
 
     def test_decorator_with_both_custom(self):
         """Test @tool decorator with both custom name and description."""
+
         @tool(name="my_tool", description="My tool description")
         def func(x: int) -> int:
             """Original."""
@@ -98,6 +102,7 @@ class TestToolDecorator:
 
     def test_decorator_no_docstring(self):
         """Test @tool decorator with function without docstring."""
+
         @tool
         def no_doc(x: int) -> int:
             return x
@@ -106,6 +111,7 @@ class TestToolDecorator:
 
     def test_multiline_docstring(self):
         """Test that only first line of docstring is used."""
+
         @tool
         def multiline() -> str:
             """First line.
@@ -128,6 +134,7 @@ class TestBasicTypeSchema:
 
     def test_string_type(self):
         """Test string type schema."""
+
         @tool
         def func(text: str) -> str:
             """Function with string."""
@@ -139,6 +146,7 @@ class TestBasicTypeSchema:
 
     def test_integer_type(self):
         """Test integer type schema."""
+
         @tool
         def func(count: int) -> int:
             """Function with integer."""
@@ -149,6 +157,7 @@ class TestBasicTypeSchema:
 
     def test_float_type(self):
         """Test float type schema."""
+
         @tool
         def func(value: float) -> float:
             """Function with float."""
@@ -159,6 +168,7 @@ class TestBasicTypeSchema:
 
     def test_boolean_type(self):
         """Test boolean type schema."""
+
         @tool
         def func(flag: bool) -> bool:
             """Function with boolean."""
@@ -169,6 +179,7 @@ class TestBasicTypeSchema:
 
     def test_list_type(self):
         """Test list type schema."""
+
         @tool
         def func(items: list) -> list:
             """Function with list."""
@@ -179,6 +190,7 @@ class TestBasicTypeSchema:
 
     def test_dict_type(self):
         """Test dict type schema."""
+
         @tool
         def func(data: dict) -> dict:
             """Function with dict."""
@@ -189,6 +201,7 @@ class TestBasicTypeSchema:
 
     def test_default_values(self):
         """Test that default values are in schema."""
+
         @tool
         def func(name: str, count: int = 10) -> str:
             """Function with defaults."""
@@ -210,6 +223,7 @@ class TestComplexTypeSchema:
 
     def test_optional_type(self):
         """Test Optional type schema."""
+
         @tool
         def func(name: str | None = None) -> str:
             """Function with Optional."""
@@ -225,6 +239,7 @@ class TestComplexTypeSchema:
 
     def test_list_of_int(self):
         """Test List[int] type schema."""
+
         @tool
         def func(numbers: list[int]) -> int:
             """Sum numbers."""
@@ -236,6 +251,7 @@ class TestComplexTypeSchema:
 
     def test_dict_with_types(self):
         """Test Dict[str, int] type schema."""
+
         @tool
         def func(data: dict[str, int]) -> int:
             """Sum dict values."""
@@ -246,6 +262,7 @@ class TestComplexTypeSchema:
 
     def test_pydantic_model_param(self):
         """Test Pydantic model as parameter."""
+
         class UserInput(BaseModel):
             name: str
             age: int
@@ -263,6 +280,7 @@ class TestComplexTypeSchema:
 
     def test_literal_type(self):
         """Test Literal type schema."""
+
         @tool
         def func(color: Literal["red", "green", "blue"]) -> str:
             """Pick a color."""
@@ -337,6 +355,7 @@ class TestPythonTypeToJsonSchema:
 
     def test_pydantic_model(self):
         """Test Pydantic model conversion."""
+
         class Model(BaseModel):
             name: str
             count: int
@@ -358,6 +377,7 @@ class TestFunctionExecution:
     @pytest.mark.asyncio
     async def test_sync_function_execution(self):
         """Test executing a sync function."""
+
         @tool
         def add(a: int, b: int) -> int:
             """Add two numbers."""
@@ -369,6 +389,7 @@ class TestFunctionExecution:
     @pytest.mark.asyncio
     async def test_async_function_execution(self):
         """Test executing an async function."""
+
         @tool
         async def async_add(a: int, b: int) -> int:
             """Async add two numbers."""
@@ -381,6 +402,7 @@ class TestFunctionExecution:
     @pytest.mark.asyncio
     async def test_execution_with_defaults(self):
         """Test execution with default values."""
+
         @tool
         def greet(name: str, greeting: str = "Hello") -> str:
             """Greet someone."""
@@ -395,6 +417,7 @@ class TestFunctionExecution:
     @pytest.mark.asyncio
     async def test_execution_error_handling(self):
         """Test that execution errors are wrapped."""
+
         @tool
         def failing_tool(x: int) -> int:
             """A tool that fails."""
@@ -409,6 +432,7 @@ class TestFunctionExecution:
     @pytest.mark.asyncio
     async def test_input_validation(self):
         """Test that inputs are validated."""
+
         @tool
         def process(count: int) -> int:
             """Process a count."""
@@ -433,6 +457,7 @@ class TestToolFormatConversion:
 
     def test_openai_format(self):
         """Test OpenAI tool format conversion."""
+
         @tool
         def search(query: str, limit: int = 10) -> str:
             """Search for information."""
@@ -448,6 +473,7 @@ class TestToolFormatConversion:
 
     def test_anthropic_format(self):
         """Test Anthropic tool format conversion."""
+
         @tool
         def search(query: str, limit: int = 10) -> str:
             """Search for information."""
@@ -462,6 +488,7 @@ class TestToolFormatConversion:
 
     def test_format_with_complex_types(self):
         """Test format conversion with complex types."""
+
         @tool
         def process(
             items: list[str],
@@ -490,6 +517,7 @@ class TestToolRegistry:
 
     def test_register_tool(self):
         """Test registering a tool."""
+
         @tool
         def my_tool(x: int) -> int:
             """My tool."""
@@ -503,6 +531,7 @@ class TestToolRegistry:
 
     def test_register_duplicate_raises(self):
         """Test that registering duplicate raises error."""
+
         @tool
         def my_tool(x: int) -> int:
             """My tool."""
@@ -516,6 +545,7 @@ class TestToolRegistry:
 
     def test_unregister_tool(self):
         """Test unregistering a tool."""
+
         @tool
         def my_tool(x: int) -> int:
             """My tool."""
@@ -548,6 +578,7 @@ class TestToolRegistry:
 
     def test_list_tools(self):
         """Test listing tools."""
+
         @tool
         def tool_a() -> str:
             """Tool A."""
@@ -567,6 +598,7 @@ class TestToolRegistry:
 
     def test_to_openai_tools(self):
         """Test exporting to OpenAI format."""
+
         @tool
         def tool_a(x: int) -> int:
             """Tool A."""
@@ -589,6 +621,7 @@ class TestToolRegistry:
 
     def test_to_anthropic_tools(self):
         """Test exporting to Anthropic format."""
+
         @tool
         def tool_a(x: int) -> int:
             """Tool A."""
@@ -612,6 +645,7 @@ class TestToolRegistry:
     @pytest.mark.asyncio
     async def test_execute_tool(self):
         """Test executing a tool through registry."""
+
         @tool
         def add(a: int, b: int) -> int:
             """Add two numbers."""
@@ -633,6 +667,7 @@ class TestToolRegistry:
 
     def test_len_and_iter(self):
         """Test __len__ and __iter__ methods."""
+
         @tool
         def tool_a() -> str:
             """Tool A."""
@@ -652,6 +687,7 @@ class TestToolRegistry:
 
     def test_clear(self):
         """Test clearing the registry."""
+
         @tool
         def my_tool() -> str:
             """My tool."""
@@ -674,6 +710,7 @@ class TestGlobalRegistry:
 
     def test_register_tool_global(self):
         """Test registering tool in global registry."""
+
         @tool
         def global_tool(x: int) -> int:
             """Global tool."""
@@ -685,6 +722,7 @@ class TestGlobalRegistry:
 
     def test_unregister_tool_global(self):
         """Test unregistering tool from global registry."""
+
         @tool
         def temp_tool(x: int) -> int:
             """Temp tool."""
@@ -715,6 +753,7 @@ class TestUtilityFunctions:
 
     def test_generate_tool_schema(self):
         """Test generate_tool_schema function."""
+
         def my_func(name: str, count: int = 5) -> str:
             """My function."""
             return name * count
@@ -729,6 +768,7 @@ class TestUtilityFunctions:
 
     def test_generate_tool_schema_custom(self):
         """Test generate_tool_schema with custom name/description."""
+
         def my_func(x: int) -> int:
             """Original."""
             return x
@@ -744,6 +784,7 @@ class TestUtilityFunctions:
 
     def test_create_pydantic_model_from_function(self):
         """Test creating Pydantic model from function."""
+
         def my_func(name: str, count: int = 5) -> str:
             """My function."""
             return name * count
@@ -782,6 +823,7 @@ class TestUtilityFunctions:
 
     def test_validate_tool_input(self):
         """Test validate_tool_input function."""
+
         @tool
         def process(name: str, count: int = 10) -> str:
             """Process something."""
@@ -807,6 +849,7 @@ class TestToolMeta:
 
     def test_tool_meta_creation(self):
         """Test creating ToolMeta."""
+
         def my_func(x: int) -> int:
             """My function."""
             return x * 2
@@ -873,6 +916,7 @@ class TestIntegration:
     @pytest.mark.asyncio
     async def test_full_workflow(self):
         """Test complete workflow from decorator to execution."""
+
         # Create tools
         @tool(description="Add two numbers")
         def add(a: int, b: int) -> int:
@@ -903,6 +947,7 @@ class TestIntegration:
     @pytest.mark.asyncio
     async def test_complex_tool_workflow(self):
         """Test workflow with complex types."""
+
         class SearchParams(BaseModel):
             query: str
             limit: int = 10

@@ -26,7 +26,9 @@ class SellerIntentDecoder:
     Implements seller-specific scoring for listing qualification.
     """
 
-    def __init__(self, ghl_client: Optional[EnhancedGHLClient] = None, industry_config: Optional["IndustryConfig"] = None):
+    def __init__(
+        self, ghl_client: Optional[EnhancedGHLClient] = None, industry_config: Optional["IndustryConfig"] = None
+    ):
         self.ghl_client = ghl_client
 
         # Load industry config for config-first marker initialization
@@ -99,7 +101,8 @@ class SellerIntentDecoder:
 
         # Listing Urgency Markers (config-first, hardcoded fallback)
         self.immediate_urgency = (
-            cfg.intents.timeline.high if cfg and cfg.intents.timeline.high
+            cfg.intents.timeline.high
+            if cfg and cfg.intents.timeline.high
             else [
                 "need to sell now",
                 "relocating",
@@ -110,7 +113,8 @@ class SellerIntentDecoder:
             ]
         )
         self.medium_urgency = (
-            cfg.intents.timeline.medium if cfg and cfg.intents.timeline.medium
+            cfg.intents.timeline.medium
+            if cfg and cfg.intents.timeline.medium
             else [
                 "want to sell",
                 "thinking of selling",
@@ -119,7 +123,8 @@ class SellerIntentDecoder:
             ]
         )
         self.low_urgency = (
-            cfg.intents.motivation.low if cfg and cfg.intents.motivation.low
+            cfg.intents.motivation.low
+            if cfg and cfg.intents.motivation.low
             else [
                 "just curious",
                 "no rush",
@@ -152,7 +157,8 @@ class SellerIntentDecoder:
 
         # Motivation Markers (config-first, hardcoded fallback)
         self.high_motivation = (
-            cfg.intents.motivation.high if cfg and cfg.intents.motivation.high
+            cfg.intents.motivation.high
+            if cfg and cfg.intents.motivation.high
             else [
                 "must sell",
                 "have to move",
@@ -163,7 +169,8 @@ class SellerIntentDecoder:
             ]
         )
         self.medium_motivation = (
-            cfg.intents.motivation.medium if cfg and cfg.intents.motivation.medium
+            cfg.intents.motivation.medium
+            if cfg and cfg.intents.motivation.medium
             else [
                 "want to upgrade",
                 "downsizing",
@@ -172,17 +179,16 @@ class SellerIntentDecoder:
             ]
         )
         self.low_motivation = (
-            cfg.intents.motivation.low if cfg and cfg.intents.motivation.low
+            cfg.intents.motivation.low
+            if cfg and cfg.intents.motivation.low
             else [
-                "just seeing what it\'s worth",
+                "just seeing what it's worth",
                 "curious about the market",
                 "no pressure",
             ]
         )
 
-    def analyze_seller(
-        self, seller_id: str, conversation_history: List[Dict[str, str]]
-    ) -> SellerIntentProfile:
+    def analyze_seller(self, seller_id: str, conversation_history: List[Dict[str, str]]) -> SellerIntentProfile:
         """
         Analyze seller intent from conversation history.
 
@@ -195,11 +201,7 @@ class SellerIntentDecoder:
         """
         try:
             conversation_text = " ".join(
-                [
-                    msg.get("content", "").lower()
-                    for msg in conversation_history
-                    if msg.get("role") == "user"
-                ]
+                [msg.get("content", "").lower() for msg in conversation_history if msg.get("role") == "user"]
             )
 
             condition_anxiety = self._score_condition_anxiety(conversation_text)
@@ -265,14 +267,11 @@ class SellerIntentDecoder:
                 ghl_contact = await self.ghl_client.get_contact(contact_id)
             except Exception as e:
                 logger.warning(
-                    f"Failed to fetch GHL contact {contact_id}: {e}. "
-                    f"Falling back to conversation-only analysis."
+                    f"Failed to fetch GHL contact {contact_id}: {e}. Falling back to conversation-only analysis."
                 )
 
         if ghl_contact is None:
-            logger.info(
-                f"No GHL data for seller {contact_id}, using conversation-only analysis"
-            )
+            logger.info(f"No GHL data for seller {contact_id}, using conversation-only analysis")
             return self.analyze_seller(contact_id, conversation_history)
 
         profile = self.analyze_seller(contact_id, conversation_history)
@@ -283,13 +282,10 @@ class SellerIntentDecoder:
                 "custom_fields": ghl_contact.custom_fields or {},
                 "source": ghl_contact.source,
                 "date_added": ghl_contact.created_at,
-                "last_activity": ghl_contact.last_activity_at
-                or ghl_contact.updated_at,
+                "last_activity": ghl_contact.last_activity_at or ghl_contact.updated_at,
             }
         except Exception as e:
-            logger.warning(
-                f"Error extracting GHL data for seller {contact_id}: {e}"
-            )
+            logger.warning(f"Error extracting GHL data for seller {contact_id}: {e}")
             return profile
 
         return self._apply_ghl_seller_boosts(profile, ghl_data)
@@ -481,14 +477,9 @@ class SellerIntentDecoder:
     def _extract_key_insights(self, text: str) -> Dict[str, Any]:
         """Extract key insights from conversation."""
         return {
-            "mentions_condition": any(
-                m in text
-                for m in self.high_condition_anxiety + self.medium_condition_anxiety
-            ),
+            "mentions_condition": any(m in text for m in self.high_condition_anxiety + self.medium_condition_anxiety),
             "has_valuation_source": any(
-                m in text
-                for m in self.high_valuation_confidence
-                + self.medium_valuation_confidence
+                m in text for m in self.high_valuation_confidence + self.medium_valuation_confidence
             ),
             "shows_urgency": any(m in text for m in self.immediate_urgency),
             "is_motivated": any(m in text for m in self.high_motivation),

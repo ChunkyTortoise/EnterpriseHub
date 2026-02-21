@@ -1,4 +1,5 @@
 """Tests for enterprise features: auth, multi-tenancy, and usage metering."""
+
 import os
 import sys
 
@@ -12,6 +13,7 @@ from enterprise.usage_metering import UsageMetering, UsageRecord
 from fastapi import HTTPException
 
 # -- API Key Auth -----------------------------------------------------------
+
 
 class TestAPIKeyAuth:
     def test_api_key_auth_valid(self):
@@ -34,11 +36,13 @@ class TestAPIKeyAuth:
 
 # -- JWT Auth ---------------------------------------------------------------
 
+
 class TestJWTAuth:
     def test_jwt_auth_skip_if_unavailable(self):
         """If python-jose is not installed, JWTAuth raises 501."""
         try:
             from jose import jwt as jose_jwt
+
             # jose IS installed -- test with a valid token
             secret = "test-secret"
             token = jose_jwt.encode({"sub": "tenant-abc"}, secret, algorithm="HS256")
@@ -56,6 +60,7 @@ class TestJWTAuth:
         auth = JWTAuth()
         try:
             from jose import jwt as jose_jwt
+
             with pytest.raises(HTTPException) as exc_info:
                 auth.validate(None)
             assert exc_info.value.status_code == 401
@@ -74,6 +79,7 @@ class TestJWTAuth:
 
 
 # -- Multi-Tenant Document Store --------------------------------------------
+
 
 class TestTenantDocumentStore:
     def test_multi_tenant_add_and_get(self):
@@ -114,6 +120,7 @@ class TestTenantDocumentStore:
 
 
 # -- Usage Metering ---------------------------------------------------------
+
 
 class TestUsageMetering:
     def test_usage_record_query(self):

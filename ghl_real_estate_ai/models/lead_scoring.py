@@ -91,17 +91,17 @@ class LeadIntentProfile(BaseModel):
         0.0,
         ge=0.0,
         le=1.0,
-        description="Handoff routing confidence for buyer bot (0.0-1.0 scale, 0.7+ triggers handoff)"
+        description="Handoff routing confidence for buyer bot (0.0-1.0 scale, 0.7+ triggers handoff)",
     )
     seller_intent_confidence: float = Field(
         0.0,
         ge=0.0,
         le=1.0,
-        description="Handoff routing confidence for seller bot (0.0-1.0 scale, 0.7+ triggers handoff)"
+        description="Handoff routing confidence for seller bot (0.0-1.0 scale, 0.7+ triggers handoff)",
     )
     detected_intent_phrases: List[str] = Field(
         default_factory=list,
-        description="Phrases that triggered buyer/seller intent detection (e.g., 'want to buy', 'sell my house')"
+        description="Phrases that triggered buyer/seller intent detection (e.g., 'want to buy', 'sell my house')",
     )
 
 
@@ -124,9 +124,7 @@ class SellerIntentProfile(BaseModel):
 
     # Analysis Context
     conversation_turns: int = Field(0, description="Number of conversation turns analyzed")
-    key_insights: Dict[str, Any] = Field(
-        default_factory=dict, description="Key seller insights (boolean flags)"
-    )
+    key_insights: Dict[str, Any] = Field(default_factory=dict, description="Key seller insights (boolean flags)")
     next_qualification_step: str = Field("motivation", description="Next step in qualification process")
 
 
@@ -154,7 +152,5 @@ class BuyerIntentProfile(BaseModel):
 
     # Analysis Context
     conversation_turns: int = Field(..., description="Number of conversation turns analyzed")
-    key_insights: Dict[str, Any] = Field(
-        default_factory=dict, description="Key buyer insights (boolean flags)"
-    )
+    key_insights: Dict[str, Any] = Field(default_factory=dict, description="Key buyer insights (boolean flags)")
     next_qualification_step: str = Field(..., description="Next step in qualification process")

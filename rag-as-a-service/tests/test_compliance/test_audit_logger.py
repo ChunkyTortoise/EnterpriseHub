@@ -1,9 +1,10 @@
 """Tests for audit logging."""
 
-import pytest
 from unittest.mock import AsyncMock
 
-from rag_service.compliance.audit_logger import AuditLogger, AuditEntry
+import pytest
+
+from rag_service.compliance.audit_logger import AuditEntry, AuditLogger
 
 
 @pytest.fixture
@@ -94,15 +95,9 @@ class TestAuditLogger:
     async def test_query_logs_by_tenant(self, audit_logger_no_db):
         """Test querying logs filtered by tenant."""
         # Arrange
-        await audit_logger_no_db.log(
-            tenant_id="tenant-1", action="action1", resource_type="type1"
-        )
-        await audit_logger_no_db.log(
-            tenant_id="tenant-2", action="action2", resource_type="type2"
-        )
-        await audit_logger_no_db.log(
-            tenant_id="tenant-1", action="action3", resource_type="type3"
-        )
+        await audit_logger_no_db.log(tenant_id="tenant-1", action="action1", resource_type="type1")
+        await audit_logger_no_db.log(tenant_id="tenant-2", action="action2", resource_type="type2")
+        await audit_logger_no_db.log(tenant_id="tenant-1", action="action3", resource_type="type3")
 
         # Act
         results = await audit_logger_no_db.query_logs(tenant_id="tenant-1")
@@ -174,9 +169,7 @@ class TestAuditLogger:
     async def test_clear_buffer(self, audit_logger_no_db):
         """Test clearing the audit buffer."""
         # Arrange
-        await audit_logger_no_db.log(
-            tenant_id="tenant-1", action="test", resource_type="test"
-        )
+        await audit_logger_no_db.log(tenant_id="tenant-1", action="test", resource_type="test")
         assert len(audit_logger_no_db.get_buffered_entries()) == 1
 
         # Act
@@ -323,9 +316,7 @@ class TestAuditLoggerIntegration:
         )
 
         # Assert
-        logs = await audit_logger_no_db.query_logs(
-            tenant_id="tenant-1", resource_type="document"
-        )
+        logs = await audit_logger_no_db.query_logs(tenant_id="tenant-1", resource_type="document")
         assert len(logs) == 3
         actions = [e.action for e in logs]
         assert "document.upload" in actions

@@ -27,6 +27,7 @@ class AgentCard(BaseModel):
         endpoints: API endpoints for the agent.
         metadata: Additional metadata.
     """
+
     name: str
     description: str = ""
     version: str = "1.0.0"

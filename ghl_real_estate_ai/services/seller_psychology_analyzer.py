@@ -479,7 +479,10 @@ class SellerPsychologyAnalyzer:
         return max(0, min(100, base_score))
 
     def _calculate_financial_pressure(
-        self, motivation_analysis: MotivationAnalysis, urgency_analysis: UrgencyAnalysis, behavioral_analysis: BehavioralAnalysis
+        self,
+        motivation_analysis: MotivationAnalysis,
+        urgency_analysis: UrgencyAnalysis,
+        behavioral_analysis: BehavioralAnalysis,
     ) -> float:
         """Calculate financial pressure score (0-100)"""
 
@@ -640,8 +643,7 @@ class SellerPsychologyAnalyzer:
             detected_signals = []
 
         logger.info(
-            f"Seller classified as {persona_type} (confidence: {confidence:.2f}, "
-            f"signals: {len(detected_signals)})"
+            f"Seller classified as {persona_type} (confidence: {confidence:.2f}, signals: {len(detected_signals)})"
         )
 
         return {
@@ -678,11 +680,7 @@ class SellerPsychologyAnalyzer:
             }
 
         # Extract user messages only
-        user_messages = [
-            msg.get("content", "")
-            for msg in conversation_history
-            if msg.get("role") == "user"
-        ]
+        user_messages = [msg.get("content", "") for msg in conversation_history if msg.get("role") == "user"]
 
         if not user_messages:
             return {
@@ -743,8 +741,7 @@ class SellerPsychologyAnalyzer:
             trend = "stable"
 
         logger.info(
-            f"PCS recalculation: {current_pcs:.1f} → {updated_pcs:.1f} "
-            f"(Δ{pcs_adjustment:+.1f}, trend: {trend})"
+            f"PCS recalculation: {current_pcs:.1f} → {updated_pcs:.1f} (Δ{pcs_adjustment:+.1f}, trend: {trend})"
         )
 
         return {

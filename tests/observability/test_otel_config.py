@@ -46,9 +46,7 @@ class TestSetupObservabilityDisabled:
 
         with patch.dict("sys.modules", {"opentelemetry": None}):
             # Force ImportError by making the import fail
-            with patch(
-                "ghl_real_estate_ai.observability.otel_config.setup_observability"
-            ) as mock_setup:
+            with patch("ghl_real_estate_ai.observability.otel_config.setup_observability") as mock_setup:
                 # Simulate what happens when import fails
                 mock_setup.return_value = False
                 result = mock_setup()
@@ -233,18 +231,14 @@ class TestAutoInstrumentGracefulDegradation:
 
     def test_asyncpg_instrument_with_mock_import_error(self):
         """asyncpg auto-instrument swallows ImportError when package missing."""
-        with patch.dict(
-            "sys.modules", {"opentelemetry.instrumentation.asyncpg": None}
-        ):
+        with patch.dict("sys.modules", {"opentelemetry.instrumentation.asyncpg": None}):
             from ghl_real_estate_ai.observability import otel_config
 
             otel_config._auto_instrument_asyncpg()
 
     def test_redis_instrument_with_mock_import_error(self):
         """Redis auto-instrument swallows ImportError when package missing."""
-        with patch.dict(
-            "sys.modules", {"opentelemetry.instrumentation.redis": None}
-        ):
+        with patch.dict("sys.modules", {"opentelemetry.instrumentation.redis": None}):
             from ghl_real_estate_ai.observability import otel_config
 
             otel_config._auto_instrument_redis()

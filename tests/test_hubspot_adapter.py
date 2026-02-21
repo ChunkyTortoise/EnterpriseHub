@@ -218,9 +218,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio()
     async def test_auth_failure(self, adapter: HubSpotAdapter):
         mock_resp = _mock_response(401, text="Unauthorized")
-        with patch(
-            "ghl_real_estate_ai.services.crm.hubspot_adapter.httpx.AsyncClient"
-        ) as mock_client_cls:
+        with patch("ghl_real_estate_ai.services.crm.hubspot_adapter.httpx.AsyncClient") as mock_client_cls:
             mock_instance = AsyncMock()
             mock_instance.request.return_value = mock_resp
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)
@@ -235,9 +233,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio()
     async def test_server_error(self, adapter: HubSpotAdapter):
         mock_resp = _mock_response(500, text="Internal Server Error")
-        with patch(
-            "ghl_real_estate_ai.services.crm.hubspot_adapter.httpx.AsyncClient"
-        ) as mock_client_cls:
+        with patch("ghl_real_estate_ai.services.crm.hubspot_adapter.httpx.AsyncClient") as mock_client_cls:
             mock_instance = AsyncMock()
             mock_instance.request.return_value = mock_resp
             mock_instance.__aenter__ = AsyncMock(return_value=mock_instance)

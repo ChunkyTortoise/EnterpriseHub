@@ -43,10 +43,10 @@ if __name__ == "__main__":
         # Case 2: Running via "streamlit run app.py"
         # Execute the target script in the current process to proxy it
         # Update __file__ so the inner script resolves relative paths correctly
-        original_file = sys.modules['__main__'].__file__
-        sys.modules['__main__'].__file__ = str(TARGET_APP)
+        original_file = sys.modules["__main__"].__file__
+        sys.modules["__main__"].__file__ = str(TARGET_APP)
 
         try:
             runpy.run_path(str(TARGET_APP), run_name="__main__")
         finally:
-            sys.modules['__main__'].__file__ = original_file
+            sys.modules["__main__"].__file__ = original_file

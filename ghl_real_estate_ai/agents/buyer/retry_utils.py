@@ -42,9 +42,7 @@ NON_RETRYABLE_EXCEPTIONS = (BuyerIntentAnalysisError, ComplianceValidationError)
 
 
 async def async_retry_with_backoff(
-    coro_factory: Callable[[], T],
-    retry_config: RetryConfig = None,
-    context_label: str = "operation"
+    coro_factory: Callable[[], T], retry_config: RetryConfig = None, context_label: str = "operation"
 ) -> T:
     """
     Retry an async operation with exponential backoff and jitter.
@@ -72,7 +70,7 @@ async def async_retry_with_backoff(
         except RETRYABLE_EXCEPTIONS as e:
             last_exception = e
             if attempt < config.max_retries:
-                backoff_ms = config.initial_backoff_ms * (config.exponential_base ** attempt)
+                backoff_ms = config.initial_backoff_ms * (config.exponential_base**attempt)
                 jitter = backoff_ms * config.jitter_factor * (2 * random.random() - 1)
                 sleep_seconds = (backoff_ms + jitter) / 1000.0
                 logger.warning(

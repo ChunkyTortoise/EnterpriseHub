@@ -1,6 +1,7 @@
 """
 Lead Router for classifying and routing leads based on intent signals.
 """
+
 from typing import TYPE_CHECKING, List, Literal
 
 from ghl_real_estate_ai.agents.lead.constants import BUYING_SIGNALS, MILESTONE_KEYWORDS
@@ -110,6 +111,7 @@ class LeadRouter:
     def has_price_keywords(message: str) -> bool:
         """Check if message contains price-related keywords."""
         from ghl_real_estate_ai.agents.lead.constants import PRICE_KEYWORDS
+
         msg_lower = message.lower()
         return any(kw in msg_lower for kw in PRICE_KEYWORDS)
 

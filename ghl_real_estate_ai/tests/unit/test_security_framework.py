@@ -75,6 +75,7 @@ def security():
 # JWT tests
 # ---------------------------------------------------------------------------
 
+
 class TestJWTGeneration:
     def test_generate_jwt_token_default_role(self, security):
         token = security.generate_jwt_token("user-123")
@@ -132,9 +133,7 @@ class TestJWTValidation:
             "iss": "service6-lead-engine",
             "aud": "service6-api",
         }
-        token = pyjwt.encode(
-            expired_payload, security.config.jwt_secret_key, algorithm=security.config.jwt_algorithm
-        )
+        token = pyjwt.encode(expired_payload, security.config.jwt_secret_key, algorithm=security.config.jwt_algorithm)
         with pytest.raises(HTTPException) as exc_info:
             await security.validate_jwt_token(token)
         assert exc_info.value.status_code == 401
@@ -167,6 +166,7 @@ class TestJWTValidation:
 # ---------------------------------------------------------------------------
 # Webhook signature verification tests
 # ---------------------------------------------------------------------------
+
 
 class TestWebhookVerification:
     def test_ghl_valid_hmac_signature(self, security):
@@ -235,6 +235,7 @@ class TestWebhookVerification:
 # Input sanitization tests
 # ---------------------------------------------------------------------------
 
+
 class TestSanitization:
     def test_sanitize_html_tags(self, security):
         result = security.sanitize_input("<script>alert('xss')</script>")
@@ -276,6 +277,7 @@ class TestSanitization:
 # Validation tests
 # ---------------------------------------------------------------------------
 
+
 class TestValidation:
     def test_valid_phone_numbers(self, security):
         assert security.validate_phone_number("+1-909-555-1234") is True
@@ -300,6 +302,7 @@ class TestValidation:
 # CORS tests
 # ---------------------------------------------------------------------------
 
+
 class TestCORS:
     def test_allowed_origin_exact(self, security):
         assert security.is_allowed_origin("https://app.gohighlevel.com") is True
@@ -318,6 +321,7 @@ class TestCORS:
 # Security headers tests
 # ---------------------------------------------------------------------------
 
+
 class TestSecurityHeaders:
     def test_add_security_headers(self, security):
         response = MagicMock()
@@ -331,6 +335,7 @@ class TestSecurityHeaders:
 # ---------------------------------------------------------------------------
 # Client IP extraction tests
 # ---------------------------------------------------------------------------
+
 
 class TestClientIP:
     def test_forwarded_for(self, security):

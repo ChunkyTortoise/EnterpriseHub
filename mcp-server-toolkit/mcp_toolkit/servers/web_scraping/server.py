@@ -5,12 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 from mcp_toolkit.framework.base_server import EnhancedMCP
-from mcp_toolkit.servers.web_scraping.scraper import WebScraper
 from mcp_toolkit.servers.web_scraping.extractor import (
     DataExtractor,
-    LLMProvider,
     DefaultLLMProvider,
+    LLMProvider,
 )
+from mcp_toolkit.servers.web_scraping.scraper import WebScraper
 
 mcp = EnhancedMCP("web-scraping")
 
@@ -94,13 +94,9 @@ async def extract_data(
         return f"Error scraping {url}: {error_msg}"
 
     if schema:
-        result = await _extractor.extract_with_schema(
-            page.text, schema, source_url=url
-        )
+        result = await _extractor.extract_with_schema(page.text, schema, source_url=url)
     else:
-        result = await _extractor.extract_freeform(
-            page.text, description, source_url=url
-        )
+        result = await _extractor.extract_freeform(page.text, description, source_url=url)
 
     if not result.success:
         return f"Extraction error: {result.error}"

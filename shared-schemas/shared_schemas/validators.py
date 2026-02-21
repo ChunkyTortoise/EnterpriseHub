@@ -1,6 +1,6 @@
 """Cross-field validators and utility validation functions."""
 
-from shared_schemas.tenant import TenantLimits, TenantTier, TIER_LIMITS
+from shared_schemas.tenant import TIER_LIMITS, TenantLimits, TenantTier
 
 
 def validate_tenant_limits(tier: TenantTier, requested_limits: TenantLimits) -> list[str]:

@@ -119,7 +119,9 @@ class TextChunker:
                         end_char=current_start + len(chunk_text),
                     )
                 )
-                overlap_text = " ".join(current_sentences[-2:]) if len(current_sentences) > 1 else ""
+                overlap_text = (
+                    " ".join(current_sentences[-2:]) if len(current_sentences) > 1 else ""
+                )
                 current_start += len(chunk_text) - len(overlap_text)
                 current_sentences = current_sentences[-2:] if len(current_sentences) > 1 else []
                 current_len = sum(len(s) for s in current_sentences)

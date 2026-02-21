@@ -10,6 +10,6 @@ from ghl_integration.handlers.seller_handlers import get_handler as get_seller_h
 
 __all__ = [
     "get_lead_handler",
-    "get_seller_handler", 
+    "get_seller_handler",
     "get_buyer_handler",
 ]

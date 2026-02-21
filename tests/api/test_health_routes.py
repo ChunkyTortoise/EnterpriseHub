@@ -58,6 +58,7 @@ def _cleanup_overrides():
 # GET /api/health/ — Basic liveness probe
 # ---------------------------------------------------------------------------
 
+
 class TestBasicHealth:
     """Tests for the basic health endpoint."""
 
@@ -170,6 +171,7 @@ class TestBasicHealth:
 # GET /api/health/live — Kubernetes liveness probe
 # ---------------------------------------------------------------------------
 
+
 class TestLivenessProbe:
     """Tests for the liveness probe endpoint."""
 
@@ -194,6 +196,7 @@ class TestLivenessProbe:
 # ---------------------------------------------------------------------------
 # GET /api/health/ready — Readiness probe (auth required)
 # ---------------------------------------------------------------------------
+
 
 class TestReadinessProbe:
     """Tests for the readiness probe endpoint."""
@@ -241,6 +244,7 @@ class TestReadinessProbe:
 # ---------------------------------------------------------------------------
 # GET /api/health/status — Human-readable status
 # ---------------------------------------------------------------------------
+
 
 class TestServiceStatus:
     """Tests for the human-readable service status endpoint."""
@@ -300,6 +304,7 @@ class TestServiceStatus:
 # GET /api/health/metrics — Performance metrics (auth required)
 # ---------------------------------------------------------------------------
 
+
 class TestPerformanceMetrics:
     """Tests for the performance metrics endpoint."""
 
@@ -340,6 +345,7 @@ class TestPerformanceMetrics:
 # ---------------------------------------------------------------------------
 # GET /api/health/dependencies — Dependency status (auth required)
 # ---------------------------------------------------------------------------
+
 
 class TestDependencyStatus:
     """Tests for the dependency status endpoint."""

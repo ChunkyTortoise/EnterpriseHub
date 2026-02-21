@@ -16,8 +16,6 @@ from src.vector_store.in_memory_store import InMemoryVectorStore
 
 
 @pytest.mark.integration
-
-
 def _make_chunk(content: str, dim: int = 8) -> DocumentChunk:
     """Create a chunk with a deterministic embedding based on content."""
     doc_id = uuid4()

@@ -18,6 +18,7 @@ pytestmark = pytest.mark.unit
 # Fixtures & helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_client():
     from ghl_real_estate_ai.api.main import app
 
@@ -87,7 +88,12 @@ def _inbound_webhook_payload(
         "contactId": contact_id,
         "locationId": location_id,
         "message": {"type": "SMS", "body": message, "direction": direction},
-        "contact": {"contactId": contact_id, "firstName": "Test", "lastName": "Lead", "tags": tags or ["Needs Qualifying"]},
+        "contact": {
+            "contactId": contact_id,
+            "firstName": "Test",
+            "lastName": "Lead",
+            "tags": tags or ["Needs Qualifying"],
+        },
     }
 
 
@@ -105,8 +111,8 @@ def _tag_webhook_payload(tag="Needs Qualifying", contact_id="contact-123", locat
 # POST /api/ghl/webhook
 # ---------------------------------------------------------------------------
 
-class TestHandleGHLWebhook:
 
+class TestHandleGHLWebhook:
     def test_webhook_ignores_outbound_messages(self):
         payload = _inbound_webhook_payload(direction="outbound")
         p1, p2, p3, p4 = _all_webhook_mocks()
@@ -120,7 +126,10 @@ class TestHandleGHLWebhook:
         payload = _inbound_webhook_payload(tags=["Random-Tag"])
         p1, p2, p3, p4 = _all_webhook_mocks()
         with (
-            p1, p2, p3, p4,
+            p1,
+            p2,
+            p3,
+            p4,
             patch("ghl_real_estate_ai.api.routes.webhook.settings") as mock_s,
             patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings") as mock_j,
         ):
@@ -162,7 +171,12 @@ class TestHandleGHLWebhook:
         assert resp.status_code == 422
 
     def test_webhook_missing_message_body_returns_422(self):
-        payload = {"type": "InboundMessage", "contactId": "c-1", "locationId": "l-1", "message": {"type": "SMS", "direction": "inbound"}}
+        payload = {
+            "type": "InboundMessage",
+            "contactId": "c-1",
+            "locationId": "l-1",
+            "message": {"type": "SMS", "direction": "inbound"},
+        }
         with _bypass_webhook_verification():
             resp = _make_client().post("/api/ghl/webhook", json=payload)
         assert resp.status_code == 422
@@ -172,8 +186,8 @@ class TestHandleGHLWebhook:
 # POST /api/ghl/tag-webhook
 # ---------------------------------------------------------------------------
 
-class TestHandleGHLTagWebhook:
 
+class TestHandleGHLTagWebhook:
     def test_tag_webhook_ignores_non_qualifying_tag(self):
         payload = _tag_webhook_payload(tag="Hot-Lead")
         p1, p2, p3, p4 = _all_webhook_mocks()
@@ -195,7 +209,10 @@ class TestHandleGHLTagWebhook:
             patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", mock_conv),
             _mock_ghl_client(),
             _mock_analytics(),
-            patch("ghl_real_estate_ai.api.routes.webhook._get_tenant_ghl_client", new=AsyncMock(return_value=MagicMock(send_message=AsyncMock()))),
+            patch(
+                "ghl_real_estate_ai.api.routes.webhook._get_tenant_ghl_client",
+                new=AsyncMock(return_value=MagicMock(send_message=AsyncMock())),
+            ),
         ):
             resp = _make_client().post("/api/ghl/tag-webhook", json=payload)
         assert resp.status_code == 200
@@ -206,7 +223,12 @@ class TestHandleGHLTagWebhook:
         mock_conv = MagicMock()
         mock_conv.get_context = AsyncMock(return_value={"initial_outreach_sent": True})
 
-        with _bypass_webhook_verification(), patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", mock_conv), _mock_ghl_client(), _mock_analytics():
+        with (
+            _bypass_webhook_verification(),
+            patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", mock_conv),
+            _mock_ghl_client(),
+            _mock_analytics(),
+        ):
             resp = _make_client().post("/api/ghl/tag-webhook", json=payload)
         assert resp.status_code == 200
         assert "already sent" in resp.json()["message"].lower()
@@ -216,7 +238,12 @@ class TestHandleGHLTagWebhook:
         mock_conv = MagicMock()
         mock_conv.get_context = AsyncMock(return_value={"conversation_history": [{"role": "user", "content": "hi"}]})
 
-        with _bypass_webhook_verification(), patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", mock_conv), _mock_ghl_client(), _mock_analytics():
+        with (
+            _bypass_webhook_verification(),
+            patch("ghl_real_estate_ai.api.routes.webhook.conversation_manager", mock_conv),
+            _mock_ghl_client(),
+            _mock_analytics(),
+        ):
             resp = _make_client().post("/api/ghl/tag-webhook", json=payload)
         assert resp.status_code == 200
         assert "already started" in resp.json()["message"].lower()
@@ -231,8 +258,8 @@ class TestHandleGHLTagWebhook:
 # Opt-out phrases
 # ---------------------------------------------------------------------------
 
-class TestOptOutPhrases:
 
+class TestOptOutPhrases:
     @pytest.mark.parametrize("phrase", ["stop", "unsubscribe", "remove me", "not interested", "opt out", "no thanks"])
     def test_opt_out_phrases_recognized(self, phrase):
         payload = _inbound_webhook_payload(message=phrase, tags=["Needs Qualifying"])

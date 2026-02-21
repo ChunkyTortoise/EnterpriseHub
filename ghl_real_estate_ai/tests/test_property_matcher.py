@@ -37,7 +37,7 @@ def test_find_matches_location():
         neighborhood = addr.get("neighborhood", "")
     else:
         neighborhood = first_listing.get("neighborhood", "")
-    
+
     if neighborhood:
         matches = matcher.find_matches({"location": neighborhood}, limit=1)
         assert len(matches) >= 1

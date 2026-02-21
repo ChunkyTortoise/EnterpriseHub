@@ -50,9 +50,7 @@ class ConversationRateLimiter:
             minute_ago = now - 60
             minute_count = sum(1 for t in timestamps if t > minute_ago)
             if minute_count >= self.max_per_minute:
-                oldest_in_window = min(
-                    (t for t in timestamps if t > minute_ago), default=now
-                )
+                oldest_in_window = min((t for t in timestamps if t > minute_ago), default=now)
                 retry_after = int(oldest_in_window + 60 - now) + 1
                 return RateLimitResult(
                     allowed=False,
@@ -64,9 +62,7 @@ class ConversationRateLimiter:
             hour_ago = now - 3600
             hour_count = sum(1 for t in timestamps if t > hour_ago)
             if hour_count >= self.max_per_hour:
-                oldest_in_window = min(
-                    (t for t in timestamps if t > hour_ago), default=now
-                )
+                oldest_in_window = min((t for t in timestamps if t > hour_ago), default=now)
                 retry_after = int(oldest_in_window + 3600 - now) + 1
                 return RateLimitResult(
                     allowed=False,
@@ -78,9 +74,7 @@ class ConversationRateLimiter:
             day_ago = now - 86400
             day_count = sum(1 for t in timestamps if t > day_ago)
             if day_count >= self.max_per_day:
-                oldest_in_window = min(
-                    (t for t in timestamps if t > day_ago), default=now
-                )
+                oldest_in_window = min((t for t in timestamps if t > day_ago), default=now)
                 retry_after = int(oldest_in_window + 86400 - now) + 1
                 return RateLimitResult(
                     allowed=False,

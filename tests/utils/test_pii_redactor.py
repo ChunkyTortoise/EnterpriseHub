@@ -40,9 +40,7 @@ class TestPIIRedactor:
 
     def test_redact_all_mixed(self):
         """Text with phone, email, and SSN all redacted in a single pass."""
-        text = (
-            "Contact John at 555-123-4567, email john@example.com, SSN 123-45-6789."
-        )
+        text = "Contact John at 555-123-4567, email john@example.com, SSN 123-45-6789."
         result = PIIRedactor.redact_all(text)
 
         assert "555-123-4567" not in result

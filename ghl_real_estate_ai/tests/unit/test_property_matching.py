@@ -88,12 +88,8 @@ def _make_lead_context(**overrides) -> LeadScoreBreakdown:
 def service():
     """Create a JorgePropertyMatchingService with mocked dependencies."""
     with (
-        patch(
-            "ghl_real_estate_ai.services.jorge_property_matching_service.EnhancedSmartLeadScorer"
-        ),
-        patch(
-            "ghl_real_estate_ai.services.jorge_property_matching_service.ClaudeAssistant"
-        ),
+        patch("ghl_real_estate_ai.services.jorge_property_matching_service.EnhancedSmartLeadScorer"),
+        patch("ghl_real_estate_ai.services.jorge_property_matching_service.ClaudeAssistant"),
     ):
         svc = JorgePropertyMatchingService()
     return svc
@@ -103,10 +99,16 @@ def service():
 def mock_inventory():
     """Standard set of 4 properties spanning different price/size/location."""
     return [
-        _make_property(id="cheap", price=250000, bedrooms=2, bathrooms=1.5, zip_code="91730", neighborhood="Central Rancho"),
+        _make_property(
+            id="cheap", price=250000, bedrooms=2, bathrooms=1.5, zip_code="91730", neighborhood="Central Rancho"
+        ),
         _make_property(id="mid", price=500000, bedrooms=3, bathrooms=2.0, zip_code="91737", neighborhood="Alta Loma"),
-        _make_property(id="upper", price=700000, bedrooms=4, bathrooms=3.0, zip_code="91739", neighborhood="Victoria Arbors"),
-        _make_property(id="luxury", price=950000, bedrooms=5, bathrooms=4.0, zip_code="91737", neighborhood="Etiwanda Heights"),
+        _make_property(
+            id="upper", price=700000, bedrooms=4, bathrooms=3.0, zip_code="91739", neighborhood="Victoria Arbors"
+        ),
+        _make_property(
+            id="luxury", price=950000, bedrooms=5, bathrooms=4.0, zip_code="91737", neighborhood="Etiwanda Heights"
+        ),
     ]
 
 

@@ -101,16 +101,12 @@ class TestFreshnessCheck:
 
 class TestCompleteness:
     def test_all_fields_present(self, checker):
-        report = checker.check_completeness(
-            {"name": "John", "email": "j@t.com"}, ["name", "email"]
-        )
+        report = checker.check_completeness({"name": "John", "email": "j@t.com"}, ["name", "email"])
         assert report.score == 1.0
         assert report.failed == 0
 
     def test_missing_fields(self, checker):
-        report = checker.check_completeness(
-            {"name": "John"}, ["name", "email", "phone"]
-        )
+        report = checker.check_completeness({"name": "John"}, ["name", "email", "phone"])
         assert report.score == pytest.approx(1 / 3, abs=0.01)
         assert report.failed == 2
 

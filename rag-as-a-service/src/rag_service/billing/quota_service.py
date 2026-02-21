@@ -92,9 +92,7 @@ def get_tier_quota(tier: str) -> TierQuota:
     return TIER_QUOTAS.get(tier, TIER_QUOTAS["starter"])
 
 
-async def check_quota_or_raise(
-    usage_tracker, tenant_id: str, tier: str, resource: str
-) -> None:
+async def check_quota_or_raise(usage_tracker, tenant_id: str, tier: str, resource: str) -> None:
     """Check quota and raise HTTPException if exceeded. Use in route handlers."""
     within_quota = await usage_tracker.check_quota(tenant_id, tier, resource)
     if not within_quota:

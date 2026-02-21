@@ -38,8 +38,11 @@ class JobScheduler:
             raise ValueError(f"Invalid cron expression: {cron_expression}")
 
         job = ScheduledJob(
-            job_id=job_id, name=name, cron_expression=cron_expression,
-            callback=callback, metadata=metadata or {},
+            job_id=job_id,
+            name=name,
+            cron_expression=cron_expression,
+            callback=callback,
+            metadata=metadata or {},
         )
         self._jobs[job_id] = job
         return job

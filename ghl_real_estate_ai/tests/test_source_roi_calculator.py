@@ -211,6 +211,7 @@ async def test_cost_per_lead_calculations(calculator):
 @pytest.mark.asyncio
 async def test_recommendations_with_negative_roi(mock_tracker, mock_db):
     """Test recommendations when sources have negative ROI."""
+
     # Mock tracker with negative ROI source
     async def mock_get_metrics(source_name=None, days=30):
         if source_name:

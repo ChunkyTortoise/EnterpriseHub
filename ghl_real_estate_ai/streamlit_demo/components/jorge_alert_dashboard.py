@@ -109,7 +109,8 @@ def format_alert_row(alert) -> Dict[str, str]:
 
 
 def format_escalation_row(
-    alert, level,
+    alert,
+    level,
 ) -> Dict[str, str]:
     """Format an escalation entry for display.
 
@@ -153,9 +154,7 @@ def render_jorge_alert_dashboard(alerting_service=None) -> None:
     with col1:
         st.metric("Active Alerts", len(active_alerts))
     with col2:
-        critical_count = sum(
-            1 for a in active_alerts if a.severity == "critical"
-        )
+        critical_count = sum(1 for a in active_alerts if a.severity == "critical")
         st.metric("Critical", critical_count)
     with col3:
         st.metric("Escalations", len(escalations))
@@ -163,9 +162,7 @@ def render_jorge_alert_dashboard(alerting_service=None) -> None:
         st.metric("Rules", data["rule_count"])
 
     # Tabs
-    tab_active, tab_history, tab_escalations = st.tabs(
-        ["Active Alerts", "Alert History", "Escalation Monitor"]
-    )
+    tab_active, tab_history, tab_escalations = st.tabs(["Active Alerts", "Alert History", "Escalation Monitor"])
 
     with tab_active:
         _render_active_alerts(active_alerts, alerting_service)
@@ -191,8 +188,7 @@ def _render_active_alerts(alerts: list, alerting_service) -> None:
             cols = st.columns([0.5, 1.5, 3, 1.5, 1])
             with cols[0]:
                 st.markdown(
-                    f"<span style='color:{color};font-size:1.5em'>"
-                    f"{row['severity_emoji']}</span>",
+                    f"<span style='color:{color};font-size:1.5em'>{row['severity_emoji']}</span>",
                     unsafe_allow_html=True,
                 )
             with cols[1]:
@@ -218,13 +214,8 @@ def _acknowledge_alert(alerting_service, alert_id: str) -> None:
 
     loop = asyncio.new_event_loop()
     try:
-        result = loop.run_until_complete(
-            alerting_service.acknowledge_alert(alert_id, acknowledged_by="dashboard_user")
-        )
-        st.success(
-            f"Alert {alert_id} acknowledged "
-            f"({result.get('time_to_ack_seconds', 0):.1f}s after trigger)"
-        )
+        result = loop.run_until_complete(alerting_service.acknowledge_alert(alert_id, acknowledged_by="dashboard_user"))
+        st.success(f"Alert {alert_id} acknowledged ({result.get('time_to_ack_seconds', 0):.1f}s after trigger)")
     except KeyError:
         st.error(f"Alert {alert_id} not found")
     except Exception as e:
@@ -256,13 +247,15 @@ def _render_alert_history(alerts: list) -> None:
     rows = []
     for alert in filtered:
         row = format_alert_row(alert)
-        rows.append({
-            "Severity": f"{row['severity_emoji']} {row['severity']}",
-            "Rule": row["rule_name"],
-            "Message": row["message_preview"],
-            "Triggered": row["triggered_at"],
-            "Status": row["ack_status"],
-        })
+        rows.append(
+            {
+                "Severity": f"{row['severity_emoji']} {row['severity']}",
+                "Rule": row["rule_name"],
+                "Message": row["message_preview"],
+                "Triggered": row["triggered_at"],
+                "Status": row["ack_status"],
+            }
+        )
 
     st.dataframe(rows, use_container_width=True)
 

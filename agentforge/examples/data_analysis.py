@@ -6,6 +6,7 @@ No API keys required — fully self-contained.
 Run:
     python examples/data_analysis.py
 """
+
 import asyncio
 import json
 from dataclasses import dataclass, field
@@ -60,7 +61,11 @@ async def insights_agent(raw_data: str) -> AgentResult:
     best = max(records, key=lambda r: r["revenue"])
     worst = min(records, key=lambda r: r["revenue"])
 
-    growth = ((records[-1]["revenue"] - records[0]["revenue"]) / records[0]["revenue"] * 100) if len(records) > 1 else 0
+    growth = (
+        ((records[-1]["revenue"] - records[0]["revenue"]) / records[0]["revenue"] * 100)
+        if len(records) > 1
+        else 0
+    )
 
     lines = [
         "Data Analysis Report",

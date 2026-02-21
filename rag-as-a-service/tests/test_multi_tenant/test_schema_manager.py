@@ -1,8 +1,9 @@
 """Tests for multi-tenant schema management."""
 
-import pytest
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from rag_service.multi_tenant.schema_manager import SchemaManager
 

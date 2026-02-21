@@ -7,9 +7,7 @@ from shared_infra.rate_limiter import TokenBucketRateLimiter
 
 @pytest.fixture
 def rate_limiter(mock_redis):
-    return TokenBucketRateLimiter(
-        redis=mock_redis, default_max_tokens=10, default_refill_rate=1.0
-    )
+    return TokenBucketRateLimiter(redis=mock_redis, default_max_tokens=10, default_refill_rate=1.0)
 
 
 class TestCheckRateLimit:
@@ -18,9 +16,7 @@ class TestCheckRateLimit:
         assert result is True
 
     async def test_custom_limits(self, rate_limiter):
-        result = await rate_limiter.check_rate_limit(
-            "tenant1", max_tokens=50, refill_rate=5.0
-        )
+        result = await rate_limiter.check_rate_limit("tenant1", max_tokens=50, refill_rate=5.0)
         assert result is True
 
     async def test_per_endpoint_keys(self, rate_limiter):
@@ -41,6 +37,7 @@ class TestGetRemainingTokens:
 
     async def test_partial_bucket(self, rate_limiter, mock_redis):
         import time
+
         mock_redis._hash_store["ratelimit:bucket:t1:default"] = {
             "tokens": "5",
             "last_refill": str(time.time() - 2),

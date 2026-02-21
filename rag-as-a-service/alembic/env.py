@@ -1,17 +1,16 @@
 """Alembic migration environment."""
 
-from logging.config import fileConfig
 import asyncio
+from logging.config import fileConfig
 
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-
+from rag_service.config import get_settings
 from rag_service.models.shared import Base
 from rag_service.models.tenant_models import *  # noqa: F401, F403
-from rag_service.config import get_settings
 
 # Alembic Config object
 config = context.config

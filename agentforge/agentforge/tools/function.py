@@ -73,9 +73,7 @@ def python_type_to_json_schema(python_type: type) -> dict[str, Any]:
             return python_type_to_json_schema(non_none_args[0])
         else:
             # It's a true Union - use anyOf
-            return {
-                "anyOf": [python_type_to_json_schema(arg) for arg in non_none_args]
-            }
+            return {"anyOf": [python_type_to_json_schema(arg) for arg in non_none_args]}
 
     # Handle list[T]
     if origin is list:
@@ -358,11 +356,7 @@ def merge_schemas(
     result = base_schema.copy()
 
     for key, value in override_schema.items():
-        if (
-            key in result
-            and isinstance(result[key], dict)
-            and isinstance(value, dict)
-        ):
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
             result[key] = merge_schemas(result[key], value)
         else:
             result[key] = value

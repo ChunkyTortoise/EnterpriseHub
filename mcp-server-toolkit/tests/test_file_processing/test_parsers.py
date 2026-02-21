@@ -1,7 +1,9 @@
 """Tests for file parsers."""
 
 import json
+
 import pytest
+
 from mcp_toolkit.servers.file_processing.parsers import FileParser
 
 

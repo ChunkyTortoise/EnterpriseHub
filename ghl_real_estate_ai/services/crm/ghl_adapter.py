@@ -141,9 +141,7 @@ class GHLAdapter(CRMProtocol):
         logger.info("Created GHL contact %s", created.id)
         return created
 
-    async def update_contact(
-        self, contact_id: str, updates: dict[str, Any]
-    ) -> CRMContact:
+    async def update_contact(self, contact_id: str, updates: dict[str, Any]) -> CRMContact:
         """Update an existing GHL contact."""
         ghl_key_map = {
             "first_name": "firstName",
@@ -158,9 +156,7 @@ class GHLAdapter(CRMProtocol):
             ghl_key = ghl_key_map.get(key, key)
             payload[ghl_key] = value
 
-        resp = await self._request(
-            "PUT", f"/contacts/{contact_id}", json_body=payload
-        )
+        resp = await self._request("PUT", f"/contacts/{contact_id}", json_body=payload)
         data = resp.json().get("contact", resp.json())
         return self._ghl_to_contact(data)
 
@@ -175,9 +171,7 @@ class GHLAdapter(CRMProtocol):
         data = resp.json().get("contact", resp.json())
         return self._ghl_to_contact(data)
 
-    async def search_contacts(
-        self, query: str, limit: int = 10
-    ) -> list[CRMContact]:
+    async def search_contacts(self, query: str, limit: int = 10) -> list[CRMContact]:
         """Search GHL contacts by query string."""
         params = {
             "locationId": self._location_id,
@@ -191,9 +185,7 @@ class GHLAdapter(CRMProtocol):
             results.append(self._ghl_to_contact(item))
         return results
 
-    async def sync_lead(
-        self, contact: CRMContact, score: int, temperature: str
-    ) -> bool:
+    async def sync_lead(self, contact: CRMContact, score: int, temperature: str) -> bool:
         """Sync lead data: update contact and apply temperature tag."""
         if not contact.id:
             logger.warning("sync_lead called with no contact id")

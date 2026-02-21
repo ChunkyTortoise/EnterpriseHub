@@ -77,37 +77,90 @@ TONE_PROFILES: Dict[str, Dict[str, object]] = {
     "lead": {
         "description": "Professional, formal language, data-driven",
         "keywords": [
-            "market", "data", "analysis", "statistics", "report",
-            "opportunity", "investment", "portfolio", "assessment",
-            "recommend", "evaluate", "metrics", "performance",
-            "professional", "accordingly", "furthermore", "regarding",
+            "market",
+            "data",
+            "analysis",
+            "statistics",
+            "report",
+            "opportunity",
+            "investment",
+            "portfolio",
+            "assessment",
+            "recommend",
+            "evaluate",
+            "metrics",
+            "performance",
+            "professional",
+            "accordingly",
+            "furthermore",
+            "regarding",
         ],
         "anti_keywords": [
-            "awesome", "super", "totally", "gonna", "wanna",
+            "awesome",
+            "super",
+            "totally",
+            "gonna",
+            "wanna",
         ],
     },
     "buyer": {
         "description": "Warm, empathetic, encouraging",
         "keywords": [
-            "exciting", "wonderful", "congratulations", "happy",
-            "understand", "feel", "help", "together", "dream",
-            "home", "perfect", "love", "welcome", "great",
-            "support", "journey", "absolutely", "fantastic",
+            "exciting",
+            "wonderful",
+            "congratulations",
+            "happy",
+            "understand",
+            "feel",
+            "help",
+            "together",
+            "dream",
+            "home",
+            "perfect",
+            "love",
+            "welcome",
+            "great",
+            "support",
+            "journey",
+            "absolutely",
+            "fantastic",
         ],
         "anti_keywords": [
-            "unfortunately", "impossible", "cannot", "denied",
+            "unfortunately",
+            "impossible",
+            "cannot",
+            "denied",
         ],
     },
     "seller": {
         "description": "Confident, assertive, market-savvy",
         "keywords": [
-            "market", "value", "competitive", "advantage", "equity",
-            "demand", "pricing", "strategy", "position", "leverage",
-            "maximize", "strong", "confident", "results", "proven",
-            "negotiate", "offer", "premium", "exclusive",
+            "market",
+            "value",
+            "competitive",
+            "advantage",
+            "equity",
+            "demand",
+            "pricing",
+            "strategy",
+            "position",
+            "leverage",
+            "maximize",
+            "strong",
+            "confident",
+            "results",
+            "proven",
+            "negotiate",
+            "offer",
+            "premium",
+            "exclusive",
         ],
         "anti_keywords": [
-            "maybe", "perhaps", "uncertain", "possibly", "might",
+            "maybe",
+            "perhaps",
+            "uncertain",
+            "possibly",
+            "might",
         ],
     },
 }
@@ -166,10 +219,25 @@ class ResponseEvaluator:
 
         # 2. Transition words
         transition_words = {
-            "additionally", "also", "furthermore", "moreover", "however",
-            "therefore", "consequently", "meanwhile", "specifically",
-            "for example", "in addition", "as a result", "on the other hand",
-            "first", "second", "third", "finally", "next", "then",
+            "additionally",
+            "also",
+            "furthermore",
+            "moreover",
+            "however",
+            "therefore",
+            "consequently",
+            "meanwhile",
+            "specifically",
+            "for example",
+            "in addition",
+            "as a result",
+            "on the other hand",
+            "first",
+            "second",
+            "third",
+            "finally",
+            "next",
+            "then",
         }
         lower_text = text.lower()
         transition_count = sum(1 for tw in transition_words if tw in lower_text)
@@ -178,11 +246,7 @@ class ResponseEvaluator:
         # 3. No duplicate sentences
         unique_ratio = len(set(s.lower() for s in sentences)) / len(sentences)
 
-        coherence = (
-            length_score * 0.35
-            + transition_score * 0.30
-            + unique_ratio * 0.35
-        )
+        coherence = length_score * 0.35 + transition_score * 0.30 + unique_ratio * 0.35
         return round(max(0.0, min(1.0, coherence)), 4)
 
     # ── Relevance ──────────────────────────────────────────────────────
@@ -249,10 +313,7 @@ class ResponseEvaluator:
                 return 1.0
 
             response_lower = response.lower()
-            covered = sum(
-                1 for kp in key_points
-                if kp.lower() in response_lower
-            )
+            covered = sum(1 for kp in key_points if kp.lower() in response_lower)
             return round(covered / len(key_points), 4)
 
         # Heuristic: longer, structured responses are more complete
@@ -394,12 +455,7 @@ class ResponseEvaluator:
         completeness = self.score_completeness(query, response, key_points)
         tone_match = self.score_tone(response, bot_type)
 
-        overall = (
-            coherence * 0.25
-            + relevance * 0.30
-            + completeness * 0.25
-            + tone_match * 0.20
-        )
+        overall = coherence * 0.25 + relevance * 0.30 + completeness * 0.25 + tone_match * 0.20
 
         return ResponseScore(
             coherence=coherence,
@@ -421,14 +477,69 @@ class ResponseEvaluator:
     def _tokenize(text: str) -> set[str]:
         """Lowercase tokenization with stopword removal."""
         stopwords = {
-            "a", "an", "the", "is", "are", "was", "were", "be", "been",
-            "being", "have", "has", "had", "do", "does", "did", "will",
-            "would", "could", "should", "may", "might", "shall", "can",
-            "to", "of", "in", "for", "on", "with", "at", "by", "from",
-            "as", "into", "about", "between", "through", "during",
-            "and", "but", "or", "nor", "not", "so", "yet", "both",
-            "i", "me", "my", "we", "our", "you", "your", "it", "its",
-            "this", "that", "these", "those", "what", "which", "who",
+            "a",
+            "an",
+            "the",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "being",
+            "have",
+            "has",
+            "had",
+            "do",
+            "does",
+            "did",
+            "will",
+            "would",
+            "could",
+            "should",
+            "may",
+            "might",
+            "shall",
+            "can",
+            "to",
+            "of",
+            "in",
+            "for",
+            "on",
+            "with",
+            "at",
+            "by",
+            "from",
+            "as",
+            "into",
+            "about",
+            "between",
+            "through",
+            "during",
+            "and",
+            "but",
+            "or",
+            "nor",
+            "not",
+            "so",
+            "yet",
+            "both",
+            "i",
+            "me",
+            "my",
+            "we",
+            "our",
+            "you",
+            "your",
+            "it",
+            "its",
+            "this",
+            "that",
+            "these",
+            "those",
+            "what",
+            "which",
+            "who",
         }
         words = set(re.sub(r"[^a-z0-9\s]", "", text.lower()).split())
         return words - stopwords

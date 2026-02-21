@@ -279,7 +279,9 @@ class TestEnterpriseAuthService:
             assert exc_info.value.error_code == "INVALID_SSO_STATE"
 
     @pytest.mark.asyncio
-    async def test_handle_sso_callback_unauthorized_ontario_mills(self, auth_service, mock_cache_service, valid_user_info):
+    async def test_handle_sso_callback_unauthorized_ontario_mills(
+        self, auth_service, mock_cache_service, valid_user_info
+    ):
         """Test SSO callback with unauthorized user ontario_mills."""
         sso_session = {"tenant_id": "tenant_123", "provider": SSOProvider.AZURE_AD}
 

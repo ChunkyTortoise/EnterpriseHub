@@ -236,36 +236,44 @@ class TestProactiveInsight:
 
         now = datetime.utcnow()
         with pytest.raises(Exception):
-            ProactiveInsight(**self._valid_data(
-                created_at=now,
-                expires_at=now - timedelta(hours=1),
-            ))
+            ProactiveInsight(
+                **self._valid_data(
+                    created_at=now,
+                    expires_at=now - timedelta(hours=1),
+                )
+            )
 
     def test_critical_priority_requires_high_confidence(self):
         from ghl_real_estate_ai.models.ai_concierge_models import ProactiveInsight
 
         with pytest.raises(Exception, match="confidence >= 0.8"):
-            ProactiveInsight(**self._valid_data(
-                priority="critical",
-                confidence_score=0.5,
-            ))
+            ProactiveInsight(
+                **self._valid_data(
+                    priority="critical",
+                    confidence_score=0.5,
+                )
+            )
 
     def test_high_priority_requires_moderate_confidence(self):
         from ghl_real_estate_ai.models.ai_concierge_models import ProactiveInsight
 
         with pytest.raises(Exception, match="confidence >= 0.7"):
-            ProactiveInsight(**self._valid_data(
-                priority="high",
-                confidence_score=0.5,
-            ))
+            ProactiveInsight(
+                **self._valid_data(
+                    priority="high",
+                    confidence_score=0.5,
+                )
+            )
 
     def test_critical_with_sufficient_confidence(self):
         from ghl_real_estate_ai.models.ai_concierge_models import ProactiveInsight
 
-        insight = ProactiveInsight(**self._valid_data(
-            priority="critical",
-            confidence_score=0.9,
-        ))
+        insight = ProactiveInsight(
+            **self._valid_data(
+                priority="critical",
+                confidence_score=0.9,
+            )
+        )
         assert insight.priority.value == "critical"
 
     def test_empty_actions_rejected(self):
@@ -277,10 +285,12 @@ class TestProactiveInsight:
     def test_is_expired(self):
         from ghl_real_estate_ai.models.ai_concierge_models import ProactiveInsight
 
-        insight = ProactiveInsight(**self._valid_data(
-            expires_at=datetime.utcnow() - timedelta(seconds=1),
-            created_at=datetime.utcnow() - timedelta(hours=3),
-        ))
+        insight = ProactiveInsight(
+            **self._valid_data(
+                expires_at=datetime.utcnow() - timedelta(seconds=1),
+                created_at=datetime.utcnow() - timedelta(hours=3),
+            )
+        )
         assert insight.is_expired() is True
 
     def test_is_actionable(self):
@@ -342,28 +352,34 @@ class TestCoachingOpportunity:
     def test_get_coaching_priority_high(self):
         from ghl_real_estate_ai.models.ai_concierge_models import CoachingOpportunity, InsightPriority
 
-        co = CoachingOpportunity(**self._valid_data(
-            immediate_application=True,
-            success_probability=0.9,
-        ))
+        co = CoachingOpportunity(
+            **self._valid_data(
+                immediate_application=True,
+                success_probability=0.9,
+            )
+        )
         assert co.get_coaching_priority() == InsightPriority.HIGH
 
     def test_get_coaching_priority_medium(self):
         from ghl_real_estate_ai.models.ai_concierge_models import CoachingOpportunity, InsightPriority
 
-        co = CoachingOpportunity(**self._valid_data(
-            immediate_application=False,
-            success_probability=0.75,
-        ))
+        co = CoachingOpportunity(
+            **self._valid_data(
+                immediate_application=False,
+                success_probability=0.75,
+            )
+        )
         assert co.get_coaching_priority() == InsightPriority.MEDIUM
 
     def test_get_coaching_priority_low(self):
         from ghl_real_estate_ai.models.ai_concierge_models import CoachingOpportunity, InsightPriority
 
-        co = CoachingOpportunity(**self._valid_data(
-            immediate_application=False,
-            success_probability=0.3,
-        ))
+        co = CoachingOpportunity(
+            **self._valid_data(
+                immediate_application=False,
+                success_probability=0.3,
+            )
+        )
         assert co.get_coaching_priority() == InsightPriority.LOW
 
 
@@ -424,19 +440,23 @@ class TestStrategyRecommendation:
     def test_get_priority_critical(self):
         from ghl_real_estate_ai.models.ai_concierge_models import InsightPriority, StrategyRecommendation
 
-        sr = StrategyRecommendation(**self._valid_data(
-            urgency_level="immediate",
-            impact_score=0.9,
-        ))
+        sr = StrategyRecommendation(
+            **self._valid_data(
+                urgency_level="immediate",
+                impact_score=0.9,
+            )
+        )
         assert sr.get_priority() == InsightPriority.CRITICAL
 
     def test_get_priority_high(self):
         from ghl_real_estate_ai.models.ai_concierge_models import InsightPriority, StrategyRecommendation
 
-        sr = StrategyRecommendation(**self._valid_data(
-            urgency_level="soon",
-            impact_score=0.7,
-        ))
+        sr = StrategyRecommendation(
+            **self._valid_data(
+                urgency_level="soon",
+                impact_score=0.7,
+            )
+        )
         assert sr.get_priority() == InsightPriority.HIGH
 
 
@@ -535,15 +555,17 @@ class TestConversationQualityScore:
     def test_get_improvement_priority_high_for_low_score(self):
         from ghl_real_estate_ai.models.ai_concierge_models import ConversationQualityScore, InsightPriority
 
-        cqs = ConversationQualityScore(**self._valid_data(
-            overall_score=50.0,
-            engagement_score=50.0,
-            rapport_score=50.0,
-            needs_discovery_score=50.0,
-            value_articulation_score=50.0,
-            objection_handling_score=50.0,
-            closing_effectiveness_score=50.0,
-        ))
+        cqs = ConversationQualityScore(
+            **self._valid_data(
+                overall_score=50.0,
+                engagement_score=50.0,
+                rapport_score=50.0,
+                needs_discovery_score=50.0,
+                value_articulation_score=50.0,
+                objection_handling_score=50.0,
+                closing_effectiveness_score=50.0,
+            )
+        )
         assert cqs.get_improvement_priority() == InsightPriority.HIGH
 
 
@@ -591,9 +613,7 @@ class TestConversationTrajectory:
         from ghl_real_estate_ai.models.ai_concierge_models import ConversationTrajectory
 
         with pytest.raises(Exception, match="sum to approximately 1.0"):
-            ConversationTrajectory(**self._valid_data(
-                outcome_probabilities={"conversion": 0.5, "nurture": 0.1}
-            ))
+            ConversationTrajectory(**self._valid_data(outcome_probabilities={"conversion": 0.5, "nurture": 0.1}))
 
     def test_invalid_predicted_outcome(self):
         from ghl_real_estate_ai.models.ai_concierge_models import ConversationTrajectory
@@ -946,13 +966,17 @@ class TestBotHandoffSerialization:
             )
             if i < 2:
                 ch = ContextHandoff.create_success(
-                    lead_id="lead-1", location_id="loc-1",
-                    intelligence_snapshot_id=f"s{i}", transition_id=f"t{i}",
-                    preservation_latency_ms=25.0, cache_key=f"k{i}",
+                    lead_id="lead-1",
+                    location_id="loc-1",
+                    intelligence_snapshot_id=f"s{i}",
+                    transition_id=f"t{i}",
+                    preservation_latency_ms=25.0,
+                    cache_key=f"k{i}",
                 )
             else:
                 ch = ContextHandoff.create_failure(
-                    lead_id="lead-1", location_id="loc-1",
+                    lead_id="lead-1",
+                    location_id="loc-1",
                     error_message="Timeout",
                 )
             history.add_transition(bt, ch)

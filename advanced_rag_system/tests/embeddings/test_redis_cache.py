@@ -8,7 +8,6 @@ from src.embeddings.cache import RedisCacheBackend
 
 
 @pytest.mark.integration
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

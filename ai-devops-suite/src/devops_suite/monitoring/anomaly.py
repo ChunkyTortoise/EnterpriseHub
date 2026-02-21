@@ -25,8 +25,12 @@ class AnomalyDetector:
     def detect(self, metric_name: str, current_value: float, history: list[float]) -> AnomalyResult:
         if len(history) < 2:
             return AnomalyResult(
-                metric=metric_name, value=current_value, expected=current_value,
-                z_score=0.0, is_anomaly=False, severity="none",
+                metric=metric_name,
+                value=current_value,
+                expected=current_value,
+                z_score=0.0,
+                is_anomaly=False,
+                severity="none",
             )
         mean = statistics.mean(history)
         stdev = statistics.stdev(history)
@@ -44,11 +48,17 @@ class AnomalyDetector:
             severity = "none"
 
         return AnomalyResult(
-            metric=metric_name, value=current_value, expected=mean,
-            z_score=z_score, is_anomaly=is_anomaly, severity=severity,
+            metric=metric_name,
+            value=current_value,
+            expected=mean,
+            z_score=z_score,
+            is_anomaly=is_anomaly,
+            severity=severity,
         )
 
-    def detect_batch(self, metric_name: str, values: list[float], window: int = 20) -> list[AnomalyResult]:
+    def detect_batch(
+        self, metric_name: str, values: list[float], window: int = 20
+    ) -> list[AnomalyResult]:
         results = []
         for i, val in enumerate(values):
             start = max(0, i - window)

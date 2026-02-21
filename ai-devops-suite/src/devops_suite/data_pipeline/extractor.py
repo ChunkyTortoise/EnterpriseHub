@@ -51,15 +51,15 @@ class LLMExtractor:
         confidence = 1.0 - (len(missing) / max(len(schema.fields), 1))
 
         return ExtractionResult(
-            data=data, source_url=source_url,
-            confidence=confidence, raw_response=raw,
+            data=data,
+            source_url=source_url,
+            confidence=confidence,
+            raw_response=raw,
             missing_fields=missing,
         )
 
     def _build_prompt(self, text: str, schema: ExtractionSchema) -> str:
-        fields_desc = "\n".join(
-            f"- {name}: {desc}" for name, desc in schema.fields.items()
-        )
+        fields_desc = "\n".join(f"- {name}: {desc}" for name, desc in schema.fields.items())
         return (
             f"Extract the following fields from the text below.\n"
             f"Return ONLY valid JSON with these fields:\n{fields_desc}\n\n"

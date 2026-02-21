@@ -37,9 +37,7 @@ class RAGBillingService:
             logger.exception("Failed to report usage for tenant %s", tenant_id)
             return None
 
-    async def create_subscription(
-        self, customer_id: str, tier: str = "starter"
-    ) -> dict | None:
+    async def create_subscription(self, customer_id: str, tier: str = "starter") -> dict | None:
         """Create a subscription for a tenant."""
         if not self.stripe:
             return None

@@ -26,8 +26,8 @@ class ProspectSource(Enum):
     """Sources from which the SDR can pull prospects."""
 
     GHL_PIPELINE = "ghl_pipeline"
-    EXPIRED_MLS = "expired_mls"    # Phase 2
-    FSBO = "fsbo"                  # Phase 2
+    EXPIRED_MLS = "expired_mls"  # Phase 2
+    FSBO = "fsbo"  # Phase 2
     STALE_LEAD = "stale_lead"
 
 
@@ -38,7 +38,7 @@ class ProspectProfile:
     contact_id: str
     location_id: str
     source: ProspectSource
-    lead_type: str              # "buyer" | "seller" | "unknown"
+    lead_type: str  # "buyer" | "seller" | "unknown"
     property_address: Optional[str]
     days_in_stage: int
     last_activity: Optional[datetime]
@@ -61,9 +61,7 @@ class ProspectSourcer:
     ) -> None:
         self._ghl = ghl_client
         self._pipeline_stage_ids: List[str] = [
-            s.strip()
-            for s in os.getenv("SDR_PIPELINE_STAGE_IDS", "").split(",")
-            if s.strip()
+            s.strip() for s in os.getenv("SDR_PIPELINE_STAGE_IDS", "").split(",") if s.strip()
         ]
 
     async def fetch_prospects(
@@ -114,9 +112,7 @@ class ProspectSourcer:
         )
         return prospects
 
-    async def _fetch_ghl_pipeline_leads(
-        self, location_id: str, limit: int
-    ) -> List[ProspectProfile]:
+    async def _fetch_ghl_pipeline_leads(self, location_id: str, limit: int) -> List[ProspectProfile]:
         """Pull contacts from configured GHL pipeline stage IDs."""
         if not self._pipeline_stage_ids:
             logger.info("[SDR] No SDR_PIPELINE_STAGE_IDS configured, skipping pipeline source")
@@ -148,15 +144,11 @@ class ProspectSourcer:
 
         return prospects
 
-    async def _fetch_stale_leads(
-        self, location_id: str, limit: int, inactive_days: int = 14
-    ) -> List[ProspectProfile]:
+    async def _fetch_stale_leads(self, location_id: str, limit: int, inactive_days: int = 14) -> List[ProspectProfile]:
         """Pull contacts with no activity in the last N days."""
         since = datetime.now(timezone.utc) - timedelta(days=inactive_days)
         try:
-            contacts = await self._ghl.get_contacts_inactive_since(
-                location_id=location_id, since=since, limit=limit
-            )
+            contacts = await self._ghl.get_contacts_inactive_since(location_id=location_id, since=since, limit=limit)
         except Exception as exc:
             logger.error(f"[SDR] Stale lead fetch failed: {exc}")
             return []
@@ -179,6 +171,7 @@ class ProspectSourcer:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _infer_lead_type(tags: List[str]) -> str:
     """Guess buyer/seller from GHL tags. Returns 'unknown' if ambiguous."""

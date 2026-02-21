@@ -3,6 +3,7 @@ Workflow Nodes - Implementation of LangGraph workflow nodes for lead follow-up.
 
 This module contains all the node implementations used in the Lead Bot workflow graphs.
 """
+
 import asyncio
 import time
 from datetime import datetime, timezone
@@ -32,7 +33,7 @@ logger = get_logger(__name__)
 class WorkflowNodes:
     """
     Container for all workflow node implementations.
-    
+
     This class holds references to all dependencies needed by the workflow nodes
     and provides implementations for each node in the LangGraph.
     """
@@ -74,7 +75,7 @@ class WorkflowNodes:
         self.intelligence_middleware = intelligence_middleware
         self.market_intel = market_intel
         self.workflow_service = workflow_service
-        
+
         # Helper classes
         self.response_generator = ResponseGenerator()
         self.lead_router = LeadRouter()
@@ -300,6 +301,7 @@ class WorkflowNodes:
 
         # Render PDF URL (Mock)
         from ghl_real_estate_ai.utils.pdf_renderer import PDFRenderer
+
         pdf_url = PDFRenderer.generate_pdf_url(report)
 
         # Construct Response
@@ -307,7 +309,7 @@ class WorkflowNodes:
             address=address,
             zillow_variance_abs=report.zillow_variance_abs,
             pdf_url=pdf_url,
-            digital_twin_url=f"https://enterprise-hub.ai/visualize/{address.replace(' ', '-').lower()}"
+            digital_twin_url=f"https://enterprise-hub.ai/visualize/{address.replace(' ', '-').lower()}",
         )
 
         logger.info(f"CMA Injection: {response_msg}")
@@ -356,7 +358,7 @@ class WorkflowNodes:
             sequence_day=3,
             action_type="message_sent",
             success=True,
-            next_action_date=(datetime.now(timezone.utc) + __import__('datetime').timedelta(days=4)).isoformat(),
+            next_action_date=(datetime.now(timezone.utc) + __import__("datetime").timedelta(days=4)).isoformat(),
             message_sent=msg,
         )
 
@@ -381,8 +383,7 @@ class WorkflowNodes:
 
         # Prepare context for the AI agent
         stall_breaker = self.lead_router.select_stall_breaker(
-            state["conversation_history"][-1]["content"] if state["conversation_history"] else "",
-            self.ghost_engine
+            state["conversation_history"][-1]["content"] if state["conversation_history"] else "", self.ghost_engine
         )
         context = {
             "lead_name": state["lead_name"],
@@ -488,7 +489,7 @@ class WorkflowNodes:
         )
 
         address = state.get("property_address", "the property")
-        
+
         # Get market metrics if available
         inventory_days = None
         if self.market_intel:
@@ -512,7 +513,6 @@ class WorkflowNodes:
         await sync_service.record_lead_event(
             state["lead_id"], "AI", "Collecting post-showing behavioral feedback.", "thought"
         )
-
 
         await sync_service.record_lead_event(state["lead_id"], "AI", "Post-showing survey sent.", "sms")
 
@@ -565,10 +565,20 @@ class WorkflowNodes:
     # ROUTING METHODS
     # ================================
 
-    def route_next_step(self, state: Dict) -> Literal[
-        "generate_cma", "day_3", "day_7", "day_14", "day_30",
-        "schedule_showing", "post_showing", "facilitate_offer",
-        "closing_nurture", "qualified", "nurture"
+    def route_next_step(
+        self, state: Dict
+    ) -> Literal[
+        "generate_cma",
+        "day_3",
+        "day_7",
+        "day_14",
+        "day_30",
+        "schedule_showing",
+        "post_showing",
+        "facilitate_offer",
+        "closing_nurture",
+        "qualified",
+        "nurture",
     ]:
         """Conditional routing logic."""
         # Check for generate_cma first
@@ -602,10 +612,20 @@ class WorkflowNodes:
         # Intelligent fallback
         return self.lead_router.classify_lead_for_routing(state)
 
-    def route_enhanced_step(self, state: Dict) -> Literal[
-        "generate_cma", "day_3", "day_7", "day_14", "day_30",
-        "schedule_showing", "post_showing", "facilitate_offer",
-        "closing_nurture", "qualified", "nurture"
+    def route_enhanced_step(
+        self, state: Dict
+    ) -> Literal[
+        "generate_cma",
+        "day_3",
+        "day_7",
+        "day_14",
+        "day_30",
+        "schedule_showing",
+        "post_showing",
+        "facilitate_offer",
+        "closing_nurture",
+        "qualified",
+        "nurture",
     ]:
         """Enhanced routing with predictive logic"""
         # Check for early warnings that require immediate action

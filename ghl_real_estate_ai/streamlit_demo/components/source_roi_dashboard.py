@@ -64,12 +64,14 @@ class SourceROIDashboard:
             )
 
         # Tabs for different views
-        tab1, tab2, tab3, tab4 = st.tabs([
-            "🏆 Top Performers",
-            "💰 ROI Analysis",
-            "📈 Trends",
-            "🎯 Recommendations",
-        ])
+        tab1, tab2, tab3, tab4 = st.tabs(
+            [
+                "🏆 Top Performers",
+                "💰 ROI Analysis",
+                "📈 Trends",
+                "🎯 Recommendations",
+            ]
+        )
 
         with tab1:
             self._render_top_performers(time_range)
@@ -272,7 +274,16 @@ class SourceROIDashboard:
 
     def _get_all_sources(self) -> List[str]:
         """Get list of all source names."""
-        return ["Facebook Ads", "Google Ads", "Referral", "Zillow", "Realtor.com", "Instagram", "LinkedIn", "Open House"]
+        return [
+            "Facebook Ads",
+            "Google Ads",
+            "Referral",
+            "Zillow",
+            "Realtor.com",
+            "Instagram",
+            "LinkedIn",
+            "Open House",
+        ]
 
     def _get_recommendations(self, days: int) -> Dict[str, Any]:
         """Get optimization recommendations."""
@@ -282,12 +293,32 @@ class SourceROIDashboard:
             "projected_impact": 12500,
             "roi_improvement": 15.8,
             "top_performers": [
-                {"Source": "Referral", "Current Budget": "$5,000", "ROI": "450%", "Recommendation": "Increase to $8,000"},
-                {"Source": "Open House", "Current Budget": "$2,500", "ROI": "380%", "Recommendation": "Increase to $4,000"},
-                {"Source": "LinkedIn", "Current Budget": "$3,000", "ROI": "310%", "Recommendation": "Increase to $4,500"},
+                {
+                    "Source": "Referral",
+                    "Current Budget": "$5,000",
+                    "ROI": "450%",
+                    "Recommendation": "Increase to $8,000",
+                },
+                {
+                    "Source": "Open House",
+                    "Current Budget": "$2,500",
+                    "ROI": "380%",
+                    "Recommendation": "Increase to $4,000",
+                },
+                {
+                    "Source": "LinkedIn",
+                    "Current Budget": "$3,000",
+                    "ROI": "310%",
+                    "Recommendation": "Increase to $4,500",
+                },
             ],
             "underperformers": [
-                {"Source": "Realtor.com", "Current Budget": "$6,000", "ROI": "95%", "Recommendation": "Reduce to $3,000"},
+                {
+                    "Source": "Realtor.com",
+                    "Current Budget": "$6,000",
+                    "ROI": "95%",
+                    "Recommendation": "Reduce to $3,000",
+                },
                 {"Source": "Direct Mail", "Current Budget": "$4,000", "ROI": "65%", "Recommendation": "Pause campaign"},
             ],
             "action_items": [
@@ -325,13 +356,15 @@ class SourceROIDashboard:
         df_display["conversion_rate"] = df_display["conversion_rate"].apply(lambda x: f"{x:.1f}%")
         df_display["revenue"] = df_display["revenue"].apply(lambda x: f"${x:,.0f}")
 
-        df_display = df_display.rename(columns={
-            "name": "Source",
-            "conversion_rate": "Conv. Rate",
-            "contacts": "Leads",
-            "closed": "Closed",
-            "revenue": "Revenue",
-        })
+        df_display = df_display.rename(
+            columns={
+                "name": "Source",
+                "conversion_rate": "Conv. Rate",
+                "contacts": "Leads",
+                "closed": "Closed",
+                "revenue": "Revenue",
+            }
+        )
 
         st.dataframe(
             df_display,
@@ -345,18 +378,20 @@ class SourceROIDashboard:
 
         fig = go.Figure()
 
-        fig.add_trace(go.Bar(
-            x=df["name"],
-            y=df["conversion_rate"],
-            text=df["conversion_rate"].apply(lambda x: f"{x:.1f}%"),
-            textposition="outside",
-            marker=dict(
-                color=df["conversion_rate"],
-                colorscale="Viridis",
-                showscale=True,
-                colorbar=dict(title="Rate %"),
-            ),
-        ))
+        fig.add_trace(
+            go.Bar(
+                x=df["name"],
+                y=df["conversion_rate"],
+                text=df["conversion_rate"].apply(lambda x: f"{x:.1f}%"),
+                textposition="outside",
+                marker=dict(
+                    color=df["conversion_rate"],
+                    colorscale="Viridis",
+                    showscale=True,
+                    colorbar=dict(title="Rate %"),
+                ),
+            )
+        )
 
         fig.update_layout(
             title="Conversion Rate by Source",
@@ -374,25 +409,27 @@ class SourceROIDashboard:
 
         fig = go.Figure()
 
-        fig.add_trace(go.Scatter(
-            x=df["cost"],
-            y=df["roi"],
-            mode="markers+text",
-            marker=dict(
-                size=df["closed"] * 5,  # Bubble size = closed deals
-                color=df["roi"],
-                colorscale="RdYlGn",
-                showscale=True,
-                colorbar=dict(title="ROI %"),
-                line=dict(width=2, color="white"),
-            ),
-            text=df["name"],
-            textposition="top center",
-            hovertemplate="<b>%{text}</b><br>" +
-                          "Cost: $%{x:,.0f}<br>" +
-                          "ROI: %{y:.0f}%<br>" +
-                          "Closed Deals: %{marker.size}<extra></extra>",
-        ))
+        fig.add_trace(
+            go.Scatter(
+                x=df["cost"],
+                y=df["roi"],
+                mode="markers+text",
+                marker=dict(
+                    size=df["closed"] * 5,  # Bubble size = closed deals
+                    color=df["roi"],
+                    colorscale="RdYlGn",
+                    showscale=True,
+                    colorbar=dict(title="ROI %"),
+                    line=dict(width=2, color="white"),
+                ),
+                text=df["name"],
+                textposition="top center",
+                hovertemplate="<b>%{text}</b><br>"
+                + "Cost: $%{x:,.0f}<br>"
+                + "ROI: %{y:.0f}%<br>"
+                + "Closed Deals: %{marker.size}<extra></extra>",
+            )
+        )
 
         fig.update_layout(
             title="ROI vs Marketing Cost (bubble size = closed deals)",
@@ -411,13 +448,15 @@ class SourceROIDashboard:
 
         fig = go.Figure()
 
-        fig.add_trace(go.Bar(
-            x=df["name"],
-            y=df["cost_per_lead"],
-            text=df["cost_per_lead"].apply(lambda x: f"${x:.0f}"),
-            textposition="outside",
-            marker=dict(color="lightblue"),
-        ))
+        fig.add_trace(
+            go.Bar(
+                x=df["name"],
+                y=df["cost_per_lead"],
+                text=df["cost_per_lead"].apply(lambda x: f"${x:.0f}"),
+                textposition="outside",
+                marker=dict(color="lightblue"),
+            )
+        )
 
         fig.update_layout(
             title="Cost per Lead",
@@ -436,13 +475,15 @@ class SourceROIDashboard:
 
         fig = go.Figure()
 
-        fig.add_trace(go.Bar(
-            x=df["name"],
-            y=df["cost_per_close"],
-            text=df["cost_per_close"].apply(lambda x: f"${x:.0f}"),
-            textposition="outside",
-            marker=dict(color="lightcoral"),
-        ))
+        fig.add_trace(
+            go.Bar(
+                x=df["name"],
+                y=df["cost_per_close"],
+                text=df["cost_per_close"].apply(lambda x: f"${x:.0f}"),
+                textposition="outside",
+                marker=dict(color="lightcoral"),
+            )
+        )
 
         fig.update_layout(
             title="Cost per Close",
@@ -467,13 +508,15 @@ class SourceROIDashboard:
             trend = np.cumsum(np.random.randn(days) * 200 + base / days)
             trend = np.maximum(trend, 0)  # Ensure positive
 
-            fig.add_trace(go.Scatter(
-                x=dates,
-                y=trend,
-                mode="lines",
-                name=source,
-                line=dict(width=2),
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=dates,
+                    y=trend,
+                    mode="lines",
+                    name=source,
+                    line=dict(width=2),
+                )
+            )
 
         fig.update_layout(
             title="Revenue Trend",
@@ -497,13 +540,15 @@ class SourceROIDashboard:
             rates = base_rate + np.cumsum(np.random.randn(days) * 0.3)
             rates = np.clip(rates, 0, 100)  # Keep in valid range
 
-            fig.add_trace(go.Scatter(
-                x=dates,
-                y=rates,
-                mode="lines",
-                name=source,
-                line=dict(width=2),
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=dates,
+                    y=rates,
+                    mode="lines",
+                    name=source,
+                    line=dict(width=2),
+                )
+            )
 
         fig.update_layout(
             title="Conversion Rate Trend",
@@ -527,14 +572,16 @@ class SourceROIDashboard:
             roi = base_roi + np.cumsum(np.random.randn(days) * 5)
             roi = np.maximum(roi, 0)  # Ensure positive
 
-            fig.add_trace(go.Scatter(
-                x=dates,
-                y=roi,
-                mode="lines",
-                name=source,
-                line=dict(width=2),
-                fill="tonexty" if source != sources[0] else None,
-            ))
+            fig.add_trace(
+                go.Scatter(
+                    x=dates,
+                    y=roi,
+                    mode="lines",
+                    name=source,
+                    line=dict(width=2),
+                    fill="tonexty" if source != sources[0] else None,
+                )
+            )
 
         fig.update_layout(
             title="ROI Trend",

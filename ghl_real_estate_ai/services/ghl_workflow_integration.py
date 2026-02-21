@@ -246,6 +246,7 @@ class GHLWorkflowIntegrator:
 
 # Convenience functions for quick integration
 
+
 async def apply_lead_tags(
     contact_id: str,
     scores: Dict[str, float],

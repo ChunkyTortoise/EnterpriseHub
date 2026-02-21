@@ -36,8 +36,9 @@ _jobs: dict[UUID, JobOut] = {}
 
 @router.post("", response_model=JobOut)
 async def create_job(job: JobCreate) -> JobOut:
-    out = JobOut(name=job.name, url_pattern=job.url_pattern,
-                 extraction_schema=job.extraction_schema)
+    out = JobOut(
+        name=job.name, url_pattern=job.url_pattern, extraction_schema=job.extraction_schema
+    )
     _jobs[out.id] = out
     return out
 

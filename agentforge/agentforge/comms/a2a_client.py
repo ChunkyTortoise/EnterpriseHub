@@ -75,9 +75,7 @@ class A2AClient:
         ```
     """
 
-    def __init__(
-        self, base_url: str, agent_card: AgentCard | None = None
-    ) -> None:
+    def __init__(self, base_url: str, agent_card: AgentCard | None = None) -> None:
         """Initialize the A2A client.
 
         Args:
@@ -118,9 +116,7 @@ class A2AClient:
                     data = json.loads(response.read().decode())
                     return AgentCard(**data)
             except urllib.error.HTTPError as e:
-                raise A2AClientError(
-                    f"Discovery failed: HTTP {e.code}", code=e.code
-                )
+                raise A2AClientError(f"Discovery failed: HTTP {e.code}", code=e.code)
             except urllib.error.URLError as e:
                 raise A2AClientError(f"Discovery failed: {e.reason}")
             except json.JSONDecodeError as e:
@@ -328,13 +324,9 @@ class A2AClient:
             await asyncio.sleep(poll_interval)
             elapsed += poll_interval
 
-        raise TimeoutError(
-            f"Task {task_id} did not complete within {max_wait} seconds"
-        )
+        raise TimeoutError(f"Task {task_id} did not complete within {max_wait} seconds")
 
-    async def _send_message(
-        self, message: A2AMessage, timeout: float = 30.0
-    ) -> A2AResponse:
+    async def _send_message(self, message: A2AMessage, timeout: float = 30.0) -> A2AResponse:
         """Send a JSON-RPC message to the agent.
 
         Internal method for sending A2A messages via HTTP POST.

@@ -13,6 +13,7 @@ from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 
 # ── Helpers ───────────────────────────────────────────────────────────
 
+
 def _make_state(message: str) -> dict:
     """Build a minimal JorgeSellerState dict for stall detection."""
     return {
@@ -31,6 +32,7 @@ def _make_detector() -> StallDetector:
 
 # ── Stall keyword tests ──────────────────────────────────────────────
 
+
 class TestJustLookingStallKeywords:
     """Verify just_looking keywords are in STALL_KEYWORDS."""
 
@@ -40,8 +42,13 @@ class TestJustLookingStallKeywords:
     @pytest.mark.parametrize(
         "keyword",
         [
-            "just looking", "just browsing", "exploring options",
-            "kicking tires", "not ready yet", "window shopping", "just curious",
+            "just looking",
+            "just browsing",
+            "exploring options",
+            "kicking tires",
+            "not ready yet",
+            "window shopping",
+            "just curious",
         ],
     )
     def test_keywords_present(self, keyword):
@@ -86,6 +93,7 @@ class TestJustLookingStallDetection:
 
 
 # ── CMA disclaimer tests ─────────────────────────────────────────────
+
 
 class TestCMADisclaimers:
     """Verify CMA disclaimer config and confidence thresholds."""
@@ -135,15 +143,18 @@ class TestCMADisclaimers:
 
 # ── Buyer just_looking objection ──────────────────────────────────────
 
+
 class TestBuyerJustLookingObjection:
     """Verify buyer response generator has just_looking strategy."""
 
     def test_buyer_response_generator_importable(self):
         from ghl_real_estate_ai.agents.buyer.response_generator import ResponseGenerator
+
         assert ResponseGenerator is not None
 
 
 # ── Handoff messages ──────────────────────────────────────────────────
+
 
 class TestSellerHandoffMessages:
     """Verify handoff messages are in Jorge's voice."""

@@ -33,9 +33,7 @@ class ListingService:
             "current_journey_stage": "listing_prep",
         }
 
-    def _generate_staging_recommendations(
-        self, condition: Optional[str]
-    ) -> List[str]:
+    def _generate_staging_recommendations(self, condition: Optional[str]) -> List[str]:
         """Generate staging recommendations based on property condition."""
         base_recs = [
             "Declutter all rooms and remove personal photos",
@@ -45,29 +43,33 @@ class ListingService:
         ]
 
         if condition == "move_in_ready":
-            base_recs.extend([
-                "Professional photography to showcase turnkey condition",
-                "Highlight recent upgrades in listing description",
-            ])
+            base_recs.extend(
+                [
+                    "Professional photography to showcase turnkey condition",
+                    "Highlight recent upgrades in listing description",
+                ]
+            )
         elif condition == "needs_work":
-            base_recs.extend([
-                "Fresh neutral paint in main living areas",
-                "Replace dated light fixtures and hardware",
-                "Consider professional staging for primary living spaces",
-            ])
+            base_recs.extend(
+                [
+                    "Fresh neutral paint in main living areas",
+                    "Replace dated light fixtures and hardware",
+                    "Consider professional staging for primary living spaces",
+                ]
+            )
         elif condition == "major_repairs":
-            base_recs.extend([
-                "Get pre-listing inspection to identify all issues",
-                "Obtain contractor estimates for major repairs",
-                "Consider selling as-is with repair credit",
-                "Price accordingly to reflect condition",
-            ])
+            base_recs.extend(
+                [
+                    "Get pre-listing inspection to identify all issues",
+                    "Obtain contractor estimates for major repairs",
+                    "Consider selling as-is with repair credit",
+                    "Price accordingly to reflect condition",
+                ]
+            )
 
         return base_recs
 
-    def _estimate_repairs(
-        self, condition: Optional[str]
-    ) -> Dict[str, float]:
+    def _estimate_repairs(self, condition: Optional[str]) -> Dict[str, float]:
         """Estimate repair costs based on condition (Rancho Cucamonga rates)."""
         if condition == "move_in_ready":
             return {

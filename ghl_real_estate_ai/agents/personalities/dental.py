@@ -76,54 +76,89 @@ class DentalLeadPersonality(BotPersonality):
         return {
             "urgency": IntentMarkerSet(
                 high=[
-                    "emergency", "severe pain", "broken tooth", "swelling",
-                    "abscess", "knocked out tooth", "bleeding won't stop",
+                    "emergency",
+                    "severe pain",
+                    "broken tooth",
+                    "swelling",
+                    "abscess",
+                    "knocked out tooth",
+                    "bleeding won't stop",
                 ],
                 medium=[
-                    "pain", "toothache", "sensitive", "bothering me",
-                    "uncomfortable", "need to be seen soon",
+                    "pain",
+                    "toothache",
+                    "sensitive",
+                    "bothering me",
+                    "uncomfortable",
+                    "need to be seen soon",
                 ],
                 low=[
-                    "routine checkup", "just a cleaning", "been a while",
+                    "routine checkup",
+                    "just a cleaning",
+                    "been a while",
                     "overdue for a visit",
                 ],
             ),
             "procedure_value": IntentMarkerSet(
                 high=[
-                    "implants", "veneers", "invisalign", "full mouth restoration",
-                    "cosmetic makeover", "dental implant",
+                    "implants",
+                    "veneers",
+                    "invisalign",
+                    "full mouth restoration",
+                    "cosmetic makeover",
+                    "dental implant",
                 ],
                 medium=[
-                    "crown", "bridge", "root canal", "teeth whitening",
-                    "filling", "extraction",
+                    "crown",
+                    "bridge",
+                    "root canal",
+                    "teeth whitening",
+                    "filling",
+                    "extraction",
                 ],
                 low=[
-                    "cleaning", "checkup", "x-rays", "exam",
+                    "cleaning",
+                    "checkup",
+                    "x-rays",
+                    "exam",
                 ],
             ),
             "insurance_status": IntentMarkerSet(
                 high=[
-                    "have insurance", "covered by", "my plan covers",
+                    "have insurance",
+                    "covered by",
+                    "my plan covers",
                     "dental benefits",
                 ],
                 medium=[
-                    "checking coverage", "need to verify", "not sure about coverage",
+                    "checking coverage",
+                    "need to verify",
+                    "not sure about coverage",
                 ],
                 low=[
-                    "no insurance", "paying out of pocket", "self-pay",
+                    "no insurance",
+                    "paying out of pocket",
+                    "self-pay",
                     "no dental plan",
                 ],
             ),
             "motivation": IntentMarkerSet(
                 high=[
-                    "wedding coming up", "job interview", "important event",
-                    "can't eat", "can't sleep from pain",
+                    "wedding coming up",
+                    "job interview",
+                    "important event",
+                    "can't eat",
+                    "can't sleep from pain",
                 ],
                 medium=[
-                    "want a nicer smile", "self-conscious", "considering",
+                    "want a nicer smile",
+                    "self-conscious",
+                    "considering",
                 ],
                 low=[
-                    "just curious", "looking into it", "maybe someday",
+                    "just curious",
+                    "looking into it",
+                    "maybe someday",
                 ],
             ),
         }
@@ -137,8 +172,12 @@ class DentalLeadPersonality(BotPersonality):
                 target_bot="cosmetic",
                 confidence_threshold=0.7,
                 trigger_phrases=[
-                    "veneers", "teeth whitening", "cosmetic",
-                    "smile makeover", "invisalign", "bonding",
+                    "veneers",
+                    "teeth whitening",
+                    "cosmetic",
+                    "smile makeover",
+                    "invisalign",
+                    "bonding",
                 ],
                 description="Route to cosmetic dental specialist",
             ),
@@ -146,8 +185,12 @@ class DentalLeadPersonality(BotPersonality):
                 target_bot="orthodontic",
                 confidence_threshold=0.7,
                 trigger_phrases=[
-                    "braces", "alignment", "crooked teeth",
-                    "orthodontist", "retainer", "bite issues",
+                    "braces",
+                    "alignment",
+                    "crooked teeth",
+                    "orthodontist",
+                    "retainer",
+                    "bite issues",
                 ],
                 description="Route to orthodontic specialist",
             ),
@@ -155,8 +198,12 @@ class DentalLeadPersonality(BotPersonality):
                 target_bot="emergency",
                 confidence_threshold=0.5,
                 trigger_phrases=[
-                    "emergency", "severe pain", "knocked out",
-                    "broken tooth", "swelling", "abscess",
+                    "emergency",
+                    "severe pain",
+                    "knocked out",
+                    "broken tooth",
+                    "swelling",
+                    "abscess",
                 ],
                 description="Route to emergency triage (lower threshold)",
             ),
@@ -193,13 +240,9 @@ class DentalLeadPersonality(BotPersonality):
     def get_tone_instructions(self) -> dict[str, str]:
         return {
             "friendly": "Be warm and approachable. Make the patient feel comfortable.",
-            "reassuring": (
-                "Address dental anxiety. Emphasize comfort and modern techniques."
-            ),
+            "reassuring": ("Address dental anxiety. Emphasize comfort and modern techniques."),
             "informative": "Explain procedures clearly without medical jargon.",
-            "urgent": (
-                "Be empathetic but direct about the need for prompt treatment."
-            ),
+            "urgent": ("Be empathetic but direct about the need for prompt treatment."),
         }
 
     def get_journey_stages(self) -> list[str]:
@@ -218,23 +261,17 @@ class DentalLeadPersonality(BotPersonality):
                 "We completely understand dental anxiety! Our office "
                 "uses comfort-focused techniques. Would you like to "
                 "know more about our approach?",
-                "Many of our happiest patients started out feeling "
-                "nervous. We go at your pace -- no judgment.",
+                "Many of our happiest patients started out feeling nervous. We go at your pace -- no judgment.",
             ],
             "cost_concern": [
-                "We offer flexible payment plans! Would you like to "
-                "learn about our financing options?",
-                "Let me check what your insurance would cover for "
-                "this treatment.",
+                "We offer flexible payment plans! Would you like to learn about our financing options?",
+                "Let me check what your insurance would cover for this treatment.",
             ],
             "thinking": [
-                "No rush at all! Would it help to come in for a "
-                "free consultation first?",
-                "Take your time. What questions can I answer to help "
-                "you feel more comfortable?",
+                "No rush at all! Would it help to come in for a free consultation first?",
+                "Take your time. What questions can I answer to help you feel more comfortable?",
             ],
             "second_opinion": [
-                "Getting a second opinion is totally reasonable! "
-                "We're happy to provide a complimentary evaluation.",
+                "Getting a second opinion is totally reasonable! We're happy to provide a complimentary evaluation.",
             ],
         }

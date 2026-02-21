@@ -116,7 +116,8 @@ class TestBillingIntegrationE2E:
                 tags=["Needs Qualifying"],
             ),
             message=Message(
-                type=MessageType.SMS, body="I'm looking for a 3-bedroom house in Rancho Cucamonga with a budget of $450,000"
+                type=MessageType.SMS,
+                body="I'm looking for a 3-bedroom house in Rancho Cucamonga with a budget of $450,000",
             ),
         )
 

@@ -49,10 +49,7 @@ class CadenceScheduler:
         Called by the API route when GHL sends a ContactReply or StageChange event.
         Loads the sequence record and calls advance_sequence.
         """
-        logger.info(
-            f"[SDR] Webhook trigger contact={contact_id} "
-            f"type={trigger_type} location={location_id}"
-        )
+        logger.info(f"[SDR] Webhook trigger contact={contact_id} type={trigger_type} location={location_id}")
         # Record retrieval and persistence are the responsibility of SDRAgent.
         # The scheduler focuses on scheduling logic only.
 
@@ -81,6 +78,7 @@ class CadenceScheduler:
 
         for record in records[:batch_size]:
             from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import is_terminal_step
+
             if is_terminal_step(record.current_step):
                 skipped += 1
                 continue
@@ -91,14 +89,11 @@ class CadenceScheduler:
                 if updated.current_step != record.current_step:
                     dispatched += 1
             except Exception as exc:
-                logger.error(
-                    f"[SDR] CadenceScheduler error contact={record.contact_id}: {exc}"
-                )
+                logger.error(f"[SDR] CadenceScheduler error contact={record.contact_id}: {exc}")
                 errors += 1
 
         logger.info(
-            f"[SDR] Batch complete: processed={processed} dispatched={dispatched} "
-            f"skipped={skipped} errors={errors}"
+            f"[SDR] Batch complete: processed={processed} dispatched={dispatched} skipped={skipped} errors={errors}"
         )
         return {
             "processed": processed,

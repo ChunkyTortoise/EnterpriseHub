@@ -263,7 +263,9 @@ async def get_conversation_insights(
         # Get historical insights if requested
         historical_insights = []
         if include_historical:
-            historical_insights = await _get_historical_insights(proactive_intelligence, conversation_id, priority_filter)
+            historical_insights = await _get_historical_insights(
+                proactive_intelligence, conversation_id, priority_filter
+            )
 
         # Get monitoring status
         monitoring_status = await _get_monitoring_status(proactive_intelligence, conversation_id)
@@ -303,9 +305,7 @@ async def get_conversation_insights(
         processing_time_ms = (time.time() - start_time) * 1000
 
         logger.error(f"Failed to get insights for {conversation_id}: {e} [request_id: {request_id}]", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve insights"
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to retrieve insights")
 
 
 @router.post(
@@ -544,7 +544,9 @@ async def control_conversation_monitoring(
         )
 
         # Execute monitoring action
-        result = await _execute_monitoring_action(proactive_intelligence, conversation_id, control_request, current_user)
+        result = await _execute_monitoring_action(
+            proactive_intelligence, conversation_id, control_request, current_user
+        )
 
         # Calculate response time
         processing_time_ms = (time.time() - start_time) * 1000
@@ -589,8 +591,8 @@ async def control_conversation_monitoring(
 
 @router.websocket("/stream/{conversation_id}")
 async def stream_proactive_insights(
-    websocket: WebSocket, 
-    conversation_id: str, 
+    websocket: WebSocket,
+    conversation_id: str,
     token: str = Query(None, description="Authentication token"),
     proactive_intelligence: ProactiveConversationIntelligence = Depends(get_proactive_conversation_intelligence),
 ):
@@ -760,8 +762,8 @@ async def _validate_conversation_access(conversation_id: str, user: Dict) -> boo
 
 async def _get_active_insights(
     proactive_intelligence: ProactiveConversationIntelligence,
-    conversation_id: str, 
-    priority_filter: Optional[str] = None
+    conversation_id: str,
+    priority_filter: Optional[str] = None,
 ) -> List[ProactiveInsight]:
     """Get active insights for a conversation with optional priority filtering."""
     try:
@@ -785,8 +787,8 @@ async def _get_active_insights(
 
 async def _get_historical_insights(
     proactive_intelligence: ProactiveConversationIntelligence,
-    conversation_id: str, 
-    priority_filter: Optional[str] = None
+    conversation_id: str,
+    priority_filter: Optional[str] = None,
 ) -> List[ProactiveInsight]:
     """Get historical insights for a conversation."""
     try:
@@ -812,8 +814,7 @@ async def _get_historical_insights(
 
 
 async def _get_monitoring_status(
-    proactive_intelligence: ProactiveConversationIntelligence,
-    conversation_id: str
+    proactive_intelligence: ProactiveConversationIntelligence, conversation_id: str
 ) -> Dict[str, Any]:
     """Get monitoring status for a conversation."""
     try:
@@ -833,8 +834,7 @@ async def _get_monitoring_status(
 
 
 async def _calculate_performance_summary(
-    proactive_intelligence: ProactiveConversationIntelligence,
-    conversation_id: str
+    proactive_intelligence: ProactiveConversationIntelligence, conversation_id: str
 ) -> Dict[str, Any]:
     """Calculate performance summary for a conversation."""
     try:
@@ -871,8 +871,7 @@ async def _calculate_performance_summary(
 
 
 async def _get_insight_by_id(
-    proactive_intelligence: ProactiveConversationIntelligence,
-    insight_id: str
+    proactive_intelligence: ProactiveConversationIntelligence, insight_id: str
 ) -> Optional[ProactiveInsight]:
     """Retrieve insight by ID from all conversation histories."""
     try:
@@ -981,9 +980,9 @@ async def _generate_improvement_recommendations(
 
 async def _execute_monitoring_action(
     proactive_intelligence: ProactiveConversationIntelligence,
-    conversation_id: str, 
-    control_request: MonitoringControlRequest, 
-    user: Dict
+    conversation_id: str,
+    control_request: MonitoringControlRequest,
+    user: Dict,
 ) -> Dict[str, Any]:
     """Execute monitoring control action."""
     try:
@@ -1046,11 +1045,11 @@ async def _authenticate_websocket_connection(token: Optional[str]) -> Optional[D
 
 async def _handle_concierge_websocket_message(
     proactive_intelligence: ProactiveConversationIntelligence,
-    websocket: WebSocket, 
-    connection_id: str, 
-    message: str, 
-    conversation_id: str, 
-    user_context: Dict
+    websocket: WebSocket,
+    connection_id: str,
+    message: str,
+    conversation_id: str,
+    user_context: Dict,
 ):
     """Handle incoming WebSocket messages from concierge client."""
     try:
@@ -1093,11 +1092,7 @@ async def _handle_concierge_websocket_message(
 
 
 async def _publish_insight_action_event(
-    event_publisher: EventPublisher,
-    action: str, 
-    insight_id: str, 
-    conversation_id: Optional[str], 
-    user: Dict
+    event_publisher: EventPublisher, action: str, insight_id: str, conversation_id: Optional[str], user: Dict
 ):
     """Publish insight action event for analytics."""
     try:

@@ -197,7 +197,9 @@ class A2ABridge:
 
             # Build result
             result: dict[str, Any] = {
-                "status": output.status.value if hasattr(output.status, "value") else str(output.status),
+                "status": output.status.value
+                if hasattr(output.status, "value")
+                else str(output.status),
             }
 
             if output.content:
@@ -208,8 +210,7 @@ class A2ABridge:
                 result["metadata"] = output.metadata
             if output.tool_calls:
                 result["tool_calls"] = [
-                    {"name": tc.name, "arguments": tc.arguments}
-                    for tc in output.tool_calls
+                    {"name": tc.name, "arguments": tc.arguments} for tc in output.tool_calls
                 ]
 
             return result

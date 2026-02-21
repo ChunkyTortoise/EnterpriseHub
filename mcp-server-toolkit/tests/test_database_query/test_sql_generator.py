@@ -1,15 +1,16 @@
 """Tests for SQL generator and validation."""
 
 import pytest
-from mcp_toolkit.servers.database_query.sql_generator import (
-    SQLGenerator,
-    MockLLMProvider,
-)
+
 from mcp_toolkit.servers.database_query.schema_inspector import (
-    SchemaInspector,
-    DatabaseSchema,
-    TableInfo,
     ColumnInfo,
+    DatabaseSchema,
+    SchemaInspector,
+    TableInfo,
+)
+from mcp_toolkit.servers.database_query.sql_generator import (
+    MockLLMProvider,
+    SQLGenerator,
 )
 
 

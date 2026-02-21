@@ -56,9 +56,7 @@ def create_default_pipeline() -> ResponsePostProcessor:
         ]
     )
 
-    return ResponsePostProcessor(
-        stages=stages
-    )
+    return ResponsePostProcessor(stages=stages)
 
 
 _pipeline: ResponsePostProcessor | None = None

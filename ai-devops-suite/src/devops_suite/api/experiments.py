@@ -51,8 +51,10 @@ async def create_experiment(exp: ExperimentCreate) -> ExperimentOut:
     if abs(total - 1.0) > 0.01:
         raise HTTPException(status_code=400, detail="Variant traffic must sum to 1.0")
     out = ExperimentOut(
-        prompt_id=exp.prompt_id, name=exp.name,
-        metric=exp.metric, variants=exp.variants,
+        prompt_id=exp.prompt_id,
+        name=exp.name,
+        metric=exp.metric,
+        variants=exp.variants,
     )
     _experiments[out.id] = out
     return out
@@ -71,5 +73,8 @@ async def get_experiment_results(experiment_id: UUID) -> ExperimentResultOut:
         raise HTTPException(status_code=404, detail="Experiment not found")
     return ExperimentResultOut(
         experiment_id=experiment_id,
-        is_significant=False, winner=None, p_value=1.0, confidence=0.0,
+        is_significant=False,
+        winner=None,
+        p_value=1.0,
+        confidence=0.0,
     )

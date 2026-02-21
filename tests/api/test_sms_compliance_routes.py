@@ -179,11 +179,13 @@ class TestComplianceReportEndpoint:
         if location_id:
             total_opt_outs = await conn.fetchval(
                 "SELECT COUNT(*) FROM sms_opt_outs WHERE location_id = $1 AND opted_out_at >= $2",
-                location_id, cutoff,
+                location_id,
+                cutoff,
             )
         else:
             total_opt_outs = await conn.fetchval(
-                "SELECT COUNT(*) FROM sms_opt_outs WHERE opted_out_at >= $1", cutoff,
+                "SELECT COUNT(*) FROM sms_opt_outs WHERE opted_out_at >= $1",
+                cutoff,
             )
 
         frequency_violations = await conn.fetchval(
@@ -196,7 +198,8 @@ class TestComplianceReportEndpoint:
         )
 
         total_messages = await conn.fetchval(
-            "SELECT COUNT(*) FROM sms_send_audit_log WHERE sent_at >= $1", cutoff,
+            "SELECT COUNT(*) FROM sms_send_audit_log WHERE sent_at >= $1",
+            cutoff,
         )
 
         total_opt_outs = int(total_opt_outs or 0)

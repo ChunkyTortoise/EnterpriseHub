@@ -6,15 +6,16 @@ Supports environment-specific overrides and runtime config updates.
 
 Usage:
     from ghl_real_estate_ai.config.jorge_config_loader import get_config
-    
+
     config = get_config()
     if config.lead_bot.features.enable_predictive_analytics:
         # Enable predictive features
-    
+
     # Or get bot-specific config
     lead_config = get_config().lead_bot
     sla = get_config().shared.performance.sla_response_time_seconds
 """
+
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -38,6 +39,7 @@ class PerformanceConfig:
 @dataclass
 class TTLLRUCacheConfig:
     """Configuration for TTL-based LRU cache (Task #15 extraction)"""
+
     max_entries: int = 1000
     ttl_seconds: int = 3600
 
@@ -73,6 +75,7 @@ class IntegrationsConfig:
 @dataclass
 class EarlyDetectionConfig:
     """Configuration for handoff early detection (Task #19)"""
+
     enabled: bool = True
     threshold: float = 0.7
     log_all_signals: bool = True
@@ -93,6 +96,7 @@ class HandoffConfig:
 @dataclass
 class BehavioralEngineConfig:
     """Configuration for Behavioral Analytics Engine (Task #15 extraction)"""
+
     cache_max_entries: int = 1000
     cache_ttl_seconds: int = 3600
     pattern_min_samples: int = 5
@@ -101,6 +105,7 @@ class BehavioralEngineConfig:
 @dataclass
 class TemperaturePredictionConfig:
     """Configuration for Temperature Prediction Engine (Task #15 extraction)"""
+
     max_leads_in_memory: int = 10000
     prediction_window_days: int = 30
     model_refresh_hours: int = 24
@@ -109,6 +114,7 @@ class TemperaturePredictionConfig:
 @dataclass
 class ConversionTrackingConfig:
     """Configuration for conversion tracking and calibration (Task #24)"""
+
     enabled: bool = True
     min_samples_for_calibration: int = 100
     calibration_schedule_hours: int = 168
@@ -119,6 +125,7 @@ class ConversionTrackingConfig:
 @dataclass
 class AnalyticsConfig:
     """Configuration for analytics engines"""
+
     behavioral_engine: BehavioralEngineConfig = field(default_factory=BehavioralEngineConfig)
     temperature_prediction: TemperaturePredictionConfig = field(default_factory=TemperaturePredictionConfig)
     conversion_tracking: ConversionTrackingConfig = field(default_factory=ConversionTrackingConfig)
@@ -127,6 +134,7 @@ class AnalyticsConfig:
 @dataclass
 class ResponseToneConfig:
     """Configuration for A/B testing response tone (Task #22)"""
+
     experiment_name: str = "response_tone_v1"
     variants: List[str] = field(default_factory=lambda: ["formal", "casual", "empathetic"])
     default: str = "empathetic"
@@ -136,6 +144,7 @@ class ResponseToneConfig:
 @dataclass
 class ABTestingConfig:
     """Configuration for A/B testing experiments"""
+
     enabled: bool = True
     response_tone: ResponseToneConfig = field(default_factory=ResponseToneConfig)
 
@@ -143,6 +152,7 @@ class ABTestingConfig:
 @dataclass
 class BotWorkflowMLAnalytics:
     """Configuration for ML analytics in BaseBotWorkflow (Task #18 - Phase 1)"""
+
     enable_by_default: bool = False
     fallback_on_import_error: bool = True
 
@@ -150,6 +160,7 @@ class BotWorkflowMLAnalytics:
 @dataclass
 class BotWorkflowEvents:
     """Configuration for event publishing in BaseBotWorkflow (Task #18 - Phase 1)"""
+
     enable_publishing: bool = True
     inject_tenant_id: bool = True
     log_publish_errors: bool = True
@@ -171,6 +182,7 @@ class BotWorkflowConfig:
     - AlertingService
     - ABTestingService
     """
+
     ml_analytics: BotWorkflowMLAnalytics = field(default_factory=BotWorkflowMLAnalytics)
     events: BotWorkflowEvents = field(default_factory=BotWorkflowEvents)
 
@@ -206,6 +218,7 @@ class LeadBotWorkflow:
 @dataclass
 class ScoringWeights:
     """Base class for scoring weights with validation (Task #24)"""
+
     weights: Dict[str, float] = field(default_factory=dict)
 
     def __post_init__(self):
@@ -213,10 +226,7 @@ class ScoringWeights:
         if self.weights:
             total = sum(self.weights.values())
             if not (0.99 <= total <= 1.01):
-                logger.warning(
-                    f"Scoring weights sum to {total:.3f}, expected 1.0. "
-                    f"Weights: {self.weights}"
-                )
+                logger.warning(f"Scoring weights sum to {total:.3f}, expected 1.0. Weights: {self.weights}")
 
 
 @dataclass
@@ -235,15 +245,13 @@ class LeadBotScoring:
             if weights:
                 total = sum(weights.values())
                 if not (0.99 <= total <= 1.01):
-                    logger.warning(
-                        f"{name} weights sum to {total:.3f}, expected 1.0. "
-                        f"Weights: {weights}"
-                    )
+                    logger.warning(f"{name} weights sum to {total:.3f}, expected 1.0. Weights: {weights}")
 
 
 @dataclass
 class LeadBotSequence:
     """Configuration for sequence day mapping (Task #23)"""
+
     default_initial_day: str = "day_3"
     valid_days: List[int] = field(default_factory=lambda: [0, 3, 7, 14, 30])
     boundary_handling: str = "round_down"
@@ -288,6 +296,7 @@ class BuyerBotAffordability:
 @dataclass
 class BuyerBotMemory:
     """Configuration for conversation memory persistence (Task #29)"""
+
     enabled: bool = True
     ttl_days: int = 30
     ttl_days_min: int = 7
@@ -300,6 +309,7 @@ class BuyerBotMemory:
 @dataclass
 class BuyerBotScoring:
     """Buyer bot scoring configuration (Task #24)"""
+
     pcs_weights: Dict[str, float] = field(default_factory=dict)
     intent_weights: Dict[str, float] = field(default_factory=dict)
 
@@ -309,10 +319,7 @@ class BuyerBotScoring:
             if weights:
                 total = sum(weights.values())
                 if not (0.99 <= total <= 1.01):
-                    logger.warning(
-                        f"Buyer bot {name} weights sum to {total:.3f}, expected 1.0. "
-                        f"Weights: {weights}"
-                    )
+                    logger.warning(f"Buyer bot {name} weights sum to {total:.3f}, expected 1.0. Weights: {weights}")
 
 
 @dataclass
@@ -363,10 +370,7 @@ class SellerBotScoring:
             if weights:
                 total = sum(weights.values())
                 if not (0.99 <= total <= 1.01):
-                    logger.warning(
-                        f"Seller bot {name} weights sum to {total:.3f}, expected 1.0. "
-                        f"Weights: {weights}"
-                    )
+                    logger.warning(f"Seller bot {name} weights sum to {total:.3f}, expected 1.0. Weights: {weights}")
 
 
 @dataclass
@@ -408,6 +412,7 @@ class OpenTelemetryConfig:
 @dataclass
 class JorgeBotsConfig:
     """Root configuration for all Jorge bots"""
+
     shared: SharedConfig = field(default_factory=SharedConfig)
     lead_bot: LeadBotConfig = field(default_factory=LeadBotConfig)
     buyer_bot: BuyerBotConfig = field(default_factory=BuyerBotConfig)
@@ -435,7 +440,7 @@ class JorgeConfigLoader:
     def _load_config(self) -> None:
         """Load configuration from YAML file"""
         config_path = Path(__file__).parent / "jorge_bots.yaml"
-        
+
         if not config_path.exists():
             logger.warning(f"Config file not found: {config_path}, using defaults")
             self._config = JorgeBotsConfig()

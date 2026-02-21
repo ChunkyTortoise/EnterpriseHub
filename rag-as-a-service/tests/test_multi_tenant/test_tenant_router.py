@@ -2,8 +2,9 @@
 
 import hashlib
 import json
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from rag_service.multi_tenant.tenant_router import TenantRouter
 
@@ -51,9 +52,7 @@ class TestTenantRouter:
         hashed = hashlib.sha256(api_key.encode()).hexdigest()
         mock_redis.get.assert_called_once_with(f"tenant_route:{hashed}")
 
-    async def test_resolve_tenant_from_database(
-        self, tenant_router, mock_redis, mock_db_factory
-    ):
+    async def test_resolve_tenant_from_database(self, tenant_router, mock_redis, mock_db_factory):
         """Test resolving tenant from database when not in cache."""
         # Arrange
         api_key = "test_key_12345"
@@ -83,9 +82,7 @@ class TestTenantRouter:
         assert result["tier"] == "business"
         assert result["scopes"] == ["read", "write", "admin"]
 
-    async def test_resolve_tenant_caches_result(
-        self, tenant_router, mock_redis, mock_db_factory
-    ):
+    async def test_resolve_tenant_caches_result(self, tenant_router, mock_redis, mock_db_factory):
         """Test that database result is cached in Redis."""
         # Arrange
         api_key = "test_key_12345"
@@ -116,9 +113,7 @@ class TestTenantRouter:
         assert call_args[0][0] == f"tenant_route:{hashed}"
         assert call_args[0][1] == 300  # 5 minute TTL
 
-    async def test_resolve_tenant_invalid_key(
-        self, tenant_router, mock_redis, mock_db_factory
-    ):
+    async def test_resolve_tenant_invalid_key(self, tenant_router, mock_redis, mock_db_factory):
         """Test resolving invalid API key returns None."""
         # Arrange
         api_key = "invalid_key"

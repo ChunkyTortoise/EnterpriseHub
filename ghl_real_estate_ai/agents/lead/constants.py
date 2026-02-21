@@ -1,6 +1,7 @@
 """
 Constants for the Lead Bot module.
 """
+
 from typing import Dict, List
 
 # Workflow constants

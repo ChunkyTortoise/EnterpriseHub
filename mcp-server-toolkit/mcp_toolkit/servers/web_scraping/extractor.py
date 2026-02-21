@@ -10,8 +10,7 @@ from typing import Any, Protocol
 class LLMProvider(Protocol):
     """Protocol for LLM providers used in data extraction."""
 
-    async def generate(self, prompt: str) -> str:
-        ...
+    async def generate(self, prompt: str) -> str: ...
 
 
 class DefaultLLMProvider:

@@ -52,7 +52,11 @@ class TestCompetitorIntelligenceIntegration:
         """Sample conversation context for testing"""
         return {
             "conversation_history": [
-                {"role": "user", "content": "I'm looking for a house in Rancho Cucamonga", "timestamp": "2024-01-15T10:00:00"},
+                {
+                    "role": "user",
+                    "content": "I'm looking for a house in Rancho Cucamonga",
+                    "timestamp": "2024-01-15T10:00:00",
+                },
                 {
                     "role": "assistant",
                     "content": "I'd be happy to help you find a home in Rancho Cucamonga",

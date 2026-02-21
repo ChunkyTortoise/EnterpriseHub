@@ -62,6 +62,7 @@ class SchedulerStartupService:
                     import os
 
                     from ghl_real_estate_ai.services.jorge.digest_service import DigestService
+
                     _digest = DigestService()
                     await _digest.schedule_daily_digest(
                         self.scheduler.scheduler,

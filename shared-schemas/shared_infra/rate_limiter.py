@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import time
 import logging
+import time
 
 from redis import asyncio as aioredis
 from redis.exceptions import NoScriptError

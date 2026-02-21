@@ -52,15 +52,33 @@ class TestConsentPrompt:
 
 
 class TestConsentEvaluation:
-    @pytest.mark.parametrize("response", [
-        "Yes", "sure", "okay", "ok", "yeah", "yep", "absolutely", "go ahead",
-    ])
+    @pytest.mark.parametrize(
+        "response",
+        [
+            "Yes",
+            "sure",
+            "okay",
+            "ok",
+            "yeah",
+            "yep",
+            "absolutely",
+            "go ahead",
+        ],
+    )
     def test_positive_consent(self, manager, response):
         assert manager.evaluate_consent_response(response) is True
 
-    @pytest.mark.parametrize("response", [
-        "No", "nope", "I don't want that", "do not record", "refuse", "decline",
-    ])
+    @pytest.mark.parametrize(
+        "response",
+        [
+            "No",
+            "nope",
+            "I don't want that",
+            "do not record",
+            "refuse",
+            "decline",
+        ],
+    )
     def test_negative_consent(self, manager, response):
         assert manager.evaluate_consent_response(response) is False
 

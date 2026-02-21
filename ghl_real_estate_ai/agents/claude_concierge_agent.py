@@ -671,7 +671,11 @@ class MultiAgentCoordinator:
             }
 
     async def _invoke_agent(
-        self, agent_capability: AgentCapability, request: str, context: ConciergeSessionDict, is_supporting: bool = False
+        self,
+        agent_capability: AgentCapability,
+        request: str,
+        context: ConciergeSessionDict,
+        is_supporting: bool = False,
     ) -> Dict[str, Any]:
         """Route to the correct agent invoke function via the pluggable registry.
 

@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 class JourneyStage(str, Enum):
     """Stages of the buyer purchase funnel."""
+
     AWARENESS = "awareness"
     CONSIDERATION = "consideration"
     PRE_APPROVAL = "pre_approval"
@@ -67,6 +68,7 @@ STAGE_ACTIONS = {
 @dataclass
 class StageTransition:
     """Records a stage transition."""
+
     buyer_id: str
     from_stage: str
     to_stage: str
@@ -150,7 +152,10 @@ class BuyerJourneyTracker:
 
         logger.info(
             "Buyer %s progressed: %s → %s (reason: %s)",
-            buyer_id, from_stage, to_stage, reason or "auto",
+            buyer_id,
+            from_stage,
+            to_stage,
+            reason or "auto",
         )
         return transition
 

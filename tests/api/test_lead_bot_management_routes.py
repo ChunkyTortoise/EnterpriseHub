@@ -45,12 +45,15 @@ async def test_create_sequence_uses_service_contract_with_create_sequence():
         start_delay_minutes=0,
     )
 
-    with patch(
-        "ghl_real_estate_ai.api.routes.lead_bot_management.get_sequence_service",
-        return_value=sequence_service,
-    ), patch(
-        "ghl_real_estate_ai.api.routes.lead_bot_management.get_lead_scheduler",
-        return_value=lead_scheduler,
+    with (
+        patch(
+            "ghl_real_estate_ai.api.routes.lead_bot_management.get_sequence_service",
+            return_value=sequence_service,
+        ),
+        patch(
+            "ghl_real_estate_ai.api.routes.lead_bot_management.get_lead_scheduler",
+            return_value=lead_scheduler,
+        ),
     ):
         response = await create_sequence(request, scheduler_service=MagicMock(), _auth=True)
 

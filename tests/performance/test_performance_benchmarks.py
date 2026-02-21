@@ -109,7 +109,12 @@ class TestAIResponsePerformance:
             "property_type": "single_family",
         }
 
-        lead_preferences = {"budget_max": 500000, "bedrooms_min": 3, "location": "Rancho Cucamonga", "timeline": "immediate"}
+        lead_preferences = {
+            "budget_max": 500000,
+            "bedrooms_min": 3,
+            "location": "Rancho Cucamonga",
+            "timeline": "immediate",
+        }
 
         # First call (cache miss) - should be slower
         start_time = time.perf_counter()

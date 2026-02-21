@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from mcp_toolkit.framework.base_server import EnhancedMCP
@@ -27,9 +27,7 @@ class A2AAgentCard:
     version: str = "1.0.0"
     capabilities: list[str] = field(default_factory=list)
     skills: list[dict[str, Any]] = field(default_factory=list)
-    authentication: dict[str, Any] = field(
-        default_factory=lambda: {"schemes": ["bearer"]}
-    )
+    authentication: dict[str, Any] = field(default_factory=lambda: {"schemes": ["bearer"]})
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -134,9 +132,7 @@ class A2AAdapter:
 
         Maps A2A task submission to MCP tool invocation.
         """
-        self._tasks[task_id] = A2ATaskStatus(
-            task_id=task_id, status="working"
-        )
+        self._tasks[task_id] = A2ATaskStatus(task_id=task_id, status="working")
 
         try:
             result = await self._server.call_tool(tool_name, arguments)

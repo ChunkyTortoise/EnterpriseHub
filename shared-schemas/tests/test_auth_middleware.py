@@ -1,12 +1,12 @@
 """Tests for auth middleware (mocked Redis/DB)."""
 
+import hashlib
 import json
 import time
-import hashlib
+from unittest.mock import AsyncMock, MagicMock
 
 import jwt
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 from fastapi import HTTPException
 
 from shared_infra.auth_middleware import AuthContext, AuthMiddleware
@@ -51,8 +51,10 @@ class TestVerifyApiKey:
         class NullSessionFactory:
             def __call__(self):
                 return self
+
             async def __aenter__(self):
                 return session
+
             async def __aexit__(self, *args):
                 pass
 
@@ -136,9 +138,7 @@ class TestRateLimit:
 class TestGetCurrentTenant:
     async def test_api_key_auth(self, auth_middleware, mock_redis):
         hashed = hashlib.sha256(b"my-key").hexdigest()
-        mock_redis._store[f"apikey:{hashed}"] = json.dumps(
-            {"tenant_id": "t1", "scopes": ["read"]}
-        )
+        mock_redis._store[f"apikey:{hashed}"] = json.dumps({"tenant_id": "t1", "scopes": ["read"]})
         request = MagicMock()
         request.headers = {"X-API-Key": "my-key"}
         ctx = await auth_middleware.get_current_tenant(request)

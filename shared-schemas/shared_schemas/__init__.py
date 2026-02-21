@@ -1,13 +1,5 @@
 """Shared schemas for the portfolio product suite."""
 
-from shared_schemas.tenant import (
-    TenantBase,
-    TenantCreate,
-    TenantLimits,
-    TenantResponse,
-    TenantStatus,
-    TenantTier,
-)
 from shared_schemas.auth import (
     APIKeySchema,
     JWTClaims,
@@ -27,6 +19,14 @@ from shared_schemas.events import (
     DomainEvent,
     TenantCreated,
     UsageThresholdReached,
+)
+from shared_schemas.tenant import (
+    TenantBase,
+    TenantCreate,
+    TenantLimits,
+    TenantResponse,
+    TenantStatus,
+    TenantTier,
 )
 from shared_schemas.validators import (
     validate_tenant_limits,

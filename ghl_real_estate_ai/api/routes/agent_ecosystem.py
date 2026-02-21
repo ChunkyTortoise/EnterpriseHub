@@ -199,11 +199,13 @@ async def _restart_agent_lifecycle(agent_id: str, cache: CacheService) -> Dict[s
 
     # Step 5: Health check
     health_ok = True  # In production, ping agent health endpoint
-    restart_log["phases"].append({
-        "phase": "health_check",
-        "status": "passed" if health_ok else "failed",
-        "timestamp": datetime.now().isoformat(),
-    })
+    restart_log["phases"].append(
+        {
+            "phase": "health_check",
+            "status": "passed" if health_ok else "failed",
+            "timestamp": datetime.now().isoformat(),
+        }
+    )
 
     if health_ok:
         await _update_agent_status_in_registry(agent_id, "active", cache)
@@ -219,6 +221,7 @@ async def _restart_agent_lifecycle(agent_id: str, cache: CacheService) -> Dict[s
     await cache.set(f"agent_restart_log:{agent_id}", restart_log, ttl=86400)
 
     return restart_log
+
 
 # ============================================================================
 # RESPONSE MODELS (Match Frontend TypeScript Interfaces)
@@ -919,9 +922,7 @@ async def initiate_handoff(handoff_request: Dict[str, Any], current_user=Depends
         logger.info(f"Initiating coordinated handoff: {from_agent} -> {to_agent}")
 
         # ROADMAP-022: Execute handoff with context preservation and rollback
-        result = await _execute_handoff_with_coordination(
-            from_agent, to_agent, handoff_type, context_data, cache
-        )
+        result = await _execute_handoff_with_coordination(from_agent, to_agent, handoff_type, context_data, cache)
 
         coordination_id = result["coordination_id"]
 
@@ -984,11 +985,12 @@ async def pause_agent(agent_id: str, current_user=Depends(get_current_user_optio
         # Publish pause event
         event_publisher = get_event_publisher()
         await event_publisher.publish_event(
-            "agent_paused", {
+            "agent_paused",
+            {
                 "agent_id": agent_id,
                 "previous_status": result.get("previous_status"),
                 "timestamp": datetime.now().isoformat(),
-            }
+            },
         )
 
         return result
@@ -1019,11 +1021,12 @@ async def resume_agent(agent_id: str, current_user=Depends(get_current_user_opti
         # Publish resume event
         event_publisher = get_event_publisher()
         await event_publisher.publish_event(
-            "agent_resumed", {
+            "agent_resumed",
+            {
                 "agent_id": agent_id,
                 "previous_status": "paused",
                 "timestamp": datetime.now().isoformat(),
-            }
+            },
         )
 
         return result
@@ -1054,12 +1057,13 @@ async def restart_agent(
 
         event_publisher = get_event_publisher()
         await event_publisher.publish_event(
-            "agent_restarted", {
+            "agent_restarted",
+            {
                 "agent_id": agent_id,
                 "success": result.get("success", False),
                 "phases": result.get("phases", []),
                 "timestamp": datetime.now().isoformat(),
-            }
+            },
         )
 
         if not result.get("success", False):

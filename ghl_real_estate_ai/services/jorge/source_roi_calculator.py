@@ -230,7 +230,9 @@ class SourceROICalculator:
         # Recommendation 4: Optimize cost per qualified lead
         if all_roi:
             avg_cpl = sum(s["cost_per_qualified_lead"] for s in all_roi) / len(all_roi)
-            low_cost_sources = [s for s in all_roi if s["cost_per_qualified_lead"] < avg_cpl and s["cost_per_qualified_lead"] > 0]
+            low_cost_sources = [
+                s for s in all_roi if s["cost_per_qualified_lead"] < avg_cpl and s["cost_per_qualified_lead"] > 0
+            ]
 
             if low_cost_sources:
                 best_cost = min(low_cost_sources, key=lambda x: x["cost_per_qualified_lead"])
@@ -277,7 +279,9 @@ class SourceROICalculator:
         winners = {
             "roi": source_a if roi_a["roi"] > roi_b["roi"] else source_b,
             "conversion_rate": source_a if roi_a["conversion_rate"] > roi_b["conversion_rate"] else source_b,
-            "cost_per_qualified_lead": source_a if roi_a["cost_per_qualified_lead"] < roi_b["cost_per_qualified_lead"] else source_b,
+            "cost_per_qualified_lead": source_a
+            if roi_a["cost_per_qualified_lead"] < roi_b["cost_per_qualified_lead"]
+            else source_b,
             "avg_deal_value": source_a if roi_a["avg_deal_value"] > roi_b["avg_deal_value"] else source_b,
         }
 
@@ -307,15 +311,15 @@ class SourceROICalculator:
 
         # Compare overall performance
         score_a = (
-            (roi_a["roi"] / 100 if roi_a["roi"] > 0 else -1) +
-            (roi_a["conversion_rate"] / 10) -
-            (roi_a["cost_per_qualified_lead"] / 1000)
+            (roi_a["roi"] / 100 if roi_a["roi"] > 0 else -1)
+            + (roi_a["conversion_rate"] / 10)
+            - (roi_a["cost_per_qualified_lead"] / 1000)
         )
 
         score_b = (
-            (roi_b["roi"] / 100 if roi_b["roi"] > 0 else -1) +
-            (roi_b["conversion_rate"] / 10) -
-            (roi_b["cost_per_qualified_lead"] / 1000)
+            (roi_b["roi"] / 100 if roi_b["roi"] > 0 else -1)
+            + (roi_b["conversion_rate"] / 10)
+            - (roi_b["cost_per_qualified_lead"] / 1000)
         )
 
         winner = source_a if score_a > score_b else source_b

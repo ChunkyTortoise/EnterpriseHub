@@ -1,6 +1,7 @@
 """
 Behavioral Analytics Engine for analyzing lead behavior patterns.
 """
+
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 

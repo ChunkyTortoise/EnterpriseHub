@@ -51,14 +51,17 @@ _init_mocks = {
 @pytest.fixture
 def orchestrator():
     """Create a ClaudeOrchestrator with all heavy deps mocked."""
-    with patch.multiple("ghl_real_estate_ai.services.claude_orchestrator", **{
-        "LLMClient": MagicMock,
-        "MemoryService": MagicMock,
-        "SentimentDriftEngine": MagicMock,
-        "PsychographicSegmentationEngine": MagicMock,
-        "MarketContextInjector": MagicMock,
-        "safe_create_task": MagicMock(),
-    }):
+    with patch.multiple(
+        "ghl_real_estate_ai.services.claude_orchestrator",
+        **{
+            "LLMClient": MagicMock,
+            "MemoryService": MagicMock,
+            "SentimentDriftEngine": MagicMock,
+            "PsychographicSegmentationEngine": MagicMock,
+            "MarketContextInjector": MagicMock,
+            "safe_create_task": MagicMock(),
+        },
+    ):
         from ghl_real_estate_ai.services.claude_orchestrator import ClaudeOrchestrator, ClaudeTaskType
 
         orch = ClaudeOrchestrator.__new__(ClaudeOrchestrator)
@@ -73,12 +76,14 @@ def orchestrator():
 @pytest.fixture
 def task_types():
     from ghl_real_estate_ai.services.claude_orchestrator import ClaudeTaskType
+
     return ClaudeTaskType
 
 
 # ---------------------------------------------------------------------------
 # _extract_json_block tests
 # ---------------------------------------------------------------------------
+
 
 class TestExtractJsonBlock:
     def test_extract_from_markdown_code_block(self, orchestrator):
@@ -102,7 +107,7 @@ class TestExtractJsonBlock:
         assert result is None
 
     def test_invalid_json_returns_none(self, orchestrator):
-        content = '```json\n{broken json\n```'
+        content = "```json\n{broken json\n```"
         result = orchestrator._extract_json_block(content)
         assert result is None
 
@@ -110,6 +115,7 @@ class TestExtractJsonBlock:
 # ---------------------------------------------------------------------------
 # _extract_balanced_json tests
 # ---------------------------------------------------------------------------
+
 
 class TestExtractBalancedJson:
     def test_simple_object(self, orchestrator):
@@ -136,6 +142,7 @@ class TestExtractBalancedJson:
 # ---------------------------------------------------------------------------
 # _parse_confidence_score tests
 # ---------------------------------------------------------------------------
+
 
 class TestParseConfidenceScore:
     def test_from_json_decimal(self, orchestrator):
@@ -171,6 +178,7 @@ class TestParseConfidenceScore:
 # _structure_action tests
 # ---------------------------------------------------------------------------
 
+
 class TestStructureAction:
     def test_high_priority_detection(self, orchestrator):
         action = orchestrator._structure_action("URGENT: Call the lead immediately")
@@ -192,6 +200,7 @@ class TestStructureAction:
 # _structure_risk tests
 # ---------------------------------------------------------------------------
 
+
 class TestStructureRisk:
     def test_high_severity_detection(self, orchestrator):
         risk = orchestrator._structure_risk("Critical: Lead may churn due to competitor offer")
@@ -209,6 +218,7 @@ class TestStructureRisk:
 # ---------------------------------------------------------------------------
 # _structure_opportunity tests
 # ---------------------------------------------------------------------------
+
 
 class TestStructureOpportunity:
     def test_dollar_value_extraction(self, orchestrator):
@@ -228,19 +238,23 @@ class TestStructureOpportunity:
 # _get_complexity_for_task tests
 # ---------------------------------------------------------------------------
 
+
 class TestGetComplexity:
     def test_routine_task(self, orchestrator, task_types):
         from ghl_real_estate_ai.core.llm_client import TaskComplexity
+
         result = orchestrator._get_complexity_for_task(task_types.CHAT_QUERY)
         assert result == TaskComplexity.ROUTINE
 
     def test_high_stakes_task(self, orchestrator, task_types):
         from ghl_real_estate_ai.core.llm_client import TaskComplexity
+
         result = orchestrator._get_complexity_for_task(task_types.EXECUTIVE_BRIEFING)
         assert result == TaskComplexity.HIGH_STAKES
 
     def test_complex_task_default(self, orchestrator, task_types):
         from ghl_real_estate_ai.core.llm_client import TaskComplexity
+
         result = orchestrator._get_complexity_for_task(task_types.REPORT_SYNTHESIS)
         assert result == TaskComplexity.COMPLEX
 
@@ -248,6 +262,7 @@ class TestGetComplexity:
 # ---------------------------------------------------------------------------
 # _get_system_prompt tests
 # ---------------------------------------------------------------------------
+
 
 class TestGetSystemPrompt:
     def test_chat_query_prompt(self, orchestrator, task_types):
@@ -266,6 +281,7 @@ class TestGetSystemPrompt:
 # ---------------------------------------------------------------------------
 # _update_metrics tests
 # ---------------------------------------------------------------------------
+
 
 class TestUpdateMetrics:
     def test_success_increments_count(self, orchestrator):
@@ -287,6 +303,7 @@ class TestUpdateMetrics:
 # _get_demo_fallback_response tests
 # ---------------------------------------------------------------------------
 
+
 class TestDemoFallback:
     def test_chat_query_fallback(self, orchestrator, task_types):
         resp = orchestrator._get_demo_fallback_response(task_types.CHAT_QUERY)
@@ -301,6 +318,7 @@ class TestDemoFallback:
 # ---------------------------------------------------------------------------
 # _extract_list_items tests
 # ---------------------------------------------------------------------------
+
 
 class TestExtractListItems:
     def test_numbered_list(self, orchestrator):
@@ -329,6 +347,7 @@ class TestExtractListItems:
 # ---------------------------------------------------------------------------
 # _parse_response integration tests
 # ---------------------------------------------------------------------------
+
 
 class TestParseResponse:
     def test_parse_lead_analysis_extracts_risks(self, orchestrator, task_types):
@@ -373,6 +392,7 @@ Jorge here - got a hot listing you might like!
 # Helpers for process_request tests
 # ---------------------------------------------------------------------------
 
+
 def _make_mock_llm_response(content="Test response", tool_calls=None):
     """Build a mock LLMResponse-like object."""
     resp = MagicMock()
@@ -388,15 +408,18 @@ def _make_mock_llm_response(content="Test response", tool_calls=None):
 
 def _make_full_orchestrator():
     """Create a ClaudeOrchestrator with wired-up mocks suitable for process_request."""
-    with patch.multiple("ghl_real_estate_ai.services.claude_orchestrator", **{
-        "LLMClient": MagicMock,
-        "MemoryService": MagicMock,
-        "SentimentDriftEngine": MagicMock,
-        "PsychographicSegmentationEngine": MagicMock,
-        "MarketContextInjector": MagicMock,
-        "safe_create_task": MagicMock(),
-        "skill_registry": MagicMock(),
-    }):
+    with patch.multiple(
+        "ghl_real_estate_ai.services.claude_orchestrator",
+        **{
+            "LLMClient": MagicMock,
+            "MemoryService": MagicMock,
+            "SentimentDriftEngine": MagicMock,
+            "PsychographicSegmentationEngine": MagicMock,
+            "MarketContextInjector": MagicMock,
+            "safe_create_task": MagicMock(),
+            "skill_registry": MagicMock(),
+        },
+    ):
         from ghl_real_estate_ai.services.claude_orchestrator import (
             ClaudeOrchestrator,
             ClaudeRequest,
@@ -421,6 +444,7 @@ def _make_full_orchestrator():
 # ---------------------------------------------------------------------------
 # process_request end-to-end tests (mocked LLM)
 # ---------------------------------------------------------------------------
+
 
 class TestProcessRequest:
     @pytest.mark.asyncio
@@ -500,9 +524,9 @@ class TestProcessRequest:
         orch, ClaudeRequest, _, ClaudeTaskType = _make_full_orchestrator()
 
         # First call returns a tool call, second returns final text
-        tool_call_resp = _make_mock_llm_response("Thinking...", tool_calls=[
-            {"id": "tc_1", "name": "analyze_lead", "args": {"lead_id": "L1"}}
-        ])
+        tool_call_resp = _make_mock_llm_response(
+            "Thinking...", tool_calls=[{"id": "tc_1", "name": "analyze_lead", "args": {"lead_id": "L1"}}]
+        )
         final_resp = _make_mock_llm_response("Final analysis complete.")
 
         orch.llm.agenerate = AsyncMock(side_effect=[tool_call_resp, final_resp])
@@ -510,16 +534,20 @@ class TestProcessRequest:
 
         # Mock skill_registry to return a server
         from unittest.mock import PropertyMock
+
         mock_registry = MagicMock()
         mock_registry.get_all_tools.return_value = ["analyze_lead"]
         mock_registry.get_server_for_tool.return_value = "LeadIntelligence"
         mock_registry.get_category_for_tool.return_value = None
 
         mock_server = MagicMock()
-        mock_server.get_tool = AsyncMock(return_value=MagicMock(
-            name="analyze_lead", description="Analyze a lead",
-            model_json_schema=MagicMock(return_value={"type": "object", "properties": {}})
-        ))
+        mock_server.get_tool = AsyncMock(
+            return_value=MagicMock(
+                name="analyze_lead",
+                description="Analyze a lead",
+                model_json_schema=MagicMock(return_value={"type": "object", "properties": {}}),
+            )
+        )
         mock_server._call_tool = AsyncMock(return_value="Tool result data")
         orch.mcp_servers = {"LeadIntelligence": mock_server}
 
@@ -540,15 +568,18 @@ class TestProcessRequest:
 # Memory cache hit / miss tests
 # ---------------------------------------------------------------------------
 
+
 class TestContextEnhancement:
     @pytest.mark.asyncio
     async def test_enhance_context_cache_miss(self):
         orch, _, _, _ = _make_full_orchestrator()
-        orch.memory.get_context = AsyncMock(return_value={
-            "relevant_knowledge": "Lead prefers 3BR homes",
-            "conversation_history": [{"role": "user", "content": "hi"}],
-            "extracted_preferences": {"bedrooms": 3},
-        })
+        orch.memory.get_context = AsyncMock(
+            return_value={
+                "relevant_knowledge": "Lead prefers 3BR homes",
+                "conversation_history": [{"role": "user", "content": "hi"}],
+                "extracted_preferences": {"bedrooms": 3},
+            }
+        )
 
         context = {"lead_id": "lead-42"}
         enhanced = await orch._enhance_context(context)
@@ -603,6 +634,7 @@ class TestContextEnhancement:
 # _build_prompt tests
 # ---------------------------------------------------------------------------
 
+
 class TestBuildPrompt:
     def test_build_prompt_includes_context(self, orchestrator):
         result = orchestrator._build_prompt("Analyze lead", {"lead_id": "L1"})
@@ -618,6 +650,7 @@ class TestBuildPrompt:
 # ---------------------------------------------------------------------------
 # _extract_conversation_messages tests
 # ---------------------------------------------------------------------------
+
 
 class TestExtractConversationMessages:
     def test_direct_conversation_history(self, orchestrator):
@@ -673,6 +706,7 @@ class TestExtractConversationMessages:
 # ---------------------------------------------------------------------------
 # get_performance_metrics tests
 # ---------------------------------------------------------------------------
+
 
 class TestGetPerformanceMetrics:
     def test_returns_copy(self, orchestrator):

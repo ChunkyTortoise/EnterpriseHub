@@ -76,9 +76,7 @@ async def test_claude_timeout_triggers_failover_or_raises():
         client = LLMClient(provider="claude")
         # Simulate an async client whose messages.create raises TimeoutError
         mock_async_client = AsyncMock()
-        mock_async_client.messages.create = AsyncMock(
-            side_effect=asyncio.TimeoutError("Request timed out")
-        )
+        mock_async_client.messages.create = AsyncMock(side_effect=asyncio.TimeoutError("Request timed out"))
         client._async_client = mock_async_client
 
         # No google_api_key → failover disabled → should raise LLMTimeoutError
@@ -104,9 +102,7 @@ async def test_claude_timeout_failover_to_gemini():
         client = LLMClient(provider="claude")
         # Simulate Claude timeout
         mock_async_client = AsyncMock()
-        mock_async_client.messages.create = AsyncMock(
-            side_effect=asyncio.TimeoutError("Request timed out")
-        )
+        mock_async_client.messages.create = AsyncMock(side_effect=asyncio.TimeoutError("Request timed out"))
         client._async_client = mock_async_client
 
         # Mock the Gemini failover path
@@ -137,9 +133,7 @@ async def test_claude_circuit_breaker_opens_after_consecutive_failures():
         client = LLMClient(provider="claude")
 
         mock_async_client = AsyncMock()
-        mock_async_client.messages.create = AsyncMock(
-            side_effect=asyncio.TimeoutError("timeout")
-        )
+        mock_async_client.messages.create = AsyncMock(side_effect=asyncio.TimeoutError("timeout"))
         client._async_client = mock_async_client
 
         # Trigger 3 failures

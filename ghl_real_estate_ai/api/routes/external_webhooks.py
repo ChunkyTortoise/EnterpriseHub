@@ -7,7 +7,6 @@ Handles incoming webhooks from:
 - Apollo (Data enrichment events)
 """
 
-
 from fastapi import APIRouter, HTTPException, Request, status
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -48,9 +47,7 @@ async def handle_twilio_sms_status(request: Request):
 
     except Exception:
         logger.exception("Twilio status webhook processing failed")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable")
 
 
 @router.post("/twilio/sms-incoming")
@@ -79,9 +76,7 @@ async def handle_twilio_sms_incoming(request: Request):
 
     except Exception:
         logger.exception("Twilio incoming webhook processing failed")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable")
 
 
 @router.post("/sendgrid/events")
@@ -108,9 +103,7 @@ async def handle_sendgrid_events(request: Request):
 
     except Exception:
         logger.exception("SendGrid event webhook processing failed")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable")
 
 
 @router.post("/apollo/enrichment")
@@ -129,6 +122,4 @@ async def handle_apollo_enrichment(request: Request):
 
     except Exception:
         logger.exception("Apollo enrichment webhook processing failed")
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable"
-        )
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable")

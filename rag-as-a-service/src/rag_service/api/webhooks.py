@@ -48,6 +48,8 @@ async def stripe_webhook(request: Request) -> JSONResponse:
     elif event_type == "invoice.payment_failed":
         logger.warning("Payment failed for customer %s", event["data"]["object"].get("customer"))
     elif event_type == "customer.subscription.deleted":
-        logger.info("Subscription cancelled for customer %s", event["data"]["object"].get("customer"))
+        logger.info(
+            "Subscription cancelled for customer %s", event["data"]["object"].get("customer")
+        )
 
     return JSONResponse(status_code=200, content={"status": "ok"})

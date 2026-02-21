@@ -174,7 +174,8 @@ def test_handoff_rate_limiting(handoff_service):
         )
 
     recent = [
-        h for h in handoff_service._handoff_history.get(contact_id, [])
+        h
+        for h in handoff_service._handoff_history.get(contact_id, [])
         if now - h["timestamp"] < handoff_service.HOUR_SECONDS
     ]
     assert len(recent) == 3
@@ -215,7 +216,8 @@ def test_circular_prevention_window(handoff_service):
     # Check for circular pattern
     recent_handoffs = handoff_service._handoff_history.get(contact_id, [])
     within_window = [
-        h for h in recent_handoffs
+        h
+        for h in recent_handoffs
         if now - h["timestamp"] < handoff_service.CIRCULAR_WINDOW_SECONDS
         and h["source_bot"] == "lead"
         and h["target_bot"] == "buyer"

@@ -1,4 +1,5 @@
 """Behavioral feature extraction for ML lead scoring."""
+
 import logging
 import re
 from dataclasses import dataclass, field
@@ -127,13 +128,8 @@ def extract_behavioral_features(
     features.avg_message_length = sum(lengths) / len(lengths) if lengths else 0.0
 
     # Emoji density
-    emoji_pattern = re.compile(
-        "[\U0001f600-\U0001f64f\U0001f300-\U0001f5ff"
-        "\U0001f680-\U0001f6ff\U0001f1e0-\U0001f1ff]"
-    )
-    total_emojis = sum(
-        len(emoji_pattern.findall(m.get("content", ""))) for m in user_msgs
-    )
+    emoji_pattern = re.compile("[\U0001f600-\U0001f64f\U0001f300-\U0001f5ff\U0001f680-\U0001f6ff\U0001f1e0-\U0001f1ff]")
+    total_emojis = sum(len(emoji_pattern.findall(m.get("content", ""))) for m in user_msgs)
     features.emoji_density = total_emojis / len(user_msgs) if user_msgs else 0.0
 
     # Question ratio
@@ -158,18 +154,13 @@ def extract_behavioral_features(
     if timestamps and len(timestamps) >= 2:
         response_times = []
         for i in range(1, len(timestamps)):
-            if (
-                messages[i].get("role") == "user"
-                and messages[i - 1].get("role") == "assistant"
-            ):
+            if messages[i].get("role") == "user" and messages[i - 1].get("role") == "assistant":
                 delta = (timestamps[i] - timestamps[i - 1]).total_seconds()
                 if 0 < delta < 86400:  # Ignore gaps > 24h
                     response_times.append(delta)
 
         if response_times:
-            features.avg_response_time_seconds = sum(response_times) / len(
-                response_times
-            )
+            features.avg_response_time_seconds = sum(response_times) / len(response_times)
             if len(response_times) >= 3:
                 first_half = response_times[: len(response_times) // 2]
                 second_half = response_times[len(response_times) // 2 :]
@@ -178,22 +169,12 @@ def extract_behavioral_features(
                 features.response_time_trend = avg_second - avg_first
 
         # Temporal patterns
-        user_hours = [
-            timestamps[i].hour
-            for i in range(len(timestamps))
-            if messages[i].get("role") == "user"
-        ]
+        user_hours = [timestamps[i].hour for i in range(len(timestamps)) if messages[i].get("role") == "user"]
         if user_hours:
             features.preferred_hour = max(set(user_hours), key=user_hours.count)
-            features.late_night_engagement = any(
-                22 <= h or h < 6 for h in user_hours
-            )
+            features.late_night_engagement = any(22 <= h or h < 6 for h in user_hours)
 
-        user_weekdays = [
-            timestamps[i].weekday()
-            for i in range(len(timestamps))
-            if messages[i].get("role") == "user"
-        ]
+        user_weekdays = [timestamps[i].weekday() for i in range(len(timestamps)) if messages[i].get("role") == "user"]
         features.weekend_engagement = any(d >= 5 for d in user_weekdays)
 
     # Initiative: count user messages that start a new "turn" (first or after long gap)
@@ -206,8 +187,6 @@ def extract_behavioral_features(
                 features.unprompted_messages += 1
 
     total_user = len(user_msgs)
-    features.initiative_ratio = (
-        initiative_count / total_user if total_user > 0 else 0.0
-    )
+    features.initiative_ratio = initiative_count / total_user if total_user > 0 else 0.0
 
     return features

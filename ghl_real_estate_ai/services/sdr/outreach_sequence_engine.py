@@ -25,6 +25,7 @@ logger = get_logger(__name__)
 # Step definitions
 # ---------------------------------------------------------------------------
 
+
 class SequenceStep(Enum):
     """All possible states in the SDR outreach sequence."""
 
@@ -113,6 +114,7 @@ _STEP_CHANNEL: Dict[str, str] = {
 # OutreachRecord
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class OutreachRecord:
     """In-memory representation of a contact's sequence state."""
@@ -126,12 +128,13 @@ class OutreachRecord:
     objections_hit: List[str] = field(default_factory=list)
     lead_type: str = "unknown"
     ab_variant: Optional[str] = None
-    sequence_id: Optional[str] = None   # FK to sdr_outreach_sequences.id
+    sequence_id: Optional[str] = None  # FK to sdr_outreach_sequences.id
 
 
 # ---------------------------------------------------------------------------
 # OutreachSequenceEngine
 # ---------------------------------------------------------------------------
+
 
 class OutreachSequenceEngine:
     """
@@ -178,9 +181,7 @@ class OutreachSequenceEngine:
 
         # Advance to first touch
         record = await self.advance_sequence(record, reply_received=False)
-        logger.info(
-            f"[SDR] Enrolled contact={contact_id} first_step={record.current_step.value}"
-        )
+        logger.info(f"[SDR] Enrolled contact={contact_id} first_step={record.current_step.value}")
         return record
 
     async def advance_sequence(
@@ -256,15 +257,10 @@ class OutreachSequenceEngine:
                     "lead_type": record.lead_type,
                 },
             )
-            logger.info(
-                f"[SDR] Dispatched step={step.value} channel={channel} "
-                f"contact={record.contact_id}"
-            )
+            logger.info(f"[SDR] Dispatched step={step.value} channel={channel} contact={record.contact_id}")
             return True
         except Exception as exc:
-            logger.error(
-                f"[SDR] Dispatch failed step={step.value} contact={record.contact_id}: {exc}"
-            )
+            logger.error(f"[SDR] Dispatch failed step={step.value} contact={record.contact_id}: {exc}")
             return False
 
     def _get_workflow_id(self, channel: str) -> str:

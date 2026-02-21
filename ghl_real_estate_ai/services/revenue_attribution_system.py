@@ -1540,9 +1540,7 @@ class RevenueAttributionSystem:
             )
             total_leads = int(lead_count_row["total_leads"]) if lead_count_row else 1
 
-            logger.info(
-                f"Retrieved {len(conversions)} conversions for period {analysis_period}"
-            )
+            logger.info(f"Retrieved {len(conversions)} conversions for period {analysis_period}")
 
             return {
                 "conversions": conversions,

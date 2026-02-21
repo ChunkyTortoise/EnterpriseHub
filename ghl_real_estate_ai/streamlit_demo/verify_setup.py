@@ -24,21 +24,18 @@ def verify_imports():
     print("🔍 Verifying imports...")
 
     try:
-
         print("  ✅ MockClaudeService imported")
     except Exception as e:
         print(f"  ❌ MockClaudeService import failed: {e}")
         return False
 
     try:
-
         print("  ✅ MockRAGService imported")
     except Exception as e:
         print(f"  ❌ MockRAGService import failed: {e}")
         return False
 
     try:
-
         print("  ✅ LeadScorer imported")
     except Exception as e:
         print(f"  ❌ LeadScorer import failed: {e}")

@@ -10,9 +10,9 @@ import logging
 import uuid
 from dataclasses import dataclass, field
 
+from rag_service.billing.usage_tracker import UsageTracker
 from rag_service.core.document_processor import DocumentProcessor, ProcessedDocument
 from rag_service.core.embedding_service import EmbeddingService
-from rag_service.billing.usage_tracker import UsageTracker
 
 logger = logging.getLogger(__name__)
 

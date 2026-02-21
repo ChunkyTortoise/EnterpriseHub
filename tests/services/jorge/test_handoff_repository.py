@@ -17,6 +17,7 @@ from ghl_real_estate_ai.services.jorge.handoff_repository import (
 
 # ── Helpers ───────────────────────────────────────────────────────────
 
+
 class FakeRedis:
     """Minimal async Redis fake for testing (subset of redis.asyncio API)."""
 
@@ -64,7 +65,7 @@ class FakeRedis:
 
     async def ltrim(self, key, start, stop):
         if key in self._data:
-            self._data[key] = self._data[key][start:stop + 1]
+            self._data[key] = self._data[key][start : stop + 1]
         return True
 
     async def lrange(self, key, start, stop):
@@ -72,7 +73,7 @@ class FakeRedis:
             return []
         if stop == -1:
             return self._data[key][start:]
-        return self._data[key][start:stop + 1]
+        return self._data[key][start : stop + 1]
 
     async def expire(self, key, seconds):
         self._expiries[key] = time.time() + seconds
@@ -103,6 +104,7 @@ class FakeRedis:
 
     async def scan_iter(self, match=None, count=100):
         import fnmatch
+
         for key in list(self._data.keys()):
             if match is None or fnmatch.fnmatch(key, match):
                 yield key

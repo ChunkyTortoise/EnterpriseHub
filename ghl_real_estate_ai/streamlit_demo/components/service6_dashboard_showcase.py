@@ -365,7 +365,6 @@ class Service6DashboardShowcase:
             st.markdown("---")
             st.markdown("**📈 Live Metrics**")
 
-
             current_time = datetime.now()
 
             st.metric("Uptime", "99.9%", "0.1%")

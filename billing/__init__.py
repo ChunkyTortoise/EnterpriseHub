@@ -4,6 +4,7 @@ Billing enums and plan configuration for EnterpriseHub.
 Provides subscription tiers, status enums, and plan configurations
 for the EnterpriseHub SaaS platform.
 """
+
 import os
 from dataclasses import dataclass
 from enum import Enum
@@ -15,6 +16,7 @@ import yaml
 
 class PlanTier(str, Enum):
     """Plan tier enumeration."""
+
     STARTER = "starter"
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
@@ -22,6 +24,7 @@ class PlanTier(str, Enum):
 
 class SubscriptionStatus(str, Enum):
     """Subscription status enumeration."""
+
     INCOMPLETE = "incomplete"
     TRIALING = "trialing"
     ACTIVE = "active"
@@ -33,6 +36,7 @@ class SubscriptionStatus(str, Enum):
 
 class ResourceType(str, Enum):
     """Resource type for usage tracking."""
+
     LEAD = "lead"
     QUERY = "query"
     API_CALL = "api_call"
@@ -147,60 +151,63 @@ PLAN_CONFIGS: Dict[PlanTier, Dict[str, Any]] = {
 
 class BillingError(Exception):
     """Base billing error."""
+
     pass
 
 
 class PaymentFailedError(BillingError):
     """Raised when payment processing fails."""
+
     pass
 
 
 class QuotaExceededError(BillingError):
     """Raised when usage quota is exceeded."""
+
     pass
 
 
 class SubscriptionExpiredError(BillingError):
     """Raised when subscription is not active."""
+
     pass
 
 
 class InvalidPlanError(BillingError):
     """Raised when an invalid plan is specified."""
+
     pass
 
 
 class FeatureNotAvailableError(BillingError):
     """Raised when a feature is not available on the current plan."""
+
     pass
 
 
 def load_plans_from_yaml(config_path: Optional[str] = None) -> Dict[PlanTier, Dict[str, Any]]:
     """
     Load plan configurations from YAML file.
-    
+
     Args:
         config_path: Path to plans.yaml file. If None, uses default location.
-        
+
     Returns:
         Dictionary of plan configurations
     """
     if config_path is None:
-        config_path = os.environ.get(
-            "BILLING_CONFIG_PATH",
-            str(Path(__file__).parent.parent / "config" / "plans.yaml")
-        )
-    
+        config_path = os.environ.get("BILLING_CONFIG_PATH", str(Path(__file__).parent.parent / "config" / "plans.yaml"))
+
     path = Path(config_path)
     if not path.exists():
         return PLAN_CONFIGS
-    
+
     with open(path, "r") as f:
         yaml_config = yaml.safe_load(f)
-    
+
     if not yaml_config or "plans" not in yaml_config:
         return PLAN_CONFIGS
-    
+
     configs = {}
     for plan_key, plan_data in yaml_config["plans"].items():
         try:
@@ -208,7 +215,7 @@ def load_plans_from_yaml(config_path: Optional[str] = None) -> Dict[PlanTier, Di
             configs[tier] = plan_data
         except ValueError:
             continue
-    
+
     return configs if configs else PLAN_CONFIGS
 
 
@@ -219,35 +226,35 @@ _cached_plans: Optional[Dict[PlanTier, Dict[str, Any]]] = None
 def get_plan_config(plan_tier: PlanTier) -> Dict[str, Any]:
     """
     Get configuration for a plan tier.
-    
+
     Args:
         plan_tier: The plan tier to get configuration for
-        
+
     Returns:
         Dictionary containing plan configuration
-        
+
     Raises:
         InvalidPlanError: If plan tier is not found
     """
     global _cached_plans
-    
+
     if _cached_plans is None:
         _cached_plans = load_plans_from_yaml()
-    
+
     if plan_tier not in _cached_plans:
         raise InvalidPlanError(f"Invalid plan tier: {plan_tier}")
-    
+
     return _cached_plans[plan_tier]
 
 
 def is_feature_available(plan_tier: PlanTier, feature: str) -> bool:
     """
     Check if a feature is available on a plan tier.
-    
+
     Args:
         plan_tier: The plan tier to check
         feature: The feature name to check
-        
+
     Returns:
         True if feature is available, False otherwise
     """
@@ -258,11 +265,11 @@ def is_feature_available(plan_tier: PlanTier, feature: str) -> bool:
 def get_plan_price(plan_tier: PlanTier, interval: str = "month") -> int:
     """
     Get price in cents for a plan tier and billing interval.
-    
+
     Args:
         plan_tier: The plan tier
         interval: "month" or "year"
-        
+
     Returns:
         Price in cents
     """
@@ -275,10 +282,10 @@ def get_plan_price(plan_tier: PlanTier, interval: str = "month") -> int:
 def get_lead_quota(plan_tier: PlanTier) -> int:
     """
     Get lead quota for a plan tier.
-    
+
     Args:
         plan_tier: The plan tier
-        
+
     Returns:
         Lead quota (-1 = unlimited)
     """
@@ -289,10 +296,10 @@ def get_lead_quota(plan_tier: PlanTier) -> int:
 def get_query_quota(plan_tier: PlanTier) -> int:
     """
     Get query quota for a plan tier.
-    
+
     Args:
         plan_tier: The plan tier
-        
+
     Returns:
         Query quota (-1 = unlimited)
     """
@@ -303,11 +310,11 @@ def get_query_quota(plan_tier: PlanTier) -> int:
 def get_plan_limit(plan_tier: PlanTier, limit_name: str) -> int:
     """
     Get a specific limit for a plan tier.
-    
+
     Args:
         plan_tier: The plan tier
         limit_name: The limit to check
-        
+
     Returns:
         Limit value (-1 = unlimited)
     """
@@ -318,22 +325,22 @@ def get_plan_limit(plan_tier: PlanTier, limit_name: str) -> int:
 def get_all_plans() -> Dict[PlanTier, Dict[str, Any]]:
     """
     Get all plan configurations.
-    
+
     Returns:
         Dictionary of all plan configurations
     """
     global _cached_plans
-    
+
     if _cached_plans is None:
         _cached_plans = load_plans_from_yaml()
-    
+
     return _cached_plans
 
 
 def reload_plans() -> None:
     """
     Reload plan configurations from YAML file.
-    
+
     Call this after updating the plans.yaml file.
     """
     global _cached_plans

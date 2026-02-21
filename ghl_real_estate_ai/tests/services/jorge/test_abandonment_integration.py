@@ -48,9 +48,7 @@ class TestAbandonmentRecoveryFlow:
         ]
 
         # Initialize services
-        detector = AbandonmentDetector(
-            ghl_client=mock_ghl_client, db_pool=mock_db_pool
-        )
+        detector = AbandonmentDetector(ghl_client=mock_ghl_client, db_pool=mock_db_pool)
         orchestrator = RecoveryOrchestrator(ghl_client=mock_ghl_client)
 
         # Step 1: Detect abandoned contacts
@@ -75,9 +73,7 @@ class TestAbandonmentRecoveryFlow:
         mock_ghl_client = AsyncMock()
         mock_db_pool = AsyncMock()
 
-        detector = AbandonmentDetector(
-            ghl_client=mock_ghl_client, db_pool=mock_db_pool
-        )
+        detector = AbandonmentDetector(ghl_client=mock_ghl_client, db_pool=mock_db_pool)
         orchestrator = RecoveryOrchestrator(ghl_client=mock_ghl_client)
 
         current_time = time.time()
@@ -134,9 +130,7 @@ class TestAbandonmentRecoveryFlow:
             }
         ]
 
-        detector = AbandonmentDetector(
-            ghl_client=mock_ghl_client, db_pool=mock_db_pool
-        )
+        detector = AbandonmentDetector(ghl_client=mock_ghl_client, db_pool=mock_db_pool)
 
         # Detect - should return empty because still at same stage
         contacts = await detector.detect_abandoned_contacts("loc123")
@@ -163,9 +157,7 @@ class TestBackgroundTaskIntegration:
 
     @patch("ghl_real_estate_ai.services.jorge.abandonment_detector.get_abandonment_detector")
     @patch("ghl_real_estate_ai.services.jorge.recovery_orchestrator.get_recovery_orchestrator")
-    async def test_background_task_one_iteration(
-        self, mock_get_orchestrator, mock_get_detector
-    ):
+    async def test_background_task_one_iteration(self, mock_get_orchestrator, mock_get_detector):
         """Test one iteration of background task loop."""
         # Mock detector and orchestrator
         mock_detector = AsyncMock()
@@ -195,9 +187,7 @@ class TestBackgroundTaskIntegration:
         mock_orchestrator.orchestrate_recovery.return_value = {
             "successful": 1,
             "total_attempted": 1,
-            "contacts_processed": [
-                {"contact_id": "c123", "stage": "3d", "status": "success"}
-            ],
+            "contacts_processed": [{"contact_id": "c123", "stage": "3d", "status": "success"}],
         }
 
         # Import and run one iteration

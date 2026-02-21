@@ -245,8 +245,7 @@ class TestInMemoryVectorStore:
     async def test_insert_batch(self, store):
         """Test batch insert."""
         entries = [
-            VectorEntry(id=f"doc{i}", vector=[0.1] * 10, content=f"Content {i}")
-            for i in range(5)
+            VectorEntry(id=f"doc{i}", vector=[0.1] * 10, content=f"Content {i}") for i in range(5)
         ]
         ids = await store.insert_batch(entries)
         assert len(ids) == 5
@@ -297,12 +296,14 @@ class TestLongTermMemory:
     @pytest.fixture
     def mock_embedder(self):
         """Create a mock embedding function."""
+
         async def embed(text: str) -> list[float]:
             # Simple mock: use hash of text to create deterministic vector
             hash_val = hash(text) % 1000
             vec = [0.0] * 10
             vec[hash_val % 10] = 1.0
             return vec
+
         return embed
 
     @pytest.fixture
@@ -353,7 +354,7 @@ class TestLongTermMemory:
         memory = LongTermMemory(
             vector_store=store,
             embedder=None,
-            default_dimension=10  # Match store dimension
+            default_dimension=10,  # Match store dimension
         )
         await memory.store(key="test", value="content")
 
@@ -394,12 +395,8 @@ class TestLongTermMemory:
     @pytest.mark.asyncio
     async def test_search_with_metadata_filter(self, memory):
         """Test search with metadata filtering."""
-        await memory.store(
-            key="doc1", value="Content 1", metadata={"category": "news"}
-        )
-        await memory.store(
-            key="doc2", value="Content 2", metadata={"category": "sports"}
-        )
+        await memory.store(key="doc1", value="Content 1", metadata={"category": "news"})
+        await memory.store(key="doc2", value="Content 2", metadata={"category": "sports"})
 
         results = await memory.search("Content", filter_metadata={"category": "news"})
         assert len(results) == 1

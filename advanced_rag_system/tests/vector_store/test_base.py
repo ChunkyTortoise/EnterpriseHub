@@ -10,8 +10,6 @@ from src.vector_store.base import SearchOptions, VectorStore, VectorStoreConfig
 
 
 @pytest.mark.unit
-
-
 class MockVectorStore(VectorStore):
     """Mock implementation for testing."""
 

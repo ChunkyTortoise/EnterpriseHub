@@ -145,8 +145,7 @@ class JorgeSellerConfig:
         timeline = (timeline_urgency or "").lower()
 
         wholesale_condition = any(
-            kw in condition
-            for kw in ("fixer", "needs work", "work", "repair", "rough", "poor", "as-is", "distressed")
+            kw in condition for kw in ("fixer", "needs work", "work", "repair", "rough", "poor", "as-is", "distressed")
         )
         wholesale_motivation = any(
             kw in motivation
@@ -157,8 +156,7 @@ class JorgeSellerConfig:
             for kw in ("move-in", "move in", "ready", "excellent", "good", "updated", "renovated", "remodeled")
         )
         listing_motivation = any(
-            kw in motivation
-            for kw in ("upsize", "upgrade", "downsize", "retire", "relocat", "new job", "family")
+            kw in motivation for kw in ("upsize", "upgrade", "downsize", "retire", "relocat", "new job", "family")
         )
 
         # Strong wholesale signals (condition is the most reliable indicator)
@@ -440,7 +438,7 @@ class JorgeSellerConfig:
         # Ensure SMS length compliance (reserve 30 chars for AI disclosure footer)
         effective_limit = cls.MAX_SMS_LENGTH - 30
         if len(message) > effective_limit:
-            message = message[:effective_limit - 3] + "..."
+            message = message[: effective_limit - 3] + "..."
 
         return message.strip()
 
@@ -931,9 +929,7 @@ class SellerBotConfig:
             enable_valuation_defense=os.getenv("SELLER_ENABLE_VALUATION_DEFENSE", "true").lower() == "true",
             enable_seller_intent_decoder=os.getenv("SELLER_ENABLE_INTENT_DECODER", "true").lower() == "true",
             cma_confidence_threshold=float(os.getenv("SELLER_CMA_CONFIDENCE_THRESHOLD", "70.0")),
-            listing_prep_qualification_threshold=float(
-                os.getenv("SELLER_LISTING_PREP_THRESHOLD", "0.75")
-            ),
+            listing_prep_qualification_threshold=float(os.getenv("SELLER_LISTING_PREP_THRESHOLD", "0.75")),
             hot_frs_threshold=float(os.getenv("SELLER_HOT_FRS_THRESHOLD", "75.0")),
             warm_frs_threshold=float(os.getenv("SELLER_WARM_FRS_THRESHOLD", "50.0")),
         )

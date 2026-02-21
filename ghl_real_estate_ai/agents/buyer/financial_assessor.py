@@ -22,11 +22,7 @@ class FinancialAssessor:
     def __init__(self, budget_config: Optional[BuyerBudgetConfig] = None):
         self.budget_config = budget_config or BuyerBudgetConfig.from_environment()
 
-    async def assess_financial_readiness(
-        self,
-        state: BuyerBotState,
-        skip_qualification: bool = False
-    ) -> Dict:
+    async def assess_financial_readiness(self, state: BuyerBotState, skip_qualification: bool = False) -> Dict:
         """Assess buyer's financial preparedness using budget_config thresholds."""
         try:
             # Skip financial assessment if handoff context already populated state
@@ -47,10 +43,7 @@ class FinancialAssessor:
             # Check budget ranges first
             if not budget_range:
                 # Try to extract from conversation
-                extracted = await extract_budget_range(
-                    state.get("conversation_history", []),
-                    self.budget_config
-                )
+                extracted = await extract_budget_range(state.get("conversation_history", []), self.budget_config)
                 if extracted:
                     budget_range = extracted
 
@@ -109,9 +102,11 @@ class FinancialAssessor:
             monthly_rate = interest_rate / 12
             num_payments = loan_term_years * 12
             if monthly_rate > 0:
-                monthly_mortgage = loan_amount * (
-                    monthly_rate * (1 + monthly_rate) ** num_payments
-                ) / ((1 + monthly_rate) ** num_payments - 1)
+                monthly_mortgage = (
+                    loan_amount
+                    * (monthly_rate * (1 + monthly_rate) ** num_payments)
+                    / ((1 + monthly_rate) ** num_payments - 1)
+                )
             else:
                 monthly_mortgage = loan_amount / num_payments
 

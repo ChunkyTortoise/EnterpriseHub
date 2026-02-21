@@ -32,6 +32,7 @@ class Checkpoint(BaseModel):
         created_at: When the checkpoint was created.
         metadata: Optional additional information.
     """
+
     thread_id: str
     step: int
     state: dict[str, Any]

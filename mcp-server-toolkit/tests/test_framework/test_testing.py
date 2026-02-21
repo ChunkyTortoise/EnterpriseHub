@@ -1,6 +1,7 @@
 """Tests for MCPTestClient utility."""
 
 import pytest
+
 from mcp_toolkit.framework.base_server import EnhancedMCP
 from mcp_toolkit.framework.testing import MCPTestClient
 

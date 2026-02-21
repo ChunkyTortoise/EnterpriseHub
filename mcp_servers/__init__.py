@@ -50,29 +50,14 @@ def __getattr__(name: str):
 SERVER_NAMES: Dict[str, str] = {
     "real_estate": "RealEstateAPI",
     "voice": "VoiceTwilio",
-    "marketing": "MarketingAutomation"
+    "marketing": "MarketingAutomation",
 }
 
 # Environment variables required for each server
 REQUIRED_ENV_VARS: Dict[str, List[str]] = {
-    "real_estate": [
-        "ZILLOW_API_KEY",
-        "REDFIN_API_KEY",
-        "MLS_API_KEY",
-        "GREAT_SCHOOLS_API_KEY",
-        "NICHES_API_KEY"
-    ],
-    "voice": [
-        "TWILIO_ACCOUNT_SID",
-        "TWILIO_AUTH_TOKEN",
-        "TWILIO_PHONE_NUMBER",
-        "OPENAI_API_KEY"
-    ],
-    "marketing": [
-        "HUBSPOT_API_KEY",
-        "MAILCHIMP_API_KEY",
-        "SENDGRID_API_KEY"
-    ]
+    "real_estate": ["ZILLOW_API_KEY", "REDFIN_API_KEY", "MLS_API_KEY", "GREAT_SCHOOLS_API_KEY", "NICHES_API_KEY"],
+    "voice": ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_PHONE_NUMBER", "OPENAI_API_KEY"],
+    "marketing": ["HUBSPOT_API_KEY", "MAILCHIMP_API_KEY", "SENDGRID_API_KEY"],
 }
 
 
@@ -88,8 +73,8 @@ def get_server_info(server_name: str) -> Dict[str, object]:
                 "get_market_trends",
                 "get_school_districts",
                 "estimate_property_value",
-                "search_properties"
-            ]
+                "search_properties",
+            ],
         },
         "voice": {
             "name": "VoiceTwilio",
@@ -101,8 +86,8 @@ def get_server_info(server_name: str) -> Dict[str, object]:
                 "send_sms_template",
                 "transcribe_call_recording",
                 "analyze_voicemail",
-                "route_call"
-            ]
+                "route_call",
+            ],
         },
         "marketing": {
             "name": "MarketingAutomation",
@@ -113,9 +98,9 @@ def get_server_info(server_name: str) -> Dict[str, object]:
                 "get_campaign_performance",
                 "create_contact",
                 "enroll_in_sequence",
-                "get_analytics_dashboard"
-            ]
-        }
+                "get_analytics_dashboard",
+            ],
+        },
     }
     return info.get(server_name, {})
 

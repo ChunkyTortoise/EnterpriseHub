@@ -29,9 +29,10 @@ COLORS = {
     "white": "#FFFFFF",
 }
 
+
 def create_gradient_background(width, height, color1, color2):
     """Create a gradient background image."""
-    base = Image.new('RGB', (width, height), color1)
+    base = Image.new("RGB", (width, height), color1)
     draw = ImageDraw.Draw(base)
 
     for y in range(height):
@@ -47,9 +48,11 @@ def create_gradient_background(width, height, color1, color2):
 
     return base
 
+
 def hex_to_rgb(hex_color):
     """Convert hex color to RGB tuple."""
-    return tuple(int(hex_color[i:i+2], 16) for i in (1, 3, 5))
+    return tuple(int(hex_color[i : i + 2], 16) for i in (1, 3, 5))
+
 
 def add_text_with_shadow(draw, position, text, font, fill, shadow_offset=3):
     """Add text with shadow effect."""
@@ -59,14 +62,16 @@ def add_text_with_shadow(draw, position, text, font, fill, shadow_offset=3):
     # Main text
     draw.text((x, y), text, font=font, fill=fill)
 
+
 # ============================================================================
 # GUMROAD THUMBNAILS (1200x630px)
 # ============================================================================
 
+
 def create_gumroad_docqa():
     """Create Gumroad thumbnail for DocQA Engine."""
     img = create_gradient_background(1200, 630, COLORS["primary"], COLORS["secondary"])
-    draw = ImageDraw.Draw(img, 'RGBA')
+    draw = ImageDraw.Draw(img, "RGBA")
 
     try:
         title_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 80)
@@ -85,11 +90,7 @@ def create_gumroad_docqa():
     draw.text((60, 280), "Build RAG pipelines in hours, not weeks", font=subtitle_font, fill=COLORS["light"])
 
     # Features
-    features = [
-        "✓ Hybrid BM25 + Vector Search",
-        "✓ 5 Chunking Strategies",
-        "✓ Citation Scoring Built-In"
-    ]
+    features = ["✓ Hybrid BM25 + Vector Search", "✓ 5 Chunking Strategies", "✓ Citation Scoring Built-In"]
     y = 370
     for feature in features:
         draw.text((60, y), feature, font=feature_font, fill=COLORS["white"])
@@ -98,16 +99,21 @@ def create_gumroad_docqa():
     # Price badge
     badge_rect = [(950, 480), (1140, 580)]
     draw.rounded_rectangle(badge_rect, radius=15, fill=COLORS["accent"])
-    price_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 50) if title_font != ImageFont.load_default() else title_font
+    price_font = (
+        ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 50)
+        if title_font != ImageFont.load_default()
+        else title_font
+    )
     draw.text((1000, 510), "$49", font=price_font, fill=COLORS["white"])
 
     img.save(OUTPUT_DIR / "gumroad-docqa-engine.png")
     print("✓ Created gumroad-docqa-engine.png")
 
+
 def create_gumroad_agentforge():
     """Create Gumroad thumbnail for AgentForge."""
     img = create_gradient_background(1200, 630, COLORS["secondary"], COLORS["primary"])
-    draw = ImageDraw.Draw(img, 'RGBA')
+    draw = ImageDraw.Draw(img, "RGBA")
 
     try:
         title_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 80)
@@ -126,11 +132,7 @@ def create_gumroad_agentforge():
     draw.text((60, 280), "Claude, Gemini, OpenAI, Perplexity unified", font=subtitle_font, fill=COLORS["light"])
 
     # Features
-    features = [
-        "✓ Unified Async Interface",
-        "✓ Token-Aware Rate Limiting",
-        "✓ Cost Tracking Built-In"
-    ]
+    features = ["✓ Unified Async Interface", "✓ Token-Aware Rate Limiting", "✓ Cost Tracking Built-In"]
     y = 370
     for feature in features:
         draw.text((60, y), feature, font=feature_font, fill=COLORS["white"])
@@ -139,16 +141,21 @@ def create_gumroad_agentforge():
     # Price badge
     badge_rect = [(950, 480), (1140, 580)]
     draw.rounded_rectangle(badge_rect, radius=15, fill=COLORS["accent"])
-    price_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 50) if title_font != ImageFont.load_default() else title_font
+    price_font = (
+        ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 50)
+        if title_font != ImageFont.load_default()
+        else title_font
+    )
     draw.text((1000, 510), "$39", font=price_font, fill=COLORS["white"])
 
     img.save(OUTPUT_DIR / "gumroad-agentforge.png")
     print("✓ Created gumroad-agentforge.png")
 
+
 def create_gumroad_scraper():
     """Create Gumroad thumbnail for Scrape-and-Serve."""
     img = create_gradient_background(1200, 630, COLORS["success"], COLORS["primary"])
-    draw = ImageDraw.Draw(img, 'RGBA')
+    draw = ImageDraw.Draw(img, "RGBA")
 
     try:
         title_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 70)
@@ -167,11 +174,7 @@ def create_gumroad_scraper():
     draw.text((60, 270), "YAML config, price tracking, SEO scoring", font=subtitle_font, fill=COLORS["light"])
 
     # Features
-    features = [
-        "✓ YAML-Configurable",
-        "✓ SHA-256 Change Detection",
-        "✓ SEO Scoring (0-100)"
-    ]
+    features = ["✓ YAML-Configurable", "✓ SHA-256 Change Detection", "✓ SEO Scoring (0-100)"]
     y = 370
     for feature in features:
         draw.text((60, y), feature, font=feature_font, fill=COLORS["white"])
@@ -180,16 +183,21 @@ def create_gumroad_scraper():
     # Price badge
     badge_rect = [(950, 480), (1140, 580)]
     draw.rounded_rectangle(badge_rect, radius=15, fill=COLORS["accent"])
-    price_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 50) if title_font != ImageFont.load_default() else title_font
+    price_font = (
+        ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 50)
+        if title_font != ImageFont.load_default()
+        else title_font
+    )
     draw.text((1000, 510), "$29", font=price_font, fill=COLORS["white"])
 
     img.save(OUTPUT_DIR / "gumroad-scraper.png")
     print("✓ Created gumroad-scraper.png")
 
+
 def create_gumroad_dashboard():
     """Create Gumroad thumbnail for Insight Engine."""
     img = create_gradient_background(1200, 630, COLORS["accent"], COLORS["secondary"])
-    draw = ImageDraw.Draw(img, 'RGBA')
+    draw = ImageDraw.Draw(img, "RGBA")
 
     try:
         title_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 70)
@@ -208,11 +216,7 @@ def create_gumroad_dashboard():
     draw.text((60, 270), "Upload → Dashboards & predictions in 30s", font=subtitle_font, fill=COLORS["light"])
 
     # Features
-    features = [
-        "✓ 4 Attribution Models",
-        "✓ Predictive Modeling + SHAP",
-        "✓ Auto-Generated PDF Reports"
-    ]
+    features = ["✓ 4 Attribution Models", "✓ Predictive Modeling + SHAP", "✓ Auto-Generated PDF Reports"]
     y = 370
     for feature in features:
         draw.text((60, y), feature, font=feature_font, fill=COLORS["white"])
@@ -221,20 +225,26 @@ def create_gumroad_dashboard():
     # Price badge
     badge_rect = [(950, 480), (1140, 580)]
     draw.rounded_rectangle(badge_rect, radius=15, fill=COLORS["accent"])
-    price_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 50) if title_font != ImageFont.load_default() else title_font
+    price_font = (
+        ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 50)
+        if title_font != ImageFont.load_default()
+        else title_font
+    )
     draw.text((1000, 510), "$39", font=price_font, fill=COLORS["white"])
 
     img.save(OUTPUT_DIR / "gumroad-dashboard.png")
     print("✓ Created gumroad-dashboard.png")
 
+
 # ============================================================================
 # FIVERR PRIMARY IMAGES (1280x769px)
 # ============================================================================
 
+
 def create_fiverr_rag_qa_primary():
     """Create Fiverr primary image for RAG Q&A gig."""
     img = create_gradient_background(1280, 769, COLORS["primary"], COLORS["dark"])
-    draw = ImageDraw.Draw(img, 'RGBA')
+    draw = ImageDraw.Draw(img, "RGBA")
 
     try:
         title_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 90)
@@ -253,11 +263,7 @@ def create_fiverr_rag_qa_primary():
     draw.text((60, 330), "AI-powered document search with citations", font=subtitle_font, fill=COLORS["light"])
 
     # Stats badges
-    badges = [
-        ("94%", "Precision"),
-        ("322", "Tests"),
-        ("$100+", "Starting")
-    ]
+    badges = [("94%", "Precision"), ("322", "Tests"), ("$100+", "Starting")]
     x_start = 60
     for value, label in badges:
         badge_rect = [(x_start, 480), (x_start + 280, 600)]
@@ -269,10 +275,11 @@ def create_fiverr_rag_qa_primary():
     img.save(OUTPUT_DIR / "fiverr-rag-qa-primary.png")
     print("✓ Created fiverr-rag-qa-primary.png")
 
+
 def create_fiverr_chatbot_primary():
     """Create Fiverr primary image for AI Chatbot gig."""
     img = create_gradient_background(1280, 769, COLORS["secondary"], COLORS["dark"])
-    draw = ImageDraw.Draw(img, 'RGBA')
+    draw = ImageDraw.Draw(img, "RGBA")
 
     try:
         title_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 90)
@@ -291,11 +298,7 @@ def create_fiverr_chatbot_primary():
     draw.text((60, 330), "Smart handoff & CRM integration", font=subtitle_font, fill=COLORS["light"])
 
     # Stats badges
-    badges = [
-        ("94%", "Success"),
-        ("4937", "Tests"),
-        ("$200+", "Starting")
-    ]
+    badges = [("94%", "Success"), ("4937", "Tests"), ("$200+", "Starting")]
     x_start = 60
     for value, label in badges:
         badge_rect = [(x_start, 480), (x_start + 280, 600)]
@@ -307,10 +310,11 @@ def create_fiverr_chatbot_primary():
     img.save(OUTPUT_DIR / "fiverr-chatbot-primary.png")
     print("✓ Created fiverr-chatbot-primary.png")
 
+
 def create_fiverr_dashboard_primary():
     """Create Fiverr primary image for Data Dashboard gig."""
     img = create_gradient_background(1280, 769, COLORS["accent"], COLORS["dark"])
-    draw = ImageDraw.Draw(img, 'RGBA')
+    draw = ImageDraw.Draw(img, "RGBA")
 
     try:
         title_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 90)
@@ -329,11 +333,7 @@ def create_fiverr_dashboard_primary():
     draw.text((60, 330), "Interactive charts in 30 seconds", font=subtitle_font, fill=COLORS["light"])
 
     # Stats badges
-    badges = [
-        ("30s", "To Insights"),
-        ("313", "Tests"),
-        ("$50+", "Starting")
-    ]
+    badges = [("30s", "To Insights"), ("313", "Tests"), ("$50+", "Starting")]
     x_start = 60
     for value, label in badges:
         badge_rect = [(x_start, 480), (x_start + 280, 600)]
@@ -345,14 +345,16 @@ def create_fiverr_dashboard_primary():
     img.save(OUTPUT_DIR / "fiverr-dashboard-primary.png")
     print("✓ Created fiverr-dashboard-primary.png")
 
+
 # ============================================================================
 # FIVERR GALLERY IMAGES (1280x769px)
 # ============================================================================
 
+
 def create_feature_showcase(filename, title, features, color_scheme):
     """Create a feature showcase image."""
     img = create_gradient_background(1280, 769, color_scheme[0], color_scheme[1])
-    draw = ImageDraw.Draw(img, 'RGBA')
+    draw = ImageDraw.Draw(img, "RGBA")
 
     try:
         title_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 70)
@@ -379,16 +381,16 @@ def create_feature_showcase(filename, title, features, color_scheme):
     img.save(OUTPUT_DIR / filename)
     print(f"✓ Created {filename}")
 
+
 def create_architecture_diagram(filename, title, components, color):
     """Create a simple architecture diagram using matplotlib."""
     fig, ax = plt.subplots(figsize=(16, 9.6))
-    fig.patch.set_facecolor('#1F2937')
-    ax.set_facecolor('#1F2937')
-    ax.axis('off')
+    fig.patch.set_facecolor("#1F2937")
+    ax.set_facecolor("#1F2937")
+    ax.axis("off")
 
     # Title
-    ax.text(0.5, 0.95, title, ha='center', va='top', fontsize=40,
-            color='white', weight='bold', transform=ax.transAxes)
+    ax.text(0.5, 0.95, title, ha="center", va="top", fontsize=40, color="white", weight="bold", transform=ax.transAxes)
 
     # Draw components as boxes
     num_components = len(components)
@@ -397,36 +399,48 @@ def create_architecture_diagram(filename, title, components, color):
         y = 0.5
 
         # Box
-        rect = mpatches.FancyBboxPatch((x - 0.12, y - 0.15), 0.24, 0.3,
-                                       boxstyle="round,pad=0.02",
-                                       edgecolor=color, facecolor=color,
-                                       linewidth=3, transform=ax.transAxes)
+        rect = mpatches.FancyBboxPatch(
+            (x - 0.12, y - 0.15),
+            0.24,
+            0.3,
+            boxstyle="round,pad=0.02",
+            edgecolor=color,
+            facecolor=color,
+            linewidth=3,
+            transform=ax.transAxes,
+        )
         ax.add_patch(rect)
 
         # Text
-        ax.text(x, y, component, ha='center', va='center', fontsize=28,
-                color='white', weight='bold', transform=ax.transAxes)
+        ax.text(
+            x, y, component, ha="center", va="center", fontsize=28, color="white", weight="bold", transform=ax.transAxes
+        )
 
         # Arrows
         if i < num_components - 1:
             next_x = (i + 2) / (num_components + 1)
-            ax.annotate('', xy=(next_x - 0.12, y), xytext=(x + 0.12, y),
-                       arrowprops=dict(arrowstyle='->', lw=3, color='white'),
-                       transform=ax.transAxes)
+            ax.annotate(
+                "",
+                xy=(next_x - 0.12, y),
+                xytext=(x + 0.12, y),
+                arrowprops=dict(arrowstyle="->", lw=3, color="white"),
+                transform=ax.transAxes,
+            )
 
     plt.tight_layout()
-    plt.savefig(OUTPUT_DIR / filename, dpi=100, facecolor='#1F2937')
+    plt.savefig(OUTPUT_DIR / filename, dpi=100, facecolor="#1F2937")
     plt.close()
     print(f"✓ Created {filename}")
+
 
 def create_comparison_chart(filename, title, items, scores, color):
     """Create a comparison bar chart using matplotlib."""
     fig, ax = plt.subplots(figsize=(16, 9.6))
-    fig.patch.set_facecolor('#1F2937')
-    ax.set_facecolor('#1F2937')
+    fig.patch.set_facecolor("#1F2937")
+    ax.set_facecolor("#1F2937")
 
     # Title
-    fig.suptitle(title, fontsize=40, color='white', weight='bold', y=0.95)
+    fig.suptitle(title, fontsize=40, color="white", weight="bold", y=0.95)
 
     # Bar chart
     y_pos = np.arange(len(items))
@@ -434,13 +448,13 @@ def create_comparison_chart(filename, title, items, scores, color):
 
     # Labels
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(items, fontsize=30, color='white')
+    ax.set_yticklabels(items, fontsize=30, color="white")
     ax.set_xlim(0, 100)
     ax.set_xticks([0, 25, 50, 75, 100])
-    ax.set_xticklabels(['0%', '25%', '50%', '75%', '100%'], fontsize=25, color='white')
+    ax.set_xticklabels(["0%", "25%", "50%", "75%", "100%"], fontsize=25, color="white")
 
     # Grid
-    ax.grid(axis='x', color='white', alpha=0.2, linestyle='--')
+    ax.grid(axis="x", color="white", alpha=0.2, linestyle="--")
     ax.set_axisbelow(True)
 
     # Remove spines
@@ -449,18 +463,18 @@ def create_comparison_chart(filename, title, items, scores, color):
 
     # Add value labels
     for i, (bar, score) in enumerate(zip(bars, scores)):
-        ax.text(score + 2, i, f'{score}%', va='center', fontsize=28,
-                color='white', weight='bold')
+        ax.text(score + 2, i, f"{score}%", va="center", fontsize=28, color="white", weight="bold")
 
     plt.tight_layout()
-    plt.savefig(OUTPUT_DIR / filename, dpi=100, facecolor='#1F2937')
+    plt.savefig(OUTPUT_DIR / filename, dpi=100, facecolor="#1F2937")
     plt.close()
     print(f"✓ Created {filename}")
+
 
 def create_screenshot_mockup(filename, title, subtitle, features, color):
     """Create a mockup screenshot with features."""
     img = create_gradient_background(1280, 769, color, COLORS["dark"])
-    draw = ImageDraw.Draw(img, 'RGBA')
+    draw = ImageDraw.Draw(img, "RGBA")
 
     try:
         title_font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial Bold.ttf", 60)
@@ -496,9 +510,11 @@ def create_screenshot_mockup(filename, title, subtitle, features, color):
     img.save(OUTPUT_DIR / filename)
     print(f"✓ Created {filename}")
 
+
 # ============================================================================
 # RAG Q&A GALLERY (7 images)
 # ============================================================================
+
 
 def create_rag_gallery():
     """Create 7 gallery images for RAG Q&A gig."""
@@ -512,9 +528,9 @@ def create_rag_gallery():
             "5 Chunking Strategies Included",
             "Citation Scoring with Confidence",
             "Production REST API Built-In",
-            "Evaluation Metrics Dashboard"
+            "Evaluation Metrics Dashboard",
         ],
-        (COLORS["primary"], COLORS["dark"])
+        (COLORS["primary"], COLORS["dark"]),
     )
 
     # 2. Architecture diagram
@@ -522,7 +538,7 @@ def create_rag_gallery():
         "fiverr-rag-qa-architecture.png",
         "RAG Pipeline Architecture",
         ["Document\nIngestion", "Chunking\n& Embedding", "Vector\nStorage", "Hybrid\nRetrieval", "Answer\nGeneration"],
-        COLORS["primary"]
+        COLORS["primary"],
     )
 
     # 3. Performance metrics
@@ -531,7 +547,7 @@ def create_rag_gallery():
         "Performance Metrics",
         ["Retrieval Precision", "Answer Relevance", "Citation Accuracy", "Response Speed"],
         [94, 89, 96, 95],
-        COLORS["success"]
+        COLORS["success"],
     )
 
     # 4. UI mockup
@@ -543,9 +559,9 @@ def create_rag_gallery():
             "Natural language queries",
             "Source citations with page numbers",
             "Confidence scores per answer",
-            "Export to PDF report"
+            "Export to PDF report",
         ],
-        COLORS["primary"]
+        COLORS["primary"],
     )
 
     # 5. API showcase
@@ -557,9 +573,9 @@ def create_rag_gallery():
             "POST /query - Ask questions",
             "GET /health - System status",
             "JWT auth + rate limiting",
-            "100 req/min default"
+            "100 req/min default",
         ],
-        (COLORS["secondary"], COLORS["dark"])
+        (COLORS["secondary"], COLORS["dark"]),
     )
 
     # 6. Chunking strategies
@@ -571,9 +587,9 @@ def create_rag_gallery():
             "Sentence: Natural boundaries",
             "Paragraph: Semantic grouping",
             "Recursive: Hierarchical",
-            "Semantic: Context-aware"
+            "Semantic: Context-aware",
         ],
-        (COLORS["accent"], COLORS["dark"])
+        (COLORS["accent"], COLORS["dark"]),
     )
 
     # 7. Deployment options
@@ -581,18 +597,15 @@ def create_rag_gallery():
         "fiverr-rag-qa-deploy.png",
         "Deployment Ready",
         "Docker, Kubernetes, or cloud platform",
-        [
-            "Docker Compose included",
-            "K8s manifests provided",
-            "Zero-downtime updates",
-            "Horizontal scaling support"
-        ],
-        COLORS["success"]
+        ["Docker Compose included", "K8s manifests provided", "Zero-downtime updates", "Horizontal scaling support"],
+        COLORS["success"],
     )
+
 
 # ============================================================================
 # CHATBOT GALLERY (7 images)
 # ============================================================================
+
 
 def create_chatbot_gallery():
     """Create 7 gallery images for AI Chatbot gig."""
@@ -606,9 +619,9 @@ def create_chatbot_gallery():
             "Smart Context-Aware Handoff",
             "CRM Integration (GHL, HubSpot)",
             "Rate Limiting & Abuse Protection",
-            "Analytics Dashboard Included"
+            "Analytics Dashboard Included",
         ],
-        (COLORS["secondary"], COLORS["dark"])
+        (COLORS["secondary"], COLORS["dark"]),
     )
 
     # 2. Architecture diagram
@@ -616,7 +629,7 @@ def create_chatbot_gallery():
         "fiverr-chatbot-architecture.png",
         "Agent Swarm Architecture",
         ["Lead Bot", "Buyer Bot", "Seller Bot", "Handoff\nService", "CRM Sync"],
-        COLORS["secondary"]
+        COLORS["secondary"],
     )
 
     # 3. Performance metrics
@@ -625,7 +638,7 @@ def create_chatbot_gallery():
         "Production Metrics",
         ["Handoff Success", "Intent Classification", "Context Preservation", "User Satisfaction"],
         [94, 94, 95, 96],
-        COLORS["success"]
+        COLORS["success"],
     )
 
     # 4. UI mockup
@@ -633,13 +646,8 @@ def create_chatbot_gallery():
         "fiverr-chatbot-ui.png",
         "Chat Interface",
         "Seamless conversations with smart handoff",
-        [
-            "Lead qualification bot",
-            "Buyer assistance bot",
-            "Seller consultation bot",
-            "Human escalation option"
-        ],
-        COLORS["secondary"]
+        ["Lead qualification bot", "Buyer assistance bot", "Seller consultation bot", "Human escalation option"],
+        COLORS["secondary"],
     )
 
     # 5. CRM integration
@@ -651,9 +659,9 @@ def create_chatbot_gallery():
             "HubSpot contact creation",
             "Salesforce webhook support",
             "Lead scoring & tagging",
-            "Email notifications"
+            "Email notifications",
         ],
-        (COLORS["primary"], COLORS["dark"])
+        (COLORS["primary"], COLORS["dark"]),
     )
 
     # 6. Handoff logic
@@ -665,9 +673,9 @@ def create_chatbot_gallery():
             "0.7 confidence threshold",
             "Circular handoff prevention",
             "Rate limiting (3/hr, 10/day)",
-            "Pattern learning from history"
+            "Pattern learning from history",
         ],
-        COLORS["accent"]
+        COLORS["accent"],
     )
 
     # 7. Analytics dashboard
@@ -675,18 +683,15 @@ def create_chatbot_gallery():
         "fiverr-chatbot-analytics.png",
         "Analytics Dashboard",
         "Track conversations and conversions",
-        [
-            "Conversation volume by bot",
-            "Lead scoring distribution",
-            "Handoff success rates",
-            "P50/P95/P99 latency"
-        ],
-        COLORS["success"]
+        ["Conversation volume by bot", "Lead scoring distribution", "Handoff success rates", "P50/P95/P99 latency"],
+        COLORS["success"],
     )
+
 
 # ============================================================================
 # DASHBOARD GALLERY (6 images)
 # ============================================================================
+
 
 def create_dashboard_gallery():
     """Create 6 gallery images for Data Dashboard gig."""
@@ -700,9 +705,9 @@ def create_dashboard_gallery():
             "4 Marketing Attribution Models",
             "Predictive Modeling + SHAP",
             "Time Series Forecasting",
-            "PDF Export with Branding"
+            "PDF Export with Branding",
         ],
-        (COLORS["accent"], COLORS["dark"])
+        (COLORS["accent"], COLORS["dark"]),
     )
 
     # 2. Workflow diagram
@@ -710,7 +715,7 @@ def create_dashboard_gallery():
         "fiverr-dashboard-workflow.png",
         "Data to Insights Workflow",
         ["Upload\nCSV/Excel", "Auto\nProfile", "Generate\nCharts", "ML\nPredict", "Export\nPDF"],
-        COLORS["accent"]
+        COLORS["accent"],
     )
 
     # 3. Performance metrics
@@ -719,7 +724,7 @@ def create_dashboard_gallery():
         "Speed & Accuracy",
         ["Time to Dashboard", "Chart Accuracy", "Auto-Detection", "Mobile Performance"],
         [95, 99, 91, 92],
-        COLORS["success"]
+        COLORS["success"],
     )
 
     # 4. UI mockup
@@ -731,9 +736,9 @@ def create_dashboard_gallery():
             "Upload CSV, Excel, or JSON",
             "15+ chart types available",
             "Interactive filters & drill-down",
-            "Export to PNG, PDF, HTML"
+            "Export to PNG, PDF, HTML",
         ],
-        COLORS["accent"]
+        COLORS["accent"],
     )
 
     # 5. ML models
@@ -745,9 +750,9 @@ def create_dashboard_gallery():
             "SHAP Explanations",
             "Clustering (K-means)",
             "Time Series (ARIMA/Prophet)",
-            "Anomaly Detection"
+            "Anomaly Detection",
         ],
-        (COLORS["primary"], COLORS["dark"])
+        (COLORS["primary"], COLORS["dark"]),
     )
 
     # 6. Export options
@@ -755,18 +760,15 @@ def create_dashboard_gallery():
         "fiverr-dashboard-export.png",
         "Professional Reports",
         "Auto-generated PDF reports with branding",
-        [
-            "Executive summary",
-            "Data quality profile",
-            "Charts and visualizations",
-            "Model explanations & insights"
-        ],
-        COLORS["secondary"]
+        ["Executive summary", "Data quality profile", "Charts and visualizations", "Model explanations & insights"],
+        COLORS["secondary"],
     )
+
 
 # ============================================================================
 # MAIN EXECUTION
 # ============================================================================
+
 
 def main():
     """Generate all 27 images."""
@@ -793,7 +795,7 @@ def main():
     print("\nDashboard Gallery (6):")
     create_dashboard_gallery()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("✅ All 27 images created successfully!")
     print(f"📁 Output directory: {OUTPUT_DIR}")
 
@@ -804,7 +806,8 @@ def main():
     print(f"\n📊 Summary:")
     print(f"   Images created: {file_count}")
     print(f"   Total size: {total_size / 1024 / 1024:.2f} MB")
-    print("="*60)
+    print("=" * 60)
+
 
 if __name__ == "__main__":
     main()

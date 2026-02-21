@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class EmbeddingResult:
     """Result of an embedding operation."""
+
     embeddings: list[list[float]]
     model: str
     token_count: int = 0

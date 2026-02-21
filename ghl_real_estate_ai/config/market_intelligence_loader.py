@@ -1,4 +1,5 @@
 """Market Intelligence Loader — loads market config from JSON, supports JORGE_MARKET env var."""
+
 import json
 import os
 from pathlib import Path

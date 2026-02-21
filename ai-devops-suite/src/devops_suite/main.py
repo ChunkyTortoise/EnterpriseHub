@@ -9,7 +9,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 
-from devops_suite.api import alerts, dashboards, events, experiments, extractions, jobs, prompts, schedules
+from devops_suite.api import (
+    alerts,
+    dashboards,
+    events,
+    experiments,
+    extractions,
+    jobs,
+    prompts,
+    schedules,
+)
 from devops_suite.config import get_settings
 from devops_suite.logging_config import RequestLoggingMiddleware, get_logger, setup_logging
 from devops_suite.middleware.errors import register_error_handlers

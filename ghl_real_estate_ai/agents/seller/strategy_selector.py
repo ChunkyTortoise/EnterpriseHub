@@ -12,6 +12,7 @@ from ghl_real_estate_ai.services.event_publisher import EventPublisher, get_even
 
 try:
     from bots.shared.ml_analytics_engine import MLAnalyticsEngine, get_ml_analytics_engine
+
     ML_ANALYTICS_AVAILABLE = True
 except ImportError:
     ML_ANALYTICS_AVAILABLE = False
@@ -27,7 +28,7 @@ class StrategySelector:
         self,
         event_publisher: Optional[EventPublisher] = None,
         ml_analytics: Optional[Any] = None,
-        tenant_id: str = "jorge_seller"
+        tenant_id: str = "jorge_seller",
     ):
         self.event_publisher = event_publisher or get_event_publisher()
         self.ml_analytics = ml_analytics
@@ -69,7 +70,11 @@ class StrategySelector:
             base_strategy = {"current_tone": "EDUCATIONAL", "next_action": "respond"}
         elif pcs >= 70:
             # High commitment = Enthusiastic support + calendar booking
-            base_strategy = {"current_tone": "ENTHUSIASTIC", "next_action": "respond", "adaptive_mode": "calendar_focused"}
+            base_strategy = {
+                "current_tone": "ENTHUSIASTIC",
+                "next_action": "respond",
+                "adaptive_mode": "calendar_focused",
+            }
         else:
             base_strategy = {"current_tone": "CONSULTATIVE", "next_action": "respond"}
 
@@ -208,9 +213,7 @@ class StrategySelector:
 
         return enhanced_strategy
 
-    def _apply_market_timing_intelligence(
-        self, strategy: Dict, journey_analysis, conversion_analysis
-    ) -> Dict:
+    def _apply_market_timing_intelligence(self, strategy: Dict, journey_analysis, conversion_analysis) -> Dict:
         """Apply market timing intelligence to enhance strategic effectiveness."""
         final_strategy = strategy.copy()
 
@@ -274,9 +277,7 @@ class StrategySelector:
 
         return final_strategy
 
-    def route_seller_action(
-        self, state: JorgeSellerState
-    ) -> Literal["respond", "follow_up", "listing_prep", "end"]:
+    def route_seller_action(self, state: JorgeSellerState) -> Literal["respond", "follow_up", "listing_prep", "end"]:
         """Determine if we should respond immediately or queue a follow-up."""
         next_action = state.get("next_action", "respond")
         if next_action == "follow_up":
@@ -291,30 +292,22 @@ class StrategySelector:
         self, state: JorgeSellerState
     ) -> Literal["defend_valuation", "negotiation_discovery", "select_strategy"]:
         """Route to valuation defense, QBQ discovery, or strategy selection after stall."""
-        if (
-            state.get("detected_stall_type") == "zestimate"
-            and state.get("cma_report") is not None
-        ):
+        if state.get("detected_stall_type") == "zestimate" and state.get("cma_report") is not None:
             return "defend_valuation"
         # QBQ: Route surface objections to negotiation discovery (once per conversation)
-        if (
-            state.get("detected_stall_type") in ["zestimate", "price", "surface_objection"]
-            and not state.get("qbq_attempted")
+        if state.get("detected_stall_type") in ["zestimate", "price", "surface_objection"] and not state.get(
+            "qbq_attempted"
         ):
             return "negotiation_discovery"
         return "select_strategy"
 
-    def route_after_objection(
-        self, state: JorgeSellerState
-    ) -> Literal["objection_response", "continue_normal"]:
+    def route_after_objection(self, state: JorgeSellerState) -> Literal["objection_response", "continue_normal"]:
         """Route based on objection detection."""
         if state.get("objection_detected") and state.get("objection_response_text"):
             return "objection_response"
         return "continue_normal"
 
-    def route_adaptive_action(
-        self, state: JorgeSellerState
-    ) -> Literal["respond", "follow_up", "fast_track", "end"]:
+    def route_adaptive_action(self, state: JorgeSellerState) -> Literal["respond", "follow_up", "fast_track", "end"]:
         """Enhanced routing with fast-track capability."""
         if state.get("adaptive_mode") == "calendar_focused":
             return "fast_track"

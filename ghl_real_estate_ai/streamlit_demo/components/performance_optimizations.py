@@ -188,7 +188,9 @@ class OptimizedChartRenderer:
 
         with col_filter2:
             sector_filter = st.multiselect(
-                "Sector Filter", ["Rancho Cucamonga", "Dallas", "Houston", "San Antonio"], default=["Rancho Cucamonga", "Dallas"]
+                "Sector Filter",
+                ["Rancho Cucamonga", "Dallas", "Houston", "San Antonio"],
+                default=["Rancho Cucamonga", "Dallas"],
             )
             chart_bins = st.select_slider("Chart Resolution", options=[10, 20, 30, 50], value=20)
 

@@ -34,6 +34,7 @@ pytestmark = pytest.mark.unit
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def mock_concierge_response():
     """Standard ConciergeResponse for mocking orchestrator methods."""
@@ -59,23 +60,23 @@ def mock_orchestrator(mock_concierge_response):
     orch.generate_mobile_field_assistance = AsyncMock(return_value=mock_concierge_response)
     orch.provide_client_presentation_support = AsyncMock(return_value=mock_concierge_response)
     orch.learn_from_user_decision = AsyncMock(return_value=True)
-    orch.predict_jorge_preference = AsyncMock(
-        return_value={"confidence": 0.8, "preference": "revenue_optimization"}
-    )
+    orch.predict_jorge_preference = AsyncMock(return_value={"confidence": 0.8, "preference": "revenue_optimization"})
     orch.apply_suggestion = AsyncMock(
         return_value={"success": True, "suggestion_id": "test-id", "actions_taken": ["test action"], "message": "ok"}
     )
     orch.session_contexts = {}
     orch.context_cache = {}
     orch.generated_suggestions = {}
-    orch.get_metrics = MagicMock(return_value={
-        "requests_processed": 5,
-        "avg_response_time_ms": 120,
-        "errors": 0,
-        "cache_hit_rate": 0.4,
-        "active_sessions": 1,
-        "learning_events": 2,
-    })
+    orch.get_metrics = MagicMock(
+        return_value={
+            "requests_processed": 5,
+            "avg_response_time_ms": 120,
+            "errors": 0,
+            "cache_hit_rate": 0.4,
+            "active_sessions": 1,
+            "learning_events": 2,
+        }
+    )
     return orch
 
 
@@ -83,42 +84,46 @@ def mock_orchestrator(mock_concierge_response):
 def mock_agent():
     """Mock ClaudeConciergeAgent."""
     agent = MagicMock()
-    agent.get_concierge_status = AsyncMock(return_value={
-        "status": "active",
-        "mode": "proactive",
-        "active_sessions": 0,
-        "performance_metrics": {
-            "interactions_handled": 10,
-            "recommendations_generated": 25,
-        },
-        "knowledge_base": {
-            "registered_agents": 11,
-            "platform_features": 4,
-            "integration_points": 4,
-        },
-        "capabilities": [
-            "Platform guidance and navigation",
-            "Multi-agent coordination",
-        ],
-    })
-    agent.process_user_interaction = AsyncMock(return_value={
-        "concierge_response": {
-            "response_type": "direct",
-            "content": "I can help you with that!",
-            "confidence": 0.8,
-        },
-        "proactive_recommendations": [],
-        "session_context": {
-            "current_context": "dashboard",
-            "detected_intent": "exploring",
-            "competency_level": "intermediate",
-        },
-        "response_metadata": {
-            "strategy": {"type": "direct_response"},
-            "processing_time": datetime.now(),
-            "confidence": 0.8,
-        },
-    })
+    agent.get_concierge_status = AsyncMock(
+        return_value={
+            "status": "active",
+            "mode": "proactive",
+            "active_sessions": 0,
+            "performance_metrics": {
+                "interactions_handled": 10,
+                "recommendations_generated": 25,
+            },
+            "knowledge_base": {
+                "registered_agents": 11,
+                "platform_features": 4,
+                "integration_points": 4,
+            },
+            "capabilities": [
+                "Platform guidance and navigation",
+                "Multi-agent coordination",
+            ],
+        }
+    )
+    agent.process_user_interaction = AsyncMock(
+        return_value={
+            "concierge_response": {
+                "response_type": "direct",
+                "content": "I can help you with that!",
+                "confidence": 0.8,
+            },
+            "proactive_recommendations": [],
+            "session_context": {
+                "current_context": "dashboard",
+                "detected_intent": "exploring",
+                "competency_level": "intermediate",
+            },
+            "response_metadata": {
+                "strategy": {"type": "direct_response"},
+                "processing_time": datetime.now(),
+                "confidence": 0.8,
+            },
+        }
+    )
     return agent
 
 
@@ -134,18 +139,23 @@ def mock_event_publisher():
 @pytest.fixture(autouse=True)
 def patch_deps(mock_orchestrator, mock_agent, mock_event_publisher):
     """Patch orchestrator, agent, event_publisher, and auth for all tests."""
-    with patch(
-        "ghl_real_estate_ai.api.routes.claude_concierge_integration.get_claude_concierge_orchestrator",
-        return_value=mock_orchestrator,
-    ), patch(
-        "ghl_real_estate_ai.api.routes.claude_concierge_integration.get_claude_concierge",
-        return_value=mock_agent,
-    ), patch(
-        "ghl_real_estate_ai.api.routes.claude_concierge_integration.get_event_publisher",
-        return_value=mock_event_publisher,
-    ), patch(
-        "ghl_real_estate_ai.api.routes.claude_concierge_integration.get_current_user_optional",
-        return_value=MagicMock(id="test-user"),
+    with (
+        patch(
+            "ghl_real_estate_ai.api.routes.claude_concierge_integration.get_claude_concierge_orchestrator",
+            return_value=mock_orchestrator,
+        ),
+        patch(
+            "ghl_real_estate_ai.api.routes.claude_concierge_integration.get_claude_concierge",
+            return_value=mock_agent,
+        ),
+        patch(
+            "ghl_real_estate_ai.api.routes.claude_concierge_integration.get_event_publisher",
+            return_value=mock_event_publisher,
+        ),
+        patch(
+            "ghl_real_estate_ai.api.routes.claude_concierge_integration.get_current_user_optional",
+            return_value=MagicMock(id="test-user"),
+        ),
     ):
         yield
 
