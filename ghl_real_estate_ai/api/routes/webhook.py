@@ -225,7 +225,7 @@ async def handle_ghl_tag_webhook(
     location_id = event.location_id
     tag = event.tag
 
-    if tag != "Needs Qualifying":
+    if tag.lower() != "needs qualifying":
         return GHLWebhookResponse(success=True, message="Tag ignored", actions=[])
 
     context = await conversation_manager.get_context(contact_id, location_id)
@@ -369,6 +369,10 @@ async def handle_ghl_webhook(
             # Infer 'Needs Qualifying' as the safe default so the seller/lead bot fires.
             tags = ["Needs Qualifying"]
 
+    # Normalize tags to lowercase set for case-insensitive comparisons throughout this request.
+    # GHL may deliver tags as "needs qualifying" (lowercase) regardless of how they were created.
+    tags_lower = {t.lower() for t in tags}
+
     # INPUT LENGTH GUARD: Cap inbound messages to prevent token abuse
     MAX_INBOUND_LENGTH = 2_000  # No legitimate SMS/chat exceeds this
     if len(user_message) > MAX_INBOUND_LENGTH:
@@ -413,14 +417,14 @@ async def handle_ghl_webhook(
     activation_tags = settings.activation_tags  # e.g., ["Needs Qualifying", "Hit List"]
     deactivation_tags = settings.deactivation_tags  # e.g., ["AI-Off", "Qualified", "Stop-Bot"]
 
-    should_activate = any(tag in tags for tag in activation_tags)
+    should_activate = any(tag.lower() in tags_lower for tag in activation_tags)
     # Buyer-mode tag also counts as activation when buyer mode is enabled
     if not should_activate and jorge_settings.JORGE_BUYER_MODE:
-        should_activate = jorge_settings.BUYER_ACTIVATION_TAG in tags
+        should_activate = jorge_settings.BUYER_ACTIVATION_TAG.lower() in tags_lower
     # Lead-mode tag also counts as activation when lead mode is enabled
     if not should_activate and jorge_settings.JORGE_LEAD_MODE:
-        should_activate = jorge_settings.LEAD_ACTIVATION_TAG in tags
-    should_deactivate = any(tag in tags for tag in deactivation_tags)
+        should_activate = jorge_settings.LEAD_ACTIVATION_TAG.lower() in tags_lower
+    should_deactivate = any(tag.lower() in tags_lower for tag in deactivation_tags)
 
     if not should_activate:
         logger.info(f"AI not triggered for contact {contact_id} - activation tag not present")
@@ -651,7 +655,7 @@ async def handle_ghl_webhook(
             logger.error(f"Pending appointment handling failed for {contact_id}: {e}", exc_info=True)
 
     # Step -0.5: Check for Jorge's Seller Mode (Needs Qualifying tag + JORGE_SELLER_MODE)
-    jorge_seller_mode = ("Needs Qualifying" in tags or "Seller-Lead" in tags) and jorge_settings.JORGE_SELLER_MODE and not should_deactivate
+    jorge_seller_mode = ("needs qualifying" in tags_lower or "seller-lead" in tags_lower) and jorge_settings.JORGE_SELLER_MODE and not should_deactivate
 
     if jorge_seller_mode:
         logger.info(f"Jorge seller mode activated for contact {contact_id}")
@@ -845,7 +849,7 @@ async def handle_ghl_webhook(
 
     # Step -0.4: Check for Jorge's Buyer Mode (Buyer-Lead tag + JORGE_BUYER_MODE)
     jorge_buyer_mode = (
-        jorge_settings.BUYER_ACTIVATION_TAG in tags and jorge_settings.JORGE_BUYER_MODE and not should_deactivate
+        jorge_settings.BUYER_ACTIVATION_TAG.lower() in tags_lower and jorge_settings.JORGE_BUYER_MODE and not should_deactivate
     )
 
     if jorge_buyer_mode:
@@ -1047,11 +1051,11 @@ async def handle_ghl_webhook(
 
     # Step -0.3: Check for Jorge's Lead Mode (LEAD_ACTIVATION_TAG + JORGE_LEAD_MODE)
     jorge_lead_mode = (
-        jorge_settings.LEAD_ACTIVATION_TAG in tags and jorge_settings.JORGE_LEAD_MODE and not should_deactivate
+        jorge_settings.LEAD_ACTIVATION_TAG.lower() in tags_lower and jorge_settings.JORGE_LEAD_MODE and not should_deactivate
     )
 
     if jorge_lead_mode:
-        if jorge_seller_mode and "Needs Qualifying" in tags:
+        if jorge_seller_mode and "needs qualifying" in tags_lower:
             logger.warning(
                 "Dual-bot collision detected: contact %s has 'Needs Qualifying' tag with both "
                 "seller and lead mode active — skipping lead bot to prevent race condition",
