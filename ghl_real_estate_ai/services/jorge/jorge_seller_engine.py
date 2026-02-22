@@ -545,30 +545,52 @@ class JorgeSellerEngine:
 
             msg_lower = user_message.lower()
 
+            # 0. Motivation (most common failure point — Claude may not extract this reliably)
+            if not extracted_data.get("motivation"):
+                if re.search(r"relocat|moving? to|transfer|new job|got a job|job (in|at|offer)", msg_lower):
+                    extracted_data["motivation"] = "relocation"
+                    dest_match = re.search(
+                        r"(?:moving? to|relocat\w* to|move to)\s+([A-Za-z\s]+?)(?:\s*[,.\?!]|$)", user_message, re.I
+                    )
+                    if dest_match and not extracted_data.get("relocation_destination"):
+                        extracted_data["relocation_destination"] = dest_match.group(1).strip()
+                elif re.search(r"downsize|down-size|too big|smaller|retire|empty nest", msg_lower):
+                    extracted_data["motivation"] = "downsizing"
+                elif re.search(r"divorce|separat|split up", msg_lower):
+                    extracted_data["motivation"] = "divorce"
+                elif re.search(r"inherited|inherit|estate|passed away|died|probate", msg_lower):
+                    extracted_data["motivation"] = "inherited"
+                elif re.search(r"financial|need(?: the)? money|debt|foreclosure|behind on|afford", msg_lower):
+                    extracted_data["motivation"] = "financial"
+                elif re.search(r"upgrad|larger|bigger|more space|growing family|new baby", msg_lower):
+                    extracted_data["motivation"] = "upgrading"
+                elif re.search(r"\bsell\b|\bselling\b", msg_lower):
+                    # Generic sell intent — counts as motivation to unblock question progression
+                    extracted_data["motivation"] = "other"
+
             # 1. Timeline (30-45 days)
             if extracted_data.get("timeline_acceptable") is None:
-                if re.search(r"(Union[yes, yeah]|Union[sure, fine]|Union[ok, works]|doable)", msg_lower):
-                    # Check if context implies agreement to timeline
-                    # (This assumes the bot just asked Q2)
-                    pass  # Hard to be sure without knowing previous question context explicitly here, rely on flow
-                if re.search(r"(Union[no, nope]|Union[cant, impossible]|too fast)", msg_lower):
-                    extracted_data["timeline_acceptable"] = False
-                elif re.search(r"(Union[30, 45]|Union[thirty, forty])", msg_lower) and not re.search(
-                    r"(Union[no, not])", msg_lower
+                if re.search(r"\b(no|won'?t|can'?t|nope|problem|too fast|not possible)\b", msg_lower):
+                    if re.search(r"\b(30|45|thirty|forty.?five|month)\b", msg_lower):
+                        extracted_data["timeline_acceptable"] = False
+                elif re.search(r"\b(30|45)\b.{0,20}\b(day|days)\b", msg_lower) and not re.search(
+                    r"\b(no|not|won'?t|can'?t)\b", msg_lower
                 ):
+                    extracted_data["timeline_acceptable"] = True
+                elif re.search(r"\b(urgent|asap|immediately|need to move|right away|as soon as)\b", msg_lower):
                     extracted_data["timeline_acceptable"] = True
 
             # 2. Price
             if not extracted_data.get("price_expectation"):
-                price_match = re.search(r"\$?(\d{1,3}(?:,\d{3})*(?:k)?)", user_message)
-                if price_match:
+                price_match = re.search(r"\$?(\d{1,3}(?:,\d{3})*(?:\.\d+)?(?:k|K)?)", user_message)
+                if price_match and int(re.sub(r"[,$kK]", "", price_match.group(1)) or 0) > 10000:
                     extracted_data["price_expectation"] = price_match.group(1)
 
             # 3. Condition
             if not extracted_data.get("property_condition"):
-                if re.search(r"(move.?in.?Union[ready, perfect]|Union[great, good]|excellent)", msg_lower):
+                if re.search(r"move.?in.?ready|great shape|good condition|excellent|updated|remodel", msg_lower):
                     extracted_data["property_condition"] = "Move-in Ready"
-                elif re.search(r"(needs?.?Union[work, fixer]|Union[repairs, bad]|rough)", msg_lower):
+                elif re.search(r"needs?.?(work|repair|fix|updat)|fixer|rough|old|dated", msg_lower):
                     extracted_data["property_condition"] = "Needs Work"
 
             # --- VAGUE ANSWER TRACKING (Pillar 1: NLP Optimization) ---
