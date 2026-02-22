@@ -248,6 +248,21 @@ class ResponseGenerator:
                 ]
             )
             content = response or fallback
+
+            # Strip markdown headers if Claude returned structured analysis instead of SMS text
+            # (occurs when intelligence context confuses the output format)
+            if content and (content.startswith("#") or "\n##" in content[:120]):
+                lines = [
+                    ln.strip()
+                    for ln in content.split("\n")
+                    if ln.strip()
+                    and not ln.startswith("#")
+                    and not ln.startswith("**")
+                    and not ln.startswith("- ")
+                    and len(ln.strip()) > 15
+                ]
+                content = lines[0] if lines else fallback
+
             content = content.replace("-", " ")  # Jorge spec: no hyphens in SMS
             return {
                 "response_content": content,
