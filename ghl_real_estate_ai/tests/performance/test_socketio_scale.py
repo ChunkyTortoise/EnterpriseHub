@@ -1,5 +1,3 @@
-import pytest
-
 """
 Socket.IO Scale Testing Utility
 ===============================
@@ -12,13 +10,23 @@ import argparse
 import asyncio
 import logging
 import random
+import socket
 import statistics
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List
 
+import pytest
 import socketio
+
+
+def _server_reachable(host: str = "localhost", port: int = 8002) -> bool:
+    try:
+        with socket.create_connection((host, port), timeout=1):
+            return True
+    except OSError:
+        return False
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -226,11 +234,13 @@ class SocketIOScaleTester:
             logger.info("🔴 SCALE TARGET FAILED")
 
 
+@pytest.mark.skipif(not _server_reachable(), reason="Socket.IO server not running on localhost:8002")
 async def test_socketio_scalability_basic():
     """Pytest entry point for basic scalability check."""
     tester = SocketIOScaleTester()
     # Run a smaller version for CI
     result = await tester.run_scale_test(num_users=100, duration=10, ramp_up_rate=50)
+    assert result is not None, "Scale test returned no result (0 connections established)"
     assert result.connection_success_rate > 0.90
     assert result.avg_latency_ms < 500
 

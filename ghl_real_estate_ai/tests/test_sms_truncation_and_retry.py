@@ -146,23 +146,23 @@ class TestGhlClientRetry:
             side_effect=httpx.HTTPStatusError("Server error", request=MagicMock(), response=MagicMock(status_code=500))
         )
 
-        with patch("httpx.AsyncClient") as mock_async:
-            mock_ctx = AsyncMock()
-            mock_ctx.post = AsyncMock(return_value=mock_response)
-            mock_async.return_value.__aenter__ = AsyncMock(return_value=mock_ctx)
-            mock_async.return_value.__aexit__ = AsyncMock(return_value=False)
+        # GHLClient stores a persistent self.http_client — patch it directly.
+        # Also mock get_or_create_conversation_id to avoid a real GHL API call.
+        client.http_client = AsyncMock()
+        client.http_client.post = AsyncMock(return_value=mock_response)
+        client.get_or_create_conversation_id = AsyncMock(return_value="conv-123")
 
-            with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-                with pytest.raises(httpx.HTTPStatusError):
-                    await client.send_message("contact-123", "Hello")
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            with pytest.raises(httpx.HTTPStatusError):
+                await client.send_message("contact-123", "Hello")
 
-                # Should have tried 3 times total
-                assert mock_ctx.post.call_count == 3
+            # Should have tried 3 times total
+            assert client.http_client.post.call_count == 3
 
-                # Exponential backoff: 0.5s, then 1.0s
-                assert mock_sleep.call_count == 2
-                mock_sleep.assert_any_call(0.5)
-                mock_sleep.assert_any_call(1.0)
+            # Exponential backoff: 0.5s, then 1.0s
+            assert mock_sleep.call_count == 2
+            mock_sleep.assert_any_call(0.5)
+            mock_sleep.assert_any_call(1.0)
 
     @pytest.mark.asyncio
     async def test_send_message_succeeds_on_second_attempt(self, ghl_client):
@@ -178,17 +178,15 @@ class TestGhlClientRetry:
         success_response.raise_for_status = MagicMock()
         success_response.json = MagicMock(return_value={"messageId": "msg-ok"})
 
-        with patch("httpx.AsyncClient") as mock_async:
-            mock_ctx = AsyncMock()
-            mock_ctx.post = AsyncMock(side_effect=[fail_response, success_response])
-            mock_async.return_value.__aenter__ = AsyncMock(return_value=mock_ctx)
-            mock_async.return_value.__aexit__ = AsyncMock(return_value=False)
+        client.http_client = AsyncMock()
+        client.http_client.post = AsyncMock(side_effect=[fail_response, success_response])
+        client.get_or_create_conversation_id = AsyncMock(return_value="conv-123")
 
-            with patch("asyncio.sleep", new_callable=AsyncMock):
-                result = await client.send_message("contact-123", "Hello")
+        with patch("asyncio.sleep", new_callable=AsyncMock):
+            result = await client.send_message("contact-123", "Hello")
 
-            assert result == {"messageId": "msg-ok"}
-            assert mock_ctx.post.call_count == 2
+        assert result == {"messageId": "msg-ok"}
+        assert client.http_client.post.call_count == 2
 
     @pytest.mark.asyncio
     async def test_add_tags_retries_on_failure(self, ghl_client):
@@ -200,20 +198,17 @@ class TestGhlClientRetry:
             side_effect=httpx.HTTPStatusError("Server error", request=MagicMock(), response=MagicMock(status_code=500))
         )
 
-        with patch("httpx.AsyncClient") as mock_async:
-            mock_ctx = AsyncMock()
-            mock_ctx.put = AsyncMock(return_value=mock_response)
-            mock_async.return_value.__aenter__ = AsyncMock(return_value=mock_ctx)
-            mock_async.return_value.__aexit__ = AsyncMock(return_value=False)
+        client.http_client = AsyncMock()
+        client.http_client.put = AsyncMock(return_value=mock_response)
 
-            with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-                with pytest.raises(httpx.HTTPStatusError):
-                    await client.add_tags("contact-123", ["Hot-Lead"])
+        with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
+            with pytest.raises(httpx.HTTPStatusError):
+                await client.add_tags("contact-123", ["Hot-Lead"])
 
-                assert mock_ctx.put.call_count == 3
-                assert mock_sleep.call_count == 2
-                mock_sleep.assert_any_call(0.5)
-                mock_sleep.assert_any_call(1.0)
+            assert client.http_client.put.call_count == 3
+            assert mock_sleep.call_count == 2
+            mock_sleep.assert_any_call(0.5)
+            mock_sleep.assert_any_call(1.0)
 
     @pytest.mark.asyncio
     async def test_add_tags_succeeds_on_third_attempt(self, ghl_client):
@@ -231,17 +226,14 @@ class TestGhlClientRetry:
         success_response.raise_for_status = MagicMock()
         success_response.json = MagicMock(return_value={"tags": ["Hot-Lead"]})
 
-        with patch("httpx.AsyncClient") as mock_async:
-            mock_ctx = AsyncMock()
-            mock_ctx.put = AsyncMock(side_effect=[fail_response, fail_response, success_response])
-            mock_async.return_value.__aenter__ = AsyncMock(return_value=mock_ctx)
-            mock_async.return_value.__aexit__ = AsyncMock(return_value=False)
+        client.http_client = AsyncMock()
+        client.http_client.put = AsyncMock(side_effect=[fail_response, fail_response, success_response])
 
-            with patch("asyncio.sleep", new_callable=AsyncMock):
-                result = await client.add_tags("contact-123", ["Hot-Lead"])
+        with patch("asyncio.sleep", new_callable=AsyncMock):
+            result = await client.add_tags("contact-123", ["Hot-Lead"])
 
-            assert result == {"tags": ["Hot-Lead"]}
-            assert mock_ctx.put.call_count == 3
+        assert result == {"tags": ["Hot-Lead"]}
+        assert client.http_client.put.call_count == 3
 
 
 # ---------------------------------------------------------------------------
