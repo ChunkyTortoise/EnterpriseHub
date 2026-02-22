@@ -210,7 +210,7 @@ class JorgeRanchoConfig:
     # More relaxed, California-friendly approach
     CA_MESSAGING_STYLE = {
         "friendly_opener": [
-            "Hey! I help folks in Rancho Cucamonga with their home sales.",
+            "Hi! I help folks in Rancho Cucamonga with their home sales.",
             "Hi there! Jorge here - I specialize in the Inland Empire market.",
             "Hello! I work with homeowners throughout Rancho Cucamonga.",
         ],
@@ -230,7 +230,7 @@ class JorgeRanchoConfig:
     # ========== INITIAL OUTREACH (TAG-ADDED) ==========
     INITIAL_OUTREACH_MESSAGES = [
         "Hi {name}, this is Jorge. I saw your home inquiry and can help you get clear on value and timing. What has you thinking about selling?",
-        "Hey {name}, Jorge here. I work with Rancho Cucamonga sellers and can walk you through pricing and timing. What got you considering a move?",
+        "Hi {name}, Jorge here. I work with Rancho Cucamonga sellers and can walk you through pricing and timing. What got you considering a move?",
         "Hi {name}, Jorge. I help homeowners in Rancho Cucamonga sell quickly and for strong prices. What would make selling worth it for you?",
     ]
 

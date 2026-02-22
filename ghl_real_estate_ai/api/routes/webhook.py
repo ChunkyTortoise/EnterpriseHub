@@ -928,9 +928,7 @@ async def handle_ghl_webhook(
         except Exception as e:
             logger.error(f"Jorge seller mode processing failed for contact {contact_id}: {str(e)}", exc_info=True)
             # Do not fall through to other bot modes when seller preconditions are met.
-            seller_rescue_msg = (
-                "Hey! I'm Jorge's AI assistant. What's got you considering selling, and where would you move?"
-            )
+            seller_rescue_msg = "What's got you considering selling? And where would you be looking to move?"
             background_tasks.add_task(
                 safe_send_message,
                 current_ghl_client,
@@ -1089,6 +1087,14 @@ async def handle_ghl_webhook(
                     "actions_count": len(actions),
                     "compliance_status": status.value,
                 },
+            )
+
+            # Persist conversation history so next turn has bot reply context
+            await conversation_manager.update_context(
+                contact_id=contact_id,
+                user_message=user_message,
+                ai_response=final_buyer_msg,
+                location_id=location_id,
             )
 
             # Send the buyer response via GHL API (background task)
@@ -1261,11 +1267,12 @@ async def handle_ghl_webhook(
 
                 # --- CROSS-BOT HANDOFF CHECK ---
                 if handoff_signals:
+                    actual_intent_signals = JorgeHandoffService.extract_intent_signals(user_message)
                     handoff = await handoff_service.evaluate_handoff(
                         current_bot="lead",
                         contact_id=contact_id,
                         conversation_history=conversation_history,
-                        intent_signals={"jorge_handoff_recommended": True},
+                        intent_signals=actual_intent_signals,
                     )
                     if handoff:
                         handoff_actions = await handoff_service.execute_handoff(
@@ -1289,6 +1296,14 @@ async def handle_ghl_webhook(
                         "compliance_status": status.value,
                         "message_length": len(final_lead_msg),
                     },
+                )
+
+                # Persist conversation history so next turn has bot reply context
+                await conversation_manager.update_context(
+                    contact_id=contact_id,
+                    user_message=user_message,
+                    ai_response=final_lead_msg,
+                    location_id=location_id,
                 )
 
                 # Send the lead response via GHL API (background task)

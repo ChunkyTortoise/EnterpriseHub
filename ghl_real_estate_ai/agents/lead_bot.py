@@ -267,6 +267,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         workflow.add_node("check_handoff_signals", self.check_handoff_signals)
         workflow.add_node("determine_path", self.determine_path)
         workflow.add_node("generate_cma", self.generate_cma)
+        workflow.add_node("qualify_intent", self.qualify_intent)
 
         # Follow-up Nodes
         workflow.add_node("send_day_3_sms", self.send_day_3_sms)
@@ -301,6 +302,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
             self._route_next_step,
             {
                 "generate_cma": "generate_cma",
+                "qualify_intent": "qualify_intent",
                 "day_3": "send_day_3_sms",
                 "day_7": "initiate_day_7_call",
                 "day_14": "send_day_14_email",
@@ -315,6 +317,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         )
 
         # All actions end for this single-turn execution
+        workflow.add_edge("qualify_intent", END)
         workflow.add_edge("generate_cma", END)
         workflow.add_edge("send_day_3_sms", END)
         workflow.add_edge("initiate_day_7_call", END)
@@ -345,6 +348,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         workflow.add_node("determine_path", self.determine_path)
         workflow.add_node("generate_cma", self.generate_cma)
+        workflow.add_node("qualify_intent", self.qualify_intent)
 
         # Enhanced follow-up nodes
         workflow.add_node("send_optimized_day_3", self.send_optimized_day_3)
@@ -401,6 +405,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
             self._route_enhanced_step,
             {
                 "generate_cma": "generate_cma",
+                "qualify_intent": "qualify_intent",
                 "day_3": "send_optimized_day_3",
                 "day_7": "initiate_predictive_day_7",
                 "day_14": "send_adaptive_day_14",
@@ -415,6 +420,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         )
 
         # All actions end
+        workflow.add_edge("qualify_intent", END)
         for node in [
             "generate_cma",
             "send_optimized_day_3",
@@ -969,6 +975,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         self, state: LeadFollowUpState
     ) -> Literal[
         "generate_cma",
+        "qualify_intent",
         "day_3",
         "day_7",
         "day_14",
@@ -1335,7 +1342,15 @@ class LeadBotWorkflow(BaseBotWorkflow):
     async def determine_path(self, state: LeadFollowUpState) -> Dict:
         """Decide the next step based on engagement and timeline."""
 
-        # 1. Check for Price Objection / CMA Request 
+        # 0. First-contact qualifier: when sequence_day=0 and no bot reply in history yet,
+        #    respond with neutral buy-or-sell question instead of ghost follow-up sequence.
+        if state.get("sequence_day") == 0:
+            history = state.get("conversation_history", [])
+            has_bot_reply = any(m.get("role") in ("assistant", "bot", "ai") for m in history)
+            if not has_bot_reply:
+                return {"current_step": "qualify_intent", "engagement_status": "responsive"}
+
+        # 1. Check for Price Objection / CMA Request
         last_msg = state["conversation_history"][-1]["content"].lower() if state["conversation_history"] else ""
         price_keywords = ["price", "value", "worth", "zestimate", "comps", "market analysis"]
 
@@ -1537,6 +1552,33 @@ class LeadBotWorkflow(BaseBotWorkflow):
                 logger.error(f"Failed to send SMS via GHL: {e}")
 
         return {"engagement_status": "ghosted", "current_step": "day_7_call", "response_content": msg}
+
+    async def qualify_intent(self, state: LeadFollowUpState) -> Dict:
+        """First-contact qualifier: send neutral buy-or-sell question to new leads."""
+        lead_name = state.get("lead_name", "")
+        # Only use name if it's not the default "Lead <id>" placeholder
+        name_part = "" if lead_name.startswith("Lead ") else lead_name.strip()
+
+        if name_part:
+            msg = f"Hi {name_part}! Are you looking to buy or sell in the Rancho Cucamonga area?"
+        else:
+            msg = "Hi! Are you looking to buy or sell in the Rancho Cucamonga area?"
+
+        await sync_service.record_lead_event(state["lead_id"], "AI", "Sent buy-or-sell qualifier", "qualifier")
+
+        if self.ghl_client:
+            try:
+                await self.ghl_client.send_message(
+                    contact_id=state["lead_id"], message=msg, channel=MessageType.SMS
+                )
+            except Exception as e:
+                logger.error(f"Failed to send qualifier SMS via GHL: {e}")
+
+        return {
+            "engagement_status": "responsive",
+            "current_step": "qualify_intent",
+            "response_content": msg,
+        }
 
     async def initiate_day_7_call(self, state: LeadFollowUpState) -> Dict:
         """Day 7: Initiate Retell AI Call with Stall-Breaker logic."""
@@ -1843,6 +1885,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         self, state: LeadFollowUpState
     ) -> Literal[
         "generate_cma",
+        "qualify_intent",
         "day_3",
         "day_7",
         "day_14",
@@ -1880,7 +1923,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         # Valid steps mapping
         step = state.get("current_step", "initial")
-        if step in ["day_3", "day_7", "day_14", "day_30"]:
+        if step in ["day_3", "day_7", "day_14", "day_30", "qualify_intent"]:
             return step
 
         # Intelligent fallback based on lead signals and engagement
@@ -2401,11 +2444,18 @@ class LeadBotWorkflow(BaseBotWorkflow):
         """
         self.workflow_stats["total_sequences"] += 1
 
+        # Extract the latest user message so check_handoff_signals and qualify_intent can read it
+        user_message = next(
+            (m.get("content", "") for m in reversed(conversation_history) if m.get("role") == "user"),
+            "",
+        )
+
         initial_state = {
             "lead_id": lead_id,
             "lead_name": f"Lead {lead_id}",
             "conversation_history": conversation_history,
             "sequence_day": sequence_day,
+            "user_message": user_message,
             "engagement_status": "responsive",
             "cma_generated": False,
             # Enhanced fields
