@@ -167,6 +167,11 @@ class ConversationManager:
         extracted_data: Optional[Dict[str, Any]] = None,
         location_id: Optional[str] = None,
         seller_temperature: Optional[str] = None,
+        predictive_score: Optional[float] = None,
+        closing_probability: Optional[float] = None,
+        persona: Optional[str] = None,
+        persona_full: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
     ) -> None:
         """
         Update conversation context with new messages and data.
@@ -178,6 +183,10 @@ class ConversationManager:
             extracted_data: Newly extracted data from conversation (buyer or seller)
             location_id: Optional location ID for isolation
             seller_temperature: Seller temperature classification (for Jorge's seller bot)
+            predictive_score: Predictive priority score from seller engine
+            closing_probability: Estimated closing probability from seller engine
+            persona: Primary persona type (e.g. "investor", "loss_aversion")
+            persona_full: Full persona analysis dict
         """
         context = await self.get_context(contact_id, location_id=location_id)
 
@@ -210,6 +219,16 @@ class ConversationManager:
             else:
                 # Handle buyer data (existing logic)
                 context["extracted_preferences"].update(extracted_data)
+
+        # Persist seller-engine analytics fields when provided
+        if predictive_score is not None:
+            context["predictive_score_engine"] = predictive_score
+        if closing_probability is not None:
+            context["closing_probability"] = closing_probability
+        if persona is not None:
+            context["persona"] = persona
+        if persona_full is not None:
+            context["persona_full"] = persona_full
 
         # Update last lead score for analytics tracking
         current_score = await self.lead_scorer.calculate(context)
