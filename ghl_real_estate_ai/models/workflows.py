@@ -66,6 +66,16 @@ class LeadFollowUpState(TypedDict):
     )
     response_content: Optional[str]
 
+    # Sequence routing (must be in TypedDict so LangGraph preserves it in state)
+    sequence_day: Optional[int]  # 0 = first contact, 3/7/14/30 = follow-up day
+    sequence_state: Optional[Any]  # Serialized LeadSequenceState from sequence_service
+    user_message: Optional[str]  # Latest user message for handoff signal detection
+
+    # Handoff signals (populated by check_handoff_signals node)
+    handoff_required: Optional[bool]
+    handoff_signals: Optional[Any]
+    handoff_target: Optional[str]
+
     # Logic Tracking
     last_interaction_time: Optional[datetime]
     stall_breaker_attempted: bool
@@ -80,6 +90,18 @@ class LeadFollowUpState(TypedDict):
     # Phase 3.3 Intelligence Enhancement Fields
     intelligence_context: Optional[Any]  # BotIntelligenceContext
     intelligence_performance_ms: Optional[float]
+
+    # Enhanced workflow fields (used by optional nodes in _build_enhanced_graph)
+    response_pattern: Optional[Any]
+    personality_type: Optional[str]
+    temperature_prediction: Optional[Any]
+    sequence_optimization: Optional[Any]
+    journey_analysis: Optional[Any]
+    conversion_analysis: Optional[Any]
+    touchpoint_analysis: Optional[Any]
+    enhanced_optimization: Optional[Any]
+    critical_scenario: Optional[Any]
+    track3_applied: Optional[bool]
 
     # A/B testing
     tone_variant: Optional[str]  # A/B experiment variant: "formal", "casual", "empathetic"
