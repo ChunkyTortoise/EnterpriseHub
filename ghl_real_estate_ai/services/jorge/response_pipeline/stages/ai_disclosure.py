@@ -20,7 +20,7 @@ DISCLOSURE_EN = "\n[AI-assisted message]"
 DISCLOSURE_ES = "\n[Mensaje asistido por IA]"
 
 # SB 1001 proactive disclosure — must appear in first message of each conversation
-PROACTIVE_DISCLOSURE_EN = "Hey! I'm Jorge's AI assistant. "
+PROACTIVE_DISCLOSURE_EN = "Hi! I'm Jorge's AI assistant. "
 PROACTIVE_DISCLOSURE_ES = "¡Hola! Soy el asistente de IA de Jorge. "
 
 

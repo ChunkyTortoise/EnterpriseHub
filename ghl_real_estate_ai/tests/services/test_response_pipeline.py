@@ -920,7 +920,7 @@ class TestProactiveAIDisclosure:
 
     @pytest.mark.asyncio
     async def test_first_message_has_proactive_disclosure(self, stage):
-        """First message prepends 'Hey! I'm Jorge's AI assistant.' + keeps footer."""
+        """First message prepends 'Hi! I'm Jorge's AI assistant.' + keeps footer."""
         resp, ctx = _make_response(
             message="Welcome! What brings you here?",
             detected_language="en",
@@ -928,7 +928,7 @@ class TestProactiveAIDisclosure:
         ctx.is_first_message = True
         result = await stage.process(resp, ctx)
 
-        assert result.message.startswith("Hey! I'm Jorge's AI assistant. ")
+        assert result.message.startswith("Hi! I'm Jorge's AI assistant. ")
         assert result.message.endswith(DISCLOSURE_EN)
         assert result.action == ProcessingAction.MODIFY
 
@@ -959,7 +959,7 @@ class TestProactiveAIDisclosure:
         ctx.is_first_message = False
         result = await stage.process(resp, ctx)
 
-        assert not result.message.startswith("Hey! I'm Jorge's AI assistant.")
+        assert not result.message.startswith("Hi! I'm Jorge's AI assistant.")
         assert result.message.endswith(DISCLOSURE_EN)
 
     @pytest.mark.asyncio
@@ -974,7 +974,7 @@ class TestProactiveAIDisclosure:
         ctx.is_first_message = True
         result = await stage.process(resp, ctx)
 
-        assert result.message.count("Hey! I'm Jorge's AI assistant.") == 1
+        assert result.message.count("Hi! I'm Jorge's AI assistant.") == 1
 
 
 # ===========================================================================
