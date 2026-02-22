@@ -1613,11 +1613,11 @@ async def initiate_qualification(
         tags = contact.get("tags", [])
 
         if "Buyer-Lead" in tags:
-            opening = f"Hey {first_name}, I found some great options in your area. Are you still looking to buy?"
+            opening = f"{first_name}, glad you reached out! Still searching for a home in Rancho Cucamonga?"
         elif "Seller-Lead" in tags or "Needs Qualifying" in tags:
-            opening = f"Hey {first_name}, saw your property inquiry. Are you still thinking about selling?"
+            opening = f"{first_name}, thanks for connecting. Still thinking about selling your property?"
         else:
-            opening = f"Hey {first_name}, thanks for reaching out! Are you looking to buy or sell?"
+            opening = f"{first_name}, thanks for reaching out! Are you looking to buy or sell in Rancho Cucamonga?"
 
         # Send the opening message via GHL
         background_tasks.add_task(
