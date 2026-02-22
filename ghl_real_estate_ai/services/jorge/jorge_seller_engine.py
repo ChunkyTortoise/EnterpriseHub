@@ -258,15 +258,47 @@ class JorgeSellerEngine:
                     self.logger.warning(f"Psychology analysis failed: {pe}")
 
             # 4. Calculate Predictive ML Score & ROI-Based Pricing (Extreme Value Phase)
-            predictive_result = await self.predictive_scorer.calculate_predictive_score(context, location=location_id)
-            pricing_result = await self.pricing_optimizer.calculate_lead_price(contact_id, location_id, context)
+            # Wrapped individually — these services are non-critical; a failure must NOT
+            # abort the qualification flow or trigger the outer fallback (question 1 loop).
+            from types import SimpleNamespace
+
+            try:
+                predictive_result = await self.predictive_scorer.calculate_predictive_score(
+                    context, location=location_id
+                )
+            except Exception as _pred_e:
+                self.logger.warning(f"Predictive scorer failed, using defaults: {_pred_e}")
+                predictive_result = SimpleNamespace(
+                    closing_probability=0.3,
+                    overall_priority_score=30.0,
+                    priority_level=SimpleNamespace(value="medium"),
+                    net_yield_estimate=None,
+                    potential_margin=None,
+                )
+
+            try:
+                pricing_result = await self.pricing_optimizer.calculate_lead_price(
+                    contact_id, location_id, context
+                )
+            except Exception as _price_e:
+                self.logger.warning(f"Pricing optimizer failed, using defaults: {_price_e}")
+                pricing_result = SimpleNamespace(
+                    final_price=2.0,
+                    tier="warm",
+                    expected_roi=0.0,
+                    justification="service_unavailable",
+                )
 
             # 5. Detect Psychographic Persona (Deep Behavioral Profiling)
-            persona_data = await self.psychographic_engine.detect_persona(
-                messages=context.get("conversation_history", []),
-                lead_context={**extracted_seller_data, "contact_id": contact_id},
-                tenant_id=location_id,
-            )
+            try:
+                persona_data = await self.psychographic_engine.detect_persona(
+                    messages=context.get("conversation_history", []),
+                    lead_context={**extracted_seller_data, "contact_id": contact_id},
+                    tenant_id=location_id,
+                )
+            except Exception as _persona_e:
+                self.logger.warning(f"Psychographic engine failed, using empty persona: {_persona_e}")
+                persona_data = {}
 
             # 5b. Swarm Intelligence (Parallel Analysis)
             # Deploy the swarm to analyze the lead while we process other ML models
@@ -475,15 +507,36 @@ class JorgeSellerEngine:
             }
 
         except Exception as e:
-            self.logger.error(f"Critical error in process_seller_response: {str(e)}")
-            # Last resort fallback
-            safe_msg = self.recovery.get_safe_fallback("there", [], {}, is_seller=True)
+            self.logger.error(f"Critical error in process_seller_response: {str(e)}", exc_info=True)
+            # Last resort fallback — use whatever seller data we extracted before the crash
+            # so the recovery engine asks the RIGHT next question (not always question 1).
+            try:
+                _fallback_prefs = extracted_seller_data  # populated before ML services run
+            except NameError:
+                _fallback_prefs = {}
+            try:
+                _fallback_name = contact_name
+            except NameError:
+                _fallback_name = "there"
+            safe_msg = self.recovery.get_safe_fallback(_fallback_name, [], _fallback_prefs, is_seller=True)
+            # Persist whatever we have so the next turn isn't starting from scratch
+            try:
+                await self.conversation_manager.update_context(
+                    contact_id=contact_id,
+                    user_message=user_message,
+                    ai_response=safe_msg,
+                    extracted_data=_fallback_prefs,
+                    location_id=location_id,
+                    seller_temperature="cold",
+                )
+            except Exception:
+                pass  # Last resort — don't let history save failure crash the fallback
             return {
                 "message": safe_msg,
                 "actions": [],
                 "temperature": "cold",
                 "error": str(e),
-                "handoff_signals": {},  # P0 FIX: Include empty handoff_signals in error case
+                "handoff_signals": {},
             }
 
     async def handle_vapi_booking(self, contact_id: str, location_id: str, booking_details: Dict[str, Any]) -> bool:
