@@ -286,6 +286,7 @@ class GHLClient:
             payload = {
                 "type": channel.value,
                 "conversationId": conversation_id,
+                "contactId": contact_id,
                 "message": message,
             }
         else:

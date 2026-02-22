@@ -5,6 +5,7 @@ to disclose they are AI-assisted. This stage appends a language-aware footer.
 """
 
 import logging
+import re
 
 from ghl_real_estate_ai.services.jorge.response_pipeline.base import ResponseProcessorStage
 from ghl_real_estate_ai.services.jorge.response_pipeline.models import (
@@ -50,7 +51,9 @@ class AIDisclosureProcessor(ResponseProcessorStage):
         if context.is_first_message:
             proactive = PROACTIVE_DISCLOSURE_ES if is_spanish else PROACTIVE_DISCLOSURE_EN
             if not response.message.startswith(proactive):
-                response.message = proactive + response.message
+                # Strip leading "Hey[!,]? " so we don't get "Hey! I'm Jorge's AI. Hey! ..."
+                cleaned = re.sub(r'^(hey[!,]?\s+)', '', response.message, flags=re.IGNORECASE)
+                response.message = proactive + cleaned
                 if response.action == ProcessingAction.PASS:
                     response.action = ProcessingAction.MODIFY
 

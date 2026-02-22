@@ -1,21 +1,7 @@
 """
-Jorge Seller Bot - Unified Enterprise Implementation
-Combines all research enhancements into production-ready unified implementation.
+Jorge Seller Bot — LangGraph orchestrator for seller lead qualification.
 
-REFACTORED: This module now delegates to specialized services in the seller/ package:
-- CMAService: CMA generation and valuation defense
-- MarketAnalyzer: Market conditions and pricing guidance
-- StallDetector: Stall detection and property condition extraction
-- ResponseGenerator: Response generation with sentiment analysis
-- StrategySelector: Strategy selection with Track 3.1 intelligence
-- ListingService: Listing preparation recommendations
-- FollowUpService: Automated follow-up execution
-- HandoffManager: Handoff context management
-- ConversationMemory/AdaptiveQuestionEngine: Conversation memory and adaptive questioning
-- ExecutiveService: Executive brief generation
-- ObjectionHandler: Objection handling with graduated responses
-
-The public API remains unchanged for backward compatibility.
+Delegates to specialized services in the seller/ package.
 """
 
 import time
@@ -72,10 +58,10 @@ from ghl_real_estate_ai.services.lead_scoring_integration import LeadScoringInte
 from ghl_real_estate_ai.services.market_intelligence import get_market_intelligence
 from ghl_real_estate_ai.services.seller_psychology_analyzer import get_seller_psychology_analyzer
 
-# Phase 1.5 - 1.8 Integration
+# Service integrations
 from ghl_real_estate_ai.services.sentiment_analysis_service import SentimentAnalysisService
 
-# Phase 3 Loop 3: Handoff context propagation
+# Handoff context propagation
 try:
     from ghl_real_estate_ai.services.jorge.jorge_handoff_service import EnrichedHandoffContext
 
@@ -93,7 +79,7 @@ except ImportError:
 
 from ghl_real_estate_ai.services.jorge.calendar_booking_service import CalendarBookingService
 
-# Track 3.1 Predictive Intelligence Integration
+# ML analytics Predictive Intelligence Integration
 try:
     from bots.shared.ml_analytics_engine import MLAnalyticsEngine, get_ml_analytics_engine
 
@@ -103,7 +89,7 @@ except ImportError:
 
     ML_ANALYTICS_AVAILABLE = False
 
-# Phase 3.3 Bot Intelligence Middleware Integration
+# Bot intelligence middleware (optional)
 try:
     from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
     from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
@@ -161,11 +147,11 @@ class JorgeSellerBot(BaseBotWorkflow):
     Inherits from BaseBotWorkflow to share common monitoring and service patterns.
 
     This class now delegates to specialized service classes for specific responsibilities
-    while maintaining full backward compatibility with the original public API.
+    
 
     CORE FEATURES (always enabled):
     - LangGraph friendly qualification workflow
-    - Track 3.1 Predictive Intelligence integration
+    - ML analytics Predictive Intelligence integration
     - Real-time event publishing and coordination
 
     OPTIONAL ENHANCEMENTS (configurable):
@@ -239,20 +225,20 @@ class JorgeSellerBot(BaseBotWorkflow):
             mode_name = "simple (4 questions)" if simple_mode else "full (10 questions)"
             logger.info(f"Jorge bot: Adaptive questioning enabled in {mode_name} mode")
 
-        # Phase 3.3 Bot Intelligence Middleware (optional)
+        # Bot intelligence middleware (optional)
         self.intelligence_middleware = None
         if self.config.enable_bot_intelligence and BOT_INTELLIGENCE_AVAILABLE:
             self.intelligence_middleware = get_bot_intelligence_middleware()
-            logger.info("Jorge bot: Bot Intelligence Middleware enabled (Phase 3.3)")
+            logger.info("Jorge bot: Bot Intelligence Middleware enabled ")
         elif self.config.enable_bot_intelligence:
             logger.warning("Jorge bot: Bot Intelligence requested but dependencies not available")
 
-        # Phase 1.5 - 1.8 Services Initialization
+        # Ancillary services
         self.sentiment_service = SentimentAnalysisService()
         self.lead_scoring_integration = LeadScoringIntegration()
         self.workflow_service = GHLWorkflowService()
         self.churn_service = ChurnDetectionService(sentiment_service=self.sentiment_service)
-        logger.info("Jorge bot: Phase 1.5-1.8 services (Sentiment, Scoring, Workflow, Churn) initialized")
+        logger.info("Jorge bot: Sentiment, scoring, workflow, and churn services initialized")
 
         # Initialize modular service layer (NEW: Decomposed services)
         self._init_service_layer()
@@ -323,7 +309,7 @@ class JorgeSellerBot(BaseBotWorkflow):
         if self.config.enable_bot_intelligence and self.intelligence_middleware:
             workflow.add_node("gather_intelligence", self.gather_intelligence_context)
 
-        # Phase 2.2: Objection handling node - delegated to service
+        # Objection handling node - delegated to service
         workflow.add_node("handle_objection", self._handle_objection_node)
 
         # CMA & Market Intelligence nodes - delegated to services
@@ -361,7 +347,7 @@ class JorgeSellerBot(BaseBotWorkflow):
             },
         )
 
-        # Phase 4: ML pricing guidance flow
+        # ML pricing guidance flow
         workflow.add_edge("generate_cma", "provide_pricing_guidance")
         workflow.add_edge("provide_pricing_guidance", "analyze_market_conditions")
         workflow.add_edge("analyze_market_conditions", "detect_stall")
@@ -460,9 +446,8 @@ class JorgeSellerBot(BaseBotWorkflow):
 
         return workflow.compile()
 
-    # ================================
     # DELEGATED NODE METHODS (NEW)
-    # ================================
+
 
     async def _generate_cma_node(self, state: JorgeSellerState) -> Dict:
         """Delegate CMA generation to CMAService."""
@@ -602,9 +587,8 @@ class JorgeSellerBot(BaseBotWorkflow):
         await self.conversation_memory.update_context(conversation_id, update)
         return {"memory_updated": True}
 
-    # ================================
     # ROUTING METHODS
-    # ================================
+
 
     def _route_seller_action(self, state: JorgeSellerState) -> Literal["respond", "follow_up", "listing_prep", "end"]:
         """Determine if we should respond immediately or queue a follow-up."""
@@ -634,9 +618,8 @@ class JorgeSellerBot(BaseBotWorkflow):
             return "negotiation_discovery"
         return "adaptive_strategy"
 
-    # ================================
     # EXISTING METHODS (maintained for compatibility)
-    # ================================
+
 
     async def generate_executive_brief(self, state: JorgeSellerState) -> Dict:
         """Legacy method - delegates to ExecutiveService."""
@@ -644,7 +627,7 @@ class JorgeSellerBot(BaseBotWorkflow):
 
     async def analyze_intent(self, state: JorgeSellerState) -> Dict:
         """Score the lead and identify psychological commitment."""
-        # Phase 3 Loop 3: Skip intent analysis if handoff context already populated state
+        # Skip intent analysis if handoff context already populated state
         if state.get("skip_qualification") and state.get("handoff_context_used"):
             logger.info(f"Skipping intent analysis for {state.get('lead_id')} - using handoff context")
             # Return high-quality default profile for handed-off contacts
@@ -720,13 +703,13 @@ class JorgeSellerBot(BaseBotWorkflow):
             state["lead_id"], state["conversation_history"]
         )
 
-        # Phase 1.2: Classify seller type (Investor, Distressed, Traditional)
+        # Classify seller type (Investor, Distressed, Traditional)
         seller_classification = await self.seller_psychology_analyzer.classify_seller_type(
             conversation_history=state["conversation_history"],
             custom_fields=state.get("metadata", {}).get("custom_fields") if state.get("metadata") else None,
         )
 
-        # Phase 1.6: Calculate Composite Lead Score
+        # Calculate Composite Lead Score
         composite_score_data = {}
         try:
             temp_state = {
@@ -759,7 +742,7 @@ class JorgeSellerBot(BaseBotWorkflow):
         }
 
     async def gather_intelligence_context(self, state: JorgeSellerState) -> Dict:
-        """Phase 3.3: Gather intelligence context for enhanced decision making."""
+        """Gather intelligence context for enhanced decision making."""
         # Update bot status
         await self.event_publisher.publish_bot_status_update(
             bot_type="jorge-seller",
@@ -995,9 +978,8 @@ class JorgeSellerBot(BaseBotWorkflow):
         """Legacy method - delegates to FollowUpService."""
         return await self.followup_service.execute_follow_up(state)
 
-    # ================================
     # ADAPTIVE INTELLIGENCE METHODS
-    # ================================
+
 
     async def adaptive_strategy_selection(self, state: JorgeSellerState) -> Dict:
         """Legacy adaptive strategy method."""
@@ -1011,9 +993,8 @@ class JorgeSellerBot(BaseBotWorkflow):
         """Legacy memory update method."""
         return await self._update_conversation_memory_node(state)
 
-    # ================================
     # PROGRESSIVE SKILLS METHODS
-    # ================================
+
 
     async def _execute_progressive_qualification(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Progressive skills-based qualification (68% token reduction)"""
@@ -1210,9 +1191,8 @@ class JorgeSellerBot(BaseBotWorkflow):
             "seller_temperature": "lukewarm",
         }
 
-    # ================================
     # AGENT MESH INTEGRATION METHODS
-    # ================================
+
 
     async def _create_mesh_qualification_task(self, lead_data: Dict[str, Any]) -> Optional[str]:
         """Create mesh task for Jorge qualification"""
@@ -1272,9 +1252,8 @@ class JorgeSellerBot(BaseBotWorkflow):
             logger.error(f"Task orchestration failed: {e}")
             return orchestrated_tasks
 
-    # ================================
     # MCP INTEGRATION METHODS
-    # ================================
+
 
     async def _enrich_with_mcp_data(self, lead_data: Dict[str, Any], qualification: Dict[str, Any]) -> Dict[str, Any]:
         """Enrich qualification with MCP data sources"""
@@ -1349,9 +1328,8 @@ class JorgeSellerBot(BaseBotWorkflow):
         except Exception as e:
             logger.error(f"MCP CRM sync failed: {e}")
 
-    # ================================
     # UTILITY METHODS
-    # ================================
+
 
     @staticmethod
     def _detect_slot_selection(message: str) -> Optional[int]:
@@ -1392,9 +1370,8 @@ class JorgeSellerBot(BaseBotWorkflow):
         parts = address.split(",")
         return parts[-2].strip() if len(parts) > 2 else "Phoenix"
 
-    # ================================
     # PUBLIC API (process_seller_message)
-    # ================================
+
 
     async def process_seller_message(
         self,
@@ -1409,7 +1386,7 @@ class JorgeSellerBot(BaseBotWorkflow):
     ) -> SellerBotResponse:
         """
         Main public API for processing seller messages.
-        Maintains full backward compatibility while delegating to service layer.
+        Delegates to the service layer.
         """
         try:
             _workflow_start = time.time()
@@ -1472,7 +1449,7 @@ class JorgeSellerBot(BaseBotWorkflow):
             if metadata:
                 initial_state["metadata"] = metadata
 
-            # Phase 3 Loop 3: Apply handoff context if valid (delegated to HandoffManager)
+            # Apply handoff context if valid (delegated to HandoffManager)
             if handoff_context and self.handoff_manager.has_valid_handoff_context(handoff_context):
                 initial_state = self.handoff_manager.populate_state_from_context(handoff_context, initial_state)
                 logger.info(f"Seller bot using handoff context for {conversation_id} - skipping re-qualification")
@@ -1497,7 +1474,7 @@ class JorgeSellerBot(BaseBotWorkflow):
                 frs_score = getattr(getattr(intent_profile, "frs", None), "total_score", 0.0)
                 pcs_score = getattr(getattr(intent_profile, "pcs", None), "total_score", 0.0)
 
-            # Phase 1.7: GHL Workflow Integration (Auto-tagging & Pipeline)
+            # GHL Workflow Integration (Auto-tagging & Pipeline)
             try:
                 scores = {"frs": frs_score, "pcs": pcs_score, "composite": 0.0}
                 persona_str = seller_persona.get("persona_type") if seller_persona else None
@@ -1514,7 +1491,7 @@ class JorgeSellerBot(BaseBotWorkflow):
             except Exception as e:
                 logger.warning(f"Failed to execute GHL workflow operations: {e}")
 
-            # Phase 1.8: Churn Detection Integration
+            # Churn Detection Integration
             churn_assessment = None
             try:
                 last_activity = datetime.now(timezone.utc)
@@ -1529,13 +1506,13 @@ class JorgeSellerBot(BaseBotWorkflow):
             await self.performance_tracker.track_operation("seller_bot", "process", _workflow_duration_ms, success=True)
             self.metrics_collector.record_bot_interaction("seller", duration_ms=_workflow_duration_ms, success=True)
 
-            # Record API cost (fire-and-forget)
+            # Record API cost asynchronously
             try:
                 await _cost_tracker.record_bot_call(conversation_id, conversation_id, "seller")
             except Exception as _e:
                 logger.debug(f"Cost tracker record failed: {_e}")
 
-            # Feed metrics to alerting (non-blocking)
+            # Feed metrics to alerting
             try:
                 self.metrics_collector.feed_to_alerting(self.alerting_service)
             except Exception as e:
@@ -1652,9 +1629,8 @@ class JorgeSellerBot(BaseBotWorkflow):
             logger.error(f"Error syncing persona tag to GHL: {e}")
             return False
 
-    # ================================
     # UNIFIED PROCESSING METHODS
-    # ================================
+
 
     async def process_seller_with_enhancements(self, lead_data: Dict[str, Any]) -> QualificationResult:
         """
@@ -1802,13 +1778,12 @@ class JorgeSellerBot(BaseBotWorkflow):
 
         return actions
 
-    # ================================
     # FACTORY METHODS AND UTILITIES
-    # ================================
+
 
     @classmethod
     def create_standard_jorge(cls, tenant_id: str = "jorge_seller") -> "JorgeSellerBot":
-        """Factory method: Create standard friendly Jorge bot (Track 3.1 only)"""
+        """Factory method: Create standard friendly Jorge bot (ML analytics only)"""
         config = JorgeFeatureConfig(enable_track3_intelligence=True, friendly_approach_enabled=True)
         return cls(tenant_id=tenant_id, config=config)
 
@@ -1886,7 +1861,7 @@ class JorgeSellerBot(BaseBotWorkflow):
                 / max(self.workflow_stats["total_interactions"], 1),
             }
 
-        # Phase 3.3 Bot intelligence metrics
+        # Bot intelligence metrics
         if self.config.enable_bot_intelligence:
             intelligence_enhancements = self.workflow_stats["intelligence_enhancements"]
             cache_hits = self.workflow_stats["intelligence_cache_hits"]
@@ -1922,7 +1897,7 @@ class JorgeSellerBot(BaseBotWorkflow):
             "overall_status": "healthy",
         }
 
-        # Check Track 3.1 intelligence
+        # Check ML analytics intelligence
         if self.config.enable_track3_intelligence and self.ml_analytics:
             health_status["track3_intelligence"] = "healthy"
 
@@ -1989,9 +1964,8 @@ class JorgeSellerBot(BaseBotWorkflow):
         logger.info(f"Jorge bot unified shutdown complete - tenant: {self.tenant_id}")
 
 
-# ================================
 # FACTORY FUNCTIONS FOR EASY USE
-# ================================
+
 
 
 def get_jorge_seller_bot(enhancement_level: str = "standard", tenant_id: str = "jorge_seller") -> JorgeSellerBot:

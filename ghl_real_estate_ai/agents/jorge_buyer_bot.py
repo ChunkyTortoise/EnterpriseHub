@@ -11,7 +11,7 @@ Buyer Bot Features:
 - Market reality education
 
 This module now delegates to specialized components in the buyer/ package
-while maintaining full backward compatibility with the existing API.
+
 """
 
 import os
@@ -87,7 +87,7 @@ from ghl_real_estate_ai.services.sentiment_analysis_service import (
     SentimentAnalysisService,
 )
 
-# Phase 3 Loop 3: Handoff context propagation
+# Handoff context propagation
 try:
     from ghl_real_estate_ai.services.jorge.jorge_handoff_service import EnrichedHandoffContext
 
@@ -103,7 +103,7 @@ except ImportError:
 
 logger = get_logger(__name__)
 
-# Phase 3.3 Bot Intelligence Middleware Integration
+# Bot intelligence middleware (optional)
 try:
     from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
     from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
@@ -130,7 +130,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
     6. Schedule follow-up actions based on qualification level
 
     This class now delegates to specialized components while maintaining
-    full backward compatibility with the existing API.
+    
     """
 
     MAX_CONVERSATION_HISTORY = MAX_CONVERSATION_HISTORY
@@ -170,27 +170,27 @@ class JorgeBuyerBot(BaseBotWorkflow):
         else:
             self.budget_ranges = self.budget_config.DEFAULT_BUDGET_RANGES
 
-        # Phase 3.3 Bot Intelligence Middleware Integration
+        # Bot intelligence middleware (optional)
         self.enable_bot_intelligence = enable_bot_intelligence
         self.intelligence_middleware = None
         if self.enable_bot_intelligence and BOT_INTELLIGENCE_AVAILABLE:
             self.intelligence_middleware = get_bot_intelligence_middleware()
-            logger.info("Jorge Buyer Bot: Bot Intelligence Middleware enabled (Phase 3.3)")
+            logger.info("Jorge Buyer Bot: Bot Intelligence Middleware enabled ")
         elif self.enable_bot_intelligence:
             logger.warning("Jorge Buyer Bot: Bot Intelligence requested but dependencies not available")
 
-        # Phase 1.4: Buyer Persona Classification
+        # Buyer Persona Classification
         self.buyer_persona_service = BuyerPersonaService()
-        # Phase 1.5: Sentiment Analysis
+        # Sentiment Analysis
         self.sentiment_service = SentimentAnalysisService(
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
             gemini_api_key=os.getenv("GEMINI_API_KEY"),
         )
-        # Phase 1.6 - 1.8 Services Initialization
+        # Ancillary services
         self.lead_scoring_integration = LeadScoringIntegration()
         self.workflow_service = GHLWorkflowService()
         self.churn_service = ChurnDetectionService(sentiment_service=self.sentiment_service)
-        logger.info("Buyer Bot: Phase 1.5-1.8 services (Sentiment, Scoring, Workflow, Churn) initialized")
+        logger.info("Buyer Bot: Sentiment, scoring, workflow, and churn services initialized")
 
         # Performance tracking for intelligence enhancements
         self.workflow_stats = {
@@ -199,7 +199,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
             "intelligence_cache_hits": 0,
         }
 
-        # Task #29: Conversation Memory Service
+        # Conversation Memory Service
         self.conversation_memory = get_buyer_conversation_memory()
         logger.info(f"Buyer Bot: Conversation memory enabled={self.conversation_memory.enabled}")
 
@@ -235,7 +235,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
         if self.enable_bot_intelligence and self.intelligence_middleware:
             workflow.add_node("gather_buyer_intelligence", self.gather_buyer_intelligence)
 
-        # Phase 1.4: Buyer Persona Classification
+        # Buyer Persona Classification
         workflow.add_node("classify_buyer_persona", self.classify_buyer_persona)
 
         workflow.add_node("generate_executive_brief", self.generate_executive_brief)
@@ -297,7 +297,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
     async def analyze_buyer_intent(self, state: BuyerBotState) -> Dict:
         """Extract and structure buyer intent from conversation using BuyerIntentDecoder."""
         try:
-            # Phase 3 Loop 3: Skip intent analysis if handoff context already populated state
+            # Skip intent analysis if handoff context already populated state
             if state.get("skip_qualification") and state.get("handoff_context_used"):
                 logger.info(f"Skipping intent analysis for {state.get('buyer_id')} - using handoff context")
                 # Return existing state values
@@ -327,7 +327,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
             # Try to extract budget range from conversation
             budget_range = await extract_budget_range(conversation_history, self.budget_config)
 
-            # Phase 1.6: Calculate Composite Lead Score
+            # Calculate Composite Lead Score
             composite_score_data = {}
             try:
                 scoring_state = {
@@ -368,7 +368,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
             }
 
     async def gather_buyer_intelligence(self, state: BuyerBotState) -> Dict:
-        """Gather buyer intelligence using Bot Intelligence Middleware (Phase 3.3)."""
+        """Gather buyer intelligence using Bot Intelligence Middleware ."""
         try:
             intelligence_context = None
             performance_ms = 0.0
@@ -428,7 +428,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
     async def generate_buyer_response(self, state: BuyerBotState) -> Dict:
         """
         Generate strategic buyer response based on qualification and property matches.
-        Enhanced with Phase 3.3 intelligence context for consultative recommendations.
+        Enhanced with conversation intelligence context for consultative recommendations.
         """
         return await self._response_generator.generate_buyer_response(state)
 
@@ -440,9 +440,8 @@ class JorgeBuyerBot(BaseBotWorkflow):
         """
         return await self._workflow_service.schedule_next_action(state)
 
-    # ================================
     # ERROR HANDLING & ESCALATION METHODS (Delegated)
-    # ================================
+
 
     async def escalate_to_human_review(self, buyer_id: str, reason: str, context: Dict) -> Dict:
         """
@@ -458,9 +457,8 @@ class JorgeBuyerBot(BaseBotWorkflow):
         """
         return await self._escalation_manager.escalate_compliance_violation(buyer_id, violation_type, evidence)
 
-    # ================================
     # FALLBACK METHODS (Delegated)
-    # ================================
+
 
     async def _fallback_financial_assessment(self, state: BuyerBotState) -> Dict:
         """
@@ -473,9 +471,8 @@ class JorgeBuyerBot(BaseBotWorkflow):
         """Extract financial signals from conversation text."""
         return assess_financial_from_conversation(conversation_text)
 
-    # ================================
     # EXTRACTION HELPERS (Delegated)
-    # ================================
+
 
     async def _extract_budget_range(self, conversation_history: List[Dict]) -> Optional[Dict[str, int]]:
         """Extract budget range from conversation history."""
@@ -491,9 +488,8 @@ class JorgeBuyerBot(BaseBotWorkflow):
         """Schedule follow-up action for buyer."""
         await self._workflow_service._schedule_follow_up(buyer_id, action, hours)
 
-    # ================================
     # HANDOFF CONTEXT HELPERS (Delegated)
-    # ================================
+
 
     def _has_valid_handoff_context(self, handoff_context: Optional["EnrichedHandoffContext"]) -> bool:
         """Check if handoff context is valid and recent (<24h)."""
@@ -505,9 +501,8 @@ class JorgeBuyerBot(BaseBotWorkflow):
         """Populate buyer state from handoff context to skip re-qualification."""
         return self._handoff_manager.populate_state_from_context(handoff_context, initial_state)
 
-    # ================================
     # MAIN ENTRY POINT
-    # ================================
+
 
     async def process_buyer_conversation(
         self,
@@ -591,7 +586,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
         try:
             _workflow_start = time.time()
 
-            # Task #29: Load conversation state from memory (if available)
+            # Load conversation state from memory (if available)
             saved_state = await self.conversation_memory.load_state(conversation_id)
             if saved_state:
                 logger.info(
@@ -630,7 +625,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 handoff_context=handoff_context,
             )
 
-            # Task #29: Restore additional state from memory
+            # Restore additional state from memory
             if saved_state:
                 # Restore qualification context
                 initial_state.update(
@@ -685,13 +680,13 @@ class JorgeBuyerBot(BaseBotWorkflow):
             await self.performance_tracker.track_operation("buyer_bot", "process", _workflow_duration_ms, success=True)
             self.metrics_collector.record_bot_interaction("buyer", duration_ms=_workflow_duration_ms, success=True)
 
-            # Record API cost (fire-and-forget)
+            # Record API cost asynchronously
             try:
                 await _cost_tracker.record_bot_call(conversation_id, conversation_id, "buyer")
             except Exception as _e:
                 logger.debug(f"Cost tracker record failed: {_e}")
 
-            # Feed metrics to alerting (non-blocking)
+            # Feed metrics to alerting
             try:
                 self.metrics_collector.feed_to_alerting(self.alerting_service)
             except Exception as e:
@@ -728,7 +723,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 properties_matched=len(result.get("matched_properties", [])),
             )
 
-            # Phase 1.7: GHL Workflow Integration (Auto-tagging & Pipeline)
+            # GHL Workflow Integration (Auto-tagging & Pipeline)
             try:
                 # Prepare data for workflow service
                 scores = {
@@ -756,7 +751,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
             except Exception as e:
                 logger.warning(f"Failed to execute GHL workflow operations for buyer: {e}")
 
-            # Phase 1.8: Churn Detection Integration
+            # Churn Detection Integration
             churn_assessment = None
             try:
                 # Assess churn risk
@@ -775,7 +770,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
             except Exception as e:
                 logger.warning(f"Failed to assess churn risk for buyer: {e}")
 
-            # Task #29: Save conversation state to memory (non-blocking)
+            # Save conversation state
             try:
                 await self.conversation_memory.save_state(conversation_id, result)
             except Exception as e:
@@ -804,9 +799,8 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 "handoff_signals": {},
             }
 
-    # ================================
     # PHASE 3.3 INTELLIGENCE ENHANCEMENT METHODS
-    # ================================
+
 
     async def _enhance_buyer_prompt_with_intelligence(
         self, base_prompt: str, intelligence_context: "BotIntelligenceContext", state: BuyerBotState
@@ -873,13 +867,12 @@ class JorgeBuyerBot(BaseBotWorkflow):
             logger.warning(f"Buyer conversation intelligence application failed: {e}")
             return conversation_strategy
 
-    # ================================
     # FACTORY METHODS & PERFORMANCE METRICS
-    # ================================
+
 
     @classmethod
     def create_enhanced_buyer_bot(cls, tenant_id: str = "jorge_buyer") -> "JorgeBuyerBot":
-        """Factory method: Create buyer bot with Phase 3.3 intelligence enhancements enabled"""
+        """Factory method: Create buyer bot with conversation intelligence enabled"""
         return cls(tenant_id=tenant_id, enable_bot_intelligence=True)
 
     async def get_performance_metrics(self) -> Dict[str, Any]:
@@ -891,7 +884,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
             "features_enabled": {"bot_intelligence": self.enable_bot_intelligence},
         }
 
-        # Phase 3.3 Bot intelligence metrics
+        # Bot intelligence metrics
         if self.enable_bot_intelligence:
             intelligence_enhancements = self.workflow_stats["intelligence_enhancements"]
             cache_hits = self.workflow_stats["intelligence_cache_hits"]
@@ -915,21 +908,19 @@ class JorgeBuyerBot(BaseBotWorkflow):
 
         return metrics
 
-    # ================================
     # PHASE 1.4: BUYER PERSONA CLASSIFICATION (Delegated)
-    # ================================
+
 
     async def classify_buyer_persona(self, state: BuyerBotState) -> Dict:
-        """Classify buyer persona based on conversation analysis (Phase 1.4)."""
+        """Classify buyer persona based on conversation analysis ."""
         return await self._workflow_service.classify_buyer_persona(state)
 
     async def _sync_buyer_persona_to_ghl(self, buyer_id: str, persona_classification) -> None:
-        """Sync buyer persona to GHL as tags (Phase 1.4)."""
+        """Sync buyer persona to GHL as tags ."""
         await self._workflow_service._sync_buyer_persona_to_ghl(buyer_id, persona_classification)
 
-    # ================================
-    # EXECUTIVE BRIEF GENERATION (Phase 2)
-    # ================================
+    # EXECUTIVE BRIEF GENERATION 
+
 
     async def generate_executive_brief(self, state: BuyerBotState) -> Dict:
         """

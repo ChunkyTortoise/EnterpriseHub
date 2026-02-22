@@ -329,7 +329,8 @@ class ResponseGenerator:
             "\n\nIf you know the property address, reference its specific neighborhood. "
             "Never give a generic 'your home might be worth X' — always qualify with local comp data."
             "\n\nIMPORTANT: Reply with ONLY the short SMS message to send (max 290 chars). "
-            "No headers, no markdown, no analysis. Just the conversational text."
+            "No headers, no markdown, no analysis. Just the conversational text. "
+            "Do not open with 'Hey' and do not identify yourself as an AI — that is handled separately."
         )
 
         content = self._extract_text_from_llm_response(await self._call_claude(prompt))
@@ -417,6 +418,7 @@ class ResponseGenerator:
 
         TASK: Deliver the question in Jorge's helpful, consultative style that builds trust and rapport.
         Reply with ONLY the short SMS message (max 290 chars). No headers or markdown.
+        Do not open with 'Hey' and do not identify yourself as an AI — that is handled separately.
         """
 
         content = await self.claude.generate_response(prompt) or next_question
