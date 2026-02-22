@@ -1633,7 +1633,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         return {
             "engagement_status": "ghosted",
             "current_step": "day_14_email",
-            "response_content": f"Initiating Day 7 Call with stall breaker: {stall_breaker}",
+            "response_content": "We'll be giving you a call soon to answer any questions. Looking forward to connecting!",
         }
 
     async def send_day_14_email(self, state: LeadFollowUpState) -> Dict:
@@ -1901,6 +1901,11 @@ class LeadBotWorkflow(BaseBotWorkflow):
         # Fix for phase 3: check for generate_cma first
         if state.get("current_step") == "generate_cma":
             return "generate_cma"
+
+        # Honor qualify_intent: first-contact routing set by determine_path must not be
+        # bypassed by the Hot Lead check below (sequence_day=0, no prior bot reply).
+        if state.get("current_step") == "qualify_intent":
+            return "qualify_intent"
 
         # Check for lifecycle transitions
         engagement = state["engagement_status"]
