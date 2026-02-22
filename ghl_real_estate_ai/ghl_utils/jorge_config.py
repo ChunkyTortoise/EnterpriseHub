@@ -887,11 +887,12 @@ class BuyerBudgetConfig:
 
     def get_routing_action(self, qualification_score: int, next_action: str = "respond") -> str:
         """Get routing action based on qualification score."""
-        if next_action == "respond" and qualification_score >= self.ROUTING_QUALIFIED_THRESHOLD:
-            return "respond"
-        elif qualification_score >= self.ROUTING_SCHEDULE_THRESHOLD:
+        if qualification_score >= self.ROUTING_SCHEDULE_THRESHOLD:
             return "schedule"
-        return "end"
+        # Default to "respond" so generate_buyer_response always runs and asks
+        # qualifying questions. Only "schedule" is a meaningful early-exit; "end"
+        # (which routes to LangGraph END) would skip response generation entirely.
+        return "respond"
 
 
 # ========== SELLER BOT CONFIGURATION ==========
