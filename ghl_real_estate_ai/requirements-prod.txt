@@ -10,8 +10,8 @@ pydantic>=2.7.4,<3.0.0
 pydantic-settings>=2.1.0,<3.0.0
 python-multipart==0.0.6
 
-# Anthropic Claude SDK
-anthropic==0.18.1
+# Anthropic Claude SDK (>=0.27 uses httpx mounts instead of deprecated proxies arg)
+anthropic>=0.45.0,<1.0.0
 
 # Google Gemini SDK (required by sentiment_analysis_service top-level import)
 google-generativeai>=0.8.0
