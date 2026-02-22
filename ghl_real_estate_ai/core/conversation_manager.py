@@ -235,16 +235,20 @@ class ConversationManager:
         context["last_lead_score"] = current_score
 
         # Calculate predictive conversion probability
-        predictive_result = await self.predictive_scorer.calculate_predictive_score(context, location=location_id)
-        # Serialize the dataclass to a dict for storage
-        predictive_data = asdict(predictive_result)
-        predictive_data["priority_level"] = predictive_result.priority_level.value
-
-        # Ensure last_updated is a string for JSON serialization
-        if isinstance(predictive_data.get("last_updated"), datetime):
-            predictive_data["last_updated"] = predictive_data["last_updated"].isoformat()
-
-        context["predictive_score"] = predictive_data
+        # Wrapped in try/except — a scorer failure must NOT prevent context from being saved.
+        # If this throws, the conversation history and seller_preferences are lost,
+        # causing the seller bot to loop on Q1 every turn.
+        try:
+            predictive_result = await self.predictive_scorer.calculate_predictive_score(context, location=location_id)
+            # Serialize the dataclass to a dict for storage
+            predictive_data = asdict(predictive_result)
+            predictive_data["priority_level"] = predictive_result.priority_level.value
+            # Ensure last_updated is a string for JSON serialization
+            if isinstance(predictive_data.get("last_updated"), datetime):
+                predictive_data["last_updated"] = predictive_data["last_updated"].isoformat()
+            context["predictive_score"] = predictive_data
+        except Exception as _pred_err:
+            logger.warning(f"Predictive scorer failed in update_context for {contact_id}: {_pred_err}")
 
         # Optimize conversation history with intelligent context pruning
         if self.optimization_enabled and self.conversation_optimizer:
