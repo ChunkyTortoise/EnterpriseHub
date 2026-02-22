@@ -63,6 +63,10 @@ services:
       - key: JWT_SECRET_KEY
         sync: false
 
+      # Bot activation — matches GHL workflow trigger tag
+      - key: ACTIVATION_TAGS
+        value: '["needs qualifying", "Needs Qualifying", "ai on", "AI On"]'
+
       # -----------------------------------------------------------------------
       # JORGE BOT CONFIG — set in dashboard with values from .env.jorge
       # -----------------------------------------------------------------------

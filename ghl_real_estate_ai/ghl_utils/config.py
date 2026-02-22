@@ -145,7 +145,7 @@ class Settings(BaseSettings):
     auto_deactivate_threshold: int = 70  # 70+ percentage triggers AI deactivation
 
     # Activation & Trigger Settings
-    activation_tags: list[str] = ["needs qualifying", "Needs Qualifying"]
+    activation_tags: list[str] = ["needs qualifying", "Needs Qualifying", "ai on", "AI On"]
     deactivation_tags: list[str] = ["AI-Off", "Qualified", "Stop-Bot"]
     required_contact_type: Optional[str] = "Seller"
     disposition_field_name: str = "disposition"
