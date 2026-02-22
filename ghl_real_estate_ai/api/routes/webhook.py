@@ -49,6 +49,10 @@ from ghl_real_estate_ai.services.hitl_gate import HITLGate
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
 from ghl_real_estate_ai.services.jorge.response_pipeline.factory import get_response_pipeline
 from ghl_real_estate_ai.services.jorge.response_pipeline.models import ProcessingContext
+from ghl_real_estate_ai.services.jorge.response_pipeline.stages.ai_disclosure import (
+    DISCLOSURE_EN,
+    PROACTIVE_DISCLOSURE_EN,
+)
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
 from ghl_real_estate_ai.services.mls_client import MLSClient
@@ -822,6 +826,10 @@ async def handle_ghl_webhook(
             if status == ComplianceStatus.BLOCKED:
                 logger.warning(f"Compliance BLOCKED message for {contact_id}: {reason}. Violations: {violations}")
                 final_seller_msg = "Let's stick to the facts about your property. What price are you looking to get?"
+                # SB 243/1001: compliance-replaced messages are still AI-generated
+                if not seller_history:
+                    final_seller_msg = PROACTIVE_DISCLOSURE_EN + final_seller_msg
+                final_seller_msg = final_seller_msg.rstrip() + DISCLOSURE_EN
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
             # --- CROSS-BOT HANDOFF CHECK ---
@@ -1033,6 +1041,10 @@ async def handle_ghl_webhook(
                 final_buyer_msg = (
                     "I'd love to help you find your next home. What's most important to you in a property?"
                 )
+                # SB 243/1001: compliance-replaced messages are still AI-generated
+                if not history:
+                    final_buyer_msg = PROACTIVE_DISCLOSURE_EN + final_buyer_msg
+                final_buyer_msg = final_buyer_msg.rstrip() + DISCLOSURE_EN
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
             # --- CROSS-BOT HANDOFF CHECK ---
@@ -1257,6 +1269,10 @@ async def handle_ghl_webhook(
                         f"Compliance BLOCKED lead message for {contact_id}: {reason}. Violations: {violations}"
                     )
                     final_lead_msg = "Thanks for reaching out! How can I help you today?"
+                    # SB 243/1001: compliance-replaced messages are still AI-generated
+                    if not history:
+                        final_lead_msg = PROACTIVE_DISCLOSURE_EN + final_lead_msg
+                    final_lead_msg = final_lead_msg.rstrip() + DISCLOSURE_EN
                     actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
                 # --- CROSS-BOT HANDOFF CHECK ---
