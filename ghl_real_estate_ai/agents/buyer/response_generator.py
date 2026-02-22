@@ -222,6 +222,7 @@ class ResponseGenerator:
 
             Keep under 290 characters for SMS compliance (pipeline enforces 320 max).
             No hyphens. No robotic phrasing. Short sentences.
+            Do not open with 'Hey' and do not identify yourself as an AI — that is handled separately.
             """
 
             # UPS: Inject progressive skill guidance into prompt

@@ -47,10 +47,10 @@ RUN mkdir -p data/knowledge_base data/memory data/analytics .chroma_db
 ENV PYTHONUNBUFFERED=1
 # Make sibling packages (ghl_integration, etc.) importable as top-level modules
 # They live inside /app/ghl_real_estate_ai/ but are imported without the prefix
-ENV PYTHONPATH=/app/ghl_real_estate_ai
+ENV PYTHONPATH=/app
 
 # Expose FastAPI port (Railway overrides with $PORT)
 EXPOSE 8000
 
 # Run FastAPI with uvicorn (shell form so $PORT is expanded)
-CMD ["/bin/sh", "-c", "uvicorn ghl_real_estate_ai.api.main_prod:app --host 0.0.0.0 --port ${PORT:-8000} --workers 2"]
+CMD ["/bin/sh", "-c", "uvicorn ghl_real_estate_ai.api.main_prod:app --host 0.0.0.0 --port ${PORT:-8000}"]

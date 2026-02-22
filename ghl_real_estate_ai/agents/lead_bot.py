@@ -30,7 +30,7 @@ from ghl_real_estate_ai.services.ghost_followup_engine import GhostState, get_gh
 from ghl_real_estate_ai.services.jorge.ab_testing_service import ABTestingService
 from ghl_real_estate_ai.services.jorge.alerting_service import AlertingService
 
-# Enhanced Analytics Components (extracted from god class)
+# Enhanced Analytics Components
 from ghl_real_estate_ai.services.jorge.analytics.behavioral_analytics import BehavioralAnalyticsEngine
 from ghl_real_estate_ai.services.jorge.analytics.models import ResponsePattern, SequenceOptimization
 from ghl_real_estate_ai.services.jorge.analytics.personality_adapter import PersonalityAdapter
@@ -48,7 +48,7 @@ from ghl_real_estate_ai.services.lead_sequence_state_service import (
 )
 from ghl_real_estate_ai.utils.pdf_renderer import PDFGenerationError, PDFRenderer
 
-# Enhanced Features (Track 3.1 Integration)
+# Enhanced Features (ML analytics Integration)
 try:
     from bots.shared.ml_analytics_engine import (
         ConversionProbabilityAnalysis,
@@ -64,7 +64,7 @@ except ImportError:
 logger = get_logger(__name__)
 
 
-# ── Background Task Error Tracking (P0 Fix) ──────────────────────────
+# ── Background Task Error Tracking ──────────────────────────
 async def _safe_background_task(coro, task_name: str, retry_count: int = 0):
     """Execute a coroutine in the background with error logging and optional retry.
 
@@ -73,7 +73,7 @@ async def _safe_background_task(coro, task_name: str, retry_count: int = 0):
         task_name: Human-readable name for logging
         retry_count: Number of retries on failure (default: 0 = no retry)
 
-    This wrapper prevents silent failures in fire-and-forget async tasks.
+    This wrapper prevents silent failures in background async tasks.
     All errors are logged with full context for debugging and monitoring.
     """
     try:
@@ -92,7 +92,7 @@ async def _safe_background_task(coro, task_name: str, retry_count: int = 0):
         )
 
 
-# Phase 3.3 Bot Intelligence Middleware Integration
+# Bot intelligence middleware (optional)
 try:
     from ghl_real_estate_ai.models.intelligence_context import BotIntelligenceContext
     from ghl_real_estate_ai.services.bot_intelligence_middleware import get_bot_intelligence_middleware
@@ -134,7 +134,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
     OPTIONAL ENHANCEMENTS (configurable):
     - Predictive Analytics (behavioral pattern analysis)
     - Personality Adaptation (customized messaging)
-    - Track 3.1 ML Intelligence (market timing optimization)
+    - ML analytics ML Intelligence (market timing optimization)
     - Jorge Bot handoff coordination
     """
 
@@ -186,13 +186,13 @@ class LeadBotWorkflow(BaseBotWorkflow):
             self.temperature_engine = TemperaturePredictionEngine()
             logger.info("Lead Bot: Predictive analytics enabled")
 
-        # Phase 3.3 Bot Intelligence Middleware Integration
+        # Bot intelligence middleware (optional)
         self.intelligence_middleware = None
         if self.config.enable_bot_intelligence and BOT_INTELLIGENCE_AVAILABLE:
             self.intelligence_middleware = get_bot_intelligence_middleware()
-            logger.info("Lead Bot: Phase 3.3 Bot Intelligence Middleware enabled")
+            logger.info("Lead Bot: conversation intelligence middleware enabled")
         elif self.config.enable_bot_intelligence:
-            logger.warning("Lead Bot: Phase 3.3 Bot Intelligence requested but dependencies not available")
+            logger.warning("Lead Bot: conversation intelligence middleware not available")
 
         # Bot-specific cache service
         self.cache_service = CacheService()
@@ -430,9 +430,8 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         return workflow.compile()
 
-    # ================================
     # ENHANCED FEATURE METHODS
-    # ================================
+
 
     async def gather_lead_intelligence(self, state: LeadFollowUpState) -> Dict:
         """
@@ -592,8 +591,8 @@ class LeadBotWorkflow(BaseBotWorkflow):
         return {"sequence_optimization": optimization}
 
     async def apply_track3_market_intelligence(self, state: LeadFollowUpState) -> Dict:
-        """Apply Track 3.1 market timing intelligence to enhance nurture sequence"""
-        logger.info(f"Applying Track 3.1 market intelligence for lead {state['lead_id']}")
+        """Apply ML analytics market timing intelligence to enhance nurture sequence"""
+        logger.info(f"Applying ML analytics market intelligence for lead {state['lead_id']}")
 
         await self.event_publisher.publish_bot_status_update(
             bot_type="enhanced-lead-bot",
@@ -604,10 +603,10 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         try:
             if not self.ml_analytics:
-                logger.warning("Track 3.1 ML analytics not available")
+                logger.warning("ML analytics ML analytics not available")
                 return {"track3_applied": False, "fallback_reason": "ML analytics not available"}
 
-            # Track 3.1 enhancement: Get comprehensive predictive analysis
+            # ML analytics enhancement: Get comprehensive predictive analysis
             journey_analysis = await self.ml_analytics.predict_lead_journey(state["lead_id"])
             conversion_analysis = await self.ml_analytics.predict_conversion_probability(
                 state["lead_id"], state.get("current_journey_stage", "nurture")
@@ -634,7 +633,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
             }
 
         except Exception as e:
-            logger.error(f"Track 3.1 market intelligence failed for {state['lead_id']}: {e}")
+            logger.error(f"ML analytics market intelligence failed for {state['lead_id']}: {e}")
             return {"track3_applied": False, "fallback_reason": str(e)}
 
     async def send_optimized_day_3(self, state: LeadFollowUpState) -> Dict:
@@ -646,7 +645,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         pattern = state.get("response_pattern")
         personality = state.get("personality_type", "relationship")
 
-        # Phase 3.3 Intelligence Enhancement: Use intelligence context for nurture optimization
+        # Use intelligence context for nurture optimization
         intelligence_context = state.get("intelligence_context")
         churn_risk = 0.5  # Default
         preferred_timing = None
@@ -719,7 +718,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         journey_analysis = state.get("journey_analysis")
         conversion_analysis = state.get("conversion_analysis")
 
-        # Phase 3.3 Intelligence Enhancement: Use intelligence context for call optimization
+        # Use intelligence context for call optimization
         intelligence_context = state.get("intelligence_context")
         churn_risk = state.get("churn_risk_score", 0.5)
         cross_bot_handoff_eligible = False
@@ -801,7 +800,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         journey_analysis = state.get("journey_analysis")
         conversion_analysis = state.get("conversion_analysis")
 
-        # Phase 3.3 Intelligence Enhancement: Adaptive messaging based on intelligence
+        # Adaptive messaging based on intelligence
         intelligence_context = state.get("intelligence_context")
         churn_risk = state.get("churn_risk_score", 0.5)
         content_adaptation_applied = False
@@ -874,7 +873,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         journey_analysis = state.get("journey_analysis")
         conversion_analysis = state.get("conversion_analysis")
 
-        # Phase 3.3 Intelligence Enhancement: Comprehensive final decision
+        # Comprehensive final decision
         intelligence_context = state.get("intelligence_context")
         churn_risk = state.get("churn_risk_score", 0.5)
 
@@ -925,17 +924,17 @@ class LeadBotWorkflow(BaseBotWorkflow):
                     f"Low intelligence score ({intelligence_score:.2f}) or high churn risk ({churn_risk:.2f})"
                 )
 
-        # Traditional Track 3.1 logic as backup
+        # Traditional ML analytics logic as backup
         if journey_analysis and conversion_analysis and final_strategy == "nurture":
             # High potential - recommend Jorge qualification
             if journey_analysis.conversion_probability > 0.5 and conversion_analysis.stage_conversion_probability > 0.4:
                 final_strategy = "jorge_qualification"
-                handoff_reasoning.append("High Track 3.1 conversion probability")
+                handoff_reasoning.append("High ML analytics conversion probability")
 
             # Low potential with cooling trend - disengage gracefully
             elif journey_analysis.conversion_probability < 0.2 and conversion_analysis.drop_off_risk > 0.8:
                 final_strategy = "graceful_disengage"
-                handoff_reasoning.append("Low Track 3.1 conversion probability with high drop-off risk")
+                handoff_reasoning.append("Low ML analytics conversion probability with high drop-off risk")
 
         # Execute Jorge handoff if recommended
         if final_strategy in ["jorge_qualification", "jorge_consultation"] and self.config.jorge_handoff_enabled:
@@ -991,7 +990,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         # Use parent routing logic with enhancements
         return self._route_next_step(state)
 
-    # --- Track 3.1 Enhancement Helper Methods ---
+    # --- ML analytics Enhancement Helper Methods ---
 
     async def _apply_market_timing_intelligence(
         self,
@@ -1000,7 +999,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         conversion_analysis,
         touchpoint_analysis,
     ) -> SequenceOptimization:
-        """Apply Track 3.1 market timing intelligence to enhance sequence optimization"""
+        """Apply ML analytics market timing intelligence to enhance sequence optimization"""
         if not base_optimization:
             base_optimization = SequenceOptimization(
                 day_3=3, day_7=7, day_14=14, day_30=30, channel_sequence=["SMS", "Email", "Voice", "SMS"]
@@ -1169,7 +1168,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         }
 
     async def analyze_intent(self, state: LeadFollowUpState) -> Dict:
-        """Score the lead using the Phase 1 Intent Decoder."""
+        """Score the lead using the intent decoder."""
         logger.info(f"Analyzing intent for lead {state['lead_id']}")
 
         # Emit bot status update
@@ -1177,7 +1176,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
             bot_type="lead-bot", contact_id=state["lead_id"], status="processing", current_step="analyze_intent"
         )
 
-        # Phase 1.1: Check for voice call qualification data first
+        # Check for voice call qualification data first
         voice_data = await self.check_voice_call_data(state["lead_id"])
 
         if voice_data and voice_data.get("qualification_complete"):
@@ -1237,7 +1236,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
             _intent_start_time = time.time()
             profile = self.intent_decoder.analyze_lead(state["lead_id"], state["conversation_history"])
 
-        # Sync to Lyrio (Phase 4)
+        # Sync to Lyrio 
         lyrio = LyrioClient()
 
         # Run sync in background with error tracking
@@ -1336,7 +1335,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
     async def determine_path(self, state: LeadFollowUpState) -> Dict:
         """Decide the next step based on engagement and timeline."""
 
-        # 1. Check for Price Objection / CMA Request (Phase 3)
+        # 1. Check for Price Objection / CMA Request 
         last_msg = state["conversation_history"][-1]["content"].lower() if state["conversation_history"] else ""
         price_keywords = ["price", "value", "worth", "zestimate", "comps", "market analysis"]
 
@@ -1446,7 +1445,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         # Render PDF URL (Mock)
         pdf_url = PDFRenderer.generate_pdf_url(report)
 
-        # Phase 8: Digital Twin Association
+        # Digital Twin Association
         lyrio = LyrioClient()
         # Mock URL for digital twin
         digital_twin_url = f"https://enterprise-hub.ai/visualize/{address.replace(' ', '-').lower()}"
@@ -1758,7 +1757,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
             state["lead_id"], "AI", "Coordinating showing with market-aware scheduling.", "thought"
         )
 
-        # Phase 7: Use Smart Scheduler
+        # Use Smart Scheduler
         from ghl_real_estate_ai.services.calendar_scheduler import get_smart_scheduler
 
         scheduler = get_smart_scheduler(self.ghl_client)
@@ -2017,9 +2016,8 @@ class LeadBotWorkflow(BaseBotWorkflow):
         # Default to nurture for leads needing more engagement
         return "nurture"
 
-    # ================================
     # INTELLIGENCE HELPER METHODS
-    # ================================
+
 
     def _extract_churn_risk_from_intelligence(self, intelligence_context) -> float:
         """Extract churn risk score from intelligence context for nurture optimization."""
@@ -2197,9 +2195,8 @@ class LeadBotWorkflow(BaseBotWorkflow):
             f"(type: {handoff_type}, score: {intelligence_score:.2f})"
         )
 
-    # ================================
     # UNIFIED PROCESSING METHODS
-    # ================================
+
 
     async def process_lead_conversation(
         self,
@@ -2291,14 +2288,14 @@ class LeadBotWorkflow(BaseBotWorkflow):
                 "personality_type": None,
                 "temperature_prediction": None,
                 "sequence_optimization": None,
-                # Track 3.1 fields
+                # ML analytics fields
                 "journey_analysis": None,
                 "conversion_analysis": None,
                 "touchpoint_analysis": None,
                 "enhanced_optimization": None,
                 "critical_scenario": None,
                 "track3_applied": False,
-                # Phase 3.3 Intelligence Enhancement fields
+                # Conversation intelligence fields
                 "intelligence_context": None,
                 "intelligence_performance_ms": 0.0,
                 "preferred_engagement_timing": None,
@@ -2343,13 +2340,13 @@ class LeadBotWorkflow(BaseBotWorkflow):
             await self.performance_tracker.track_operation("lead_bot", "process", _workflow_duration_ms, success=True)
             self.metrics_collector.record_bot_interaction("lead", duration_ms=_workflow_duration_ms, success=True)
 
-            # Record API cost (fire-and-forget)
+            # Record API cost asynchronously
             try:
                 await _cost_tracker.record_bot_call(conversation_id, conversation_id, "lead")
             except Exception as _e:
                 logger.debug(f"Cost tracker record failed: {_e}")
 
-            # Feed metrics to alerting (non-blocking)
+            # Feed metrics to alerting
             try:
                 self.metrics_collector.feed_to_alerting(self.alerting_service)
             except Exception as e:
@@ -2416,14 +2413,14 @@ class LeadBotWorkflow(BaseBotWorkflow):
             "personality_type": None,
             "temperature_prediction": None,
             "sequence_optimization": None,
-            # Track 3.1 fields
+            # ML analytics fields
             "journey_analysis": None,
             "conversion_analysis": None,
             "touchpoint_analysis": None,
             "enhanced_optimization": None,
             "critical_scenario": None,
             "track3_applied": False,
-            # Phase 3.3 Intelligence Enhancement fields
+            # Conversation intelligence fields
             "intelligence_context": None,
             "intelligence_performance_ms": 0.0,
             "preferred_engagement_timing": None,
@@ -2466,7 +2463,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
                 / max(self.workflow_stats["total_sequences"], 1),
             }
 
-        # Track 3.1 metrics
+        # ML analytics metrics
         if self.config.enable_track3_intelligence:
             metrics["track3_intelligence"] = {
                 "enhancements_applied": self.workflow_stats["track3_enhancements"],
@@ -2521,7 +2518,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
         if self.config.enable_personality_adaptation:
             health_status["personality_adaptation"] = "healthy" if self.personality_adapter else "misconfigured"
 
-        # Check Track 3.1 intelligence
+        # Check ML analytics intelligence
         if self.config.enable_track3_intelligence:
             health_status["track3_intelligence"] = "healthy" if self.ml_analytics else "dependencies_missing"
             if not TRACK3_ML_AVAILABLE:
@@ -2537,9 +2534,8 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         return health_status
 
-    # ================================
     # FACTORY METHODS
-    # ================================
+
 
     @classmethod
     def create_standard_lead_bot(cls, ghl_client=None) -> "LeadBotWorkflow":
@@ -2570,14 +2566,13 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
     @classmethod
     def create_intelligence_enhanced_lead_bot(cls, ghl_client=None) -> "LeadBotWorkflow":
-        """Factory method: Create lead bot with Phase 3.3 Intelligence Middleware"""
+        """Factory method: Create lead bot with conversation intelligence middleware"""
         config = LeadBotConfig(enable_bot_intelligence=True, jorge_handoff_enabled=True)
         return cls(ghl_client=ghl_client, config=config)
 
 
-# ================================
 # FACTORY FUNCTIONS FOR EASY USE
-# ================================
+
 
 
 def get_lead_bot(enhancement_level: str = "standard", ghl_client=None) -> LeadBotWorkflow:
