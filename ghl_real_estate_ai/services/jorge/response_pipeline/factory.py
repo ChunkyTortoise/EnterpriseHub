@@ -40,6 +40,12 @@ def create_default_pipeline() -> ResponsePostProcessor:
         "yes",
         "on",
     }
+    disclosure_enabled = os.getenv("AI_DISCLOSURE_ENABLED", "true").lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
 
     stages = [
         LanguageMirrorProcessor(),
@@ -48,13 +54,10 @@ def create_default_pipeline() -> ResponsePostProcessor:
     ]
     if repair_enabled:
         stages.append(ConversationRepairProcessor())
-    stages.extend(
-        [
-            ComplianceCheckProcessor(),
-            AIDisclosureProcessor(),
-            SMSTruncationProcessor(),
-        ]
-    )
+    stages.append(ComplianceCheckProcessor())
+    if disclosure_enabled:
+        stages.append(AIDisclosureProcessor())
+    stages.append(SMSTruncationProcessor())
 
     return ResponsePostProcessor(stages=stages)
 
