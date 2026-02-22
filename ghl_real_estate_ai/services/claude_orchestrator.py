@@ -127,22 +127,26 @@ class ClaudeOrchestrator:
         self.jorge_scorer = LeadScorer()
         self.ml_scorer = PredictiveLeadScorer()
 
-        # MCP Servers for Phase 2 Orchestration
-        from ghl_real_estate_ai.core.mcp_servers.domain.analytics_intelligence_server import mcp as analytics_mcp
-        from ghl_real_estate_ai.core.mcp_servers.domain.lead_intelligence_server import mcp as lead_mcp
-        from ghl_real_estate_ai.core.mcp_servers.domain.market_intelligence_server import mcp as market_mcp
-        from ghl_real_estate_ai.core.mcp_servers.domain.negotiation_intelligence_server import mcp as negotiation_mcp
-        from ghl_real_estate_ai.core.mcp_servers.domain.property_intelligence_server import mcp as property_mcp
-        from ghl_real_estate_ai.core.mcp_servers.domain.research_intelligence_server import mcp as research_mcp
+        # MCP Servers for Phase 2 Orchestration (optional — requires fastmcp)
+        try:
+            from ghl_real_estate_ai.core.mcp_servers.domain.analytics_intelligence_server import mcp as analytics_mcp
+            from ghl_real_estate_ai.core.mcp_servers.domain.lead_intelligence_server import mcp as lead_mcp
+            from ghl_real_estate_ai.core.mcp_servers.domain.market_intelligence_server import mcp as market_mcp
+            from ghl_real_estate_ai.core.mcp_servers.domain.negotiation_intelligence_server import mcp as negotiation_mcp
+            from ghl_real_estate_ai.core.mcp_servers.domain.property_intelligence_server import mcp as property_mcp
+            from ghl_real_estate_ai.core.mcp_servers.domain.research_intelligence_server import mcp as research_mcp
 
-        self.mcp_servers = {
-            "LeadIntelligence": lead_mcp,
-            "PropertyIntelligence": property_mcp,
-            "MarketIntelligence": market_mcp,
-            "NegotiationIntelligence": negotiation_mcp,
-            "AnalyticsIntelligence": analytics_mcp,
-            "ResearchIntelligence": research_mcp,
-        }
+            self.mcp_servers = {
+                "LeadIntelligence": lead_mcp,
+                "PropertyIntelligence": property_mcp,
+                "MarketIntelligence": market_mcp,
+                "NegotiationIntelligence": negotiation_mcp,
+                "AnalyticsIntelligence": analytics_mcp,
+                "ResearchIntelligence": research_mcp,
+            }
+        except ImportError as e:
+            print(f"Warning: MCP servers unavailable (fastmcp not installed): {e}")
+            self.mcp_servers = {}
 
         # Initialize dependencies for ChurnPredictionEngine
         try:
