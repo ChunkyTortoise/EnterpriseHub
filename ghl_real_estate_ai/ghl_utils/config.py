@@ -222,6 +222,7 @@ class Settings(BaseSettings):
 
     # Security
     ghl_webhook_secret: Optional[str] = None  # For signature verification
+    ghl_allow_unsigned_webhooks: bool = False  # Allow GHL webhooks without signature (for Custom Webhook actions)
     # SECURITY: JWT secret must be provided via environment variable.
     # No default value to prevent accidental use of weak secrets in production.
     # In development, set JWT_SECRET_KEY in .env file.
