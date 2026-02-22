@@ -1342,13 +1342,11 @@ class LeadBotWorkflow(BaseBotWorkflow):
     async def determine_path(self, state: LeadFollowUpState) -> Dict:
         """Decide the next step based on engagement and timeline."""
 
-        # 0. First-contact qualifier: when sequence_day=0 and no bot reply in history yet,
-        #    respond with neutral buy-or-sell question instead of ghost follow-up sequence.
+        # 0. First-contact qualifier: sequence_day=0 means the contact was just tagged
+        #    with new-lead (fresh entry point). Always route to qualify_intent so the
+        #    bot asks "buy or sell?" — ignore stored sequence state and prior history.
         if state.get("sequence_day") == 0:
-            history = state.get("conversation_history", [])
-            has_bot_reply = any(m.get("role") in ("assistant", "bot", "ai") for m in history)
-            if not has_bot_reply:
-                return {"current_step": "qualify_intent", "engagement_status": "responsive"}
+            return {"current_step": "qualify_intent", "engagement_status": "responsive"}
 
         # 1. Check for Price Objection / CMA Request
         last_msg = state["conversation_history"][-1]["content"].lower() if state["conversation_history"] else ""
