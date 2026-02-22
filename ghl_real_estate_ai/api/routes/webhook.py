@@ -880,13 +880,7 @@ async def handle_ghl_webhook(
                 },
             )
 
-            # Persist conversation history so next turn has bot reply context
-            await conversation_manager.update_context(
-                contact_id=contact_id,
-                user_message=user_message,
-                ai_response=final_seller_msg,
-                location_id=location_id,
-            )
+            # Note: seller engine calls update_context internally (success + error paths)
 
             # Send the seller response via GHL API (background task)
             background_tasks.add_task(
