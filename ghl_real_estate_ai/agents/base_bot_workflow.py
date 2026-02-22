@@ -4,7 +4,7 @@ Base workflow class for all Jorge bots.
 This module provides a shared base class that deduplicates common service
 initialization and monitoring patterns across Lead, Buyer, and Seller bots.
 
-Task #18: Create BaseBotWorkflow shared base class (Enhanced)
+Create BaseBotWorkflow shared base class (Enhanced)
 - Reduces 50+ duplicate service initializations across 3 bots
 - Provides consistent monitoring, metrics, and event publishing
 - Enables easier testing and maintenance
@@ -51,7 +51,7 @@ class BaseBotWorkflow:
         Args:
             tenant_id: Unique identifier for this bot instance
             industry_config: Industry-specific configuration (defaults to real estate)
-            enable_ml_analytics: Whether to enable Track 3.1 ML intelligence
+            enable_ml_analytics: Whether to enable ML analytics ML intelligence
         """
         from ghl_real_estate_ai.config.industry_config import IndustryConfig
         from ghl_real_estate_ai.services.event_publisher import get_event_publisher
@@ -76,7 +76,7 @@ class BaseBotWorkflow:
         # Initialize A/B experiments
         self._init_ab_experiments()
 
-        # Optional ML analytics (Track 3.1)
+        # Optional ML analytics (ML analytics)
         self.ml_analytics = None
         if enable_ml_analytics:
             try:

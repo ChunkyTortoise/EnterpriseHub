@@ -50,7 +50,7 @@ from contextlib import asynccontextmanager
 
 from fastapi.responses import JSONResponse
 
-# Import GHL Integration router (Phase 1: Unified webhook infrastructure)
+# Import GHL Integration router (Unified webhook infrastructure)
 from ghl_integration import ghl_router, initialize_ghl_integration, shutdown_ghl_integration
 from ghl_real_estate_ai.api.enterprise.auth import EnterpriseAuthError, enterprise_auth_service
 from ghl_real_estate_ai.api.middleware import (
@@ -95,7 +95,7 @@ from ghl_real_estate_ai.api.routes import (
     lead_intelligence,
     lead_lifecycle,
     leads,  # NEW: Leads Management API for frontend integration
-    ml_scoring,  # Phase 4B: Real-time ML lead scoring API
+    ml_scoring,  # Real-time ML lead scoring
     portal,
     predictive_analytics,
     pricing_optimization,
@@ -180,9 +180,8 @@ async def lifespan(app: FastAPI):
         except (ImportError, AttributeError, ValueError) as e:
             logger.error(f"Failed to auto-register primary tenant: {str(e)}")
 
-    # ========================================================================
-    # START WEBSOCKET SERVICES (Phase 3: Real-time Integration)
-    # ========================================================================
+    # START WEBSOCKET SERVICES (Real-time Integration)
+
 
     logger.info("Starting WebSocket and real-time services...")
 
@@ -229,9 +228,8 @@ async def lifespan(app: FastAPI):
         # Don't raise here - allow app to start but log the issue
         logger.warning("WebSocket services failed to start - real-time features may be unavailable")
 
-    # ========================================================================
     # START LEAD SEQUENCE SCHEDULER (Critical for Lead Bot automation)
-    # ========================================================================
+
 
     logger.info("Starting Lead Sequence Scheduler...")
 
@@ -250,9 +248,8 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ Failed to start Lead Sequence Scheduler: {e}")
         logger.warning("Lead Bot automation will not function - sequences must be triggered manually")
 
-    # ========================================================================
     # JORGE BOT PERSISTENCE: Wire repository into services
-    # ========================================================================
+
 
     jorge_repository = None
     try:
@@ -267,9 +264,8 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ Failed to initialize Jorge metrics repository: {e}")
         logger.warning("Jorge metrics will operate in memory-only mode")
 
-    # ========================================================================
     # REDIS HANDOFF REPOSITORY (multi-worker safe history + locks)
-    # ========================================================================
+
 
     redis_handoff_repo = None
     try:
@@ -285,9 +281,8 @@ async def lifespan(app: FastAPI):
         logger.warning(f"Redis handoff repository init failed: {e}")
         redis_handoff_repo = None
 
-    # ========================================================================
     # JORGE BOT MONITORING: Periodic alerting background task
-    # ========================================================================
+
 
     alerting_task = None
     try:
@@ -362,9 +357,8 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("Failed to start periodic alerting task: %s", e)
 
-    # ========================================================================
-    # LEAD ABANDONMENT RECOVERY (Phase 2.1)
-    # ========================================================================
+    # LEAD ABANDONMENT RECOVERY 
+
 
     abandonment_task_started = False
     try:
@@ -403,9 +397,8 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ Failed to start Lead Abandonment Recovery: {e}")
         logger.warning("Abandonment recovery will not function automatically")
 
-    # ========================================================================
-    # LEAD SOURCE ROI ANALYTICS (Phase 2.3)
-    # ========================================================================
+    # LEAD SOURCE ROI ANALYTICS 
+
 
     source_roi_task_started = False
     try:
@@ -433,16 +426,14 @@ async def lifespan(app: FastAPI):
         logger.error(f"❌ Failed to start Lead Source ROI Analytics: {e}")
         logger.warning("Source ROI metrics will not update automatically")
 
-    # ========================================================================
     # STARTUP ENV VAR VALIDATION (non-blocking warnings)
-    # ========================================================================
+
 
     _validate_critical_env_vars(logger)
     _validate_jorge_services_config(logger)
 
-    # ========================================================================
-    # GHL UNIFIED WEBHOOK INTEGRATION (Phase 1: Router + Handlers + Retry/DLQ)
-    # ========================================================================
+    # GHL UNIFIED WEBHOOK INTEGRATION (Router + Handlers + Retry/DLQ)
+
     try:
         ghl_init_result = await initialize_ghl_integration()
         if ghl_init_result.get("success"):
@@ -773,7 +764,7 @@ def _setup_routers(app: FastAPI):
 
     app.include_router(concierge_admin_router, prefix="/admin/concierge", tags=["Concierge Admin"])
 
-    # GHL Unified Webhook Integration (Phase 1: Lead/Seller/Buyer bot handlers)
+    # GHL Unified Webhook Integration (Lead/Seller/Buyer bot handlers)
     app.include_router(ghl_router, prefix="/ghl")
 
 
@@ -806,9 +797,8 @@ logger = get_logger(__name__)
 if os.getenv("ENVIRONMENT") == "production":
     app.add_middleware(HTTPSRedirectMiddleware)
 
-# ============================================================================
 # ENHANCED PERFORMANCE OPTIMIZATION: Advanced Compression & Optimization
-# ============================================================================
+
 
 # Multi-tier compression with intelligent sizing
 app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
@@ -846,9 +836,8 @@ async def enhanced_performance_middleware(request: Request, call_next):
     process_time = time.time() - start_time
     performance_stats["total_response_time"] += process_time
 
-    # ========================================================================
     # ADVANCED CACHING STRATEGY
-    # ========================================================================
+
 
     if path.startswith("/static/") or path.endswith((".css", ".js", ".png", ".jpg", ".ico", ".woff", ".woff2")):
         # Static assets - aggressive caching with versioning
@@ -877,9 +866,8 @@ async def enhanced_performance_middleware(request: Request, call_next):
         # Default - minimal caching
         response.headers["Cache-Control"] = "public, max-age=60"
 
-    # ========================================================================
     # COMPRESSION & OPTIMIZATION HEADERS
-    # ========================================================================
+
 
     # Add compression indicators
     response.headers["X-Content-Optimized"] = "true"
@@ -904,9 +892,8 @@ async def enhanced_performance_middleware(request: Request, call_next):
     else:
         response.headers["X-Performance"] = "slow"
 
-    # ========================================================================
     # SECURITY & OPTIMIZATION HEADERS
-    # ========================================================================
+
 
     # Security headers for performance
     response.headers["X-Frame-Options"] = "DENY"
@@ -930,9 +917,8 @@ async def enhanced_performance_middleware(request: Request, call_next):
             performance_stats["compression_saved"] += 1
             response.headers["X-Compression-Ratio"] = "~30%"
 
-    # ========================================================================
     # PERFORMANCE MONITORING & ALERTING
-    # ========================================================================
+
 
     # Enhanced logging for performance analysis
     if process_time > 0.5:  # Slow request threshold
@@ -977,9 +963,8 @@ async def enhanced_performance_middleware(request: Request, call_next):
     return response
 
 
-# ============================================================================
 # COMPREHENSIVE ERROR HANDLING SYSTEM
-# ============================================================================
+
 
 # Add existing middleware error handler
 app.add_middleware(ErrorHandlerMiddleware)
