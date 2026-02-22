@@ -235,6 +235,14 @@ class ResponseGenerator:
                     response_prompt, intelligence_context, state
                 )
 
+            # CRITICAL: Force plain SMS output regardless of preceding context
+            response_prompt += (
+                "\n\nOUTPUT INSTRUCTIONS (MANDATORY):\n"
+                "Return ONLY the SMS message text — nothing else.\n"
+                "No headers. No labels. No analysis. No markdown. No bullet points.\n"
+                "One or two short sentences max. Plain conversational text only."
+            )
+
             raw_response = await self.claude.generate_response(response_prompt)
             response = self._extract_text_from_response(raw_response)
 
@@ -249,9 +257,16 @@ class ResponseGenerator:
             )
             content = response or fallback
 
-            # Strip markdown headers if Claude returned structured analysis instead of SMS text
-            # (occurs when intelligence context confuses the output format)
-            if content and (content.startswith("#") or "\n##" in content[:120]):
+            # Strip markdown if Claude returned structured analysis instead of plain SMS text
+            _md_markers = ("#", "**", "- ", "* ", "##", "Strategic", "Analysis", "Assessment", "Intelligence")
+            _has_md = (
+                content.startswith("#")
+                or "\n##" in content[:200]
+                or "\n**" in content[:200]
+                or content.startswith("**")
+                or any(content.startswith(m) for m in _md_markers)
+            )
+            if _has_md:
                 lines = [
                     ln.strip()
                     for ln in content.split("\n")
@@ -259,6 +274,11 @@ class ResponseGenerator:
                     and not ln.startswith("#")
                     and not ln.startswith("**")
                     and not ln.startswith("- ")
+                    and not ln.startswith("* ")
+                    and not ln.startswith("|")
+                    and not ln.lower().startswith("strategic")
+                    and not ln.lower().startswith("analysis")
+                    and not ln.lower().startswith("assessment")
                     and len(ln.strip()) > 15
                 ]
                 content = lines[0] if lines else fallback

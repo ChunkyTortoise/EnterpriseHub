@@ -231,8 +231,12 @@ class ConversationManager:
             context["persona_full"] = persona_full
 
         # Update last lead score for analytics tracking
-        current_score = await self.lead_scorer.calculate(context)
-        context["last_lead_score"] = current_score
+        # Wrapped in try/except — a scorer failure must NOT prevent context from being saved.
+        try:
+            current_score = await self.lead_scorer.calculate(context)
+            context["last_lead_score"] = current_score
+        except Exception as _score_err:
+            logger.warning(f"Lead scorer failed in update_context for {contact_id}: {_score_err}")
 
         # Calculate predictive conversion probability
         # Wrapped in try/except — a scorer failure must NOT prevent context from being saved.
