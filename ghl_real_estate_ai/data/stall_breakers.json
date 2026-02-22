@@ -1,22 +1,22 @@
 {
     "thinking_about_it": {
-        "question": "What specifically are you thinking about? Are you actually selling, or just exploring? Because if it's exploration, you're wasting both our time.",
-        "logic": "Forces specificity, exposes real objection."
+        "question": "What's holding you back? Sometimes it just helps to run the numbers — no pressure, no commitment.",
+        "logic": "Low-pressure redirect to value. Opens the real objection without confrontation."
     },
     "get_back_to_you": {
-        "question": "I appreciate it, but I need to know: are you *actually* selling, or just exploring? Because if it's exploration, you're wasting both our time.",
-        "logic": "Jorge Confrontational Tone + Directness. Outcome: Honest commitment signal or disqualification."
+        "question": "Of course, take your time. Just curious — are you thinking spring market, or more of a 'when the timing is right' situation?",
+        "logic": "Keeps the door open. Surfaces timeline without pressure."
     },
     "zestimate_reference": {
         "question": "Zillow's algorithm doesn't know your kitchen was just renovated or that it overlooks a park. Want to see the real comps that actually matter?",
-        "logic": "Undermine competition (Zillow), reposition authority."
+        "logic": "Undermine automated estimates, reposition Jorge's expertise."
     },
     "has_realtor": {
-        "question": "Cool. Quick question: has your agent actually *toured* those comps, or are they using Zillow too? If they haven't been inside the properties, we're operating with better intel.",
-        "logic": "Differentiate on expertise vs. algorithm."
+        "question": "Good to know! If your agent ever wants a second set of eyes on the comps, Jorge's happy to compare. More data always helps.",
+        "logic": "Respectful of existing relationship. Opens collaboration angle."
     },
     "market_shift": {
-        "question": "If you're serious about selling, you need to know market conditions are *shifting* in 2 weeks. Would 15 minutes to look at real numbers make sense?",
+        "question": "If you're serious about selling, you should know market conditions are shifting right now. Would 15 minutes to look at real numbers make sense?",
         "logic": "Urgency frame + knowledge positioning."
     }
 }

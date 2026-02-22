@@ -79,7 +79,7 @@ class GhostFollowUpEngine:
     async def _day_0_initial_contact(self, state: GhostState) -> Dict[str, Any]:
         return {
             "channel": "sms",
-            "content": "Thanks for reaching out! Qualifying now...",
+            "content": "Got it! Looking up the latest market activity for your area now.",
             "logic": "FRS Scored immediately.",
         }
 
