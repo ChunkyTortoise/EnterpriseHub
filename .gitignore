@@ -227,3 +227,10 @@ scripts/chrome_copy/
 
 # Tenant credential files (secrets stored in Railway/env vars)
 data/tenants/
+
+# JWT secret file (never commit — use JWT_SECRET_KEY env var)
+**/.jwt_secret
+
+# Owner reference — contains live credentials
+JORGE_OWNER_REFERENCE.md
+*OWNER_REFERENCE*
