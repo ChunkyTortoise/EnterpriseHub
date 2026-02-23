@@ -795,9 +795,19 @@ class JorgeSellerEngine:
                 )
             response_type = "qualification"
 
-        # 4. All 4 answered but not hot → warm/cold acknowledgment
+        # 4. All 4 answered but not hot → check for scheduling intent first
         else:
-            message = self._create_nurture_message(seller_data, temperature)
+            _last_msg = (seller_data.get("last_user_message") or "").lower()
+            _wants_schedule = bool(
+                re.search(
+                    r"\b(schedule|book|call|meeting|appointment|available|availability|when can|let'?s talk|speak with|chat)\b",
+                    _last_msg,
+                )
+            )
+            if _wants_schedule:
+                message = "Let's do it. What time works best for you — morning, afternoon, or evening? We'll get you on the calendar."
+            else:
+                message = self._create_nurture_message(seller_data, temperature)
             response_type = "nurture"
 
         compliance_result = self.tone_engine.validate_message_compliance(message)
@@ -1121,9 +1131,19 @@ class JorgeSellerEngine:
                     )
                     response_type = "qualification"
 
-        # 6. Nurture (Completed but not hot)
+        # 6. Nurture (Completed but not hot) — check scheduling intent first
         else:
-            message = self._create_nurture_message(seller_data, temperature)
+            _last_msg_full = (seller_data.get("last_user_message") or "").lower()
+            _wants_schedule_full = bool(
+                re.search(
+                    r"\b(schedule|book|call|meeting|appointment|available|availability|when can|let'?s talk|speak with|chat)\b",
+                    _last_msg_full,
+                )
+            )
+            if _wants_schedule_full:
+                message = "Let's do it. What time works best for you — morning, afternoon, or evening? We'll get you on the calendar."
+            else:
+                message = self._create_nurture_message(seller_data, temperature)
             response_type = "nurture"
 
         # --- PERSONA ADAPTATION (Extreme Value Phase) ---

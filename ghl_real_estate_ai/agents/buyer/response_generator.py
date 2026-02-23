@@ -184,6 +184,61 @@ class ResponseGenerator:
 
             # Base prompt for buyer consultation
             buyer_temp = getattr(profile, "buyer_temperature", "cold") if profile else "cold"
+
+            # Scan full conversation history to extract already-stated facts.
+            # State fields like preferred_areas are often None even when the buyer mentioned it.
+            # Scanning history ensures the ALREADY KNOWN block matches reality.
+            import re as _re
+            _conv = state.get("conversation_history", [])
+            _user_text = " ".join(
+                m.get("content", "") for m in _conv if m.get("role") == "user"
+            ).lower()
+            _area_kws = [
+                "etiwanda", "alta loma", "day creek", "victoria groves",
+                "heritage", "caryn", "windrows", "old alta loma",
+            ]
+            _found_areas = [a.title() for a in _area_kws if a in _user_text]
+            _known_area = (
+                ", ".join(_found_areas)
+                or getattr(profile, "preferred_areas", None)
+                or state.get("preferred_areas")
+                or "not stated yet"
+            )
+            _known_budget = (
+                getattr(profile, "budget_max", None)
+                or state.get("budget_max")
+                or (
+                    next(
+                        (
+                            m.strip()
+                            for m in _re.findall(r"\$[\d,k]+|\d+\s*(?:k|thousand|million)", _user_text)
+                            if m
+                        ),
+                        None,
+                    )
+                )
+                or "not stated yet"
+            )
+            _known_preapproval = (
+                "Yes"
+                if _re.search(r"pre.?approv|pre.?qual|been approved|got approved", _user_text)
+                else (getattr(profile, "pre_approval_status", None) or "not stated yet")
+            )
+            _known_beds = (
+                getattr(profile, "bedrooms_needed", None)
+                or state.get("bedrooms_needed")
+                or next(
+                    (m for m in _re.findall(r"\d+\s*(?:bed|br|bedroom)", _user_text) if m),
+                    None,
+                )
+                or "not stated yet"
+            )
+            _known_timeline = (
+                getattr(profile, "move_timeline", None)
+                or state.get("move_timeline")
+                or ("stated" if _re.search(r"\b(?:june|july|august|summer|month|week|day|asap|soon)\b", _user_text) else "not stated yet")
+            )
+
             response_prompt = f"""
             As Jorge's Buyer Bot, generate a helpful and supportive response for this buyer.
 
@@ -192,30 +247,24 @@ class ResponseGenerator:
             - Typical single-family home range: $550K–$1.2M; luxury above $1.2M
             - Key neighborhoods/areas: Etiwanda, Alta Loma, Day Creek, Victoria Groves, Heritage, Caryn, Windrows, Old Alta Loma
             - Market dynamics: strong demand, fast-moving inventory, commuter-friendly (SR-210/I-15 access, 55-65 min to downtown LA), highly ranked schools (CVUSD)
-            - When relevant, reference specific neighborhoods, school names, or local landmarks to demonstrate market expertise
-            - Common seller motivations: upsizing, relocating out of state, estate sales, investor exits, divorce
 
             BUYER CONTEXT:
-            - Common buyer profiles: first-time buyers (often FHA/VA), move-up buyers from LA/OC looking for more space, investors, and remote workers seeking Inland Empire value
-            - Price sensitivity: FHA loan limits ~$730K; jumbo threshold ~$766K
-            - Key buyer concerns: commute time, school district (CVUSD highly valued), HOA fees, new vs resale
-            - Always establish WHERE they want to live and WHY before discussing finances
             - One question per message. Never ask two questions in the same response.
 
             Buyer Temperature: {buyer_temp}
             Financial Readiness: {state.get("financial_readiness_score", 25)}/100
-            Properties Matched: {len(matches)}
             Current Step: {state.get("current_qualification_step", "unknown")}
 
-            ALREADY KNOWN — DO NOT RE-ASK these if they appear below:
-            - Budget: {getattr(profile, "budget_max", None) or state.get("budget_max") or "unknown"}
-            - Preferred area: {getattr(profile, "preferred_areas", None) or state.get("preferred_areas") or "unknown"}
-            - Pre-approved: {getattr(profile, "pre_approval_status", None) or state.get("pre_approval_status") or "unknown"}
-            - Bedrooms: {getattr(profile, "bedrooms_needed", None) or state.get("bedrooms_needed") or "unknown"}
-            - Timeline: {getattr(profile, "move_timeline", None) or state.get("move_timeline") or "unknown"}
+            *** ALREADY CONFIRMED — NEVER ASK ABOUT THESE AGAIN ***
+            - Preferred area/neighborhood: {_known_area}
+            - Budget: {_known_budget}
+            - Pre-approved: {_known_preapproval}
+            - Bedrooms: {_known_beds}
+            - Move timeline: {_known_timeline}
+            *** If any field above is NOT "not stated yet", treat it as SETTLED. Do NOT re-ask. ***
 
-            Full Conversation (use ALL of it to avoid repeating questions):
-            {state.get("conversation_history", [])[-8:]}
+            Full Conversation History:
+            {_conv[-8:]}
             {sentiment_context}
 
             Response should be:
