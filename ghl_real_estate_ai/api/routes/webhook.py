@@ -766,6 +766,13 @@ async def handle_ghl_webhook(
             # Initialize Jorge's seller engine
             jorge_engine = JorgeSellerEngine(conversation_manager, current_ghl_client, mls_client=mls_client)
 
+            # Snapshot history BEFORE process_seller_response so is_first_message
+            # is accurate: the engine calls update_context internally, which means
+            # fetching history after would always show a non-empty history on T1.
+            seller_history_snapshot = await conversation_manager.get_conversation_history(
+                contact_id, location_id=location_id
+            )
+
             # Process seller response
             seller_result = await jorge_engine.process_seller_response(
                 contact_id=contact_id, user_message=user_message, location_id=location_id, tenant_config=tenant_config
@@ -807,13 +814,12 @@ async def handle_ghl_webhook(
 
             # Run through response pipeline (AI disclosure + SMS truncation + spam guard)
             final_seller_msg = seller_result["message"]
-            seller_history = await conversation_manager.get_conversation_history(contact_id, location_id=location_id)
             pipeline_context = ProcessingContext(
                 contact_id=contact_id,
                 bot_mode="seller",
                 channel="sms",
                 user_message=user_message,
-                is_first_message=not seller_history,
+                is_first_message=not seller_history_snapshot,
             )
             pipeline = get_response_pipeline()
             processed = await pipeline.process(final_seller_msg, pipeline_context)
