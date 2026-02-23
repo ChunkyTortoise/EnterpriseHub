@@ -10,79 +10,73 @@ billing portal, Socket.IO — none needed for bot operation.
 """
 
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.requests import Request as StarletteRequest
-from starlette.responses import Response as StarletteResponse
 
 from ghl_real_estate_ai.api import health
 from ghl_real_estate_ai.api.routes import webhook
 
 
 class SafeJSONResponse(JSONResponse):
-    """JSON response that guarantees Pydantic models are properly serialized.
+    """JSON response with belt-and-suspenders control-character escaping.
 
-    Fixes the literal-newline bug where FastAPI's response pipeline may pass
-    a Pydantic v2 model directly to json.dumps without calling model_dump()
-    first, causing control characters (e.g. the \\n in the SB 243 footer)
-    to appear unescaped in the response body.
+    Ensures Pydantic models are serialized via model_dump() before json.dumps,
+    then replaces any bare LF/CR bytes that survive in the output.
     """
 
-    def render(self, content) -> bytes:
+    def render(self, content: Any) -> bytes:
         if hasattr(content, "model_dump"):
             content = content.model_dump()
-        return super().render(content)
+        result = super().render(content)
+        # Escape bare control characters that must not appear unescaped in JSON
+        return result.replace(b"\x0a", b"\\n").replace(b"\x0d", b"\\r")
 
 
-class JSONBodySanitizeMiddleware(BaseHTTPMiddleware):
-    """Escape bare control characters in JSON response bodies.
+class JSONSanitizeASGIMiddleware:
+    """Pure ASGI middleware: escapes bare LF/CR bytes in JSON response bodies.
 
-    Belt-and-suspenders guard: ensures the \\n in '\\n[AI-assisted message]'
-    is always JSON-encoded as \\\\n, regardless of which response class or
-    code path produced the response bytes.
+    Operates at the raw ASGI protocol level (http.response.body messages),
+    bypassing BaseHTTPMiddleware's body_iterator streaming issues entirely.
 
-    Operates at the raw bytes level so it catches any code path — including
-    direct Response returns or third-party serializers — that might bypass
-    SafeJSONResponse.render().
+    Replaces 0x0a → \\n and 0x0d → \\r so the SB 243 footer newline
+    (\n[AI-assisted message]) is always JSON-safe, regardless of which
+    code path assembled the response.
     """
 
-    async def dispatch(self, request: StarletteRequest, call_next):
-        response = await call_next(request)
+    def __init__(self, app: Any) -> None:
+        self.app = app
 
-        content_type = response.headers.get("content-type", "")
-        if "application/json" not in content_type:
-            return response
+    async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
 
-        # Buffer the full response body
-        chunks = []
-        async for chunk in response.body_iterator:
-            if isinstance(chunk, str):
-                chunk = chunk.encode("utf-8")
-            chunks.append(chunk)
-        body = b"".join(chunks)
+        is_json = False
 
-        # Escape bare control characters (LF, CR) that must not appear
-        # unescaped inside JSON string values. Safe for compact JSON
-        # (no structural newlines between tokens).
-        sanitized = body.replace(b"\x0a", b"\\n").replace(b"\x0d", b"\\r")
+        async def send_wrapper(message: Any) -> None:
+            nonlocal is_json
 
-        # Rebuild headers: drop content-length (Starlette auto-sets it from
-        # the new body) and transfer-encoding (incompatible with buffered body)
-        headers = {
-            k: v
-            for k, v in response.headers.items()
-            if k.lower() not in ("content-length", "transfer-encoding")
-        }
+            if message["type"] == "http.response.start":
+                # Detect JSON content-type from response headers
+                headers = dict(message.get("headers", []))
+                ct = headers.get(b"content-type", b"").decode("utf-8", errors="ignore")
+                is_json = "application/json" in ct
+                await send(message)
 
-        return StarletteResponse(
-            content=sanitized,
-            status_code=response.status_code,
-            headers=headers,
-            media_type="application/json",
-        )
+            elif message["type"] == "http.response.body" and is_json:
+                body = message.get("body", b"")
+                if isinstance(body, str):
+                    body = body.encode("utf-8")
+                sanitized = body.replace(b"\x0a", b"\\n").replace(b"\x0d", b"\\r")
+                await send({**message, "body": sanitized})
+
+            else:
+                await send(message)
+
+        await self.app(scope, receive, send_wrapper)
 
 
 @asynccontextmanager
@@ -92,14 +86,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Jorge Bot Server",
-    version="1.0.35",
+    version="1.0.38",
     lifespan=lifespan,
     default_response_class=SafeJSONResponse,
 )
 
 # Add CORS first (inner), then sanitize middleware (outer).
 # Starlette stacks middlewares in reverse-add order: last-added = outermost.
-# JSONBodySanitizeMiddleware (outer) sees the response AFTER CORSMiddleware
+# JSONSanitizeASGIMiddleware (outer) sees the response AFTER CORSMiddleware
 # has already added its headers, so CORS headers are preserved.
 app.add_middleware(
     CORSMiddleware,
@@ -107,7 +101,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(JSONBodySanitizeMiddleware)
+# Pure ASGI middleware: reliable alternative to BaseHTTPMiddleware for body sanitization.
+# Works by intercepting http.response.body ASGI messages directly.
+app.add_middleware(JSONSanitizeASGIMiddleware)
 
 # Render health check: GET /api/health/live → 200
 app.include_router(health.router, prefix="/api")
