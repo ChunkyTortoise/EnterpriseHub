@@ -764,6 +764,25 @@ class JorgeSellerEngine:
         response_quality = seller_data.get("response_quality", 1.0)
         last_response = seller_data.get("last_user_message", "")
 
+        # 0. Explicit scheduling intent — check BEFORE temperature to handle hot sellers asking to book
+        _schedule_intent = bool(
+            questions_answered >= 4
+            and re.search(
+                r"\b(schedule|book|call|meeting|appointment|available|availability|when can|let'?s talk|speak with|chat)\b",
+                last_response.lower(),
+            )
+        )
+        if _schedule_intent:
+            message = "Let's do it. What time works best for you — morning, afternoon, or evening? We'll get you on the calendar."
+            response_type = "scheduling"
+            return {
+                "message": message,
+                "response_type": response_type,
+                "character_count": len(message),
+                "compliance": self.tone_engine.validate_message_compliance(message),
+                "directness_score": 1.0,
+            }
+
         # 1. Hot → handoff message
         if temperature == "hot":
             message = self.tone_engine.generate_hot_seller_handoff(
@@ -840,6 +859,24 @@ class JorgeSellerEngine:
         vague_streak = seller_data.get("vague_streak", 0)
         newly_answered_count = seller_data.get("newly_answered_count", 0)
         user_message = seller_data.get("last_user_message", "")
+
+        # 0. Explicit scheduling intent — check BEFORE hot-seller handoff
+        _schedule_intent_full = bool(
+            questions_answered >= 4
+            and re.search(
+                r"\b(schedule|book|call|meeting|appointment|available|availability|when can|let'?s talk|speak with|chat)\b",
+                user_message.lower(),
+            )
+        )
+        if _schedule_intent_full:
+            _sched_msg = "Let's do it. What time works best for you — morning, afternoon, or evening? We'll get you on the calendar."
+            return {
+                "message": _sched_msg,
+                "response_type": "scheduling",
+                "character_count": len(_sched_msg),
+                "compliance": self.tone_engine.validate_message_compliance(_sched_msg),
+                "directness_score": 1.0,
+            }
 
         # Extract persona details
         persona_data = persona_data or {}
