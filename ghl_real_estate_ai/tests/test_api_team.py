@@ -2,7 +2,7 @@
 Integration tests for Team API routes.
 """
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -11,10 +11,25 @@ from ghl_real_estate_ai.api.main import app
 
 
 @pytest.fixture(autouse=True)
+def mock_auth_dependency():
+    """Override JWT auth dependency to bypass authentication in tests."""
+    from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
+
+    mock_user = Mock()
+    mock_user.id = 1
+    mock_user.username = "testuser"
+    mock_user.is_active = True
+
+    app.dependency_overrides[get_current_user] = lambda: mock_user
+    yield
+    app.dependency_overrides.pop(get_current_user, None)
+
+
+@pytest.fixture(autouse=True)
 def mock_rate_limiter():
     """Mock rate limiter to always allow requests."""
     with patch("ghl_real_estate_ai.api.middleware.rate_limiter.RateLimiter.is_allowed", new_callable=AsyncMock) as mock:
-        mock.return_value = True
+        mock.return_value = (True, None)
         yield mock
 
 

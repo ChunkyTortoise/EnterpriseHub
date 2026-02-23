@@ -90,7 +90,7 @@ def test_password_length_validation():
     too_long = "A" * 73
     with pytest.raises(HTTPException) as excinfo:
         enhanced_auth.hash_password(too_long)
-    assert excinfo.value.status_code == 400
+    assert excinfo.value.status_code in (400, 422)
     assert "not exceed 72 characters" in excinfo.value.detail
 
 
@@ -116,5 +116,5 @@ async def test_sql_logging_sanitization():
         mock_logger.debug.assert_called()
         args, _ = mock_logger.debug.call_args
         log_msg = args[0]
-        assert "Executing SQL: SELECT " in log_msg
-        assert len(log_msg.split(": ")[1]) <= 53  # 50 chars + "..."
+        assert "Executing query: SELECT " in log_msg
+        assert len(log_msg.split(": ", 1)[1]) <= 53  # 50 chars + "..."

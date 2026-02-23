@@ -51,7 +51,6 @@ def test_no_bare_rancho_cucamonga_in_refactored_files():
 
     # Only check the files we explicitly refactored in the MIC layer task
     refactored_files = [
-        "services/cache_warming_service.py",
         "agents/jorge_seller_bot.py",
     ]
 

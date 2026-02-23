@@ -45,24 +45,21 @@ class TestAlertingService:
             performance_stats={},
         )
 
+        # Configure channel_config directly (values read from env at init time, not call time)
+        alerting_service.channel_config.email_enabled = True
+        alerting_service.channel_config.email_to = ["test@example.com"]
+        alerting_service.channel_config.smtp_host = "localhost"
+        alerting_service.channel_config.smtp_port = 587
+
         mock_smtp_instance = MagicMock()
         mock_smtp_instance.__enter__ = MagicMock(return_value=mock_smtp_instance)
         mock_smtp_instance.__exit__ = MagicMock(return_value=False)
 
         with patch("ghl_real_estate_ai.services.jorge.alerting_service.smtplib.SMTP") as mock_smtp:
             mock_smtp.return_value = mock_smtp_instance
-
-            with patch.dict(
-                "os.environ",
-                {
-                    "ALERT_EMAIL_TO": "test@example.com",
-                    "ALERT_SMTP_HOST": "localhost",
-                    "ALERT_SMTP_PORT": "587",
-                },
-            ):
-                await alerting_service._send_email_alert(alert)
-                mock_smtp.assert_called_once()
-                mock_smtp_instance.send_message.assert_called_once()
+            await alerting_service._send_email_alert(alert)
+            mock_smtp.assert_called_once()
+            mock_smtp_instance.send_message.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_send_email_alert_no_recipients(self, alerting_service):
@@ -76,9 +73,11 @@ class TestAlertingService:
             performance_stats={},
         )
 
+        # channel_config is read from env at init time; directly reset to empty
+        alerting_service.channel_config.email_to = []
+        alerting_service.channel_config.email_enabled = False
         # Should not raise when no recipients configured
-        with patch.dict("os.environ", {"ALERT_EMAIL_TO": ""}):
-            await alerting_service._send_email_alert(alert)
+        await alerting_service._send_email_alert(alert)
 
     @pytest.mark.asyncio
     async def test_send_slack_alert_success(self, alerting_service):
@@ -104,10 +103,12 @@ class TestAlertingService:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
+        # Configure channel_config directly (values read from env at init time)
+        alerting_service.channel_config.slack_webhook_url = "https://hooks.slack.com/test"
+
         with patch("aiohttp.ClientSession", return_value=mock_session):
-            with patch.dict("os.environ", {"ALERT_SLACK_WEBHOOK_URL": "https://hooks.slack.com/test"}):
-                await alerting_service._send_slack_alert(alert)
-                mock_session.post.assert_called_once()
+            await alerting_service._send_slack_alert(alert)
+            mock_session.post.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_send_slack_alert_no_webhook(self, alerting_service):
@@ -121,9 +122,10 @@ class TestAlertingService:
             performance_stats={},
         )
 
+        # channel_config is read from env at init time; directly reset to empty
+        alerting_service.channel_config.slack_webhook_url = ""
         # Should not raise when no webhook configured
-        with patch.dict("os.environ", {}, clear=True):
-            await alerting_service._send_slack_alert(alert)
+        await alerting_service._send_slack_alert(alert)
 
     @pytest.mark.asyncio
     async def test_send_webhook_alert_success(self, alerting_service):
@@ -149,10 +151,12 @@ class TestAlertingService:
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
+        # Configure channel_config directly (values read from env at init time)
+        alerting_service.channel_config.webhook_url = "https://example.com/webhook"
+
         with patch("aiohttp.ClientSession", return_value=mock_session):
-            with patch.dict("os.environ", {"ALERT_WEBHOOK_URL": "https://example.com/webhook"}):
-                await alerting_service._send_webhook_alert(alert)
-                mock_session.post.assert_called_once()
+            await alerting_service._send_webhook_alert(alert)
+            mock_session.post.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_send_webhook_alert_no_url(self, alerting_service):
@@ -166,9 +170,15 @@ class TestAlertingService:
             performance_stats={},
         )
 
+        # channel_config is read from env at init time; directly reset all webhook URLs to empty
+        # (_send_webhook_alert tries pagerduty → opsgenie → generic webhook in order)
+        alerting_service.channel_config.webhook_url = ""
+        alerting_service.channel_config.pagerduty_url = ""
+        alerting_service.channel_config.pagerduty_api_key = ""
+        alerting_service.channel_config.opsgenie_url = ""
+        alerting_service.channel_config.opsgenie_api_key = ""
         # Should not raise when no webhook URL configured
-        with patch.dict("os.environ", {}, clear=True):
-            await alerting_service._send_webhook_alert(alert)
+        await alerting_service._send_webhook_alert(alert)
 
     @pytest.mark.asyncio
     async def test_check_alert_rules(self, alerting_service):

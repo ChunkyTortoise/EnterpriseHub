@@ -6,6 +6,7 @@ Target: 80%+ coverage
 
 import json
 import os
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -13,6 +14,9 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 
 from ghl_real_estate_ai.services.memory_service import MemoryService
+
+# Location ID resolved by settings in test environment (see conftest.py GHL_LOCATION_ID)
+TEST_LOCATION_ID = "test_location_id"
 
 
 @pytest.mark.asyncio
@@ -24,10 +28,17 @@ class TestMemoryService:
         """Override integration test lifecycle to avoid async conflict."""
         yield
 
+    @pytest.fixture(autouse=True)
+    def reset_singleton(self):
+        """Reset MemoryService singleton cache between tests to avoid state pollution."""
+        MemoryService._instances.clear()
+        yield
+        MemoryService._instances.clear()
+
     @pytest.fixture
     def mock_graphiti(self):
-        """Mock Graphiti memory manager."""
-        with patch("ghl_real_estate_ai.services.memory_service.graphiti_manager") as mock:
+        """Mock Graphiti memory manager (patched at source module)."""
+        with patch("ghl_real_estate_ai.agent_system.memory.memory_manager") as mock:
             mock.enabled = False
             mock.retrieve_context = AsyncMock(return_value="Mocked Graphiti Context")
             mock.save_interaction = AsyncMock()
@@ -36,15 +47,10 @@ class TestMemoryService:
     @pytest.fixture
     def memory_service(self, tmp_path):
         """Create MemoryService instance using temporary directory."""
-        # Patch the hardcoded 'data/memory' path in __init__ to use tmp_path
-        with patch("pathlib.Path") as mock_path:
-            # We only want to patch the initial Path("data/memory") call
-            # But patching Path globally is tricky.
-            # Instead, let's instantiate and then override the directory.
-            service = MemoryService(storage_type="file")
-            service.memory_dir = tmp_path / "data" / "memory"
-            service.memory_dir.mkdir(parents=True, exist_ok=True)
-            return service
+        service = MemoryService(storage_type="file")
+        service.memory_dir = tmp_path / "data" / "memory"
+        service.memory_dir.mkdir(parents=True, exist_ok=True)
+        return service
 
     @pytest.fixture
     def in_memory_service(self):
@@ -96,11 +102,9 @@ class TestMemoryService:
         assert ".." not in str(path)
         assert str(path).startswith(str(memory_service.memory_dir))
 
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows reserved filenames only apply on Windows")
     def test_get_file_path_reserved_names(self, memory_service):
-        """Test handling of reserved filenames."""
-        # The sanitization logic raises ValueError for valid reserved names
-        # But _get_file_path catches it and uses a hash fallback
-
+        """Test handling of reserved filenames (Windows only)."""
         path = memory_service._get_file_path("CON")
         assert "sanitized_" in path.name
         assert path.suffix == ".json"
@@ -118,10 +122,15 @@ class TestMemoryService:
     async def test_get_context_existing_file(self, memory_service):
         """Test retrieving context from existing file."""
         contact_id = "existing_contact"
-        data = {"contact_id": contact_id, "some_key": "some_value"}
+        data = {
+            "contact_id": contact_id,
+            "location_id": TEST_LOCATION_ID,
+            "some_key": "some_value",
+        }
 
-        # Create the file
-        path = memory_service._get_file_path(contact_id)
+        # Create file at the path that get_context actually reads from
+        path = memory_service._get_file_path(contact_id, location_id=TEST_LOCATION_ID)
+        path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w") as f:
             json.dump(data, f)
 
@@ -131,9 +140,10 @@ class TestMemoryService:
     async def test_get_context_in_memory(self, in_memory_service):
         """Test retrieving context from memory cache."""
         contact_id = "mem_contact"
-        data = {"contact_id": contact_id, "cached": True}
+        cache_key = f"{TEST_LOCATION_ID}:{contact_id}"
+        data = {"contact_id": contact_id, "location_id": TEST_LOCATION_ID, "cached": True}
 
-        in_memory_service._memory_cache[contact_id] = data
+        in_memory_service._memory_cache[cache_key] = data
 
         context = await in_memory_service.get_context(contact_id)
         assert context["cached"] is True
@@ -142,11 +152,12 @@ class TestMemoryService:
         """Test context retrieval with Graphiti enabled."""
         mock_graphiti.enabled = True
 
-        # Setup file
+        # Setup file with location_id
         contact_id = "graphiti_contact"
-        path = memory_service._get_file_path(contact_id)
+        path = memory_service._get_file_path(contact_id, location_id=TEST_LOCATION_ID)
+        path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w") as f:
-            json.dump({"contact_id": contact_id}, f)
+            json.dump({"contact_id": contact_id, "location_id": TEST_LOCATION_ID}, f)
 
         context = await memory_service.get_context(contact_id)
 
@@ -162,7 +173,8 @@ class TestMemoryService:
 
         await memory_service.save_context(contact_id, context)
 
-        path = memory_service._get_file_path(contact_id)
+        # save_context uses location_id subdirectory
+        path = memory_service._get_file_path(contact_id, location_id=TEST_LOCATION_ID)
         assert path.exists()
 
         with open(path, "r") as f:
@@ -177,8 +189,9 @@ class TestMemoryService:
 
         await in_memory_service.save_context(contact_id, context)
 
-        assert contact_id in in_memory_service._memory_cache
-        assert in_memory_service._memory_cache[contact_id]["val"] == 456
+        cache_key = f"{TEST_LOCATION_ID}:{contact_id}"
+        assert cache_key in in_memory_service._memory_cache
+        assert in_memory_service._memory_cache[cache_key]["val"] == 456
 
     # --- Interaction logging ---
 
@@ -198,10 +211,6 @@ class TestMemoryService:
         assert history[0]["content"] == message
         assert "timestamp" in history[0]
 
-        # Verify Graphiti call
-        # Mock is disabled by default in fixture, enable it here if we want to test calls
-        # But add_interaction calls it if enabled.
-        # Let's verify it didn't call if disabled
         mock_graphiti.save_interaction.assert_not_called()
 
     # --- Lead Intelligence Tests ---
@@ -238,7 +247,7 @@ class TestMemoryService:
         contact_id = "clear_contact"
         await memory_service.save_context(contact_id, {"data": 1})
 
-        path = memory_service._get_file_path(contact_id)
+        path = memory_service._get_file_path(contact_id, location_id=TEST_LOCATION_ID)
         assert path.exists()
 
         await memory_service.clear_context(contact_id)
@@ -247,10 +256,11 @@ class TestMemoryService:
     async def test_clear_context_memory(self, in_memory_service):
         """Test clearing context memory."""
         contact_id = "clear_mem"
-        in_memory_service._memory_cache[contact_id] = {}
+        cache_key = f"{TEST_LOCATION_ID}:{contact_id}"
+        in_memory_service._memory_cache[cache_key] = {}
 
         await in_memory_service.clear_context(contact_id)
-        assert contact_id not in in_memory_service._memory_cache
+        assert cache_key not in in_memory_service._memory_cache
 
     # --- Specialized Memory ---
 
