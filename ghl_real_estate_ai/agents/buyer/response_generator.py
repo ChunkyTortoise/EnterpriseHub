@@ -207,7 +207,15 @@ class ResponseGenerator:
             Properties Matched: {len(matches)}
             Current Step: {state.get("current_qualification_step", "unknown")}
 
-            Conversation Context: {state.get("conversation_history", [])[-2:]}
+            ALREADY KNOWN — DO NOT RE-ASK these if they appear below:
+            - Budget: {getattr(profile, "budget_max", None) or state.get("budget_max") or "unknown"}
+            - Preferred area: {getattr(profile, "preferred_areas", None) or state.get("preferred_areas") or "unknown"}
+            - Pre-approved: {getattr(profile, "pre_approval_status", None) or state.get("pre_approval_status") or "unknown"}
+            - Bedrooms: {getattr(profile, "bedrooms_needed", None) or state.get("bedrooms_needed") or "unknown"}
+            - Timeline: {getattr(profile, "move_timeline", None) or state.get("move_timeline") or "unknown"}
+
+            Full Conversation (use ALL of it to avoid repeating questions):
+            {state.get("conversation_history", [])[-8:]}
             {sentiment_context}
 
             Response should be:

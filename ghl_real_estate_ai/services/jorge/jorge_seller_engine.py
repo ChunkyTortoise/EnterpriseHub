@@ -633,11 +633,24 @@ class JorgeSellerEngine:
                 elif re.search(r"\b(urgent|asap|immediately|need to move|right away|as soon as)\b", msg_lower):
                     extracted_data["timeline_acceptable"] = True
 
-            # 2. Price
+            # 2. Price — handle "$750k", "750,000", "750 to 800 thousand", "800 thousand"
             if not extracted_data.get("price_expectation"):
-                price_match = re.search(r"\$?(\d{1,3}(?:,\d{3})*(?:\.\d+)?(?:k|K)?)", user_message)
-                if price_match and int(re.sub(r"[,$kK]", "", price_match.group(1)) or 0) > 10000:
-                    extracted_data["price_expectation"] = price_match.group(1)
+                # "X to Y thousand" or "X thousand"
+                thousand_match = re.search(
+                    r"(\d+(?:\.\d+)?)\s*(?:to\s*\d+(?:\.\d+)?\s*)?thousand", msg_lower
+                )
+                if thousand_match:
+                    extracted_data["price_expectation"] = f"{float(thousand_match.group(1)) * 1000:,.0f}"
+                else:
+                    price_match = re.search(
+                        r"\$?(\d{1,3}(?:,\d{3})*(?:\.\d+)?(?:k|K)?)", user_message
+                    )
+                    if price_match:
+                        raw = re.sub(r"[,$]", "", price_match.group(1))
+                        multiplier = 1000 if raw.lower().endswith("k") else 1
+                        numeric = float(re.sub(r"[kK]", "", raw) or 0) * multiplier
+                        if numeric > 10000:
+                            extracted_data["price_expectation"] = price_match.group(1)
 
             # 3. Condition
             if not extracted_data.get("property_condition"):
