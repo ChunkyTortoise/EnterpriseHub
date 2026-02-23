@@ -322,6 +322,9 @@ class ResponseGenerator:
             )
 
             raw_response = await self.claude.generate_response(response_prompt)
+            # Guard: orchestrator error strings must never surface as SMS messages
+            if isinstance(raw_response, str) and raw_response.startswith("Error processing request:"):
+                raw_response = None
             response = self._extract_text_from_response(raw_response)
 
             import random
