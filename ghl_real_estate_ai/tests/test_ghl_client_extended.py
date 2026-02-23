@@ -57,28 +57,19 @@ class TestGHLClient:
 
     async def test_check_health_live_success(self, client):
         """Test health check live success."""
-        with (
-            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.AsyncClient") as MockClient,
-        ):
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = False
-
-            mock_http = MockClient.return_value.__aenter__.return_value
-            mock_http.get = AsyncMock(return_value=Mock(status_code=200))
+            # Mock http_client directly (it's created at __init__ time)
+            client.http_client.get = AsyncMock(return_value=Mock(status_code=200))
 
             response = await client.check_health()
             assert response.status_code == 200
 
     async def test_check_health_live_failure(self, client):
         """Test health check failure."""
-        with (
-            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.AsyncClient") as MockClient,
-        ):
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = False
-
-            mock_http = MockClient.return_value.__aenter__.return_value
-            mock_http.get = AsyncMock(side_effect=Exception("Connection refused"))
+            client.http_client.get = AsyncMock(side_effect=Exception("Connection refused"))
 
             response = await client.check_health()
             assert response.status_code == 500
@@ -92,17 +83,13 @@ class TestGHLClient:
 
     async def test_get_conversations_success(self, client):
         """Test successful conversation fetch."""
-        with (
-            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.AsyncClient") as MockClient,
-        ):
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = False
-
-            mock_http = MockClient.return_value.__aenter__.return_value
             mock_response = Mock()
             mock_response.json.return_value = {"conversations": [{"id": 1}]}
             mock_response.status_code = 200
-            mock_http.get = AsyncMock(return_value=mock_response)
+            mock_response.raise_for_status = Mock()
+            client.http_client.get = AsyncMock(return_value=mock_response)
 
             convs = await client.get_conversations()
             assert len(convs) == 1
@@ -110,14 +97,9 @@ class TestGHLClient:
 
     async def test_get_conversations_timeout(self, client):
         """Test timeout handling."""
-        with (
-            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.AsyncClient") as MockClient,
-        ):
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = False
-
-            mock_http = MockClient.return_value.__aenter__.return_value
-            mock_http.get = AsyncMock(side_effect=httpx.TimeoutException("Timeout"))
+            client.http_client.get = AsyncMock(side_effect=httpx.TimeoutException("Timeout"))
 
             with pytest.raises(ConnectionError, match="Timeout fetching conversations"):
                 await client.get_conversations()
@@ -126,17 +108,13 @@ class TestGHLClient:
 
     async def test_get_opportunities_success(self, client):
         """Test successful opportunity fetch."""
-        with (
-            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.AsyncClient") as MockClient,
-        ):
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = False
-
-            mock_http = MockClient.return_value.__aenter__.return_value
             mock_response = Mock()
             mock_response.json.return_value = {"opportunities": [{"monetary_value": 1000}]}
             mock_response.status_code = 200
-            mock_http.get = AsyncMock(return_value=mock_response)
+            mock_response.raise_for_status = Mock()
+            client.http_client.get = AsyncMock(return_value=mock_response)
 
             opps = await client.get_opportunities()
             assert len(opps) == 1
@@ -146,20 +124,13 @@ class TestGHLClient:
 
     async def test_send_message_success(self, client):
         """Test sending message success."""
-        with (
-            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.AsyncClient") as MockClient,
-        ):
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = False
-
-            # Setup Mock Response
             mock_response = Mock()
             mock_response.json.return_value = {"status": "ok"}
             mock_response.status_code = 200
-
-            # Setup AsyncClient
-            mock_http = MockClient.return_value.__aenter__.return_value
-            mock_http.post = AsyncMock(return_value=mock_response)
+            mock_response.raise_for_status = Mock()
+            client.http_client.post = AsyncMock(return_value=mock_response)
 
             response = await client.send_message("contact_123", "Hello")
             assert response["status"] == "ok"
@@ -183,24 +154,21 @@ class TestGHLClient:
 
     async def test_remove_tags_success(self, client):
         """Test successful tag removal."""
-        with (
-            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.AsyncClient") as MockClient,
-        ):
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = False
-
-            mock_http = MockClient.return_value.__aenter__.return_value
 
             # Mock GET contact response
             mock_get_response = Mock()
             mock_get_response.json.return_value = {"tags": ["Tag A", "Tag B"]}
             mock_get_response.status_code = 200
-            mock_http.get = AsyncMock(return_value=mock_get_response)
+            mock_get_response.raise_for_status = Mock()
+            client.http_client.get = AsyncMock(return_value=mock_get_response)
 
             # Mock PUT contact response
             mock_put_response = Mock()
             mock_put_response.status_code = 200
-            mock_http.put = AsyncMock(return_value=mock_put_response)
+            mock_put_response.raise_for_status = Mock()
+            client.http_client.put = AsyncMock(return_value=mock_put_response)
 
             response = await client.remove_tags("contact_123", ["Tag A"])
 
@@ -210,14 +178,9 @@ class TestGHLClient:
 
     async def test_remove_tags_critical_failure(self, client):
         """Test critical failure in tag removal."""
-        with (
-            patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings,
-            patch("httpx.AsyncClient") as MockClient,
-        ):
+        with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = False
-
-            mock_http = MockClient.return_value.__aenter__.return_value
-            mock_http.get = AsyncMock(side_effect=httpx.HTTPError("API Error"))
+            client.http_client.get = AsyncMock(side_effect=httpx.HTTPError("API Error"))
 
             with pytest.raises(httpx.HTTPError):
                 await client.remove_tags("contact_123", ["Tag A"])
