@@ -37,9 +37,6 @@ from fastapi.routing import APIRoute
 # Custom route class to handle problematic union type responses
 class UnionCompatibleRoute(APIRoute):
     def __init__(self, *args, **kwargs):
-        # Apply response_model=None for routes that might have union type issues
-        if "response_model" not in kwargs:
-            kwargs["response_model"] = None
         super().__init__(*args, **kwargs)
 
 
@@ -135,6 +132,9 @@ class OptimizedJSONResponse(JSONResponse):
 
     def render(self, content) -> bytes:
         """Render JSON with optimization for smaller payloads."""
+        if hasattr(content, "model_dump"):
+            # Pydantic v2 model — convert to dict so json.dumps escapes control chars
+            content = content.model_dump()
         if isinstance(content, dict):
             # Remove null values to reduce payload size
             content = self._remove_nulls(content)
