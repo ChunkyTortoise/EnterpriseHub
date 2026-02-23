@@ -783,12 +783,17 @@ class JorgeSellerEngine:
                 "directness_score": 1.0,
             }
 
-        # 1. Hot → handoff message
+        # 1. Hot → handoff message (first hot response) or scheduling ask (follow-up turns)
         if temperature == "hot":
-            message = self.tone_engine.generate_hot_seller_handoff(
-                seller_name=seller_data.get("contact_name"), agent_name="our team"
-            )
-            response_type = "handoff"
+            if vague_streak == 0 and seller_data.get("newly_answered_count", 0) == 0:
+                # Already sent handoff; seller is still replying — move to scheduling
+                message = "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
+                response_type = "scheduling"
+            else:
+                message = self.tone_engine.generate_hot_seller_handoff(
+                    seller_name=seller_data.get("contact_name"), agent_name="our team"
+                )
+                response_type = "handoff"
 
         # 2. Vague streak >= 2 → take-away close
         elif vague_streak >= 2:
@@ -901,12 +906,17 @@ class JorgeSellerEngine:
                 psych_instruction += "Focus on the net proceeds and bottom line."
             persona_override += psych_instruction
 
-        # 1. Hot Seller Handoff
+        # 1. Hot Seller Handoff (first hot turn) or scheduling follow-up (subsequent hot turns)
         if temperature == "hot":
-            message = self.tone_engine.generate_hot_seller_handoff(
-                seller_name=seller_data.get("contact_name"), agent_name="our team"
-            )
-            response_type = "handoff"
+            if vague_streak == 0 and newly_answered_count == 0:
+                # Already qualified and handoff was already sent; ask for scheduling slot
+                message = "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
+                response_type = "scheduling"
+            else:
+                message = self.tone_engine.generate_hot_seller_handoff(
+                    seller_name=seller_data.get("contact_name"), agent_name="our team"
+                )
+                response_type = "handoff"
 
         # 2. LOSS AVERSION / COST OF WAITING (Tactical Behavioral Response)
         elif primary_persona == "loss_aversion" and questions_answered >= 1:

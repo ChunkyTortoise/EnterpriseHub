@@ -57,6 +57,8 @@ from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
 from ghl_real_estate_ai.services.tenant_service import TenantService
 
 logger = get_logger(__name__)
+
+SMS_MAX_CHARS = 320
 router = APIRouter(prefix="/ghl", tags=["ghl"])
 
 # Graceful fallback when Claude API is unavailable (timeout / circuit breaker)
@@ -802,7 +804,7 @@ async def handle_ghl_webhook(
 
             # Run through response pipeline (AI disclosure + SMS truncation + spam guard)
             final_seller_msg = seller_result["message"]
-            seller_history = await conversation_manager.get_conversation_history(contact_id)
+            seller_history = await conversation_manager.get_conversation_history(contact_id, location_id=location_id)
             pipeline_context = ProcessingContext(
                 contact_id=contact_id,
                 bot_mode="seller",
@@ -960,7 +962,7 @@ async def handle_ghl_webhook(
                 current_ghl_client = GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
 
             # Build conversation history from manager
-            history = await conversation_manager.get_conversation_history(contact_id)
+            history = await conversation_manager.get_conversation_history(contact_id, location_id=location_id)
             conversation_history = history if history else [{"role": "user", "content": user_message}]
             # Ensure current message is included
             if not conversation_history or conversation_history[-1].get("content") != user_message:
@@ -1176,7 +1178,7 @@ async def handle_ghl_webhook(
                     current_ghl_client = GHLClient(api_key=tenant_config["ghl_api_key"], location_id=location_id)
 
                 # Build conversation history from manager
-                history = await conversation_manager.get_conversation_history(contact_id)
+                history = await conversation_manager.get_conversation_history(contact_id, location_id=location_id)
                 conversation_history = history if history else [{"role": "user", "content": user_message}]
                 # Ensure current message is included
                 if not conversation_history or conversation_history[-1].get("content") != user_message:

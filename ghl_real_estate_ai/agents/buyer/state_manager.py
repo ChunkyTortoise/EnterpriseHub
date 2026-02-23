@@ -41,9 +41,11 @@ class StateManager:
         if conversation_history is None:
             conversation_history = []
 
-        conversation_history.append(
-            {"role": "user", "content": user_message, "timestamp": datetime.now(timezone.utc).isoformat()}
-        )
+        # Only append current message if not already the last entry (webhook may have pre-appended)
+        if not conversation_history or conversation_history[-1].get("content") != user_message:
+            conversation_history.append(
+                {"role": "user", "content": user_message, "timestamp": datetime.now(timezone.utc).isoformat()}
+            )
 
         # Prune to prevent unbounded memory growth
         if len(conversation_history) > MAX_CONVERSATION_HISTORY:
