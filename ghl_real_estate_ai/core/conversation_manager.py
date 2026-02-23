@@ -494,8 +494,12 @@ Count questions_answered based on how many of the 4 main categories have data.
 
             extracted_data = json.loads(response.content)
 
-            # Merge with existing seller data
-            merged_data = {**current_seller_data, **extracted_data}
+            # Filter out null values — Claude may return null for fields not in current message,
+            # which would incorrectly override previously extracted values in current_seller_data.
+            non_null_extracted = {k: v for k, v in extracted_data.items() if v is not None}
+
+            # Merge with existing seller data (nulls in LLM output do NOT erase prior answers)
+            merged_data = {**current_seller_data, **non_null_extracted}
 
             # Ensure questions_answered count is accurate
             question_fields = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
@@ -503,7 +507,7 @@ Count questions_answered based on how many of the 4 main categories have data.
             merged_data["questions_answered"] = questions_answered
 
             # Auto-assess response quality if not provided by Claude
-            if "response_quality" not in extracted_data:
+            if "response_quality" not in non_null_extracted:
                 merged_data["response_quality"] = self._assess_seller_response_quality(user_message)
 
             logger.info(

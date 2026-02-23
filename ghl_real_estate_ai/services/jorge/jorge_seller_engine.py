@@ -368,40 +368,43 @@ class JorgeSellerEngine:
                 pending_appointment_data = None
 
                 if temperature == "hot" and not context.get("pending_appointment"):
-                    from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, get_smart_scheduler
+                    try:
+                        from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, get_smart_scheduler
 
-                    scheduler = get_smart_scheduler(self.ghl_client)
+                        scheduler = get_smart_scheduler(self.ghl_client)
 
-                    available_slots = await scheduler.get_available_slots(
-                        appointment_type=AppointmentType.LISTING_APPOINTMENT, days_ahead=7
-                    )
-
-                    if available_slots:
-                        options = []
-                        lines = []
-                        for i, slot in enumerate(available_slots[:3], 1):
-                            display = slot.format_for_lead()
-                            options.append(
-                                {
-                                    "label": str(i),
-                                    "display": display,
-                                    "start_time": slot.start_time.isoformat(),
-                                    "end_time": slot.end_time.isoformat(),
-                                    "appointment_type": slot.appointment_type.value,
-                                }
-                            )
-                            lines.append(f"{i}) {display}")
-
-                        booking_message = "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n" + "\n".join(
-                            lines
+                        available_slots = await scheduler.get_available_slots(
+                            appointment_type=AppointmentType.LISTING_APPOINTMENT, days_ahead=7
                         )
 
-                        pending_appointment_data = {
-                            "status": "awaiting_selection",
-                            "options": options,
-                            "attempts": 0,
-                            "expires_at": (datetime.utcnow().isoformat()),
-                        }
+                        if available_slots:
+                            options = []
+                            lines = []
+                            for i, slot in enumerate(available_slots[:3], 1):
+                                display = slot.format_for_lead()
+                                options.append(
+                                    {
+                                        "label": str(i),
+                                        "display": display,
+                                        "start_time": slot.start_time.isoformat(),
+                                        "end_time": slot.end_time.isoformat(),
+                                        "appointment_type": slot.appointment_type.value,
+                                    }
+                                )
+                                lines.append(f"{i}) {display}")
+
+                            booking_message = "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n" + "\n".join(
+                                lines
+                            )
+
+                            pending_appointment_data = {
+                                "status": "awaiting_selection",
+                                "options": options,
+                                "attempts": 0,
+                                "expires_at": (datetime.utcnow().isoformat()),
+                            }
+                    except Exception as cal_e:
+                        self.logger.warning(f"Calendar slot fetch failed, skipping slot offer: {cal_e}")
 
                 if booking_message:
                     final_message = booking_message
@@ -794,8 +797,15 @@ class JorgeSellerEngine:
 
         # 1. Hot → handoff message (first hot response) or scheduling ask (follow-up turns)
         if temperature == "hot":
-            if seller_data.get("newly_answered_count", 0) == 0:
-                # Already sent handoff; seller is still replying — move to scheduling
+            _hot_sched = bool(
+                last_response
+                and re.search(
+                    r"\b(when can|schedule|book|call|meeting|talk|available|appointment)\b",
+                    last_response.lower(),
+                )
+            )
+            if seller_data.get("newly_answered_count", 0) == 0 or _hot_sched:
+                # Already sent handoff (or seller explicitly asking to schedule) — move to scheduling
                 message = "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
                 response_type = "scheduling"
             else:
@@ -917,10 +927,23 @@ class JorgeSellerEngine:
 
         # 1. Hot Seller Handoff (first hot turn) or scheduling follow-up (subsequent hot turns)
         if temperature == "hot":
-            if newly_answered_count == 0:
-                # Already qualified and handoff was already sent; ask for scheduling slot
-                message = "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
-                response_type = "scheduling"
+            _hot_sched_full = bool(
+                user_message
+                and re.search(
+                    r"\b(when can|schedule|book|call|meeting|talk|available|appointment)\b",
+                    user_message.lower(),
+                )
+            )
+            if newly_answered_count == 0 or _hot_sched_full:
+                # Already sent handoff (or seller asking to schedule) — return early to skip persona adaptation
+                _sched_msg = "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
+                return {
+                    "message": _sched_msg,
+                    "response_type": "scheduling",
+                    "character_count": len(_sched_msg),
+                    "compliance": self.tone_engine.validate_message_compliance(_sched_msg),
+                    "directness_score": 1.0,
+                }
             else:
                 message = self.tone_engine.generate_hot_seller_handoff(
                     seller_name=seller_data.get("contact_name"), agent_name="our team"
