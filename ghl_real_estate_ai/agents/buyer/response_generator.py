@@ -196,6 +196,7 @@ class ResponseGenerator:
             _area_kws = [
                 "etiwanda", "alta loma", "day creek", "victoria groves",
                 "heritage", "caryn", "windrows", "old alta loma",
+                "rancho cucamonga", "rancho", "rc", "inland empire",
             ]
             _found_areas = [a.title() for a in _area_kws if a in _user_text]
             _known_area = (
@@ -236,13 +237,12 @@ class ResponseGenerator:
             _known_timeline = (
                 getattr(profile, "move_timeline", None)
                 or state.get("move_timeline")
-                or ("stated" if _re.search(r"\b(?:june|july|august|summer|month|week|day|asap|soon)\b", _user_text) else "not stated yet")
+                or ("stated" if _re.search(r"\b(?:june|july|august|september|october|spring|summer|fall|winter|month|week|day|days|asap|soon|quickly|urgent|ready|weekend|now)\b", _user_text) else "not stated yet")
             )
 
-            # Compute next question — tell Claude exactly what to ask, not just what to skip
+            # Compute next question — tell Claude exactly what to ask, not just what to skip.
+            # Area is asked LAST so budget/pre-approval/bedrooms/timeline progress first.
             _todo = []
-            if _known_area == "not stated yet":
-                _todo.append("preferred area or neighborhood")
             if _known_budget == "not stated yet":
                 _todo.append("budget range")
             if _known_preapproval == "not stated yet":
@@ -251,6 +251,8 @@ class ResponseGenerator:
                 _todo.append("bedrooms and property size")
             if _known_timeline == "not stated yet":
                 _todo.append("move-in timeline")
+            if _known_area == "not stated yet":
+                _todo.append("preferred area or neighborhood in Rancho Cucamonga")
 
             if _todo:
                 _next_q_instruction = f"NEXT: Ask ONLY about '{_todo[0]}' — nothing else."

@@ -218,7 +218,9 @@ def _compute_mode_flags(
             and not should_deactivate
         ),
         "buyer": _tag_present(buyer_activation_tag, tags_lower) and buyer_mode_enabled and not should_deactivate,
-        "lead": _tag_present(lead_activation_tag, tags_lower) and lead_mode_enabled and not should_deactivate,
+        "lead": (
+            _tag_present(lead_activation_tag, tags_lower) or (not tags_lower and lead_mode_enabled)
+        ) and lead_mode_enabled and not should_deactivate,
     }
 
 
@@ -423,8 +425,8 @@ async def handle_ghl_webhook(
                 "Proceeding with empty tags — GHL workflow filter guarantees activation tag is present."
             )
             # Trust the GHL workflow filter: webhook only fires for tagged contacts.
-            # Infer 'Needs Qualifying' as the safe default so the seller/lead bot fires.
-            tags = ["Needs Qualifying"]
+            # Keep tags empty — lead bot handles unclassified contacts when JORGE_LEAD_MODE=true.
+            tags = []
 
     # Normalize tags for case-insensitive comparisons throughout this request.
     tags_lower = _normalize_tags(tags)
@@ -480,9 +482,10 @@ async def handle_ghl_webhook(
     # Buyer-mode tag also counts as activation when buyer mode is enabled
     if not should_activate and jorge_settings.JORGE_BUYER_MODE:
         should_activate = _tag_present(jorge_settings.BUYER_ACTIVATION_TAG, tags_lower)
-    # Lead-mode tag also counts as activation when lead mode is enabled
+    # Lead-mode tag also counts as activation when lead mode is enabled.
+    # Unclassified contacts (empty tags) are also handled by lead bot when JORGE_LEAD_MODE=true.
     if not should_activate and jorge_settings.JORGE_LEAD_MODE:
-        should_activate = _tag_present(jorge_settings.LEAD_ACTIVATION_TAG, tags_lower)
+        should_activate = _tag_present(jorge_settings.LEAD_ACTIVATION_TAG, tags_lower) or not tags_lower
     should_deactivate = any(_tag_present(tag, tags_lower) for tag in deactivation_tags)
 
     if not should_activate:
