@@ -2247,6 +2247,95 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
     # UNIFIED PROCESSING METHODS
 
+    async def real_time_converse(
+        self,
+        contact_id: str,
+        user_message: str,
+        conversation_history: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Direct real-time conversation handler for incoming lead messages.
+
+        Bypasses the LangGraph sequence workflow and makes a direct LLM call
+        to generate a contextual response. Used by the webhook for live SMS
+        conversations where the scheduled sequence nodes (day_3/7/14/30) don't apply.
+
+        Returns dict with response_content, engagement_status, jorge_handoff_recommended.
+        """
+        from ghl_real_estate_ai.core.llm_client import LLMClient, TaskComplexity
+
+        history = conversation_history or []
+
+        system_prompt = (
+            "You are Jorge Salas, a caring real estate professional in Rancho Cucamonga, CA. "
+            "You help incoming leads figure out whether they're looking to buy or sell a home. "
+            "Your role is to qualify their intent and connect them with the right specialist.\n\n"
+            "RULES:\n"
+            "- SMS only: keep responses under 160 characters\n"
+            "- No hyphens, no emojis\n"
+            "- Warm and friendly tone\n"
+            "- Ask ONE question at a time\n"
+            "- First question: Are they looking to buy or sell?\n"
+            "- Gather: timeline, location preference, motivation\n"
+            "- If they clearly want to buy say you will connect them with our buyer specialist\n"
+            "- If they clearly want to sell say you will connect them with our seller specialist\n"
+            "- NEVER make up property details or listings\n"
+            "- NEVER promise specific prices or outcomes"
+        )
+
+        # Build history for LLM (role must be 'user' or 'assistant')
+        llm_history = []
+        for m in history:
+            role = m.get("role", "user")
+            if role in ("bot", "ai", "assistant"):
+                role = "assistant"
+            else:
+                role = "user"
+            content = m.get("content", "")
+            if content:
+                llm_history.append({"role": role, "content": content})
+
+        # Drop trailing user message if it's already the current prompt
+        if llm_history and llm_history[-1]["role"] == "user" and llm_history[-1]["content"] == user_message:
+            llm_history = llm_history[:-1]
+
+        try:
+            llm_client = LLMClient(provider="claude")
+            response = await llm_client.agenerate(
+                prompt=user_message,
+                system_prompt=system_prompt,
+                history=llm_history,
+                temperature=0.7,
+                max_tokens=200,
+                complexity=TaskComplexity.ROUTINE,
+            )
+            reply = response.content.strip()
+        except Exception as e:
+            logger.warning(f"Lead bot LLM call failed for {contact_id}: {e}")
+            reply = "Hi! Are you looking to buy or sell in the Rancho Cucamonga area?"
+
+        # Detect handoff signals from user message
+        msg_lower = user_message.lower()
+        buy_signals = any(
+            kw in msg_lower
+            for kw in ["buy", "purchase", "looking for a home", "pre-approval", "pre approval", "budget", "want to buy"]
+        )
+        sell_signals = any(
+            kw in msg_lower
+            for kw in ["sell", "listing", "home worth", "my house", "my home", "cma", "want to sell"]
+        )
+        handoff_recommended = buy_signals or sell_signals
+
+        return {
+            "response_content": reply,
+            "engagement_status": "qualified" if handoff_recommended else "responsive",
+            "lead_id": contact_id,
+            "current_step": "real_time_converse",
+            "intent_profile": None,
+            "jorge_handoff_recommended": handoff_recommended,
+            "jorge_handoff_eligible": handoff_recommended,
+            "handoff_signals": {"buyer": buy_signals, "seller": sell_signals},
+        }
 
     async def process_lead_conversation(
         self,
