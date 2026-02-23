@@ -617,21 +617,30 @@ class JorgeSellerEngine:
                     extracted_data["motivation"] = "financial"
                 elif re.search(r"upgrad|larger|bigger|more space|growing family|new baby", msg_lower):
                     extracted_data["motivation"] = "upgrading"
-                elif re.search(r"\bsell\b|\bselling\b", msg_lower):
-                    # Generic sell intent — counts as motivation to unblock question progression
+                elif re.search(r"\bsell\b|\bselling\b", msg_lower) and current_seller_data:
+                    # Generic sell intent — only count as motivation after first turn
+                    # (avoid falsely marking "thinking about selling" as a Q1 answer on T1)
                     extracted_data["motivation"] = "other"
 
             # 1. Timeline (30-45 days)
             if extracted_data.get("timeline_acceptable") is None:
-                if re.search(r"\b(no|won'?t|can'?t|nope|problem|too fast|not possible)\b", msg_lower):
-                    if re.search(r"\b(30|45|thirty|forty.?five|month)\b", msg_lower):
-                        extracted_data["timeline_acceptable"] = False
-                elif re.search(r"\b(30|45)\b.{0,20}\b(day|days)\b", msg_lower) and not re.search(
-                    r"\b(no|not|won'?t|can'?t)\b", msg_lower
+                # Check explicit positives FIRST (avoids false negatives from "no problem", "no issue")
+                if re.search(
+                    r"no problem|no issue|not a problem|that works|works for (me|us)|fine with|works fine|totally fine|absolutely|sounds good|that'?s fine",
+                    msg_lower,
                 ):
                     extracted_data["timeline_acceptable"] = True
                 elif re.search(r"\b(urgent|asap|immediately|need to move|right away|as soon as)\b", msg_lower):
                     extracted_data["timeline_acceptable"] = True
+                elif re.search(r"\b(30|45)\b.{0,20}\b(day|days)\b", msg_lower) and not re.search(
+                    r"\b(no|not|won'?t|can'?t)\b.{0,15}\b(30|45)\b", msg_lower
+                ):
+                    # Only reject if "no/not" is directly adjacent to 30/45
+                    extracted_data["timeline_acceptable"] = True
+                elif re.search(r"\b(won'?t|can'?t|nope|too fast|not possible)\b", msg_lower) and re.search(
+                    r"\b(30|45|thirty|forty.?five|month)\b", msg_lower
+                ):
+                    extracted_data["timeline_acceptable"] = False
 
             # 2. Price — handle "$750k", "750,000", "750 to 800 thousand", "800 thousand"
             if not extracted_data.get("price_expectation"):
@@ -785,7 +794,7 @@ class JorgeSellerEngine:
 
         # 1. Hot → handoff message (first hot response) or scheduling ask (follow-up turns)
         if temperature == "hot":
-            if vague_streak == 0 and seller_data.get("newly_answered_count", 0) == 0:
+            if seller_data.get("newly_answered_count", 0) == 0:
                 # Already sent handoff; seller is still replying — move to scheduling
                 message = "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
                 response_type = "scheduling"
@@ -908,7 +917,7 @@ class JorgeSellerEngine:
 
         # 1. Hot Seller Handoff (first hot turn) or scheduling follow-up (subsequent hot turns)
         if temperature == "hot":
-            if vague_streak == 0 and newly_answered_count == 0:
+            if newly_answered_count == 0:
                 # Already qualified and handoff was already sent; ask for scheduling slot
                 message = "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
                 response_type = "scheduling"
