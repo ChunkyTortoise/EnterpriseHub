@@ -14,9 +14,25 @@ from datetime import datetime
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from ghl_real_estate_ai.api import health
 from ghl_real_estate_ai.api.routes import webhook
+
+
+class SafeJSONResponse(JSONResponse):
+    """JSON response that guarantees Pydantic models are properly serialized.
+
+    Fixes the literal-newline bug where OptimizedJSONResponse or FastAPI's
+    response pipeline may pass a Pydantic v2 model directly to json.dumps
+    without calling model_dump() first, causing control characters (e.g.
+    the \\n in the SB 243 footer) to appear unescaped in the response body.
+    """
+
+    def render(self, content) -> bytes:
+        if hasattr(content, "model_dump"):
+            content = content.model_dump()
+        return super().render(content)
 
 
 @asynccontextmanager
@@ -26,8 +42,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Jorge Bot Server",
-    version="1.0.0",
+    version="1.0.32",
     lifespan=lifespan,
+    default_response_class=SafeJSONResponse,
 )
 
 app.add_middleware(
