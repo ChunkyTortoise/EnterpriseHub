@@ -1198,11 +1198,11 @@ async def handle_ghl_webhook(
                     sequence_day = delta.days
                 await conversation_manager.memory_service.save_context(contact_id, lead_ctx, location_id=location_id)
 
-                # Initialize and run lead bot
+                # Initialize and run lead bot (real-time conversation handler)
                 lead_bot = LeadBotWorkflow(ghl_client=current_ghl_client)
-                lead_result = await lead_bot.process_enhanced_lead_sequence(
-                    lead_id=contact_id,
-                    sequence_day=sequence_day,
+                lead_result = await lead_bot.real_time_converse(
+                    contact_id=contact_id,
+                    user_message=user_message,
                     conversation_history=conversation_history,
                 )
 
