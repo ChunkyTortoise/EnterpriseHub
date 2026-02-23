@@ -142,11 +142,11 @@ class OptimizedJSONResponse(JSONResponse):
         return super().render(content)
 
     def _remove_nulls(self, obj):
-        """Recursively remove null values from dictionaries."""
+        """Recursively remove null values from dictionaries. Lists preserve None items."""
         if isinstance(obj, dict):
             return {k: self._remove_nulls(v) for k, v in obj.items() if v is not None}
         elif isinstance(obj, list):
-            return [self._remove_nulls(item) for item in obj if item is not None]
+            return [self._remove_nulls(item) for item in obj]
         return obj
 
 
@@ -872,9 +872,7 @@ async def enhanced_performance_middleware(request: Request, call_next):
     # Add compression indicators
     response.headers["X-Content-Optimized"] = "true"
 
-    # Performance monitoring headers
-    response.headers["X-Process-Time"] = f"{process_time:.3f}"
-    response.headers["X-Server-Version"] = settings.version
+    # Performance monitoring headers (internal timing only — no version info exposed)
     response.headers["X-Compression-Level"] = "6"
 
     # Response size optimization headers
@@ -905,8 +903,10 @@ async def enhanced_performance_middleware(request: Request, call_next):
 
     # API-specific optimizations
     if path.startswith("/api/"):
-        # Enable efficient JSON parsing
-        response.headers["Content-Type"] = "application/json; charset=utf-8"
+        # Only set Content-Type for JSON responses — do not override other content types
+        existing_ct = response.headers.get("content-type", "")
+        if not existing_ct or existing_ct.startswith("application/json"):
+            response.headers["Content-Type"] = "application/json; charset=utf-8"
 
         # Add API performance metrics
         avg_response_time = performance_stats["total_response_time"] / max(performance_stats["total_requests"], 1)
