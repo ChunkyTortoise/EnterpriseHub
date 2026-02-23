@@ -239,31 +239,50 @@ class ResponseGenerator:
                 or ("stated" if _re.search(r"\b(?:june|july|august|summer|month|week|day|asap|soon)\b", _user_text) else "not stated yet")
             )
 
+            # Compute next question — tell Claude exactly what to ask, not just what to skip
+            _todo = []
+            if _known_area == "not stated yet":
+                _todo.append("preferred area or neighborhood")
+            if _known_budget == "not stated yet":
+                _todo.append("budget range")
+            if _known_preapproval == "not stated yet":
+                _todo.append("mortgage pre-approval status")
+            if _known_beds == "not stated yet":
+                _todo.append("bedrooms and property size")
+            if _known_timeline == "not stated yet":
+                _todo.append("move-in timeline")
+
+            if _todo:
+                _next_q_instruction = f"NEXT: Ask ONLY about '{_todo[0]}' — nothing else."
+                _already_settled = [
+                    k for k in ["area", "budget", "pre-approval", "bedrooms", "timeline"]
+                    if k not in _todo[0]
+                ]
+            else:
+                _next_q_instruction = "All key info is collected. Warmly move toward scheduling a home tour — do NOT ask any new qualifying questions."
+                _already_settled = ["area", "budget", "pre-approval", "bedrooms", "timeline"]
+
             response_prompt = f"""
             As Jorge's Buyer Bot, generate a helpful and supportive response for this buyer.
 
             MARKET CONTEXT:
-            - Jorge specializes exclusively in Rancho Cucamonga, CA (Inland Empire, San Bernardino County)
-            - Typical single-family home range: $550K–$1.2M; luxury above $1.2M
-            - Key neighborhoods/areas: Etiwanda, Alta Loma, Day Creek, Victoria Groves, Heritage, Caryn, Windrows, Old Alta Loma
-            - Market dynamics: strong demand, fast-moving inventory, commuter-friendly (SR-210/I-15 access, 55-65 min to downtown LA), highly ranked schools (CVUSD)
+            - Jorge specializes in Rancho Cucamonga, CA — key areas: Etiwanda, Alta Loma, Day Creek, Heritage, Caryn
+            - Commuter-friendly, top CVUSD schools, strong demand
 
-            BUYER CONTEXT:
-            - One question per message. Never ask two questions in the same response.
+            BUYER PROFILE (confirmed — DO NOT re-ask these):
+            - Preferred area: {_known_area}
+            - Budget: {_known_budget}
+            - Pre-approved: {_known_preapproval}
+            - Bedrooms/size: {_known_beds}
+            - Timeline: {_known_timeline}
+
+            {_next_q_instruction}
+            ABSOLUTELY DO NOT ask about: {", ".join(_already_settled) if _already_settled else "nothing — move to scheduling"}
 
             Buyer Temperature: {buyer_temp}
             Financial Readiness: {state.get("financial_readiness_score", 25)}/100
-            Current Step: {state.get("current_qualification_step", "unknown")}
 
-            *** ALREADY CONFIRMED — NEVER ASK ABOUT THESE AGAIN ***
-            - Preferred area/neighborhood: {_known_area}
-            - Budget: {_known_budget}
-            - Pre-approved: {_known_preapproval}
-            - Bedrooms: {_known_beds}
-            - Move timeline: {_known_timeline}
-            *** If any field above is NOT "not stated yet", treat it as SETTLED. Do NOT re-ask. ***
-
-            Full Conversation History:
+            Full Conversation History (for context — do not re-ask anything already answered):
             {_conv[-8:]}
             {sentiment_context}
 
