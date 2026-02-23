@@ -53,4 +53,4 @@ ENV PYTHONPATH=/app
 EXPOSE 8000
 
 # Run FastAPI with uvicorn (shell form so $PORT is expanded)
-CMD ["/bin/sh", "-c", "uvicorn ghl_real_estate_ai.api.main_prod:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["/bin/sh", "-c", "uvicorn ghl_real_estate_ai.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

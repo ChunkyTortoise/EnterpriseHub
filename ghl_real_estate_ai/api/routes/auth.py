@@ -41,11 +41,20 @@ class TokenResponse(BaseModel):
 DEMO_USER_HASH = os.getenv("AUTH_DEMO_USER_HASH")
 ADMIN_USER_HASH = os.getenv("AUTH_ADMIN_USER_HASH")
 
+_environment = os.getenv("ENVIRONMENT", "development").lower()
+
 if not DEMO_USER_HASH or not ADMIN_USER_HASH:
+    if _environment == "production":
+        raise RuntimeError(
+            "AUTH_DEMO_USER_HASH and AUTH_ADMIN_USER_HASH must be set in production. "
+            "Generate bcrypt hashes and add them to your environment."
+        )
     logger.warning(
-        "⚠️ using default hardcoded credentials for demo/admin. Set AUTH_DEMO_USER_HASH and AUTH_ADMIN_USER_HASH in .env for production."
+        "⚠️ AUTH_DEMO_USER_HASH / AUTH_ADMIN_USER_HASH not set — using hardcoded dev defaults. "
+        "This must NOT be used in production."
     )
 
+# Hardcoded hashes are dev/demo only — rejected at startup in production (see above).
 USERS_DB = {
     "demo_user": DEMO_USER_HASH
     or "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqVLXhKvNe",  # nosemgrep: generic.secrets.security.detected-bcrypt-hash.detected-bcrypt-hash
@@ -59,9 +68,8 @@ async def login(credentials: LoginRequest):
     """
     Authenticate user and return JWT token.
 
-    Default demo credentials:
-    - username: demo_user, password: demo_password
-    - username: admin, password: admin_password
+    Credentials are set via AUTH_DEMO_USER_HASH / AUTH_ADMIN_USER_HASH env vars (bcrypt hashes).
+    Hardcoded dev defaults are used only when those vars are absent AND ENVIRONMENT != production.
     """
     # Verify user exists
     if credentials.username not in USERS_DB:

@@ -936,6 +936,21 @@ async def handle_ghl_webhook(
             logger.error(f"Jorge seller mode processing failed for contact {contact_id}: {str(e)}", exc_info=True)
             # Do not fall through to other bot modes when seller preconditions are met.
             seller_rescue_msg = "What's got you considering selling? And where would you be looking to move?"
+            # Route through pipeline so SB 243 [AI-assisted message] footer is appended.
+            try:
+                rescue_pipeline_context = ProcessingContext(
+                    contact_id=contact_id,
+                    bot_mode="seller",
+                    channel=event.message.type,
+                    user_message=user_message,
+                )
+                rescue_pipeline = get_response_pipeline()
+                rescue_processed = await rescue_pipeline.process(seller_rescue_msg, rescue_pipeline_context)
+                seller_rescue_msg = rescue_processed.message
+            except Exception as pipeline_err:
+                logger.error(f"Rescue pipeline failed for contact {contact_id}: {pipeline_err}")
+                # Fallback: append SB 243 footer manually to ensure compliance
+                seller_rescue_msg = f"{seller_rescue_msg}\n\n[AI-assisted message]"
             background_tasks.add_task(
                 safe_send_message,
                 current_ghl_client,
@@ -1151,12 +1166,38 @@ async def handle_ghl_webhook(
 
         except Exception as e:
             logger.error(f"Jorge buyer mode processing failed for contact {contact_id}: {str(e)}", exc_info=True)
-            # Fall-through to next bot mode allowed for robustness
-            # Tag contact with Bot-Fallback-Active for monitoring
+            # Do not fall through to lead bot — buyer contact would get wrong personality and scoring.
             try:
                 background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["Bot-Fallback-Active"])
             except Exception as tag_error:
                 logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
+            buyer_rescue_msg = "Thanks for reaching out! Could you tell me more about what you're looking for in a home?"
+            # Route through pipeline so SB 243 [AI-assisted message] footer is appended.
+            try:
+                rescue_pipeline_context = ProcessingContext(
+                    contact_id=contact_id,
+                    bot_mode="buyer",
+                    channel=event.message.type,
+                    user_message=user_message,
+                )
+                rescue_pipeline = get_response_pipeline()
+                rescue_processed = await rescue_pipeline.process(buyer_rescue_msg, rescue_pipeline_context)
+                buyer_rescue_msg = rescue_processed.message
+            except Exception as pipeline_err:
+                logger.error(f"Buyer rescue pipeline failed for contact {contact_id}: {pipeline_err}")
+                buyer_rescue_msg = f"{buyer_rescue_msg}\n\n[AI-assisted message]"
+            background_tasks.add_task(
+                safe_send_message,
+                current_ghl_client,
+                contact_id,
+                buyer_rescue_msg,
+                event.message.type,
+            )
+            return GHLWebhookResponse(
+                success=True,
+                message=buyer_rescue_msg,
+                actions=[],
+            )
 
     # Step -0.3: Check for Jorge's Lead Mode (LEAD_ACTIVATION_TAG + JORGE_LEAD_MODE)
 
