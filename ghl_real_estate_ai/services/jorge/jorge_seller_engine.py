@@ -695,7 +695,7 @@ class JorgeSellerEngine:
 
             # 3. Condition
             if not extracted_data.get("property_condition"):
-                if re.search(r"move.?in.?ready|great shape|good shape|good condition|pretty good|excellent|updated|remodel|replaced (the )?roof|new roof|kept it up|well maintained|well-maintained|pristine|turnkey|turn.?key", msg_lower):
+                if re.search(r"move.?in.?ready|great shape|good shape|great condition|good condition|pretty good|excellent|updated|remodel|renovated|recently\s+\w+|replaced (the )?roof|new roof|kept it up|well maintained|well-maintained|pristine|turnkey|turn.?key", msg_lower):
                     extracted_data["property_condition"] = "Move-in Ready"
                 elif re.search(r"needs?.{0,8}(work|repair|fix|updat)|fixer|rough|\bold\b|dated", msg_lower):
                     extracted_data["property_condition"] = "Needs Work"
