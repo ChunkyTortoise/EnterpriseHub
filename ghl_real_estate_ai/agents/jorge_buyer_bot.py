@@ -665,12 +665,36 @@ class JorgeBuyerBot(BaseBotWorkflow):
             # even when a low-intent route exits before response generation.
             if not str(result.get("response_content", "")).strip():
                 logger.warning(
-                    "Empty buyer response_content for %s after workflow; applying fallback response",
+                    "Empty buyer response_content for %s after workflow; applying progression-aware fallback",
                     conversation_id,
                 )
-                result["response_content"] = (
-                    "Thanks for sharing. What area in Rancho Cucamonga are you most interested in?"
-                )
+                import re as _sg_re
+                _sg_hist = initial_state.get("conversation_history", [])
+                _sg_user = " ".join(m.get("content", "") for m in _sg_hist if m.get("role") == "user").lower()
+                _sg_bot = [m.get("content", "").lower() for m in _sg_hist if m.get("role") in ("assistant", "bot", "ai")]
+                _sg_todo = []
+                if not _sg_re.search(r"\$[\d,k]+|\d+\s*(?:k|thousand|million)", _sg_user):
+                    _sg_todo.append("budget range")
+                if not _sg_re.search(r"pre.?approv|pre.?qual|been approved|got approved|approved up to", _sg_user):
+                    _sg_todo.append("pre-approval")
+                if not _sg_re.search(r"\d+\s*(?:bed|br|bedroom)", _sg_user):
+                    _sg_todo.append("bedrooms")
+                if not _sg_re.search(r"\b(?:june|july|august|september|october|spring|summer|fall|winter|months?|weeks?|years?|day|days|asap|soon|quickly|urgent|ready|timeline|moving|relocat|by \w+)\b", _sg_user):
+                    _sg_todo.append("timeline")
+                _sg_fallbacks = {
+                    "budget range": "What's your price range? That helps me focus on the right options for you.",
+                    "pre-approval": "Have you spoken with a lender yet? Getting pre-approved opens up a lot more doors.",
+                    "bedrooms": "How many bedrooms are you looking for and do you need a yard?",
+                    "timeline": "When are you hoping to be in your new home?",
+                }
+                if _sg_todo:
+                    result["response_content"] = _sg_fallbacks[_sg_todo[0]]
+                else:
+                    _sg_sched_asked = sum(1 for m in _sg_bot if "morning or afternoon" in m or "morning, afternoon" in m)
+                    if _sg_sched_asked >= 2:
+                        result["response_content"] = "Jorge will give you a call tomorrow morning to set up tours."
+                    else:
+                        result["response_content"] = "What time works best for tours — morning or afternoon?"
 
             # SMS length guard
             response_truncation = self._state_manager.truncate_response_if_needed(
