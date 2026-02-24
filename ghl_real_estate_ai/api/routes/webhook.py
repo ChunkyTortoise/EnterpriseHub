@@ -1004,6 +1004,9 @@ async def handle_ghl_webhook(
             # Apply buyer bot actions (tags based on temperature)
             actions = []
             buyer_temp = buyer_result.get("buyer_temperature", "cold")
+            # Upgrade temperature when buyer is qualified but scoring returned cold
+            if buyer_temp == "cold" and buyer_result.get("is_qualified"):
+                buyer_temp = "warm"
             temp_tag_map = {"hot": "Hot-Buyer", "warm": "Warm-Buyer", "cold": "Cold-Buyer"}
             if buyer_temp in temp_tag_map:
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag=temp_tag_map[buyer_temp]))
