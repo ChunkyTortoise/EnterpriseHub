@@ -2262,8 +2262,6 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         Returns dict with response_content, engagement_status, jorge_handoff_recommended.
         """
-        from ghl_real_estate_ai.core.llm_client import LLMClient, TaskComplexity
-
         history = conversation_history or []
 
         system_prompt = (
@@ -2303,17 +2301,22 @@ class LeadBotWorkflow(BaseBotWorkflow):
             llm_history = llm_history[:-1]
 
         try:
-            llm_client = LLMClient(provider="claude")
-            response = await llm_client.agenerate(
-                prompt=user_message,
-                system_prompt=system_prompt,
-                history=llm_history,
-                temperature=0.7,
+            import os
+            from anthropic import AsyncAnthropic
+
+            _api_key = os.getenv("ANTHROPIC_API_KEY")
+            _client = AsyncAnthropic(api_key=_api_key)
+            _messages = list(llm_history) + [{"role": "user", "content": user_message}]
+            _resp = await _client.messages.create(
+                model="claude-sonnet-4-6",
                 max_tokens=200,
+                temperature=0.7,
+                system=system_prompt,
+                messages=_messages,
             )
-            reply = response.content.strip()
+            reply = _resp.content[0].text.strip()
         except Exception as e:
-            logger.warning(f"Lead bot LLM call failed for {contact_id}: {e}")
+            logger.warning(f"Lead bot LLM call failed for {contact_id}: {type(e).__name__}: {e}")
             reply = "Hi! Are you looking to buy or sell in the Rancho Cucamonga area?"
 
         # Detect handoff signals from user message
