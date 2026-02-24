@@ -237,7 +237,7 @@ class ResponseGenerator:
             _known_timeline = (
                 getattr(profile, "move_timeline", None)
                 or state.get("move_timeline")
-                or ("stated" if _re.search(r"\b(?:june|july|august|september|october|spring|summer|fall|winter|month|week|day|days|asap|soon|quickly|urgent|ready|weekend|now)\b", _user_text) else "not stated yet")
+                or ("stated" if _re.search(r"\b(?:june|july|august|september|october|spring|summer|fall|winter|months?|weeks?|years?|day|days|asap|soon|quickly|urgent|ready|weekend|now|timeline|moving|relocat)\b", _user_text) else "not stated yet")
             )
 
             # Compute next question — tell Claude exactly what to ask, not just what to skip.
@@ -321,14 +321,9 @@ class ResponseGenerator:
                 "One or two short sentences max. Plain conversational text only."
             )
 
-            raw_response = await self.claude.generate_response(response_prompt)
-            # Guard: orchestrator error strings must never surface as SMS messages
-            if isinstance(raw_response, str) and raw_response.startswith("Error processing request:"):
-                raw_response = None
-            response = self._extract_text_from_response(raw_response)
-
-            # Progression-aware fallback — uses _todo computed above to advance the
-            # qualification flow even when Claude is unavailable (e.g. no API key yet).
+            # Deterministic qualification map — primary response when _todo is non-empty.
+            # Claude is unreliable for structured qualification sequences, so we bypass it entirely
+            # during the qualification phase and only invoke it post-qualification for scheduling.
             _fallback_map = {
                 "budget range": "What's your price range? That helps me focus on the right options for you.",
                 "mortgage pre-approval status": "Have you spoken with a lender yet? Getting pre-approved opens up a lot more doors.",
@@ -336,13 +331,26 @@ class ResponseGenerator:
                 "move-in timeline": "When are you hoping to be in your new home?",
                 "preferred area or neighborhood in Rancho Cucamonga": "Any specific neighborhoods you have in mind? Etiwanda, Alta Loma, Day Creek?",
             }
+
             if _todo:
-                fallback = _fallback_map.get(_todo[0], "What matters most to you in your next home? Area, size, or style?")
+                # Qualification still incomplete — use deterministic response, skip Claude entirely.
+                content = _fallback_map.get(_todo[0], "What matters most to you in your next home? Area, size, or style?")
             else:
-                # All qualified — vary fallback based on what prospect just said
+                # All key info collected — call Claude for post-qualification scheduling conversation.
+                raw_response = await self.claude.generate_response(response_prompt)
+                # Guard: orchestrator error strings must never surface as SMS messages
+                if isinstance(raw_response, str) and raw_response.startswith("Error processing request:"):
+                    raw_response = None
+                response = self._extract_text_from_response(raw_response)
+
+                # Post-qualification fallback — vary based on what prospect just said
                 _last_msg = (_conv[-1].get("content", "") if _conv else "").lower()
+                _bot_msgs = [m.get("content", "").lower() for m in _conv if m.get("role") in ("bot", "ai", "assistant")]
+                _sched_asks = sum(1 for m in _bot_msgs if "morning or afternoon" in m or "morning, afternoon" in m)
                 if _re.search(r"\b(morning|afternoon|evening|monday|tuesday|wednesday|thursday|friday|weekend)\b", _last_msg):
                     fallback = "Works for me. I'll have Jorge's team reach out to lock in a time."
+                elif _sched_asks >= 2:
+                    fallback = "Jorge will give you a call tomorrow morning to set up tours."
                 elif _re.search(r"\b(etiwanda|alta loma|day creek|neighborhood|area|value|schools)\b", _last_msg):
                     fallback = "Etiwanda is a great pick. Let's set up tours there. Morning or afternoon work for you?"
                 elif _re.search(r"\b(see|tour|show|homes|houses|visit|when can|ready)\b", _last_msg):
@@ -351,35 +359,42 @@ class ResponseGenerator:
                     fallback = "Perfect. Jorge's team will reach out to set up tours. Morning or afternoon works best?"
                 else:
                     fallback = "You're all set. What time works best for tours — morning or afternoon?"
-            content = response or fallback
+                content = response or fallback
 
-            # Strip markdown if Claude returned structured analysis instead of plain SMS text
-            _md_markers = ("#", "**", "- ", "* ", "##", "Strategic", "Analysis", "Assessment", "Intelligence")
-            _has_md = (
-                content.startswith("#")
-                or "\n##" in content[:200]
-                or "\n**" in content[:200]
-                or content.startswith("**")
-                or any(content.startswith(m) for m in _md_markers)
-            )
-            if _has_md:
-                lines = [
-                    ln.strip()
-                    for ln in content.split("\n")
-                    if ln.strip()
-                    and not ln.startswith("#")
-                    and not ln.startswith("**")
-                    and not ln.startswith("- ")
-                    and not ln.startswith("* ")
-                    and not ln.startswith("|")
-                    and not ln.lower().startswith("strategic")
-                    and not ln.lower().startswith("analysis")
-                    and not ln.lower().startswith("assessment")
-                    and len(ln.strip()) > 15
-                ]
-                content = lines[0] if lines else fallback
+                # Strip markdown if Claude returned structured analysis instead of plain SMS text
+                _md_markers = ("#", "**", "- ", "* ", "##", "Strategic", "Analysis", "Assessment", "Intelligence")
+                _has_md = (
+                    content.startswith("#")
+                    or "\n##" in content[:200]
+                    or "\n**" in content[:200]
+                    or content.startswith("**")
+                    or any(content.startswith(m) for m in _md_markers)
+                )
+                if _has_md:
+                    lines = [
+                        ln.strip()
+                        for ln in content.split("\n")
+                        if ln.strip()
+                        and not ln.startswith("#")
+                        and not ln.startswith("**")
+                        and not ln.startswith("- ")
+                        and not ln.startswith("* ")
+                        and not ln.startswith("|")
+                        and not ln.lower().startswith("strategic")
+                        and not ln.lower().startswith("analysis")
+                        and not ln.lower().startswith("assessment")
+                        and len(ln.strip()) > 15
+                    ]
+                    content = lines[0] if lines else fallback
+
+                # Loop-break: if we've already asked morning/afternoon 2+ times and are about to ask again, commit instead
+                _bot_msgs_final = [m.get("content", "").lower() for m in _conv if m.get("role") in ("bot", "ai", "assistant")]
+                _sched_asks_final = sum(1 for m in _bot_msgs_final if "morning or afternoon" in m or "morning, afternoon" in m)
+                if _sched_asks_final >= 2 and ("morning or afternoon" in content.lower() or "morning, afternoon" in content.lower()):
+                    content = "Jorge will give you a call tomorrow morning to set up tours."
 
             content = content.replace("-", " ")  # Jorge spec: no hyphens in SMS
+
             return {
                 "response_content": content,
                 "response_tone": "friendly_consultative",

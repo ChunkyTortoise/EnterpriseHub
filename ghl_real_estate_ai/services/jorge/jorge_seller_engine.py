@@ -754,6 +754,23 @@ class JorgeSellerEngine:
                         1 for f in question_fields if extracted_data.get(f) is not None
                     )
 
+            # Smart skip: if the user answered a later question (timeline/price/condition) but we're
+            # stalled on Q1 (motivation), infer motivation as "other" immediately (don't wait 2 stall turns).
+            if current_q_now == 1 and not extracted_data.get("motivation") and current_seller_data:
+                _answered_later = (
+                    extracted_data.get("timeline_acceptable") is not None
+                    or bool(extracted_data.get("price_expectation"))
+                    or bool(extracted_data.get("property_condition"))
+                )
+                if _answered_later:
+                    extracted_data["motivation"] = "other"
+                    extracted_data["stall_turns"] = 0
+                    extracted_data["questions_answered"] = sum(
+                        1 for f in question_fields if extracted_data.get(f) is not None
+                    )
+                    # Update last_question_asked to reflect new position after skip
+                    extracted_data["last_question_asked"] = SellerQuestions.get_question_number(extracted_data)
+
             # Store current user message for follow-up handling
             extracted_data["last_user_message"] = user_message
 
@@ -841,8 +858,22 @@ class JorgeSellerEngine:
             )
         )
         if _schedule_intent:
-            message = "Let's do it. What time works best for you — morning, afternoon, or evening? We'll get you on the calendar."
-            response_type = "scheduling"
+            _lr_si = last_response.lower()
+            _gave_day_si = bool(re.search(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b", _lr_si))
+            _gave_time_si = bool(re.search(r"\b(morning|afternoon|evening)\b", _lr_si))
+            _post_confirm_si = bool(re.search(r"\b(thanks|thank you|sounds good|got it|appreciate|prepare|preparing|looking forward|see you|all set)\b", _lr_si))
+            if _post_confirm_si:
+                message = "You're all set. Our team will call before then to confirm everything. Talk soon!"
+                response_type = "post_confirm"
+            elif _gave_day_si:
+                message = "Perfect, I'll have Jorge's team reach out to lock it in. Talk soon!"
+                response_type = "scheduling_confirm"
+            elif _gave_time_si:
+                message = "What day works best — this week or next?"
+                response_type = "scheduling_day"
+            else:
+                message = "Let's do it. What time works best for you — morning, afternoon, or evening? We'll get you on the calendar."
+                response_type = "scheduling"
             return {
                 "message": message,
                 "response_type": response_type,
@@ -862,8 +893,16 @@ class JorgeSellerEngine:
             _hot_sched = bool(re.search(
                 r"\b(when can|schedule|book|call|meeting|talk|available|appointment)\b", _lr
             ))
+            _post_confirm = bool(re.search(
+                r"\b(yes|yeah|yep|yup|sure|great|perfect|sounds good|alright|ok|okay|got it|that works|works for me|all set|appreciate|thanks|thank you|looking forward)\b",
+                _lr,
+            ))
 
-            if _gave_day:
+            if _post_confirm and not _gave_time and not _gave_day:
+                # User confirmed scheduling — wrap it up
+                message = "You're all set. Our team will reach out to confirm the details. Talk soon!"
+                response_type = "post_confirm"
+            elif _gave_day:
                 # Prospect gave a day — wrap it up
                 message = "Perfect, I'll have Jorge's team reach out to lock it in. Talk soon!"
                 response_type = "scheduling_confirm"
@@ -961,7 +1000,18 @@ class JorgeSellerEngine:
             )
         )
         if _schedule_intent_full:
-            _sched_msg = "Let's do it. What time works best for you — morning, afternoon, or evening? We'll get you on the calendar."
+            _lr_full = user_message.lower()
+            _gave_day_full = bool(re.search(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b", _lr_full))
+            _gave_time_full = bool(re.search(r"\b(morning|afternoon|evening)\b", _lr_full))
+            _post_confirm_full = bool(re.search(r"\b(thanks|thank you|sounds good|got it|appreciate|prepare|preparing|looking forward|see you|all set)\b", _lr_full))
+            if _post_confirm_full:
+                _sched_msg = "You're all set. Our team will call before then to confirm everything. Talk soon!"
+            elif _gave_day_full:
+                _sched_msg = "Perfect, I'll have Jorge's team reach out to lock it in. Talk soon!"
+            elif _gave_time_full:
+                _sched_msg = "What day works best — this week or next?"
+            else:
+                _sched_msg = "Let's do it. What time works best for you — morning, afternoon, or evening? We'll get you on the calendar."
             return {
                 "message": _sched_msg,
                 "response_type": "scheduling",
@@ -1004,7 +1054,21 @@ class JorgeSellerEngine:
             )
             if newly_answered_count == 0 or _hot_sched_full:
                 # Already sent handoff (or seller asking to schedule) — return early to skip persona adaptation
-                _sched_msg = "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
+                _lr_hot = user_message.lower()
+                _gave_day_hot = bool(re.search(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b", _lr_hot))
+                _gave_time_hot = bool(re.search(r"\b(morning|afternoon|evening)\b", _lr_hot))
+                _post_confirm_hot = bool(re.search(
+                    r"\b(yes|yeah|yep|yup|sure|great|perfect|sounds good|alright|ok|okay|got it|that works|works for me|all set|appreciate|thanks|thank you|looking forward)\b",
+                    _lr_hot,
+                ))
+                if _post_confirm_hot and not _gave_time_hot and not _gave_day_hot:
+                    _sched_msg = "You're all set. Our team will reach out to confirm the details. Talk soon!"
+                elif _gave_day_hot:
+                    _sched_msg = "Perfect, I'll have Jorge's team reach out to lock it in. Talk soon!"
+                elif _gave_time_hot:
+                    _sched_msg = "What day works best — this week or next?"
+                else:
+                    _sched_msg = "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
                 return {
                     "message": _sched_msg,
                     "response_type": "scheduling",
@@ -1288,7 +1352,15 @@ class JorgeSellerEngine:
                 )
             )
             if _wants_schedule_full:
-                message = "Let's do it. What time works best for you — morning, afternoon, or evening? We'll get you on the calendar."
+                _lr_nurture = _last_msg_full
+                _gave_day_nurture = bool(re.search(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b", _lr_nurture))
+                _gave_time_nurture = bool(re.search(r"\b(morning|afternoon|evening)\b", _lr_nurture))
+                if _gave_day_nurture:
+                    message = "Perfect, I'll have Jorge's team reach out to lock it in. Talk soon!"
+                elif _gave_time_nurture:
+                    message = "What day works best — this week or next?"
+                else:
+                    message = "Let's do it. What time works best for you — morning, afternoon, or evening? We'll get you on the calendar."
             else:
                 message = self._create_nurture_message(seller_data, temperature)
             response_type = "nurture"
