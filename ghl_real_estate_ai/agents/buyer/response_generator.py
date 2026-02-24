@@ -339,7 +339,18 @@ class ResponseGenerator:
             if _todo:
                 fallback = _fallback_map.get(_todo[0], "What matters most to you in your next home? Area, size, or style?")
             else:
-                fallback = "You are all set! Would you like to schedule some home tours? Morning or afternoon works best for most buyers."
+                # All qualified — vary fallback based on what prospect just said
+                _last_msg = (_conv[-1].get("content", "") if _conv else "").lower()
+                if _re.search(r"\b(morning|afternoon|evening|monday|tuesday|wednesday|thursday|friday|weekend)\b", _last_msg):
+                    fallback = "Works for me. I'll have Jorge's team reach out to lock in a time."
+                elif _re.search(r"\b(etiwanda|alta loma|day creek|neighborhood|area|value|schools)\b", _last_msg):
+                    fallback = "Etiwanda is a great pick. Let's set up tours there. Morning or afternoon work for you?"
+                elif _re.search(r"\b(see|tour|show|homes|houses|visit|when can|ready)\b", _last_msg):
+                    fallback = "I'll have Jorge reach out to set up tours. Would morning or afternoon work better?"
+                elif _re.search(r"\b(wife|husband|partner|family|kids|both|we|ready)\b", _last_msg):
+                    fallback = "Perfect. Jorge's team will reach out to set up tours. Morning or afternoon works best?"
+                else:
+                    fallback = "You're all set. What time works best for tours — morning or afternoon?"
             content = response or fallback
 
             # Strip markdown if Claude returned structured analysis instead of plain SMS text
