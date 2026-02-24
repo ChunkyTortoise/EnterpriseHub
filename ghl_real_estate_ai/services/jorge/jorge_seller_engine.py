@@ -619,7 +619,7 @@ class JorgeSellerEngine:
                     extracted_data["motivation"] = "inherited"
                 elif re.search(r"financial|need(?: the)? money|debt|foreclosure|behind on|afford", msg_lower):
                     extracted_data["motivation"] = "financial"
-                elif re.search(r"upgrad|larger|bigger|more space|growing family|new baby", msg_lower):
+                elif re.search(r"upgrad|larger|bigger|more space|growing family|new baby|second baby|another baby|too small|outgrown|need more room|kids? (are )?growing", msg_lower):
                     extracted_data["motivation"] = "upgrading"
                 elif re.search(r"\bsell\b|\bselling\b", msg_lower) and current_seller_data:
                     # Generic sell intent — only count as motivation after first turn
@@ -646,10 +646,18 @@ class JorgeSellerEngine:
                 ):
                     extracted_data["timeline_acceptable"] = False
                 else:
-                    # "within X months" or "sell in X months" where X <= 4 → flexible but motivated
-                    _mo = re.search(r"(?:within|sell\s+in|in)\s+(\d+)\s*months?", msg_lower)
+                    # "within X months" / "in X months" / "X to Y months" where X <= 4 → flexible/motivated
+                    _mo = re.search(r"(?:within|sell\s+in|in)\s+(\d+)\s*(?:to\s*\d+\s*)?months?", msg_lower)
                     if _mo and int(_mo.group(1)) <= 4:
                         extracted_data["timeline_acceptable"] = True
+                    else:
+                        # Bare "X to Y months" (e.g. "4 to 5 months", "3 months")
+                        _mo2 = re.search(r"\b(\d+)\s*(?:to\s*\d+\s*)?months?\b", msg_lower)
+                        if _mo2 and int(_mo2.group(1)) <= 4:
+                            extracted_data["timeline_acceptable"] = True
+                        # Seasonal / relative timeframes (summer = ~4 months from Feb, spring ≈ now)
+                        elif re.search(r"\b(spring|summer|this year|end of year|few months|couple months|a few months)\b", msg_lower):
+                            extracted_data["timeline_acceptable"] = True
 
             # 2. Price — handle "$750k", "750,000", "750 to 800 thousand", "800 thousand"
             if not extracted_data.get("price_expectation"):
@@ -669,12 +677,22 @@ class JorgeSellerEngine:
                         numeric = float(re.sub(r"[kK]", "", raw) or 0) * multiplier
                         if numeric > 10000:
                             extracted_data["price_expectation"] = price_match.group(1)
+                    if not extracted_data.get("price_expectation"):
+                        # Bare 3-digit price in context: "around 680", "680 to 700", "hoping for 650"
+                        _ctx = re.search(
+                            r"(?:around|about|hoping|thinking|asking|priced?\s+at|looking\s+for|worth|sold\s+for|sell\s+for)?\s*\$?(\d{3})\b",
+                            msg_lower,
+                        )
+                        if _ctx:
+                            _val = int(_ctx.group(1))
+                            if 300 <= _val <= 999:  # plausible home price in $k
+                                extracted_data["price_expectation"] = f"{_val}k"
 
             # 3. Condition
             if not extracted_data.get("property_condition"):
-                if re.search(r"move.?in.?ready|great shape|good condition|excellent|updated|remodel", msg_lower):
+                if re.search(r"move.?in.?ready|great shape|good shape|good condition|pretty good|excellent|updated|remodel|replaced (the )?roof|new roof|kept it up|well maintained|well-maintained|pristine|turnkey|turn.?key", msg_lower):
                     extracted_data["property_condition"] = "Move-in Ready"
-                elif re.search(r"needs?.{0,8}(work|repair|fix|updat)|fixer|rough|old|dated", msg_lower):
+                elif re.search(r"needs?.{0,8}(work|repair|fix|updat)|fixer|rough|\bold\b|dated", msg_lower):
                     extracted_data["property_condition"] = "Needs Work"
 
             # --- VAGUE ANSWER TRACKING (Pillar 1: NLP Optimization) ---
