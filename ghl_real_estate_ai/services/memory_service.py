@@ -68,10 +68,13 @@ class MemoryService:
 
     def _should_use_redis(self, location_id: Optional[str]) -> bool:
         """Determine if Redis should be used for this request."""
-        # In production, we always prefer Redis for multitenancy
-        if settings.environment == "production" and settings.redis_url:
+        # Only use Redis if a Redis URL is actually configured
+        if not settings.redis_url:
+            return False
+        # In production with Redis configured, always prefer Redis
+        if settings.environment == "production":
             return True
-        # Explicit override
+        # Explicit override (e.g. storage_type="redis" in staging)
         return self.storage_type == "redis"
 
     @staticmethod

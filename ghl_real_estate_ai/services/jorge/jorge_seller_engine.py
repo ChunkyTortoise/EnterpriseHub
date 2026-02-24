@@ -645,6 +645,11 @@ class JorgeSellerEngine:
                     r"\b(30|45|thirty|forty.?five|month)\b", msg_lower
                 ):
                     extracted_data["timeline_acceptable"] = False
+                else:
+                    # "within X months" or "sell in X months" where X <= 4 → flexible but motivated
+                    _mo = re.search(r"(?:within|sell\s+in|in)\s+(\d+)\s*months?", msg_lower)
+                    if _mo and int(_mo.group(1)) <= 4:
+                        extracted_data["timeline_acceptable"] = True
 
             # 2. Price — handle "$750k", "750,000", "750 to 800 thousand", "800 thousand"
             if not extracted_data.get("price_expectation"):
@@ -669,7 +674,7 @@ class JorgeSellerEngine:
             if not extracted_data.get("property_condition"):
                 if re.search(r"move.?in.?ready|great shape|good condition|excellent|updated|remodel", msg_lower):
                     extracted_data["property_condition"] = "Move-in Ready"
-                elif re.search(r"needs?.?(work|repair|fix|updat)|fixer|rough|old|dated", msg_lower):
+                elif re.search(r"needs?.{0,8}(work|repair|fix|updat)|fixer|rough|old|dated", msg_lower):
                     extracted_data["property_condition"] = "Needs Work"
 
             # --- VAGUE ANSWER TRACKING (Pillar 1: NLP Optimization) ---
