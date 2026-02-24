@@ -27,8 +27,6 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.pipeline import (
     ResponsePostProcessor,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.ai_disclosure import (
-    DISCLOSURE_EN,
-    DISCLOSURE_ES,
     AIDisclosureProcessor,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.compliance_check import (
@@ -187,43 +185,42 @@ class TestAIDisclosureProcessor:
         return AIDisclosureProcessor()
 
     @pytest.mark.asyncio
-    async def test_disclosure_appended_english(self, stage):
-        """English message gets English disclosure footer."""
+    async def test_disclosure_not_added(self, stage):
+        """Messages pass through unchanged — no footer added."""
         resp, ctx = _make_response(message="Great property!", detected_language="en")
         result = await stage.process(resp, ctx)
 
-        assert result.message.endswith(DISCLOSURE_EN)
-        assert result.action == ProcessingAction.MODIFY
+        assert result.message == "Great property!"
+        assert result.action == ProcessingAction.PASS
 
     @pytest.mark.asyncio
-    async def test_disclosure_appended_spanish(self, stage):
-        """Spanish context gets Spanish disclosure footer."""
+    async def test_no_disclosure_spanish(self, stage):
+        """Spanish messages also pass through unchanged."""
         resp, ctx = _make_response(message="Buena propiedad!", detected_language="es")
         result = await stage.process(resp, ctx)
 
-        assert result.message.endswith(DISCLOSURE_ES)
+        assert result.message == "Buena propiedad!"
 
     @pytest.mark.asyncio
-    async def test_disclosure_not_duplicated(self, stage):
-        """If disclosure already present, don't add it again."""
-        msg = f"Hello!{DISCLOSURE_EN}"
-        resp, ctx = _make_response(message=msg)
-        result = await stage.process(resp, ctx)
-
-        assert result.message.count("[AI-assisted message]") == 1
-
-    @pytest.mark.asyncio
-    async def test_disclosure_skipped_on_short_circuit(self, stage):
-        """Opt-out (SHORT_CIRCUIT) messages don't get disclosure."""
-        resp, ctx = _make_response(message=OPT_OUT_RESPONSE_EN)
-        resp.action = ProcessingAction.SHORT_CIRCUIT
+    async def test_no_footer_on_any_message(self, stage):
+        """No AI disclosure footer appended to any message."""
+        resp, ctx = _make_response(message="Hello!")
         result = await stage.process(resp, ctx)
 
         assert "[AI-assisted message]" not in result.message
 
     @pytest.mark.asyncio
-    async def test_disclosure_skipped_on_block(self, stage):
-        """BLOCKED messages don't get disclosure."""
+    async def test_short_circuit_passes_through(self, stage):
+        """SHORT_CIRCUIT messages pass through unchanged."""
+        resp, ctx = _make_response(message=OPT_OUT_RESPONSE_EN)
+        resp.action = ProcessingAction.SHORT_CIRCUIT
+        result = await stage.process(resp, ctx)
+
+        assert result.message == OPT_OUT_RESPONSE_EN
+
+    @pytest.mark.asyncio
+    async def test_block_passes_through(self, stage):
+        """BLOCKED messages pass through unchanged."""
         resp, ctx = _make_response(message="Safe fallback")
         resp.action = ProcessingAction.BLOCK
         result = await stage.process(resp, ctx)
@@ -671,7 +668,7 @@ class TestPipelineIntegration:
             )
             result = await pipeline.process("Here are some great options!", ctx)
 
-        assert "[AI-assisted message]" in result.message
+        assert "[AI-assisted message]" not in result.message
         assert result.message.startswith("Here are some great options!")
         assert len(result.stage_log) == 5  # all 5 stages ran
 
@@ -783,8 +780,8 @@ class TestPipelineIntegration:
             )
             result = await pipeline.process(long_msg, ctx)
 
-        # Disclosure is appended but no truncation
-        assert len(result.message) > 500
+        # Email channel: no truncation, message passes through at full length
+        assert len(result.message) == 500
 
     @pytest.mark.asyncio
     async def test_stage_exception_does_not_break_pipeline(self):
@@ -919,8 +916,8 @@ class TestProactiveAIDisclosure:
         return AIDisclosureProcessor()
 
     @pytest.mark.asyncio
-    async def test_first_message_has_proactive_disclosure(self, stage):
-        """First message prepends 'Hi! I'm Jorge's AI assistant.' + keeps footer."""
+    async def test_first_message_no_proactive_disclosure(self, stage):
+        """First message passes through — no 'I'm Jorge's AI assistant' prefix."""
         resp, ctx = _make_response(
             message="Welcome! What brings you here?",
             detected_language="en",
@@ -928,17 +925,13 @@ class TestProactiveAIDisclosure:
         ctx.is_first_message = True
         result = await stage.process(resp, ctx)
 
-        assert result.message.startswith("Hi! I'm Jorge's AI assistant. ")
-        assert result.message.endswith(DISCLOSURE_EN)
-        assert result.action == ProcessingAction.MODIFY
+        assert not result.message.startswith("Hi! I'm Jorge's AI assistant.")
+        assert "[AI-assisted message]" not in result.message
+        assert result.action == ProcessingAction.PASS
 
     @pytest.mark.asyncio
-    async def test_first_message_spanish_proactive_disclosure(self, stage):
-        """Spanish first message prepends Spanish proactive disclosure."""
-        from ghl_real_estate_ai.services.jorge.response_pipeline.stages.ai_disclosure import (
-            PROACTIVE_DISCLOSURE_ES,
-        )
-
+    async def test_first_message_spanish_no_disclosure(self, stage):
+        """Spanish first message passes through unchanged."""
         resp, ctx = _make_response(
             message="Bienvenido!",
             detected_language="es",
@@ -946,12 +939,11 @@ class TestProactiveAIDisclosure:
         ctx.is_first_message = True
         result = await stage.process(resp, ctx)
 
-        assert result.message.startswith(PROACTIVE_DISCLOSURE_ES)
-        assert result.message.endswith(DISCLOSURE_ES)
+        assert result.message == "Bienvenido!"
 
     @pytest.mark.asyncio
-    async def test_subsequent_messages_keep_footer_only(self, stage):
-        """Non-first messages get footer but no proactive disclosure."""
+    async def test_subsequent_messages_no_footer(self, stage):
+        """Non-first messages pass through without footer."""
         resp, ctx = _make_response(
             message="Here's more info for you.",
             detected_language="en",
@@ -959,22 +951,17 @@ class TestProactiveAIDisclosure:
         ctx.is_first_message = False
         result = await stage.process(resp, ctx)
 
-        assert not result.message.startswith("Hi! I'm Jorge's AI assistant.")
-        assert result.message.endswith(DISCLOSURE_EN)
+        assert result.message == "Here's more info for you."
 
     @pytest.mark.asyncio
-    async def test_first_message_not_duplicated(self, stage):
-        """Proactive disclosure not duplicated if already present."""
-        from ghl_real_estate_ai.services.jorge.response_pipeline.stages.ai_disclosure import (
-            PROACTIVE_DISCLOSURE_EN,
-        )
-
-        msg = PROACTIVE_DISCLOSURE_EN + "Welcome!"
-        resp, ctx = _make_response(message=msg, detected_language="en")
+    async def test_message_unchanged_throughout(self, stage):
+        """Any message passes through the processor unchanged."""
+        original = "Hi! What's your timeline for selling?"
+        resp, ctx = _make_response(message=original, detected_language="en")
         ctx.is_first_message = True
         result = await stage.process(resp, ctx)
 
-        assert result.message.count("Hi! I'm Jorge's AI assistant.") == 1
+        assert result.message == original
 
 
 # ===========================================================================
