@@ -637,6 +637,8 @@ class JorgeBuyerBot(BaseBotWorkflow):
                         "financing_status": saved_state.get("financing_status", "unknown"),
                         "buyer_persona": saved_state.get("buyer_persona"),
                         "objection_history": saved_state.get("objection_history", []),
+                        "current_qualification_step": saved_state.get("current_qualification_step", "budget"),
+                        "current_journey_stage": saved_state.get("current_journey_stage", "discovery"),
                     }
                 )
 
