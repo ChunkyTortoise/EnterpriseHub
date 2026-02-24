@@ -728,6 +728,32 @@ class JorgeSellerEngine:
             extracted_data["newly_answered_count"] = len(newly_answered)
             extracted_data["questions_answered"] = questions_answered
 
+            # --- STALL DETECTION: advance past a question the prospect won't answer ---
+            current_q_now = SellerQuestions.get_question_number(extracted_data)
+            last_q_asked = current_seller_data.get("last_question_asked", 0)
+            if current_q_now == last_q_asked and current_q_now > 0:
+                stall = current_seller_data.get("stall_turns", 0) + 1
+            else:
+                stall = 0
+            extracted_data["stall_turns"] = stall
+            extracted_data["last_question_asked"] = current_q_now
+
+            # After 2 turns stuck on same question, accept as unknown and advance
+            if stall >= 2:
+                stall_field_defaults = {
+                    1: ("motivation", "unknown"),
+                    2: ("timeline_acceptable", False),
+                    3: ("property_condition", "Unknown"),
+                    4: ("price_expectation", "unknown"),
+                }
+                field, default = stall_field_defaults.get(current_q_now, (None, None))
+                if field and extracted_data.get(field) is None:
+                    extracted_data[field] = default
+                    extracted_data["stall_turns"] = 0
+                    extracted_data["questions_answered"] = sum(
+                        1 for f in question_fields if extracted_data.get(f) is not None
+                    )
+
             # Store current user message for follow-up handling
             extracted_data["last_user_message"] = user_message
 
@@ -854,7 +880,8 @@ class JorgeSellerEngine:
 
         # 3. Questions < 4 → next question (or confrontational follow-up if vague)
         elif questions_answered < 4 and current_question_number <= 4:
-            if response_quality < 0.5 and last_response:
+            # Only push back on vague answers when Q1 has already been asked (not on the very first message)
+            if response_quality < 0.5 and last_response and current_question_number > 1:
                 message = self.tone_engine.generate_follow_up_message(
                     last_response=last_response,
                     question_number=current_question_number - 1,
