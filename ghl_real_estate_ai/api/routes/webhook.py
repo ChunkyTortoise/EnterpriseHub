@@ -955,8 +955,8 @@ async def handle_ghl_webhook(
                 seller_rescue_msg = rescue_processed.message
             except Exception as pipeline_err:
                 logger.error(f"Rescue pipeline failed for contact {contact_id}: {pipeline_err}")
-                # Fallback: append SB 243 footer manually to ensure compliance
-                seller_rescue_msg = f"{seller_rescue_msg}\n\n[AI-assisted message]"
+                # Pipeline failed — send message as-is
+                pass
             background_tasks.add_task(
                 safe_send_message,
                 current_ghl_client,
@@ -1191,7 +1191,7 @@ async def handle_ghl_webhook(
                 buyer_rescue_msg = rescue_processed.message
             except Exception as pipeline_err:
                 logger.error(f"Buyer rescue pipeline failed for contact {contact_id}: {pipeline_err}")
-                buyer_rescue_msg = f"{buyer_rescue_msg}\n\n[AI-assisted message]"
+                pass  # Pipeline failed — send message as-is
             background_tasks.add_task(
                 safe_send_message,
                 current_ghl_client,
