@@ -682,9 +682,10 @@ class JorgeSellerEngine:
                         if numeric > 10000:
                             extracted_data["price_expectation"] = price_match.group(1)
                     if not extracted_data.get("price_expectation"):
-                        # Bare 3-digit price in context: "around 680", "680 to 700", "hoping for 650"
+                        # Bare 3-digit price with REQUIRED context word: "around 680", "hoping for 650"
+                        # Context word required to avoid false matches from zip codes / addresses
                         _ctx = re.search(
-                            r"(?:around|about|hoping|thinking|asking|priced?\s+at|looking\s+for|worth|sold\s+for|sell\s+for)?\s*\$?(\d{3})\b",
+                            r"(?:around|about|hoping|thinking|asking|priced?\s+at|looking\s+for|worth|sold\s+for|sell\s+for)\s*\$?\b(\d{3})\b",
                             msg_lower,
                         )
                         if _ctx:
