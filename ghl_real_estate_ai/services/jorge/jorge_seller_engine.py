@@ -851,17 +851,28 @@ class JorgeSellerEngine:
                 "directness_score": 1.0,
             }
 
-        # 1. Hot → handoff message (first hot response) or scheduling ask (follow-up turns)
+        # 1. Hot → handoff → time ask → day ask → confirm
         if temperature == "hot":
-            _hot_sched = bool(
-                last_response
-                and re.search(
-                    r"\b(when can|schedule|book|call|meeting|talk|available|appointment)\b",
-                    last_response.lower(),
-                )
-            )
-            if seller_data.get("newly_answered_count", 0) == 0 or _hot_sched:
-                # Already sent handoff (or seller explicitly asking to schedule) — move to scheduling
+            _lr = last_response.lower() if last_response else ""
+            _gave_day = bool(re.search(
+                r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b",
+                _lr,
+            ))
+            _gave_time = bool(re.search(r"\b(morning|afternoon|evening)\b", _lr))
+            _hot_sched = bool(re.search(
+                r"\b(when can|schedule|book|call|meeting|talk|available|appointment)\b", _lr
+            ))
+
+            if _gave_day:
+                # Prospect gave a day — wrap it up
+                message = "Perfect, I'll have Jorge's team reach out to lock it in. Talk soon!"
+                response_type = "scheduling_confirm"
+            elif _gave_time:
+                # Prospect gave morning/afternoon/evening — ask for a day
+                message = "What day works best — this week or next?"
+                response_type = "scheduling_day"
+            elif seller_data.get("newly_answered_count", 0) == 0 or _hot_sched:
+                # Already sent handoff — ask for time
                 message = "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
                 response_type = "scheduling"
             else:
