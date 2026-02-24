@@ -9,7 +9,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, model_validator
 
 
 class MessageType(str, Enum):
@@ -184,6 +184,17 @@ class GHLWebhookResponse(BaseModel):
     success: bool
     message: str  # AI-generated response
     actions: List[GHLAction] = Field(default_factory=list)
+
+    @field_serializer("message")
+    def _sanitize_message(self, v: str) -> str:
+        """Replace bare newlines/carriage-returns with a space for JSON safety.
+
+        The actual SMS is sent via safe_send_message() before this response is
+        constructed, so newlines in the SMS text are unaffected. This field is
+        only the webhook acknowledgment returned to GHL; control characters
+        must not appear unescaped inside JSON string values.
+        """
+        return v.replace("\n", " ").replace("\r", " ")
 
 
 class AppointmentStatus(str, Enum):
