@@ -2277,8 +2277,11 @@ class LeadBotWorkflow(BaseBotWorkflow):
             "- Ask ONE question at a time\n"
             "- First question: Are they looking to buy or sell?\n"
             "- Gather: timeline, location preference, motivation\n"
-            "- If they clearly want to buy say you will connect them with our buyer specialist\n"
-            "- If they clearly want to sell say you will connect them with our seller specialist\n"
+            "- Accept info in any order. If they share price, timeline, or condition info without answering your last question, acknowledge it and move to the NEXT unanswered question. Never re-ask the exact same question twice.\n"
+            "- Once intent is clear (buy or sell) and you have their timeline, pivot to scheduling: ask morning or afternoon for a quick call with our team\n"
+            "- After they give a time preference (morning/afternoon/evening), ask which day works this week or next\n"
+            "- After they give a day, confirm: 'Perfect, our team will reach out to lock it in. Talk soon!'\n"
+            "- NEVER say 'let me have our team review' more than once in the same conversation\n"
             "- NEVER make up property details or listings\n"
             "- NEVER promise specific prices or outcomes"
         )
@@ -2307,7 +2310,6 @@ class LeadBotWorkflow(BaseBotWorkflow):
                 history=llm_history,
                 temperature=0.7,
                 max_tokens=200,
-                complexity=TaskComplexity.ROUTINE,
             )
             reply = response.content.strip()
         except Exception as e:

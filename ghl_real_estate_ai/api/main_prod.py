@@ -86,7 +86,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Jorge Bot Server",
-    version="1.0.61",
+    version="1.0.62",
     lifespan=lifespan,
     default_response_class=SafeJSONResponse,
 )
