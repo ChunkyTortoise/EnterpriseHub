@@ -187,13 +187,19 @@ class GHLWebhookResponse(BaseModel):
 
     @field_serializer("message")
     def _sanitize_message(self, v: str) -> str:
-        """Replace bare newlines/carriage-returns with a space for JSON safety.
+        """Ensure SB 243 AI disclosure footer, then replace bare newlines for JSON safety.
 
-        The actual SMS is sent via safe_send_message() before this response is
-        constructed, so newlines in the SMS text are unaffected. This field is
-        only the webhook acknowledgment returned to GHL; control characters
-        must not appear unescaped inside JSON string values.
+        SB 243 compliance: every outbound AI message must carry [AI-assisted message].
+        This serializer is the last-resort guarantee — it runs on every GHLWebhookResponse
+        regardless of which code path assembled the message.
+
+        The actual SMS is sent via safe_send_message() which also ensures the footer,
+        so both the webhook ACK JSON and the outbound SMS are always compliant.
         """
+        # SB 243: append footer if missing (last-resort guarantee)
+        if "[AI-assisted message]" not in v and "[Mensaje asistido por IA]" not in v:
+            v = v + " [AI-assisted message]"
+        # JSON safety: replace bare newlines/carriage-returns with a space
         return v.replace("\n", " ").replace("\r", " ")
 
 

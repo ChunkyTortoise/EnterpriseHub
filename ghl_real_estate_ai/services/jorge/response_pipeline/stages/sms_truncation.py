@@ -20,7 +20,10 @@ logger = logging.getLogger(__name__)
 
 SMS_MAX_CHARS = 320
 SENTENCE_SEPARATORS = (". ", "! ", "? ")
-KNOWN_FOOTERS: tuple = ()
+KNOWN_FOOTERS: tuple = (
+    "\n[AI-assisted message]",
+    "\n[Mensaje asistido por IA]",
+)
 
 # Carrier AI filter trigger words (case-insensitive all-caps versions get flagged)
 SPAM_TRIGGER_WORDS = [
