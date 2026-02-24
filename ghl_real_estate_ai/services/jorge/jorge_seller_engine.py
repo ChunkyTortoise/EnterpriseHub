@@ -104,7 +104,7 @@ class SellerQuestions:
         field_mapping = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
 
         for i, field in enumerate(field_mapping, 1):
-            if not answered_questions.get(field):
+            if answered_questions.get(field) is None:
                 return i
         return 5  # All questions answered
 
@@ -757,11 +757,12 @@ class JorgeSellerEngine:
         warm_questions = self.config.WARM_QUESTIONS_REQUIRED
         warm_quality = self.config.WARM_QUALITY_THRESHOLD
 
-        # Jorge's Hot seller criteria (strictest)
+        # Jorge's Hot seller criteria: all questions answered + timeline accepted
+        # Once fully qualified (4/4 + timeline=True), don't downgrade on follow-up
+        # message quality — quality scoring only matters during qualification phase
         if (
             questions_answered >= hot_questions
             and timeline_acceptable is True  # Must accept 30-45 day timeline
-            and response_quality >= hot_quality
         ):
             temperature = "hot"
             confidence = 0.95
