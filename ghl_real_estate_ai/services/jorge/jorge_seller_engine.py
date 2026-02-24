@@ -651,13 +651,17 @@ class JorgeSellerEngine:
                     if _mo and int(_mo.group(1)) <= 4:
                         extracted_data["timeline_acceptable"] = True
                     else:
-                        # Bare "X to Y months" (e.g. "4 to 5 months", "3 months")
+                        # Bare "X to Y months" (e.g. "4 to 5 months", "3 months", "6 months")
                         _mo2 = re.search(r"\b(\d+)\s*(?:to\s*\d+\s*)?months?\b", msg_lower)
-                        if _mo2 and int(_mo2.group(1)) <= 4:
-                            extracted_data["timeline_acceptable"] = True
-                        # Seasonal / relative timeframes (summer = ~4 months from Feb, spring ≈ now)
+                        if _mo2:
+                            # ≤4 months → accepts 30-45 day offer; >4 months → doesn't accept but move on
+                            extracted_data["timeline_acceptable"] = int(_mo2.group(1)) <= 4
+                        # Seasonal / relative timeframes
                         elif re.search(r"\b(spring|summer|this year|end of year|few months|couple months|a few months)\b", msg_lower):
                             extracted_data["timeline_acceptable"] = True
+                        # "next year" / "no rush" / "not urgent" → warm/cold, but move past Q2
+                        elif re.search(r"\b(next year|no rush|not urgent|eventually|someday|not sure yet|exploring)\b", msg_lower):
+                            extracted_data["timeline_acceptable"] = False
 
             # 2. Price — handle "$750k", "750,000", "750 to 800 thousand", "800 thousand"
             if not extracted_data.get("price_expectation"):
