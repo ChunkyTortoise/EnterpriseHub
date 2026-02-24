@@ -327,15 +327,19 @@ class ResponseGenerator:
                 raw_response = None
             response = self._extract_text_from_response(raw_response)
 
-            import random
-
-            fallback = random.choice(
-                [
-                    "What are you looking for in your next home? I want to make sure we're on the same page.",
-                    "What matters most to you in your next home? Area, size, style?",
-                    "What's the most important thing on your wish list for your next place?",
-                ]
-            )
+            # Progression-aware fallback — uses _todo computed above to advance the
+            # qualification flow even when Claude is unavailable (e.g. no API key yet).
+            _fallback_map = {
+                "budget range": "What's your price range? That helps me focus on the right options for you.",
+                "mortgage pre-approval status": "Have you spoken with a lender yet? Getting pre-approved opens up a lot more doors.",
+                "bedrooms and property size": "How many bedrooms are you looking for, and anything specific about the size or style?",
+                "move-in timeline": "When are you hoping to be in your new home?",
+                "preferred area or neighborhood in Rancho Cucamonga": "Any specific neighborhoods you have in mind? Etiwanda, Alta Loma, Day Creek?",
+            }
+            if _todo:
+                fallback = _fallback_map.get(_todo[0], "What matters most to you in your next home? Area, size, or style?")
+            else:
+                fallback = "You are all set! Would you like to schedule some home tours? Morning or afternoon works best for most buyers."
             content = response or fallback
 
             # Strip markdown if Claude returned structured analysis instead of plain SMS text
