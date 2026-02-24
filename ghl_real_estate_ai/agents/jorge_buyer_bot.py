@@ -691,7 +691,14 @@ class JorgeBuyerBot(BaseBotWorkflow):
                     result["response_content"] = _sg_fallbacks[_sg_todo[0]]
                 else:
                     _sg_sched_asked = sum(1 for m in _sg_bot if "morning or afternoon" in m or "morning, afternoon" in m)
-                    if _sg_sched_asked >= 2:
+                    # Advance to confirmation if: bot already asked once AND user replied with a time preference
+                    _sg_user_gave_time = _sg_re.search(
+                        r"\bmorning\b|\bafternoon\b|\bevening\b|\bnoon\b|\bam\b|\bpm\b|\b\d+[: ]\d*\s*(?:am|pm)\b",
+                        " ".join(m.get("content", "") for m in _sg_hist if m.get("role") == "user").lower(),
+                    )
+                    if _sg_sched_asked >= 1 and _sg_user_gave_time:
+                        result["response_content"] = "Jorge's team will reach out to confirm everything. Talk soon!"
+                    elif _sg_sched_asked >= 2:
                         result["response_content"] = "Jorge will give you a call tomorrow morning to set up tours."
                     else:
                         result["response_content"] = "What time works best for tours — morning or afternoon?"
