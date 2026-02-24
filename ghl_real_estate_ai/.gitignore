@@ -83,3 +83,7 @@ temp/
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Owner reference — contains live credentials
+JORGE_OWNER_REFERENCE.md
+*OWNER_REFERENCE*
