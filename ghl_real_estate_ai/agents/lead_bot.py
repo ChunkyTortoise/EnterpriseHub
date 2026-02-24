@@ -2300,24 +2300,55 @@ class LeadBotWorkflow(BaseBotWorkflow):
         if llm_history and llm_history[-1]["role"] == "user" and llm_history[-1]["content"] == user_message:
             llm_history = llm_history[:-1]
 
-        try:
-            import os
-            from anthropic import AsyncAnthropic
+        # State-machine response: derive next question from conversation state
+        # Collects all user content (history + current) to track what's been shared
+        _all_user = " ".join(
+            m["content"].lower() for m in llm_history if m["role"] == "user"
+        ) + " " + user_message.lower()
+        _bot_msgs = [m["content"].lower() for m in llm_history if m["role"] == "assistant"]
 
-            _api_key = os.getenv("ANTHROPIC_API_KEY")
-            _client = AsyncAnthropic(api_key=_api_key)
-            _messages = list(llm_history) + [{"role": "user", "content": user_message}]
-            _resp = await _client.messages.create(
-                model="claude-sonnet-4-6",
-                max_tokens=200,
-                temperature=0.7,
-                system=system_prompt,
-                messages=_messages,
-            )
-            reply = _resp.content[0].text.strip()
-        except Exception as e:
-            logger.warning(f"Lead bot LLM call failed for {contact_id}: {type(e).__name__}: {e}")
-            reply = "Hi! Are you looking to buy or sell in the Rancho Cucamonga area?"
+        _is_buyer = any(kw in _all_user for kw in [
+            "buy", "purchase", "looking for a home", "want to buy", "pre-approv", "pre approv"
+        ])
+        _is_seller = any(kw in _all_user for kw in [
+            "sell", "selling", "my house", "my home", "my property", "want to sell", "list"
+        ])
+        _has_timeline = any(kw in _all_user for kw in [
+            "month", "week", "year", "asap", "soon", "now", "day", "days", "ready", "moving", "relocat"
+        ])
+        _has_time_pref = any(kw in _all_user for kw in [
+            "morning", "afternoon", "evening"
+        ])
+        _has_day = any(kw in _all_user for kw in [
+            "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+            "today", "tomorrow", "this week", "next week"
+        ])
+        _post_confirm = any(kw in user_message.lower() for kw in [
+            "sounds good", "perfect", "great", "thank", "all set", "see you", "looking forward"
+        ])
+
+        if _post_confirm and _has_day:
+            reply = "You're all set. Our team will reach out to confirm everything. Talk soon!"
+        elif _has_day:
+            reply = "Perfect. Our team will reach out to lock it in. Talk soon!"
+        elif _has_time_pref:
+            reply = "What day works best, this week or next?"
+        elif (_is_buyer or _is_seller) and _has_timeline:
+            if _is_buyer:
+                reply = "What time works for a quick call with our buyer specialist, morning or afternoon?"
+            else:
+                reply = "What time works for a quick call with our team, morning or afternoon?"
+        elif _is_seller and not _has_timeline:
+            reply = "Got it. What is your timeline for selling?"
+        elif _is_buyer and not _has_timeline:
+            reply = "Great, when are you hoping to move into your new home?"
+        elif _is_buyer or _is_seller:
+            if _is_buyer:
+                reply = "Are you looking to buy in the Rancho Cucamonga area?"
+            else:
+                reply = "Are you looking to sell in the Rancho Cucamonga area?"
+        else:
+            reply = "Are you looking to buy or sell in the Rancho Cucamonga area?"
 
         # Detect handoff signals from user message
         msg_lower = user_message.lower()
