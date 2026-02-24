@@ -158,7 +158,14 @@ def _get_mls_client() -> MLSClient:
 
 # Safe wrappers for background tasks to prevent silent delivery failures
 async def safe_send_message(ghl_client, contact_id: str, message: str, channel=None):
-    """Wrapper for send_message that handles errors and tags contact on failure."""
+    """Wrapper for send_message that handles errors and tags contact on failure.
+
+    SB 243 last-resort: appends [AI-assisted message] footer if not already present.
+    This ensures compliance regardless of which code path assembled the message.
+    """
+    # SB 243 compliance: every outbound AI SMS must carry the disclosure footer
+    if "[AI-assisted message]" not in message and "[Mensaje asistido por IA]" not in message:
+        message = message + "\n[AI-assisted message]"
     try:
         await ghl_client.send_message(contact_id, message, channel=channel)
     except Exception as e:
@@ -835,6 +842,12 @@ async def handle_ghl_webhook(
                 final_seller_msg = "Let's stick to the facts about your property. What price are you looking to get?"
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
+            # Bulletproof SB 243 / SB 1001 disclosure (supplements pipeline AIDisclosureProcessor)
+            if "[AI-assisted message]" not in final_seller_msg:
+                final_seller_msg += "\n[AI-assisted message]"
+            if not seller_history_snapshot and "AI assistant" not in final_seller_msg:
+                final_seller_msg = "This is Jorge's AI assistant. " + final_seller_msg
+
             # --- CROSS-BOT HANDOFF CHECK ---
             if seller_result.get("handoff_signals"):
                 handoff = await handoff_service.evaluate_handoff(
@@ -1004,14 +1017,37 @@ async def handle_ghl_webhook(
             # Apply buyer bot actions (tags based on temperature)
             actions = []
             buyer_temp = buyer_result.get("buyer_temperature", "cold")
-            # Upgrade temperature when buyer is qualified but scoring returned cold
-            if buyer_temp == "cold" and buyer_result.get("is_qualified"):
+            # buyer_temperature is never set by the LangGraph workflow, so derive from signals
+            _resp_content_lower = buyer_result.get("response_content", "").lower()
+            _conv_len = len(conversation_history) if conversation_history else 0
+            _scheduling_response = (
+                "morning or afternoon" in _resp_content_lower
+                or "jorge's team will reach out" in _resp_content_lower
+                or "jorge will reach out" in _resp_content_lower
+                or "lock in a time" in _resp_content_lower
+                or "set up tours" in _resp_content_lower
+            )
+            if buyer_result.get("is_qualified"):
                 buyer_temp = "warm"
+            elif _scheduling_response and _conv_len >= 3:
+                # All qualification fields gathered — buyer is at least warm
+                buyer_temp = "warm"
+            # Upgrade cold→hot when buyer is fully committed: pre-approval + hard deadline + scheduling
+            _pre_approved = any(
+                kw in (user_message or "").lower()
+                for kw in ("pre-approved", "pre approved", "preapproved", "approved up to", "approval letter")
+            )
+            _has_deadline = any(
+                kw in " ".join(m.get("content", "") for m in (conversation_history or [])).lower()
+                for kw in ("lease", "move in by", "by july", "by august", "by month", "closing date", "our deadline")
+            )
+            if buyer_temp == "warm" and _pre_approved and _has_deadline and _scheduling_response:
+                buyer_temp = "hot"
             temp_tag_map = {"hot": "Hot-Buyer", "warm": "Warm-Buyer", "cold": "Cold-Buyer"}
             if buyer_temp in temp_tag_map:
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag=temp_tag_map[buyer_temp]))
 
-            if buyer_result.get("is_qualified"):
+            if buyer_result.get("is_qualified") or buyer_temp in ("warm", "hot"):
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Buyer-Qualified"))
 
             if buyer_temp == "hot" and jorge_settings.hot_buyer_workflow_id:
@@ -1063,6 +1099,12 @@ async def handle_ghl_webhook(
                     "I'd love to help you find your next home. What's most important to you in a property?"
                 )
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
+            # Bulletproof SB 243 / SB 1001 disclosure (supplements pipeline AIDisclosureProcessor)
+            if "[AI-assisted message]" not in final_buyer_msg:
+                final_buyer_msg += "\n[AI-assisted message]"
+            if not history and "AI assistant" not in final_buyer_msg:
+                final_buyer_msg = "This is Jorge's AI assistant. " + final_buyer_msg
 
             # --- CROSS-BOT HANDOFF CHECK ---
             if buyer_result.get("handoff_signals"):
@@ -1321,6 +1363,12 @@ async def handle_ghl_webhook(
                     )
                     final_lead_msg = "Thanks for reaching out! How can I help you today?"
                     actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
+
+                # Bulletproof SB 243 / SB 1001 disclosure (supplements pipeline AIDisclosureProcessor)
+                if "[AI-assisted message]" not in final_lead_msg:
+                    final_lead_msg += "\n[AI-assisted message]"
+                if not history and "AI assistant" not in final_lead_msg:
+                    final_lead_msg = "This is Jorge's AI assistant. " + final_lead_msg
 
                 # --- CROSS-BOT HANDOFF CHECK ---
                 if handoff_signals:
