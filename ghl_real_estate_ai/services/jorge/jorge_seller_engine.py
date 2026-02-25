@@ -15,7 +15,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, ClassVar
 
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 from ghl_real_estate_ai.services.compliance_escalation import ComplianceEscalationService
@@ -114,6 +114,12 @@ class JorgeSellerEngine:
     Handles the 4-question sequence with confrontational tone.
     """
 
+    # Per-contact async lock: prevents turn-counter skipping and
+    # seller_data last-writer-wins when concurrent requests arrive
+    # for the same contact_id. Class-level so it persists across
+    # per-request engine instances.
+    _contact_locks: ClassVar[Dict[str, asyncio.Lock]] = {}
+
     def __init__(self, conversation_manager, ghl_client, config: Optional[JorgeSellerConfig] = None, mls_client=None):
         """Initialize with existing conversation manager and GHL client
 
@@ -174,419 +180,428 @@ class JorgeSellerEngine:
         Returns:
             Dict with message, actions, temperature, and analytics data
         """
-        try:
-            self.logger.info(f"Processing seller response for contact {contact_id}")
-
-            # 1. Get conversation context
-            context = await self.conversation_manager.get_context(contact_id, location_id)
-            current_seller_data = context.get("seller_preferences", {})
-            contact_name = context.get("contact_name", "there")
-
-            # Phase 7: Track probability jump for Adaptive Escalation
-            previous_closing_prob = context.get("closing_probability", 0.0)
-
-            # --- AUTONOMOUS FEEDBACK LOOP: Record Conversion ---
-            # If lead is responding to an active A/B test follow-up
-            if context.get("active_ab_test") and context.get("last_ai_message_type") == "follow_up":
-                try:
-                    from ghl_real_estate_ai.services.autonomous_ab_testing import get_autonomous_ab_testing
-
-                    ab_testing = get_autonomous_ab_testing()
-                    await ab_testing.record_conversion(
-                        test_id=context["active_ab_test"]["test_id"],
-                        participant_id=contact_id,
-                        conversion_data={"type": "response", "message": user_message},
-                    )
-                    self.logger.info(f"Recorded A/B test conversion for contact {contact_id}")
-                except Exception as ab_conv_e:
-                    self.logger.warning(f"Failed to record A/B conversion: {ab_conv_e}")
-
-            # 2. Extract seller data from user message
+        # Serialise concurrent calls for the same contact_id to prevent:
+        #  1. Turn-counter skipping (+2 per concurrent pair)
+        #  2. seller_data last-writer-wins corruption
+        # asyncio.Lock is per-contact and class-level so it survives
+        # per-request engine instantiation.
+        _lock = JorgeSellerEngine._contact_locks.setdefault(
+            contact_id, asyncio.Lock()
+        )
+        async with _lock:
             try:
-                extracted_seller_data = await self._extract_seller_data(
-                    user_message=user_message,
-                    current_seller_data=current_seller_data,
-                    tenant_config=tenant_config or {},
-                    images=images,
-                )
-            except Exception as ee:
-                self.logger.warning(f"Seller data extraction failed, using existing context: {ee}")
-                extracted_seller_data = current_seller_data
+                self.logger.info(f"Processing seller response for contact {contact_id}")
 
-            # 2b. History-scan recovery: if Redis/state was lost between turns,
-            # current_seller_data may be empty (missing previously answered fields).
-            # Scan every prior *user* message in conversation_history using regex-only
-            # extraction (no additional LLM calls) to recover fields still None in
-            # extracted_seller_data.  This ensures a single-turn context can still
-            # advance the Q-flow correctly even when the in-memory / Redis fallback
-            # cache is unavailable (e.g. a different Render dyno handled earlier turns).
-            _critical_fields_missing = (
-                extracted_seller_data.get("motivation") is None
-                or extracted_seller_data.get("timeline_acceptable") is None
-            )
-            if _critical_fields_missing:
-                conversation_history = context.get("conversation_history", [])
-                if conversation_history:
-                    # Collect all prior user messages oldest-first (the current turn is
-                    # not yet in history since update_context hasn't been called yet).
-                    prior_user_messages = [
-                        msg["content"]
-                        for msg in conversation_history
-                        if msg.get("role") == "user" and msg.get("content")
-                    ]
-                    if prior_user_messages:
-                        self.logger.info(
-                            f"History-scan recovery triggered for {contact_id}: "
-                            f"{len(prior_user_messages)} prior user messages to scan"
+                # 1. Get conversation context
+                context = await self.conversation_manager.get_context(contact_id, location_id)
+                current_seller_data = context.get("seller_preferences", {})
+                contact_name = context.get("contact_name", "there")
+
+                # Phase 7: Track probability jump for Adaptive Escalation
+                previous_closing_prob = context.get("closing_probability", 0.0)
+
+                # --- AUTONOMOUS FEEDBACK LOOP: Record Conversion ---
+                # If lead is responding to an active A/B test follow-up
+                if context.get("active_ab_test") and context.get("last_ai_message_type") == "follow_up":
+                    try:
+                        from ghl_real_estate_ai.services.autonomous_ab_testing import get_autonomous_ab_testing
+
+                        ab_testing = get_autonomous_ab_testing()
+                        await ab_testing.record_conversion(
+                            test_id=context["active_ab_test"]["test_id"],
+                            participant_id=contact_id,
+                            conversion_data={"type": "response", "message": user_message},
                         )
-                        # Run regex-only extraction across prior messages (no LLM calls).
-                        recovered_data: Dict = {}
-                        for prior_msg in prior_user_messages:
-                            recovered_data = self._extract_seller_data_regex(
-                                prior_msg, recovered_data
+                        self.logger.info(f"Recorded A/B test conversion for contact {contact_id}")
+                    except Exception as ab_conv_e:
+                        self.logger.warning(f"Failed to record A/B conversion: {ab_conv_e}")
+
+                # 2. Extract seller data from user message
+                try:
+                    extracted_seller_data = await self._extract_seller_data(
+                        user_message=user_message,
+                        current_seller_data=current_seller_data,
+                        tenant_config=tenant_config or {},
+                        images=images,
+                    )
+                except Exception as ee:
+                    self.logger.warning(f"Seller data extraction failed, using existing context: {ee}")
+                    extracted_seller_data = current_seller_data
+
+                # 2b. History-scan recovery: if Redis/state was lost between turns,
+                # current_seller_data may be empty (missing previously answered fields).
+                # Scan every prior *user* message in conversation_history using regex-only
+                # extraction (no additional LLM calls) to recover fields still None in
+                # extracted_seller_data.  This ensures a single-turn context can still
+                # advance the Q-flow correctly even when the in-memory / Redis fallback
+                # cache is unavailable (e.g. a different Render dyno handled earlier turns).
+                _critical_fields_missing = (
+                    extracted_seller_data.get("motivation") is None
+                    or extracted_seller_data.get("timeline_acceptable") is None
+                )
+                if _critical_fields_missing:
+                    conversation_history = context.get("conversation_history", [])
+                    if conversation_history:
+                        # Collect all prior user messages oldest-first (the current turn is
+                        # not yet in history since update_context hasn't been called yet).
+                        prior_user_messages = [
+                            msg["content"]
+                            for msg in conversation_history
+                            if msg.get("role") == "user" and msg.get("content")
+                        ]
+                        if prior_user_messages:
+                            self.logger.info(
+                                f"History-scan recovery triggered for {contact_id}: "
+                                f"{len(prior_user_messages)} prior user messages to scan"
                             )
-                        # Merge: history-recovered values fill only fields still None in
-                        # extracted_seller_data (current-turn answers take priority).
-                        for field in ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]:
-                            if extracted_seller_data.get(field) is None and recovered_data.get(field) is not None:
-                                extracted_seller_data[field] = recovered_data[field]
-                                self.logger.info(
-                                    f"History-scan recovered {field}={recovered_data[field]} for {contact_id}"
+                            # Run regex-only extraction across prior messages (no LLM calls).
+                            recovered_data: Dict = {}
+                            for prior_msg in prior_user_messages:
+                                recovered_data = self._extract_seller_data_regex(
+                                    prior_msg, recovered_data
                                 )
-                        # Recompute questions_answered after recovery
-                        _qfields = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
-                        extracted_seller_data["questions_answered"] = sum(
-                            1 for f in _qfields if extracted_seller_data.get(f) is not None
+                            # Merge: history-recovered values fill only fields still None in
+                            # extracted_seller_data (current-turn answers take priority).
+                            for field in ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]:
+                                if extracted_seller_data.get(field) is None and recovered_data.get(field) is not None:
+                                    extracted_seller_data[field] = recovered_data[field]
+                                    self.logger.info(
+                                        f"History-scan recovered {field}={recovered_data[field]} for {contact_id}"
+                                    )
+                            # Recompute questions_answered after recovery
+                            _qfields = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
+                            extracted_seller_data["questions_answered"] = sum(
+                                1 for f in _qfields if extracted_seller_data.get(f) is not None
+                            )
+
+                # 3. Calculate seller temperature (Hot/Warm/Cold)
+                temperature_result = await self._calculate_seller_temperature(extracted_seller_data)
+                temperature = temperature_result["temperature"]
+
+                # --- SELLER PSYCHOLOGY ANALYSIS (New Enhancement) ---
+                psychology_profile = None
+                if extracted_seller_data.get("property_address"):
+                    try:
+                        # Attempt to analyze seller psychology based on property and comms
+                        # This uses DOM, price drops, and tone to determine negotiation stance
+                        from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory
+
+                        # Attempt real listing history lookup via MLS/Attom
+                        listing_history = None
+                        property_address = extracted_seller_data.get("property_address") or context.get("property_address")
+                        if property_address and self.mls_client:
+                            try:
+                                listing_history = await self.mls_client.get_listing_history(property_address)
+                            except Exception as mls_err:
+                                self.logger.warning(f"MLS lookup failed for {property_address}: {mls_err}")
+
+                        # Fallback to contact-provided data
+                        if not listing_history:
+                            listing_history = ListingHistory(
+                                days_on_market=context.get("days_since_first_contact", 0),
+                                original_list_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
+                                current_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
+                                price_drops=[],
+                            )
+
+                        comm_data = {
+                            "avg_response_time_hours": context.get("avg_response_time", 24),
+                            "communication_tone": context.get("last_ai_message_type", "professional"),
+                        }
+
+                        psychology_profile = await self.psychology_analyzer.analyze_seller_psychology(
+                            property_id=contact_id, listing_history=listing_history, communication_data=comm_data
                         )
+                        self.logger.info(
+                            f"Psychology Profile detected for {contact_id}: {psychology_profile.motivation_type}"
+                        )
+                    except Exception as pe:
+                        self.logger.warning(f"Psychology analysis failed: {pe}")
 
-            # 3. Calculate seller temperature (Hot/Warm/Cold)
-            temperature_result = await self._calculate_seller_temperature(extracted_seller_data)
-            temperature = temperature_result["temperature"]
+                # 4. Calculate Predictive ML Score & ROI-Based Pricing (Extreme Value Phase)
+                # Wrapped individually — these services are non-critical; a failure must NOT
+                # abort the qualification flow or trigger the outer fallback (question 1 loop).
+                from types import SimpleNamespace
 
-            # --- SELLER PSYCHOLOGY ANALYSIS (New Enhancement) ---
-            psychology_profile = None
-            if extracted_seller_data.get("property_address"):
                 try:
-                    # Attempt to analyze seller psychology based on property and comms
-                    # This uses DOM, price drops, and tone to determine negotiation stance
-                    from ghl_real_estate_ai.api.schemas.negotiation import ListingHistory
+                    predictive_result = await self.predictive_scorer.calculate_predictive_score(
+                        context, location=location_id
+                    )
+                except Exception as _pred_e:
+                    self.logger.warning(f"Predictive scorer failed, using defaults: {_pred_e}")
+                    predictive_result = SimpleNamespace(
+                        closing_probability=0.3,
+                        overall_priority_score=30.0,
+                        priority_level=SimpleNamespace(value="medium"),
+                        net_yield_estimate=None,
+                        potential_margin=None,
+                    )
 
-                    # Attempt real listing history lookup via MLS/Attom
-                    listing_history = None
-                    property_address = extracted_seller_data.get("property_address") or context.get("property_address")
-                    if property_address and self.mls_client:
-                        try:
-                            listing_history = await self.mls_client.get_listing_history(property_address)
-                        except Exception as mls_err:
-                            self.logger.warning(f"MLS lookup failed for {property_address}: {mls_err}")
+                try:
+                    pricing_result = await self.pricing_optimizer.calculate_lead_price(
+                        contact_id, location_id, context
+                    )
+                except Exception as _price_e:
+                    self.logger.warning(f"Pricing optimizer failed, using defaults: {_price_e}")
+                    pricing_result = SimpleNamespace(
+                        final_price=2.0,
+                        tier="warm",
+                        expected_roi=0.0,
+                        justification="service_unavailable",
+                    )
 
-                    # Fallback to contact-provided data
-                    if not listing_history:
-                        listing_history = ListingHistory(
-                            days_on_market=context.get("days_since_first_contact", 0),
-                            original_list_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
-                            current_price=float(extracted_seller_data.get("price_expectation", 0) or 0),
-                            price_drops=[],
+                # 5. Detect Psychographic Persona (Deep Behavioral Profiling)
+                try:
+                    persona_data = await self.psychographic_engine.detect_persona(
+                        messages=context.get("conversation_history", []),
+                        lead_context={**extracted_seller_data, "contact_id": contact_id},
+                        tenant_id=location_id,
+                    )
+                except Exception as _persona_e:
+                    self.logger.warning(f"Psychographic engine failed, using empty persona: {_persona_e}")
+                    persona_data = {}
+
+                # 5b. Swarm Intelligence (Parallel Analysis)
+                # Deploy the swarm to analyze the lead while we process other ML models
+                # Lazy import to avoid circular dependency
+                from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
+
+                swarm_task = asyncio.create_task(
+                    lead_intelligence_swarm.analyze_lead_comprehensive(
+                        contact_id, {**context, **extracted_seller_data, "persona": persona_data.get("primary_persona")}
+                    )
+                )
+
+                # 5c. Detect Negotiation Drift (Tactical Behavioral Response)
+                # We await the swarm result specifically for NegotiationStrategistAgent (COMMUNICATION_OPTIMIZER)
+                try:
+                    swarm_consensus = await swarm_task
+                    optimizer_insight = next(
+                        (i for i in swarm_consensus.agent_insights if i.agent_type.value == "communication_optimizer"), None
+                    )
+
+                    if optimizer_insight:
+                        drift_data = optimizer_insight.metadata.get("drift", {})
+                        extracted_seller_data["drift_softening"] = drift_data.get("is_softening", False)
+                        extracted_seller_data["price_break_probability"] = drift_data.get("price_break_probability", 0.0)
+                        self.logger.info(
+                            f"🧠 Swarm-Driven Drift Detection: softening={extracted_seller_data['drift_softening']}"
                         )
-
-                    comm_data = {
-                        "avg_response_time_hours": context.get("avg_response_time", 24),
-                        "communication_tone": context.get("last_ai_message_type", "professional"),
-                    }
-
-                    psychology_profile = await self.psychology_analyzer.analyze_seller_psychology(
-                        property_id=contact_id, listing_history=listing_history, communication_data=comm_data
-                    )
-                    self.logger.info(
-                        f"Psychology Profile detected for {contact_id}: {psychology_profile.motivation_type}"
-                    )
-                except Exception as pe:
-                    self.logger.warning(f"Psychology analysis failed: {pe}")
-
-            # 4. Calculate Predictive ML Score & ROI-Based Pricing (Extreme Value Phase)
-            # Wrapped individually — these services are non-critical; a failure must NOT
-            # abort the qualification flow or trigger the outer fallback (question 1 loop).
-            from types import SimpleNamespace
-
-            try:
-                predictive_result = await self.predictive_scorer.calculate_predictive_score(
-                    context, location=location_id
-                )
-            except Exception as _pred_e:
-                self.logger.warning(f"Predictive scorer failed, using defaults: {_pred_e}")
-                predictive_result = SimpleNamespace(
-                    closing_probability=0.3,
-                    overall_priority_score=30.0,
-                    priority_level=SimpleNamespace(value="medium"),
-                    net_yield_estimate=None,
-                    potential_margin=None,
-                )
-
-            try:
-                pricing_result = await self.pricing_optimizer.calculate_lead_price(
-                    contact_id, location_id, context
-                )
-            except Exception as _price_e:
-                self.logger.warning(f"Pricing optimizer failed, using defaults: {_price_e}")
-                pricing_result = SimpleNamespace(
-                    final_price=2.0,
-                    tier="warm",
-                    expected_roi=0.0,
-                    justification="service_unavailable",
-                )
-
-            # 5. Detect Psychographic Persona (Deep Behavioral Profiling)
-            try:
-                persona_data = await self.psychographic_engine.detect_persona(
-                    messages=context.get("conversation_history", []),
-                    lead_context={**extracted_seller_data, "contact_id": contact_id},
-                    tenant_id=location_id,
-                )
-            except Exception as _persona_e:
-                self.logger.warning(f"Psychographic engine failed, using empty persona: {_persona_e}")
-                persona_data = {}
-
-            # 5b. Swarm Intelligence (Parallel Analysis)
-            # Deploy the swarm to analyze the lead while we process other ML models
-            # Lazy import to avoid circular dependency
-            from ghl_real_estate_ai.agents.lead_intelligence_swarm import lead_intelligence_swarm
-
-            swarm_task = asyncio.create_task(
-                lead_intelligence_swarm.analyze_lead_comprehensive(
-                    contact_id, {**context, **extracted_seller_data, "persona": persona_data.get("primary_persona")}
-                )
-            )
-
-            # 5c. Detect Negotiation Drift (Tactical Behavioral Response)
-            # We await the swarm result specifically for NegotiationStrategistAgent (COMMUNICATION_OPTIMIZER)
-            try:
-                swarm_consensus = await swarm_task
-                optimizer_insight = next(
-                    (i for i in swarm_consensus.agent_insights if i.agent_type.value == "communication_optimizer"), None
-                )
-
-                if optimizer_insight:
-                    drift_data = optimizer_insight.metadata.get("drift", {})
-                    extracted_seller_data["drift_softening"] = drift_data.get("is_softening", False)
-                    extracted_seller_data["price_break_probability"] = drift_data.get("price_break_probability", 0.0)
-                    self.logger.info(
-                        f"🧠 Swarm-Driven Drift Detection: softening={extracted_seller_data['drift_softening']}"
-                    )
-                else:
-                    # Fallback to local tone engine if agent failed
+                    else:
+                        # Fallback to local tone engine if agent failed
+                        drift = self.tone_engine.detect_negotiation_drift(context.get("conversation_history", []))
+                        extracted_seller_data["drift_softening"] = drift.is_softening
+                        extracted_seller_data["price_break_probability"] = drift.price_break_probability
+                except Exception as se:
+                    self.logger.warning(f"Swarm analysis failed, falling back to local drift: {se}")
                     drift = self.tone_engine.detect_negotiation_drift(context.get("conversation_history", []))
                     extracted_seller_data["drift_softening"] = drift.is_softening
                     extracted_seller_data["price_break_probability"] = drift.price_break_probability
-            except Exception as se:
-                self.logger.warning(f"Swarm analysis failed, falling back to local drift: {se}")
-                drift = self.tone_engine.detect_negotiation_drift(context.get("conversation_history", []))
-                extracted_seller_data["drift_softening"] = drift.is_softening
-                extracted_seller_data["price_break_probability"] = drift.price_break_probability
 
-            # --- ADAPTIVE ESCALATION (Phase 7) ---
-            new_closing_prob = predictive_result.closing_probability
-            if (new_closing_prob - previous_closing_prob) > 0.30:
-                self.logger.info(
-                    f"🚀 ADAPTIVE ESCALATION for {contact_id}: Prob jumped {previous_closing_prob:.2f} -> {new_closing_prob:.2f}"
-                )
-                try:
-                    from ghl_real_estate_ai.services.vapi_service import VapiService
-
-                    vapi = VapiService()
-                    await vapi.trigger_outbound_call(
-                        contact_phone=extracted_seller_data.get("phone", ""),
-                        lead_name=contact_name,
-                        property_address=extracted_seller_data.get("property_address", "your property"),
-                        extra_variables={
-                            "escalation_type": "high_intent_jump",
-                            "prob_jump": new_closing_prob - previous_closing_prob,
-                            "auto_book": True,
-                            "persona": persona_data.get("primary_persona"),
-                        },
+                # --- ADAPTIVE ESCALATION (Phase 7) ---
+                new_closing_prob = predictive_result.closing_probability
+                if (new_closing_prob - previous_closing_prob) > 0.30:
+                    self.logger.info(
+                        f"🚀 ADAPTIVE ESCALATION for {contact_id}: Prob jumped {previous_closing_prob:.2f} -> {new_closing_prob:.2f}"
                     )
-                except Exception as ve:
-                    self.logger.warning(f"Adaptive escalation failed: {ve}")
-
-            # 6. Generate response based on temperature, progress, ML insights, and persona
-            try:
-                # Phase 7: Slot-Offer Scheduling for Hot Sellers
-                booking_message = ""
-                pending_appointment_data = None
-
-                if temperature == "hot" and not context.get("pending_appointment"):
                     try:
-                        from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, get_smart_scheduler
+                        from ghl_real_estate_ai.services.vapi_service import VapiService
 
-                        scheduler = get_smart_scheduler(self.ghl_client)
-
-                        available_slots = await scheduler.get_available_slots(
-                            appointment_type=AppointmentType.LISTING_APPOINTMENT, days_ahead=7
+                        vapi = VapiService()
+                        await vapi.trigger_outbound_call(
+                            contact_phone=extracted_seller_data.get("phone", ""),
+                            lead_name=contact_name,
+                            property_address=extracted_seller_data.get("property_address", "your property"),
+                            extra_variables={
+                                "escalation_type": "high_intent_jump",
+                                "prob_jump": new_closing_prob - previous_closing_prob,
+                                "auto_book": True,
+                                "persona": persona_data.get("primary_persona"),
+                            },
                         )
+                    except Exception as ve:
+                        self.logger.warning(f"Adaptive escalation failed: {ve}")
 
-                        if available_slots:
-                            options = []
-                            lines = []
-                            for i, slot in enumerate(available_slots[:3], 1):
-                                display = slot.format_for_lead()
-                                options.append(
-                                    {
-                                        "label": str(i),
-                                        "display": display,
-                                        "start_time": slot.start_time.isoformat(),
-                                        "end_time": slot.end_time.isoformat(),
-                                        "appointment_type": slot.appointment_type.value,
-                                    }
-                                )
-                                lines.append(f"{i}) {display}")
+                # 6. Generate response based on temperature, progress, ML insights, and persona
+                try:
+                    # Phase 7: Slot-Offer Scheduling for Hot Sellers
+                    booking_message = ""
+                    pending_appointment_data = None
 
-                            booking_message = "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n" + "\n".join(
-                                lines
+                    if temperature == "hot" and not context.get("pending_appointment"):
+                        try:
+                            from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, get_smart_scheduler
+
+                            scheduler = get_smart_scheduler(self.ghl_client)
+
+                            available_slots = await scheduler.get_available_slots(
+                                appointment_type=AppointmentType.LISTING_APPOINTMENT, days_ahead=7
                             )
 
-                            pending_appointment_data = {
-                                "status": "awaiting_selection",
-                                "options": options,
-                                "attempts": 0,
-                                "expires_at": (datetime.utcnow().isoformat()),
-                            }
-                    except Exception as cal_e:
-                        self.logger.warning(f"Calendar slot fetch failed, skipping slot offer: {cal_e}")
+                            if available_slots:
+                                options = []
+                                lines = []
+                                for i, slot in enumerate(available_slots[:3], 1):
+                                    display = slot.format_for_lead()
+                                    options.append(
+                                        {
+                                            "label": str(i),
+                                            "display": display,
+                                            "start_time": slot.start_time.isoformat(),
+                                            "end_time": slot.end_time.isoformat(),
+                                            "appointment_type": slot.appointment_type.value,
+                                        }
+                                    )
+                                    lines.append(f"{i}) {display}")
 
-                if booking_message:
-                    final_message = booking_message
-                else:
-                    response_result = await self._generate_seller_response(
-                        seller_data=extracted_seller_data,
-                        temperature=temperature,
-                        contact_id=contact_id,
-                        location_id=location_id,
-                        predictive_result=predictive_result,
-                        persona_data=persona_data,
-                        psychology_profile=psychology_profile,
+                                booking_message = "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n" + "\n".join(
+                                    lines
+                                )
+
+                                pending_appointment_data = {
+                                    "status": "awaiting_selection",
+                                    "options": options,
+                                    "attempts": 0,
+                                    "expires_at": (datetime.utcnow().isoformat()),
+                                }
+                        except Exception as cal_e:
+                            self.logger.warning(f"Calendar slot fetch failed, skipping slot offer: {cal_e}")
+
+                    if booking_message:
+                        final_message = booking_message
+                    else:
+                        response_result = await self._generate_seller_response(
+                            seller_data=extracted_seller_data,
+                            temperature=temperature,
+                            contact_id=contact_id,
+                            location_id=location_id,
+                            predictive_result=predictive_result,
+                            persona_data=persona_data,
+                            psychology_profile=psychology_profile,
+                        )
+                        final_message = response_result["message"]
+                except Exception as re:
+                    self.logger.error(f"Seller response generation failed, triggering RECOVERY: {re}")
+                    self.recovery.log_failure("seller_llm")
+                    final_message = self.recovery.get_safe_fallback(
+                        contact_name=contact_name,
+                        conversation_history=context.get("conversation_history", []),
+                        extracted_preferences=extracted_seller_data,
+                        is_seller=True,
                     )
-                    final_message = response_result["message"]
-            except Exception as re:
-                self.logger.error(f"Seller response generation failed, triggering RECOVERY: {re}")
-                self.recovery.log_failure("seller_llm")
-                final_message = self.recovery.get_safe_fallback(
-                    contact_name=contact_name,
-                    conversation_history=context.get("conversation_history", []),
-                    extracted_preferences=extracted_seller_data,
-                    is_seller=True,
-                )
 
-            # --- GOVERNANCE ENFORCEMENT (AGENT G1) ---
-            final_message = self.governance.enforce(final_message)
+                # --- GOVERNANCE ENFORCEMENT (AGENT G1) ---
+                final_message = self.governance.enforce(final_message)
 
-            # 7. Determine actions based on temperature and pricing ROI
-            actions = await self._create_seller_actions(
-                contact_id=contact_id,
-                location_id=location_id,
-                temperature=temperature,
-                seller_data=extracted_seller_data,
-                pricing_result=pricing_result,
-                persona_data=persona_data,
-            )
-
-            # 7. Update conversation context
-            await self.conversation_manager.update_context(
-                contact_id=contact_id,
-                user_message=user_message,
-                ai_response=final_message,
-                extracted_data=extracted_seller_data,
-                location_id=location_id,
-                seller_temperature=temperature,
-                predictive_score=predictive_result.overall_priority_score,
-                closing_probability=predictive_result.closing_probability,
-                persona=persona_data.get("primary_persona"),
-                persona_full=persona_data,
-            )
-
-            if pending_appointment_data:
-                context = await self.conversation_manager.get_context(contact_id, location_id)
-                context["pending_appointment"] = pending_appointment_data
-                await self.conversation_manager.memory_service.save_context(
-                    contact_id, context, location_id=location_id
-                )
-                await self._track_seller_interaction(
+                # 7. Determine actions based on temperature and pricing ROI
+                actions = await self._create_seller_actions(
                     contact_id=contact_id,
                     location_id=location_id,
-                    interaction_data={"appointment_slot_offer_sent": True},
+                    temperature=temperature,
+                    seller_data=extracted_seller_data,
+                    pricing_result=pricing_result,
+                    persona_data=persona_data,
                 )
 
-            # 8. Log analytics data including ROI insights
-            await self._track_seller_interaction(
-                contact_id=contact_id,
-                location_id=location_id,
-                interaction_data={
-                    "temperature": temperature,
-                    "questions_answered": extracted_seller_data.get("questions_answered", 0),
-                    "response_quality": extracted_seller_data.get("response_quality", 0.0),
-                    "message_length": len(final_message),
-                    "vague_streak": extracted_seller_data.get("vague_streak", 0),
-                    "closing_probability": predictive_result.closing_probability,
-                    "expected_roi": pricing_result.expected_roi,
-                    "final_price": pricing_result.final_price,
-                },
-            )
-
-            # P0 FIX: Extract handoff signals for cross-bot handoff detection
-            from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
-
-            handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
-
-            return {
-                "message": final_message,
-                "actions": actions,
-                "temperature": temperature,
-                "seller_data": extracted_seller_data,
-                "questions_answered": extracted_seller_data.get("questions_answered", 0),
-                "handoff_signals": handoff_signals,  # P0 FIX: Add handoff signals to return dict
-                "analytics": {
-                    **temperature_result["analytics"],
-                    "closing_probability": predictive_result.closing_probability,
-                    "expected_roi": pricing_result.expected_roi,
-                    "priority_level": predictive_result.priority_level.value,
-                },
-                "pricing": {
-                    "final_price": pricing_result.final_price,
-                    "tier": pricing_result.tier,
-                    "justification": pricing_result.justification,
-                },
-            }
-
-        except Exception as e:
-            self.logger.error(f"Critical error in process_seller_response: {str(e)}", exc_info=True)
-            # Last resort fallback — use whatever seller data we extracted before the crash
-            # so the recovery engine asks the RIGHT next question (not always question 1).
-            try:
-                _fallback_prefs = extracted_seller_data  # populated before ML services run
-            except NameError:
-                _fallback_prefs = {}
-            try:
-                _fallback_name = contact_name
-            except NameError:
-                _fallback_name = "there"
-            safe_msg = self.recovery.get_safe_fallback(_fallback_name, [], _fallback_prefs, is_seller=True)
-            # Persist whatever we have so the next turn isn't starting from scratch
-            try:
+                # 7. Update conversation context
                 await self.conversation_manager.update_context(
                     contact_id=contact_id,
                     user_message=user_message,
-                    ai_response=safe_msg,
-                    extracted_data=_fallback_prefs,
+                    ai_response=final_message,
+                    extracted_data=extracted_seller_data,
                     location_id=location_id,
-                    seller_temperature="cold",
+                    seller_temperature=temperature,
+                    predictive_score=predictive_result.overall_priority_score,
+                    closing_probability=predictive_result.closing_probability,
+                    persona=persona_data.get("primary_persona"),
+                    persona_full=persona_data,
                 )
-            except Exception:
-                pass  # Last resort — don't let history save failure crash the fallback
-            return {
-                "message": safe_msg,
-                "actions": [],
-                "temperature": "cold",
-                "error": str(e),
-                "handoff_signals": {},
-            }
+
+                if pending_appointment_data:
+                    context = await self.conversation_manager.get_context(contact_id, location_id)
+                    context["pending_appointment"] = pending_appointment_data
+                    await self.conversation_manager.memory_service.save_context(
+                        contact_id, context, location_id=location_id
+                    )
+                    await self._track_seller_interaction(
+                        contact_id=contact_id,
+                        location_id=location_id,
+                        interaction_data={"appointment_slot_offer_sent": True},
+                    )
+
+                # 8. Log analytics data including ROI insights
+                await self._track_seller_interaction(
+                    contact_id=contact_id,
+                    location_id=location_id,
+                    interaction_data={
+                        "temperature": temperature,
+                        "questions_answered": extracted_seller_data.get("questions_answered", 0),
+                        "response_quality": extracted_seller_data.get("response_quality", 0.0),
+                        "message_length": len(final_message),
+                        "vague_streak": extracted_seller_data.get("vague_streak", 0),
+                        "closing_probability": predictive_result.closing_probability,
+                        "expected_roi": pricing_result.expected_roi,
+                        "final_price": pricing_result.final_price,
+                    },
+                )
+
+                # P0 FIX: Extract handoff signals for cross-bot handoff detection
+                from ghl_real_estate_ai.services.jorge.jorge_handoff_service import JorgeHandoffService
+
+                handoff_signals = JorgeHandoffService.extract_intent_signals(user_message)
+
+                return {
+                    "message": final_message,
+                    "actions": actions,
+                    "temperature": temperature,
+                    "seller_data": extracted_seller_data,
+                    "questions_answered": extracted_seller_data.get("questions_answered", 0),
+                    "handoff_signals": handoff_signals,  # P0 FIX: Add handoff signals to return dict
+                    "analytics": {
+                        **temperature_result["analytics"],
+                        "closing_probability": predictive_result.closing_probability,
+                        "expected_roi": pricing_result.expected_roi,
+                        "priority_level": predictive_result.priority_level.value,
+                    },
+                    "pricing": {
+                        "final_price": pricing_result.final_price,
+                        "tier": pricing_result.tier,
+                        "justification": pricing_result.justification,
+                    },
+                }
+
+            except Exception as e:
+                self.logger.error(f"Critical error in process_seller_response: {str(e)}", exc_info=True)
+                # Last resort fallback — use whatever seller data we extracted before the crash
+                # so the recovery engine asks the RIGHT next question (not always question 1).
+                try:
+                    _fallback_prefs = extracted_seller_data  # populated before ML services run
+                except NameError:
+                    _fallback_prefs = {}
+                try:
+                    _fallback_name = contact_name
+                except NameError:
+                    _fallback_name = "there"
+                safe_msg = self.recovery.get_safe_fallback(_fallback_name, [], _fallback_prefs, is_seller=True)
+                # Persist whatever we have so the next turn isn't starting from scratch
+                try:
+                    await self.conversation_manager.update_context(
+                        contact_id=contact_id,
+                        user_message=user_message,
+                        ai_response=safe_msg,
+                        extracted_data=_fallback_prefs,
+                        location_id=location_id,
+                        seller_temperature="cold",
+                    )
+                except Exception:
+                    pass  # Last resort — don't let history save failure crash the fallback
+                return {
+                    "message": safe_msg,
+                    "actions": [],
+                    "temperature": "cold",
+                    "error": str(e),
+                    "handoff_signals": {},
+                }
 
     async def handle_vapi_booking(self, contact_id: str, location_id: str, booking_details: Dict[str, Any]) -> bool:
         """
@@ -627,6 +642,47 @@ class JorgeSellerEngine:
         except Exception as e:
             self.logger.error(f"❌ Error handling Vapi booking: {e}")
             return False
+
+    @staticmethod
+    def _extract_price_from_text(text: str) -> Optional[str]:
+        """Return a price string extracted from *text*, or None.
+
+        Tries three patterns in priority order so that timeline numbers like
+        "30-60 days" can never shadow an explicit price later in the sentence:
+
+          1. Explicit ``$`` prefix  — ``$580k``, ``$650,000``, ``$2.5m``
+          2. k/K/m/M suffix         — ``580k``, ``2.5m`` (no $ required)
+          3. Comma-formatted number — ``650,000`` (bare, no suffix)
+
+        Numbers ≤ $10,000 are rejected (implausible home prices).
+        """
+        # Pattern 1 — explicit dollar sign
+        m = re.search(r'\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*([kKmM]?)', text)
+        if m:
+            raw = re.sub(r'[,\s]', '', m.group(1))
+            suffix = m.group(2).lower()
+            mult = 1_000_000 if suffix == 'm' else (1_000 if suffix == 'k' else 1)
+            numeric = float(raw) * mult
+            if numeric > 10_000:
+                return m.group(1) + m.group(2) if m.group(2) else m.group(1)
+
+        # Pattern 2 — k/K/m/M suffix (no $ required)
+        m = re.search(r'\b(\d{1,3}(?:\.\d+)?)\s*([kKmM])\b', text)
+        if m:
+            suffix = m.group(2).lower()
+            mult = 1_000_000 if suffix == 'm' else 1_000
+            numeric = float(m.group(1)) * mult
+            if numeric > 10_000:
+                return m.group(1) + m.group(2)
+
+        # Pattern 3 — comma-formatted bare number (e.g. "650,000")
+        m = re.search(r'\b(\d{1,3}(?:,\d{3})+(?:\.\d+)?)\b', text)
+        if m:
+            raw = re.sub(r',', '', m.group(1))
+            if float(raw) > 10_000:
+                return m.group(1)
+
+        return None
 
     async def _extract_seller_data(
         self, user_message: str, current_seller_data: Dict, tenant_config: Dict, images: Optional[List[str]] = None
@@ -743,25 +799,22 @@ class JorgeSellerEngine:
                         elif re.search(r"\b(next year|no rush|not urgent|eventually|someday|not sure yet|exploring)\b", msg_lower):
                             extracted_data["timeline_acceptable"] = False
 
-            # 2. Price — handle "$750k", "750,000", "750 to 800 thousand", "800 thousand"
+            # 2. Price — handle "$580k", "$650,000", "750 to 800 thousand", "800 thousand"
             if not extracted_data.get("price_expectation"):
-                # "X to Y thousand" or "X thousand"
+                # "X to Y thousand" or "X thousand" (e.g. "620 thousand dollars")
                 thousand_match = re.search(
                     r"(\d+(?:\.\d+)?)\s*(?:to\s*\d+(?:\.\d+)?\s*)?thousand", msg_lower
                 )
                 if thousand_match:
                     extracted_data["price_expectation"] = f"{float(thousand_match.group(1)) * 1000:,.0f}"
                 else:
-                    price_match = re.search(
-                        r"\$?(\d{1,3}(?:,\d{3})*(?:\.\d+)?(?:k|K)?)", user_message
-                    )
-                    if price_match:
-                        raw = re.sub(r"[,$]", "", price_match.group(1))
-                        multiplier = 1000 if raw.lower().endswith("k") else 1
-                        numeric = float(re.sub(r"[kK]", "", raw) or 0) * multiplier
-                        if numeric > 10000:
-                            extracted_data["price_expectation"] = price_match.group(1)
-                    if not extracted_data.get("price_expectation"):
+                    # _extract_price_from_text tries $-prefix → k/m-suffix → comma-number
+                    # in priority order so timeline numbers ("30-60 days") can't shadow
+                    # an explicit price that appears later in the message.
+                    _price = JorgeSellerEngine._extract_price_from_text(user_message)
+                    if _price:
+                        extracted_data["price_expectation"] = _price
+                    else:
                         # Bare 3-digit price with REQUIRED context word: "around 680", "hoping for 650"
                         # Context word required to avoid false matches from zip codes / addresses
                         _ctx = re.search(
@@ -989,13 +1042,12 @@ class JorgeSellerEngine:
             if thousand_match:
                 extracted["price_expectation"] = f"{float(thousand_match.group(1)) * 1000:,.0f}"
             else:
-                price_match = re.search(r"\$?(\d{1,3}(?:,\d{3})*(?:\.\d+)?(?:k|K)?)", user_message)
-                if price_match:
-                    raw = re.sub(r"[,$]", "", price_match.group(1))
-                    multiplier = 1000 if raw.lower().endswith("k") else 1
-                    numeric = float(re.sub(r"[kK]", "", raw) or 0) * multiplier
-                    if numeric > 10000:
-                        extracted["price_expectation"] = price_match.group(1)
+                # _extract_price_from_text tries $-prefix → k/m-suffix → comma-number
+                # in priority order so timeline numbers ("30-60 days") never shadow
+                # an explicit price appearing later in the same message.
+                _price = JorgeSellerEngine._extract_price_from_text(user_message)
+                if _price:
+                    extracted["price_expectation"] = _price
 
         return extracted
 
