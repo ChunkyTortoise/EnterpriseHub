@@ -110,3 +110,9 @@ app.include_router(health.router, prefix="/api")
 
 # GHL webhook: POST /api/ghl/webhook → bot logic
 app.include_router(webhook.router, prefix="/api")
+
+# Bot smoke-test endpoints — no auth, no DB, no GHL creds needed
+# POST /test/seller  POST /test/buyer  DELETE /test/session/{id}  GET /test/sessions
+from ghl_real_estate_ai.api.routes.test_bots import router as test_bots_router
+
+app.include_router(test_bots_router)
