@@ -119,20 +119,20 @@ class AdaptiveQuestionEngine:
         """
         if simple_mode:
             return [
-                "What's got you considering wanting to sell, where would you move to?",
-                "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
-                "How would you describe your home, would you say it's move-in ready or would it need some work?",
-                "What price would incentivize you to sell?",
+                "What's making you think about selling, and where would you move to?",
+                "If our team sold your home within the next 30 to 45 days, would that work for you?",
+                "How would you describe your home — move in ready or would it need some work?",
+                "What price would make you feel good about selling?",
             ]
         else:
             return [
                 "What's the address of the property you're thinking about selling?",
-                "What's got you considering wanting to sell, where would you move to?",
-                "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
-                "How would you describe your home, would you say it's move-in ready or would it need some work?",
-                "What price would incentivize you to sell?",
+                "What's making you think about selling, and where would you move to?",
+                "If our team sold your home within the next 30 to 45 days, would that work for you?",
+                "How would you describe your home — move in ready or would it need some work?",
+                "What price would make you feel good about selling?",
                 "Do you have any existing mortgage or liens on the property?",
-                "Are there any repairs or improvements needed before listing?",
+                "Have you made any recent upgrades or improvements to the home?",
                 "Have you tried listing this property before?",
                 "Are you the primary decision-maker, or would anyone else need to be involved?",
                 "What's the best way to reach you - call, text, or email?",

@@ -223,7 +223,7 @@ class TestCleanMessages:
     @pytest.mark.asyncio
     async def test_qualification_question_passes(self, middleware):
         result = await middleware.enforce(
-            message="What price would incentivize you to sell?",
+            message="What price would make you feel good about selling?",
             contact_id="c52",
         )
         assert result.status == ComplianceStatus.PASSED

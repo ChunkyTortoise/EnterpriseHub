@@ -67,12 +67,12 @@ class SellerProfile:
     4. Price expectations
     """
 
-    # Question 1: What's got you considering wanting to sell, where would you move to?
+    # Question 1: What's making you think about selling, and where would you move to?
     motivation: Optional[MotivationType] = None
     motivation_details: Optional[str] = None  # Free-form details about motivation
     relocation_destination: Optional[str] = None  # Where they want to move
 
-    # Question 2: If our team sold your home within the next 30 to 45 days, would that pose a problem?
+    # Question 2: If our team sold your home within the next 30 to 45 days, would that work for you?
     timeline_urgency: Optional[TimelineUrgency] = None
     timeline_acceptable: Optional[bool] = None  # True if 30-45 days is okay
     timeline_details: Optional[str] = None  # Additional timeline info
@@ -82,7 +82,7 @@ class SellerProfile:
     repair_estimate: Optional[str] = None  # Estimated repair costs/needs
     condition_details: Optional[str] = None  # Additional condition info
 
-    # Question 4: What price would incentivize you to sell?
+    # Question 4: What price would make you feel good about selling?
     price_expectation: Optional[int] = None  # Dollar amount expected
     price_flexibility: Optional[PriceFlexibility] = None
     price_details: Optional[str] = None  # Additional price context

@@ -98,6 +98,13 @@ class ResponseGenerator:
                     "That's a great way to start. What caught your eye so far?",
                 ],
             },
+            "has_agent": {
+                "approach": "Respect the relationship, offer supplementary value",
+                "talking_points": [
+                    "Great that you have someone in your corner! If you ever want a second opinion on listings, I'm here.",
+                    "Nice! If your agent hasn't shown you anything in Rancho Cucamonga yet, I can send some picks.",
+                ],
+            },
         }
 
         strategy = objection_strategies.get(

@@ -96,7 +96,7 @@ def _load_test_patches(
         mock_seller_engine.process_seller_response = AsyncMock(
             return_value={
                 "temperature": "warm",
-                "message": "What price would incentivize you to sell?",
+                "message": "What price would make you feel good about selling?",
                 "questions_answered": 2,
                 "actions": [{"type": "add_tag", "tag": "Warm-Seller"}],
             }

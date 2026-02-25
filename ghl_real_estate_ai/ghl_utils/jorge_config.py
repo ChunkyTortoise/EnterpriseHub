@@ -183,12 +183,12 @@ class JorgeSellerConfig:
     # Can be configured via JORGE_SIMPLE_MODE to use 4-question flow
     SELLER_QUESTIONS_FULL = {
         1: "What's the address of the property you're thinking about selling?",
-        2: "What's got you considering wanting to sell, where would you move to?",
-        3: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
-        4: "How would you describe your home, would you say it's move-in ready or would it need some work?",
-        5: "What price would incentivize you to sell?",
+        2: "What's making you think about selling, and where would you move to?",
+        3: "If our team sold your home within the next 30 to 45 days, would that work for you?",
+        4: "How would you describe your home — move in ready or would it need some work?",
+        5: "What price would make you feel good about selling?",
         6: "Do you have any existing mortgage or liens on the property?",
-        7: "Are there any repairs or improvements needed before listing?",
+        7: "Have you made any recent upgrades or improvements to the home?",
         8: "Have you tried listing this property before?",
         9: "Are you the primary decision-maker, or would anyone else need to be involved?",
         10: "What's the best way to reach you - call, text, or email?",
@@ -272,7 +272,7 @@ class JorgeSellerConfig:
     HOT_SELLER_HANDOFF_MESSAGES = [
         "Great news! I'm connecting you with Jorge directly. He'll reach out shortly to go over everything.",
         "You're a great fit. Let me get Jorge on the line — he'll follow up with you soon.",
-        "Awesome, you answered everything! Jorge's going to love working with you. He'll be in touch shortly.",
+        "You're in great shape. Jorge will reach out to discuss next steps with you.",
     ]
 
     # ========== BUYER BOT SETTINGS ==========

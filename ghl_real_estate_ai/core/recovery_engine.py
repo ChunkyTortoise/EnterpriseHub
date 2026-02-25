@@ -56,13 +56,13 @@ class RecoveryEngine:
     def _get_seller_fallback(self, greeting: str, prefs: Dict[str, Any]) -> str:
         """Rule-based seller qualification flow fallback."""
         if not prefs.get("motivation"):
-            return f"{greeting}What's got you considering wanting to sell, where would you move to?"
+            return f"{greeting}What's making you think about selling, and where would you move to?"
         if prefs.get("timeline_acceptable") is None:
-            return f"{greeting}If our team sold your home within 30 to 45 days, would that pose a problem for you?"
+            return f"{greeting}If our team sold your home within the next 30 to 45 days, would that work for you?"
         if not prefs.get("property_condition"):
-            return f"{greeting}How would you describe your home, would you say it's move-in ready or would it need some work?"
+            return f"{greeting}How would you describe your home — move in ready or would it need some work?"
         if not prefs.get("price_expectation"):
-            return f"{greeting}What price would incentivize you to sell?"
+            return f"{greeting}What price would make you feel good about selling?"
 
         return f"{greeting}Thanks for those details. I'll have Jorge's team review this and get back to you. Are mornings or afternoons better for a call?"
 

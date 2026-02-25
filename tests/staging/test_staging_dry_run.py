@@ -558,7 +558,7 @@ class TestSellerBotFlow:
         # Mock the internal Claude call to avoid hitting the real API
         with patch.object(engine, "process_seller_response") as mock_process:
             mock_process.return_value = {
-                "message": "What's got you considering wanting to sell, where would you move to?",
+                "message": "What's making you think about selling, and where would you move to?",
                 "temperature": "cold",
                 "questions_answered": 0,
                 "actions": [
@@ -822,7 +822,7 @@ class TestWebhookResponseSchema:
         """Standard success response has correct structure."""
         response = GHLWebhookResponse(
             success=True,
-            message="What's got you considering wanting to sell?",
+            message="What's making you think about selling?",
             actions=[
                 GHLAction(type=ActionType.ADD_TAG, tag="Warm-Seller"),
                 GHLAction(
