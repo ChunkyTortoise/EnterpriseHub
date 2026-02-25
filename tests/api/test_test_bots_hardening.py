@@ -234,3 +234,69 @@ async def test_seller_temperature_floor(seller_data: dict, expected_temp: str) -
     assert result["temperature"] == expected_temp, (
         f"seller_data={seller_data} → expected {expected_temp!r}, got {result['temperature']!r}"
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# H-07: Post-close HOT re-engagement (F-10)
+# Once scheduling_step == "confirmed", Jorge must hand off rather than loop.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@_needs_engine
+@pytest.mark.asyncio
+async def test_post_confirm_returns_handoff_not_scheduling() -> None:
+    """After scheduling is confirmed, _generate_simple_response must return
+    post_confirm_handoff — not ask for a time or day again."""
+    from unittest.mock import MagicMock
+
+    engine = JorgeSellerEngine(
+        conversation_manager=MagicMock(),
+        ghl_client=MagicMock(),
+    )
+    seller_data = {
+        "motivation": "relocation",
+        "timeline_acceptable": True,
+        "property_condition": "Move-in Ready",
+        "price_expectation": "650k",
+        "questions_answered": 4,
+        "response_quality": 0.9,
+        "scheduling_step": "confirmed",
+        "last_user_message": "I changed my mind, what are next steps?",
+    }
+    result = await engine._generate_simple_response(seller_data, "hot", "test-contact-001")
+    assert result["response_type"] == "post_confirm_handoff", (
+        f"Expected post_confirm_handoff, got {result['response_type']!r}: {result['message']!r}"
+    )
+    # Must not contain scheduling prompts
+    msg_lower = result["message"].lower()
+    assert "morning" not in msg_lower, "Post-confirm response must not re-ask for time"
+    assert "afternoon" not in msg_lower
+    assert "what day" not in msg_lower
+
+
+@_needs_engine
+@pytest.mark.asyncio
+async def test_post_confirm_actions_include_ai_off_tag() -> None:
+    """_create_seller_actions must emit Human-Follow-Up-Needed + AI-Off when
+    scheduling_step == 'confirmed'."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    engine = JorgeSellerEngine(
+        conversation_manager=MagicMock(),
+        ghl_client=MagicMock(),
+    )
+    seller_data = {
+        "questions_answered": 4,
+        "scheduling_step": "confirmed",
+    }
+    actions = await engine._create_seller_actions(
+        contact_id="test-001",
+        location_id="test-loc",
+        temperature="hot",
+        seller_data=seller_data,
+    )
+    tag_names = [a.get("tag") for a in actions if a.get("type") == "add_tag"]
+    assert "Human-Follow-Up-Needed" in tag_names, (
+        f"Expected Human-Follow-Up-Needed tag, got: {tag_names}"
+    )
+    assert "AI-Off" in tag_names, f"Expected AI-Off tag, got: {tag_names}"
