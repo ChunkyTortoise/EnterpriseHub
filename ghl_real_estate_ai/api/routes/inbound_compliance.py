@@ -5,10 +5,11 @@ Pure functions — no FastAPI, no database, no async I/O.
 Imported by test_bots.py (router) AND by tests/api/test_test_bots_hardening.py
 so that unit tests never pull in the full application import graph.
 
-Covers three legally-required interception categories:
-  1. TCPA opt-out  — must suppress further messages
-  2. Fair Housing Act violations in user message — refuse and flag
-  3. CCPA data-deletion requests — acknowledge and suspend qualification
+Covers four interception categories:
+  1. TCPA opt-out        — must suppress further messages
+  2. Fair Housing Act    — refuse discriminatory seller requests
+  3. CCPA data-deletion  — acknowledge and suspend qualification
+  4. Bot-identity        — honest disclosure when sincerely asked (SB 1001 / CA)
 """
 
 from __future__ import annotations
@@ -36,6 +37,24 @@ _FAIR_HOUSING_PATTERNS: List[str] = [
     r"only\s+(?:sell|rent)\s+to\s+(?:white|black|asian|hispanic|jewish|christian|muslim|gay|straight|american)",
     r"(?:racist|discriminat)\w*",
 ]
+
+# ── Bot-identity (SB 1001) ────────────────────────────────────────────────────
+# California SB 1001: a bot may not deny being a bot when sincerely asked.
+# Pattern matches direct, sincere questions — not rhetorical or passing mentions.
+_BOT_IDENTITY_RE = re.compile(
+    r"\b("
+    r"are you (a )?(real |actual |human |live )?(person|human|agent|bot|ai|robot|chatbot|computer)|"
+    r"(is this|am i (talking|speaking|chatting) (to|with)) (a )?(real |actual |human |live )?(person|human|agent|bot|ai|robot)|"
+    r"(you|this).{0,15}(real person|actual human|a bot|an ai|automated|a robot)|"
+    r"(talk|speak|chat).{0,20}(human|real person|real agent|actual person)"
+    r")\b",
+    re.IGNORECASE,
+)
+
+_BOT_IDENTITY_RESPONSE = (
+    "Just to be upfront — I'm an AI assistant, not a human agent. "
+    "I'm here to help with your real estate questions. What can I do for you?"
+)
 
 # ── CCPA / right-to-deletion ──────────────────────────────────────────────────
 _CCPA_PATTERNS: List[str] = [
@@ -93,6 +112,10 @@ def check_inbound_compliance(message: str) -> Tuple[bool, str, List[Dict[str, An
                 "45 days. For immediate assistance, contact privacy@jorgerealty.com.",
                 [{"type": "add_tag", "tag": "CCPA-Deletion-Request"}],
             )
+
+    # 4. Bot-identity — SB 1001: must not deny being a bot when sincerely asked
+    if _BOT_IDENTITY_RE.search(message):
+        return (True, _BOT_IDENTITY_RESPONSE, [])
 
     return (False, "", [])
 
