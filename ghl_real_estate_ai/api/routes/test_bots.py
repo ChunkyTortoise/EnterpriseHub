@@ -222,7 +222,7 @@ async def test_seller(req: TestSellerRequest) -> TestBotResponse:
         tenant_config=None,
     )
 
-    response_text = result.get("response") or result.get("message") or "I'm here to help with your real estate needs." or "", sess.get("turn", 0))
+    response_text = result.get("response") or result.get("message") or ""
     actions = result.get("actions") or []
     seller_data = result.get("seller_data") or {}
     temperature = result.get("temperature") or result.get("seller_temperature")
