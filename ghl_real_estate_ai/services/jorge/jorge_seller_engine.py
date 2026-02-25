@@ -40,30 +40,27 @@ class SellerQuestions:
     """Jorge's 4 seller qualification questions in exact order"""
 
     # Question 1: Motivation & Relocation
-    MOTIVATION = "What's got you considering wanting to sell, where would you move to?"
+    MOTIVATION = "What's making you think about selling, and where would you move to?"
 
     # Question 2: Timeline Urgency (Critical for Jorge)
-    TIMELINE = "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?"
+    TIMELINE = "If our team sold your home within the next 30 to 45 days, would that work for you?"
 
     # Question 3: Property Condition Assessment
-    CONDITION = "How would you describe your home, would you say it's move-in ready or would it need some work?"
+    CONDITION = "How would you describe your home — move in ready or would it need some work?"
 
     # Question 4: Price Expectations
-    PRICE = "What price would incentivize you to sell?"
+    PRICE = "What price would make you feel good about selling?"
 
     # --- SPECIALIZED PERSONA QUESTIONS (Tactical Behavioral Response) ---
 
     # Investor Branch
-    INVESTOR_CAP_RATE = "What's your target cap rate for this asset, and are you looking to do a 1031 exchange?"
+    INVESTOR_CAP_RATE = "What's your target cap rate for this asset?"
+    INVESTOR_1031_EXCHANGE = "Are you looking to do a 1031 exchange?"
     INVESTOR_LIQUIDITY = "Are you looking for a quick cash exit or are you open to terms if the ROI is right?"
 
     # Loss Aversion Branch
-    LOSS_AVERSION_PLAN_B = (
-        "If the market shifts and inventory doubles next month, what's your plan B if the home doesn't sell?"
-    )
-    LOSS_AVERSION_RATE_RISK = (
-        "With rates being volatile, if your buying power drops 10% by waiting, does selling now become a necessity?"
-    )
+    LOSS_AVERSION_PLAN_B = "Have you thought about what you'd do if the market slows down? I can help you plan either way."
+    LOSS_AVERSION_RATE_RISK = "With rates shifting, have you considered how that might affect your buying side? Happy to run the numbers."
 
     @classmethod
     def get_question_order(cls) -> List[SellerQuestionType]:
@@ -1364,6 +1361,8 @@ class JorgeSellerEngine:
                     # Switch to investor-specific high-stakes question
                     message = SellerQuestions.INVESTOR_CAP_RATE
                     if seller_data.get("investor_q1_answered"):
+                        message = SellerQuestions.INVESTOR_1031_EXCHANGE
+                    if seller_data.get("investor_q2_answered"):
                         message = SellerQuestions.INVESTOR_LIQUIDITY
 
                     # Keep investor branch direct but non-confrontational.
@@ -1652,12 +1651,23 @@ class JorgeSellerEngine:
         # Update custom fields with seller data
         # Use centralized config to map to correct GHL Field IDs
 
-        # Price
-        if seller_data.get("price_expectation"):
-            field_id = JorgeSellerConfig.get_ghl_custom_field_id("price_expectation") or "price_expectation"
+        # Property Address (must be written so GHL workflows can build links)
+        if seller_data.get("property_address"):
+            field_id = JorgeSellerConfig.get_ghl_custom_field_id("property_address") or "property_address"
             actions.append(
-                {"type": "update_custom_field", "field": field_id, "value": str(seller_data["price_expectation"])}
+                {"type": "update_custom_field", "field": field_id, "value": seller_data["property_address"]}
             )
+
+        # Motivation
+        if seller_data.get("motivation"):
+            field_id = JorgeSellerConfig.get_ghl_custom_field_id("seller_motivation") or "seller_motivation"
+            actions.append({"type": "update_custom_field", "field": field_id, "value": seller_data["motivation"]})
+
+        # Timeline
+        if seller_data.get("timeline_acceptable") is not None:
+            field_id = JorgeSellerConfig.get_ghl_custom_field_id("timeline_urgency") or "timeline_urgency"
+            val = "30-45 Days Accepted" if seller_data["timeline_acceptable"] else "Timeline Conflict"
+            actions.append({"type": "update_custom_field", "field": field_id, "value": val})
 
         # Condition
         if seller_data.get("property_condition"):
@@ -1666,16 +1676,12 @@ class JorgeSellerEngine:
                 {"type": "update_custom_field", "field": field_id, "value": seller_data["property_condition"]}
             )
 
-        # Motivation
-        if seller_data.get("motivation"):
-            field_id = JorgeSellerConfig.get_ghl_custom_field_id("seller_motivation") or "motivation"
-            actions.append({"type": "update_custom_field", "field": field_id, "value": seller_data["motivation"]})
-
-        # Timeline
-        if seller_data.get("timeline_acceptable") is not None:
-            field_id = JorgeSellerConfig.get_ghl_custom_field_id("timeline_urgency") or "timeline_acceptable"
-            val = "30-45 Days Accepted" if seller_data["timeline_acceptable"] else "Timeline Conflict"
-            actions.append({"type": "update_custom_field", "field": field_id, "value": val})
+        # Price
+        if seller_data.get("price_expectation"):
+            field_id = JorgeSellerConfig.get_ghl_custom_field_id("price_expectation") or "price_expectation"
+            actions.append(
+                {"type": "update_custom_field", "field": field_id, "value": str(seller_data["price_expectation"])}
+            )
 
         # Offer pathway (wholesale vs. listing) — derived, no extra question needed
         offer_type = JorgeSellerConfig.classify_offer_type(
