@@ -1,7 +1,6 @@
 """SMS-safe truncation and carrier spam guard stage.
 
 Truncates messages at sentence boundaries to stay within SMS character limits.
-Preserves AI disclosure footer (SB 243) if present.
 Post-truncation: sanitizes carrier spam triggers (excessive caps, spam words,
 URL shorteners) to improve deliverability.
 """
@@ -20,10 +19,6 @@ logger = logging.getLogger(__name__)
 
 SMS_MAX_CHARS = 320
 SENTENCE_SEPARATORS = (". ", "! ", "? ")
-KNOWN_FOOTERS: tuple = (
-    "\n[AI-assisted message]",
-    "\n[Mensaje asistido por IA]",
-)
 
 # Carrier AI filter trigger words (case-insensitive all-caps versions get flagged)
 SPAM_TRIGGER_WORDS = [
@@ -114,9 +109,6 @@ def _check_url_shorteners(text: str) -> list[str]:
 class SMSTruncationProcessor(ResponseProcessorStage):
     """Truncates messages exceeding SMS_MAX_CHARS at sentence boundaries.
 
-    Preserves AI disclosure footers by stripping them before truncation
-    and re-appending after, ensuring SB 243 compliance is never broken.
-
     Post-truncation, applies carrier spam guard:
     - Lowercases spam trigger words (FREE, URGENT, etc.)
     - Converts excessive caps (>30% uppercase) to sentence case
@@ -143,27 +135,13 @@ class SMSTruncationProcessor(ResponseProcessorStage):
 
         # --- Truncation ---
         if len(response.message) > self._max_chars:
-            # Detect and preserve disclosure footer
-            footer = ""
-            content = response.message
-            for known_footer in KNOWN_FOOTERS:
-                if content.endswith(known_footer):
-                    footer = known_footer
-                    content = content[: -len(known_footer)]
+            truncated = response.message[: self._max_chars]
+            for sep in SENTENCE_SEPARATORS:
+                idx = truncated.rfind(sep)
+                if idx > self._max_chars // 2:
+                    truncated = truncated[: idx + 1]
                     break
-
-            # Truncate content portion only, reserving space for footer
-            content_limit = self._max_chars - len(footer)
-            if len(content) > content_limit:
-                truncated = content[:content_limit]
-                for sep in SENTENCE_SEPARATORS:
-                    idx = truncated.rfind(sep)
-                    if idx > content_limit // 2:
-                        truncated = truncated[: idx + 1]
-                        break
-                content = truncated.rstrip()
-
-            response.message = content + footer
+            response.message = truncated.rstrip()
             modified = True
 
             logger.debug(

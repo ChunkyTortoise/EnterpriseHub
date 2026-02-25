@@ -198,14 +198,7 @@ def _get_mls_client() -> MLSClient:
 
 # Safe wrappers for background tasks to prevent silent delivery failures
 async def safe_send_message(ghl_client, contact_id: str, message: str, channel=None):
-    """Wrapper for send_message that handles errors and tags contact on failure.
-
-    SB 243 last-resort: appends [AI-assisted message] footer if not already present.
-    This ensures compliance regardless of which code path assembled the message.
-    """
-    # SB 243 compliance: every outbound AI SMS must carry the disclosure footer
-    if "[AI-assisted message]" not in message and "[Mensaje asistido por IA]" not in message:
-        message = message + "\n[AI-assisted message]"
+    """Wrapper for send_message that handles errors and tags contact on failure."""
     try:
         await ghl_client.send_message(contact_id, message, channel=channel)
     except Exception as e:
@@ -895,10 +888,6 @@ async def handle_ghl_webhook(
                 final_seller_msg = "Let's stick to the facts about your property. What price are you looking to get?"
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
-            # SB 243 footer only — never proactively disclose AI identity
-            if "[AI-assisted message]" not in final_seller_msg:
-                final_seller_msg += "\n[AI-assisted message]"
-
             # --- CROSS-BOT HANDOFF CHECK ---
             if seller_result.get("handoff_signals"):
                 handoff = await handoff_service.evaluate_handoff_from_profile(
@@ -1155,9 +1144,6 @@ async def handle_ghl_webhook(
                 )
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
-            # SB 243 footer only — never proactively disclose AI identity
-            if "[AI-assisted message]" not in final_buyer_msg:
-                final_buyer_msg += "\n[AI-assisted message]"
 
             # --- CROSS-BOT HANDOFF CHECK ---
             if buyer_result.get("handoff_signals"):
@@ -1422,9 +1408,6 @@ async def handle_ghl_webhook(
                     final_lead_msg = "Thanks for reaching out! How can I help you today?"
                     actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
-                # SB 243 footer only — never proactively disclose AI identity
-                if "[AI-assisted message]" not in final_lead_msg:
-                    final_lead_msg += "\n[AI-assisted message]"
 
                 # --- CROSS-BOT HANDOFF CHECK ---
                 if handoff_signals:
