@@ -658,11 +658,11 @@ class JorgeSellerEngine:
 
             # 0a. Property address — detect "123 Main St" / "456 Oak Ave, City" patterns
             # Discard LLM-extracted address that doesn't look like a real street address
-        existing_addr = extracted_data.get("property_address", "")
-        if existing_addr and not re.search(r'\b\d{2,6}\s+[A-Za-z]', existing_addr):
-            extracted_data.pop("property_address", None)
+            existing_addr = extracted_data.get("property_address", "")
+            if existing_addr and not re.search(r'\b\d{2,6}\s+[A-Za-z]', existing_addr):
+                extracted_data.pop("property_address", None)
 
-        if not extracted_data.get("property_address"):
+            if not extracted_data.get("property_address"):
                 addr_match = re.search(
                     r'\b\d{2,6}\s+[A-Za-z]{2,}[\s\w]*(?:St|Ave|Blvd|Dr|Rd|Ln|Way|Ct|Pl|Cir|Pkwy|Hwy)\b',
                     user_message, re.I
