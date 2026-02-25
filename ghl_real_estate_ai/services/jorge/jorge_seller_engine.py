@@ -1557,10 +1557,16 @@ class JorgeSellerEngine:
             if tag != current_tag:
                 actions.append({"type": "remove_tag", "tag": tag})
 
+        # Write qualification progress to GHL so Jorge can see how far the seller got
+        q_count = seller_data.get("questions_answered", 0)
+        q_field = JorgeSellerConfig.get_ghl_custom_field_id("questions_answered") or "questions_answered"
+        actions.append({"type": "update_custom_field", "field": q_field, "value": f"{q_count}/4"})
+
         # Hot seller actions
         if temperature == "hot":
-            # Remove qualification tag
+            # Remove qualification tag and mark as fully qualified
             actions.append({"type": "remove_tag", "tag": "Needs Qualifying"})
+            actions.append({"type": "add_tag", "tag": "Seller-Qualified"})
 
             # Trigger agent notification workflow
             hot_workflow_id = JorgeSellerConfig.get_workflow_id("hot")

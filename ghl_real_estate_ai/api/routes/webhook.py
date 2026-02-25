@@ -14,6 +14,7 @@ Flow:
 8. Send response back to GHL
 """
 
+import os
 import random
 import re
 from datetime import datetime
@@ -1094,6 +1095,32 @@ async def handle_ghl_webhook(
             if buyer_result.get("is_qualified") or buyer_temp in ("warm", "hot"):
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Buyer-Qualified"))
 
+            # --- BUYER CUSTOM FIELD SYNC ---
+            # Write qualifying data to GHL contact record so Jorge can see buyer details
+            _budget_range = buyer_result.get("budget_range")
+            if _budget_range and settings.custom_field_budget:
+                if isinstance(_budget_range, dict):
+                    _budget_val = _budget_range.get("budget_max") or _budget_range.get("max", "")
+                    if _budget_val:
+                        actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=settings.custom_field_budget, value=str(_budget_val)))
+                elif isinstance(_budget_range, str) and _budget_range:
+                    actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=settings.custom_field_budget, value=_budget_range))
+
+            _buyer_temp_field = os.getenv("CUSTOM_FIELD_BUYER_TEMPERATURE")
+            if _buyer_temp_field and buyer_temp in ("hot", "warm", "cold"):
+                actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=_buyer_temp_field, value=buyer_temp))
+
+            _pre_approval_field = os.getenv("CUSTOM_FIELD_PRE_APPROVAL_STATUS")
+            if _pre_approval_field and _pre_approved:
+                actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=_pre_approval_field, value="pre-approved"))
+
+            _prefs_field = os.getenv("CUSTOM_FIELD_PROPERTY_PREFERENCES")
+            if _prefs_field:
+                _prefs = buyer_result.get("property_preferences") or buyer_result.get("extracted_preferences") or {}
+                if isinstance(_prefs, dict) and _prefs:
+                    _prefs_str = "; ".join(f"{k}: {v}" for k, v in _prefs.items())[:200]
+                    actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=_prefs_field, value=_prefs_str))
+
             if buyer_temp == "hot" and jorge_settings.hot_buyer_workflow_id:
                 actions.append(
                     GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=jorge_settings.hot_buyer_workflow_id)
@@ -1360,6 +1387,16 @@ async def handle_ghl_webhook(
                 is_qualified = lead_result.get("engagement_status") == "qualified"
                 if is_qualified:
                     actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Lead-Qualified"))
+
+                # --- LEAD CUSTOM FIELD SYNC ---
+                # Write lead score so Jorge can filter/sort contacts in GHL
+                if settings.custom_field_lead_score:
+                    _lead_score_val = lead_result.get("lead_score", 0)
+                    actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=settings.custom_field_lead_score, value=_lead_score_val))
+                # Write nurture sequence day so Jorge can see where in follow-up each lead is
+                _seq_day_field = os.getenv("CUSTOM_FIELD_LEAD_SEQUENCE_DAY")
+                if _seq_day_field:
+                    actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=_seq_day_field, value=str(sequence_day)))
 
                 # Check for Jorge handoff signals
                 handoff_triggered = False
