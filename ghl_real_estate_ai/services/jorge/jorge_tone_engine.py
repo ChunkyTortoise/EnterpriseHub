@@ -613,7 +613,7 @@ class JorgeToneEngine:
         followups = {
             1: "I need to know what's motivating you to sell and where you're moving.",
             2: "The timeline question is important. Would 30 to 45 days work or not?",
-            3: "I need to know the condition of your home. Move in ready or needs work?",
+            3: "Just to make sure I capture this right — how would you describe the overall condition of the property?",
             4: "What price would get you to sell? Give me a number.",
         }
 
@@ -629,7 +629,7 @@ class JorgeToneEngine:
             push_for_specifics = {
                 1: "I need specifics. What exactly is driving you to sell and where are you moving to?",
                 2: "Yes or no: would selling in 30 to 45 days work for your situation?",
-                3: "Be specific about your home condition. What exactly needs to be done?",
+                3: "Got it! Would you say it's in great shape, needs some work, or somewhere in between?",
                 4: "I need a dollar amount. What price would make you sell today?",
             }
             return push_for_specifics.get(question_number, "I need a specific answer, not maybe.")
