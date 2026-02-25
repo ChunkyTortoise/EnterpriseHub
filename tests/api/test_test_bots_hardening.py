@@ -507,3 +507,106 @@ async def test_objection_exhaustion_actions_emit_ai_off_and_human_follow_up() ->
     assert "Human-Follow-Up-Needed" in tag_names, f"Missing tag, got: {tag_names}"
     assert "AI-Off" in tag_names, f"Missing AI-Off tag, got: {tag_names}"
     assert "Objection-Exhausted" in tag_names, f"Missing Objection-Exhausted tag, got: {tag_names}"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# F-13: Language mirroring — Spanish input → Spanish qualification questions
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _make_pipeline_context(user_message: str, detected_language: str = "en", confidence: float = 0.95):
+    """Helper: build a minimal ProcessingContext for translation stage tests."""
+    from ghl_real_estate_ai.services.jorge.response_pipeline.models import ProcessingContext
+    ctx = ProcessingContext(
+        contact_id="test-f13",
+        user_message=user_message,
+        bot_mode="seller",
+    )
+    ctx.detected_language = detected_language
+    ctx.metadata["language_detection"] = {"language": detected_language, "confidence": confidence}
+    return ctx
+
+
+@pytest.mark.asyncio
+async def test_spanish_q1_translated() -> None:
+    """Q1 English → Spanish when detected_language='es'."""
+    from ghl_real_estate_ai.services.jorge.response_pipeline.models import ProcessedResponse
+    from ghl_real_estate_ai.services.jorge.response_pipeline.stages.response_translation import (
+        ResponseTranslationProcessor,
+    )
+
+    stage = ResponseTranslationProcessor()
+    _msg = "What's making you think about selling, and where do you move to?"
+    resp = ProcessedResponse(message=_msg, original_message=_msg)
+    ctx = _make_pipeline_context("Quiero vender mi casa", detected_language="es")
+    result = await stage.process(resp, ctx)
+    assert "vender" in result.message.lower() or "¿" in result.message, (
+        f"Expected Spanish Q1, got: {result.message!r}"
+    )
+    assert "What" not in result.message, f"English still present: {result.message!r}"
+
+
+@pytest.mark.asyncio
+async def test_spanish_q4_translated() -> None:
+    """Q4 (price) English → Spanish when user writes in Spanish."""
+    from ghl_real_estate_ai.services.jorge.response_pipeline.models import ProcessedResponse
+    from ghl_real_estate_ai.services.jorge.response_pipeline.stages.response_translation import (
+        ResponseTranslationProcessor,
+    )
+
+    stage = ResponseTranslationProcessor()
+    _msg = "What price would make you feel good about selling?"
+    resp = ProcessedResponse(message=_msg, original_message=_msg)
+    ctx = _make_pipeline_context("estoy interesado en vender", detected_language="es")
+    result = await stage.process(resp, ctx)
+    assert "precio" in result.message.lower(), f"Expected Spanish Q4, got: {result.message!r}"
+
+
+@pytest.mark.asyncio
+async def test_english_message_not_translated() -> None:
+    """English messages must pass through unchanged."""
+    from ghl_real_estate_ai.services.jorge.response_pipeline.models import ProcessedResponse
+    from ghl_real_estate_ai.services.jorge.response_pipeline.stages.response_translation import (
+        ResponseTranslationProcessor,
+    )
+
+    stage = ResponseTranslationProcessor()
+    original = "What price would make you feel good about selling?"
+    resp = ProcessedResponse(message=original, original_message=original)
+    ctx = _make_pipeline_context("I want to sell", detected_language="en")
+    result = await stage.process(resp, ctx)
+    assert result.message == original, f"English message must not change: {result.message!r}"
+
+
+@pytest.mark.asyncio
+async def test_low_confidence_detection_not_translated() -> None:
+    """If language detection confidence < 0.65, do not translate."""
+    from ghl_real_estate_ai.services.jorge.response_pipeline.models import ProcessedResponse
+    from ghl_real_estate_ai.services.jorge.response_pipeline.stages.response_translation import (
+        ResponseTranslationProcessor,
+    )
+
+    stage = ResponseTranslationProcessor()
+    original = "What price would make you feel good about selling?"
+    resp = ProcessedResponse(message=original, original_message=original)
+    ctx = _make_pipeline_context("ok", detected_language="es", confidence=0.40)
+    result = await stage.process(resp, ctx)
+    assert result.message == original, (
+        f"Low-confidence detection must not translate: {result.message!r}"
+    )
+
+
+@pytest.mark.asyncio
+async def test_response_translation_stage_in_default_pipeline() -> None:
+    """response_translation must appear in the default pipeline."""
+    from ghl_real_estate_ai.services.jorge.response_pipeline.factory import create_default_pipeline
+
+    pipeline = create_default_pipeline()
+    stage_names = [s.name for s in pipeline.stages]
+    assert "response_translation" in stage_names, (
+        f"response_translation stage missing from pipeline: {stage_names}"
+    )
+    # Must come after language_mirror (which sets detected_language)
+    assert stage_names.index("language_mirror") < stage_names.index("response_translation"), (
+        "language_mirror must run before response_translation"
+    )

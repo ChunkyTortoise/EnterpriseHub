@@ -15,6 +15,9 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.stages.conversation_rep
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror import (
     LanguageMirrorProcessor,
 )
+from ghl_real_estate_ai.services.jorge.response_pipeline.stages.response_translation import (
+    ResponseTranslationProcessor,
+)
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.sms_truncation import (
     SMSTruncationProcessor,
 )
@@ -27,12 +30,13 @@ def create_default_pipeline() -> ResponsePostProcessor:
     """Create the standard pipeline with all stages in correct order.
 
     Order:
-        1. LanguageMirrorProcessor  — detect language, set context
-        2. TCPAOptOutProcessor      — can short-circuit on "stop"/"unsubscribe"
-        3. ConversationRepairProcessor (optional; env-gated)
-        4. ComplianceCheckProcessor  — FHA/RESPA enforcement
-        5. AIDisclosureProcessor     — SB 243 AI disclosure footer
-        6. SMSTruncationProcessor    — 320 char limit for SMS
+        1. LanguageMirrorProcessor       — detect language, set context
+        2. TCPAOptOutProcessor           — can short-circuit on "stop"/"unsubscribe"
+        3. ConversationRepairProcessor   (optional; env-gated)
+        4. ComplianceCheckProcessor      — FHA/RESPA enforcement
+        5. AIDisclosureProcessor         — SB 243 AI disclosure footer
+        6. ResponseTranslationProcessor  — mirror user language (es, …)
+        7. SMSTruncationProcessor        — 320 char limit for SMS
     """
     repair_enabled = os.getenv("CONVERSATION_REPAIR_ENABLED", "false").lower() in {
         "1",
@@ -57,6 +61,10 @@ def create_default_pipeline() -> ResponsePostProcessor:
     stages.append(ComplianceCheckProcessor())
     if disclosure_enabled:
         stages.append(AIDisclosureProcessor())
+    # F-13 FIX: Translate fixed qualification / scheduling / handoff messages
+    # to match the user's detected language.  Runs after AI disclosure so the
+    # disclosure footer is also translated in a future iteration.
+    stages.append(ResponseTranslationProcessor())
     stages.append(SMSTruncationProcessor())
 
     return ResponsePostProcessor(stages=stages)
