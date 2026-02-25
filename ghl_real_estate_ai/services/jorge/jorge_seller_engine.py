@@ -641,6 +641,15 @@ class JorgeSellerEngine:
                 images=images,
             )
 
+            # --- Q-ORDER GATE ---
+            # If motivation wasn't answered before this turn, strip any timeline extraction
+            # so Q2 is not skipped when the motivation answer incidentally mentions months
+            # (e.g. "relocating, need to sell within 3 months").  Both the LLM and regex
+            # paths can produce timeline_acceptable — this gate neutralises both.
+            if current_seller_data.get("motivation") is None:
+                extracted_data.pop("timeline_acceptable", None)
+                extracted_data.pop("timeline_urgency", None)
+
             # --- LOCAL REGEX ENHANCEMENT (Pillar 1: NLP Optimization) ---
             # Fallback/Validation if ConversationManager missed it
             import re
