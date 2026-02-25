@@ -683,7 +683,15 @@ class JorgeSellerEngine:
                     extracted_data["motivation"] = "downsizing"
                 elif re.search(r"divorce|separat|split up", msg_lower):
                     extracted_data["motivation"] = "divorce"
-                elif re.search(r"inherited|inherit|estate|passed away|died|probate", msg_lower):
+                elif re.search(r"inherited|inherit|passed away|died|probate", msg_lower) or re.search(
+                    # "estate" only triggers when there is a clear possessive or sale
+                    # context. Excluded cases: "real estate", "estate agent", and
+                    # legal phrases like "counsel for the estate" (bare "the estate"
+                    # removed — too ambiguous). "selling the estate" is still caught by
+                    # the selling verb pattern below.
+                    r"(?:(?:my|family|parent[s']?|father[s']?|mother[s']?)\s+estate|estate\s+sale|selling\s+(?:the|my|an?\s+)?estate)",
+                    msg_lower,
+                ):
                     extracted_data["motivation"] = "inherited"
                 elif re.search(r"financial|need(?: the)? money|debt|foreclosure|behind on|afford", msg_lower):
                     extracted_data["motivation"] = "financial"
@@ -921,7 +929,10 @@ class JorgeSellerEngine:
                 extracted["motivation"] = "downsizing"
             elif re.search(r"divorce|separat|split up", msg_lower):
                 extracted["motivation"] = "divorce"
-            elif re.search(r"inherited|inherit|estate|passed away|died|probate", msg_lower):
+            elif re.search(r"inherited|inherit|passed away|died|probate", msg_lower) or re.search(
+                r"(?:(?:my|family|parent[s']?|father[s']?|mother[s']?)\s+estate|estate\s+sale|selling\s+(?:the|my|an?\s+)?estate)",
+                msg_lower,
+            ):
                 extracted["motivation"] = "inherited"
             elif re.search(r"financial|need(?: the)? money|debt|foreclosure|behind on|afford", msg_lower):
                 extracted["motivation"] = "financial"
@@ -1007,8 +1018,16 @@ class JorgeSellerEngine:
         # Jorge's Hot seller criteria: all questions answered + timeline accepted
         # Once fully qualified (4/4 + timeline=True), don't downgrade on follow-up
         # message quality — quality scoring only matters during qualification phase
+        #
+        # H-01 HARDENING: explicit qa floor — hot requires ALL 4 fields answered.
+        # Prevents phantom HOT escalation from first-turn price mentions, JSON
+        # injection, or "estate"/"valuation" keyword false-positives in extraction.
+        # Even if config.HOT_QUESTIONS_REQUIRED is lowered, the absolute floor
+        # of 4 ensures the state machine can never skip qualification entirely.
+        _HOT_QA_FLOOR = 4
         if (
             questions_answered >= hot_questions
+            and questions_answered >= _HOT_QA_FLOOR   # absolute floor
             and timeline_acceptable is True  # Must accept 30-45 day timeline
         ):
             temperature = "hot"
