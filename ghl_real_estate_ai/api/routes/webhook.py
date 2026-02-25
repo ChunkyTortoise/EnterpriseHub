@@ -52,11 +52,51 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import Processin
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
 from ghl_real_estate_ai.services.mls_client import MLSClient
+from ghl_real_estate_ai.models.lead_scoring import (
+    ConditionRealism,
+    FinancialReadinessScore,
+    LeadIntentProfile,
+    MotivationSignals,
+    PriceResponsiveness,
+    PsychologicalCommitmentScore,
+    TimelineCommitment,
+)
 from ghl_real_estate_ai.services.security_framework import verify_webhook
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
 from ghl_real_estate_ai.services.tenant_service import TenantService
 
 logger = get_logger(__name__)
+
+
+def _signals_to_handoff_profile(contact_id: str, signals: dict) -> LeadIntentProfile:
+    """Build a minimal LeadIntentProfile for handoff routing from raw intent signals.
+
+    FRS/PCS are set to neutral values — only buyer/seller_intent_confidence matters
+    for evaluate_handoff_from_profile() routing logic.
+    """
+    return LeadIntentProfile(
+        lead_id=contact_id,
+        frs=FinancialReadinessScore(
+            total_score=50.0,
+            motivation=MotivationSignals(score=50, category="Mixed Intent"),
+            timeline=TimelineCommitment(score=50, category="Flexible"),
+            condition=ConditionRealism(score=50, category="Negotiable"),
+            price=PriceResponsiveness(score=50, category="Price-Flexible"),
+            classification="Warm",
+        ),
+        pcs=PsychologicalCommitmentScore(
+            total_score=50.0,
+            response_velocity_score=50,
+            message_length_score=50,
+            question_depth_score=50,
+            objection_handling_score=50,
+            call_acceptance_score=50,
+        ),
+        next_best_action="Continue qualification",
+        buyer_intent_confidence=signals.get("buyer_intent_score", 0.0),
+        seller_intent_confidence=signals.get("seller_intent_score", 0.0),
+        detected_intent_phrases=signals.get("detected_intent_phrases", []),
+    )
 
 SMS_MAX_CHARS = 320
 router = APIRouter(prefix="/ghl", tags=["ghl"])
@@ -863,11 +903,11 @@ async def handle_ghl_webhook(
 
             # --- CROSS-BOT HANDOFF CHECK ---
             if seller_result.get("handoff_signals"):
-                handoff = await handoff_service.evaluate_handoff(
+                handoff = await handoff_service.evaluate_handoff_from_profile(
                     current_bot="seller",
                     contact_id=contact_id,
                     conversation_history=[],
-                    intent_signals=seller_result["handoff_signals"],
+                    intent_profile=_signals_to_handoff_profile(contact_id, seller_result["handoff_signals"]),
                 )
                 if handoff:
                     handoff_actions = await handoff_service.execute_handoff(
@@ -1121,11 +1161,11 @@ async def handle_ghl_webhook(
 
             # --- CROSS-BOT HANDOFF CHECK ---
             if buyer_result.get("handoff_signals"):
-                handoff = await handoff_service.evaluate_handoff(
+                handoff = await handoff_service.evaluate_handoff_from_profile(
                     current_bot="buyer",
                     contact_id=contact_id,
                     conversation_history=conversation_history,
-                    intent_signals=buyer_result["handoff_signals"],
+                    intent_profile=_signals_to_handoff_profile(contact_id, buyer_result["handoff_signals"]),
                 )
                 if handoff:
                     handoff_actions = await handoff_service.execute_handoff(
@@ -1386,11 +1426,11 @@ async def handle_ghl_webhook(
                 # --- CROSS-BOT HANDOFF CHECK ---
                 if handoff_signals:
                     actual_intent_signals = JorgeHandoffService.extract_intent_signals(user_message)
-                    handoff = await handoff_service.evaluate_handoff(
+                    handoff = await handoff_service.evaluate_handoff_from_profile(
                         current_bot="lead",
                         contact_id=contact_id,
                         conversation_history=conversation_history,
-                        intent_signals=actual_intent_signals,
+                        intent_profile=_signals_to_handoff_profile(contact_id, actual_intent_signals),
                     )
                     if handoff:
                         handoff_actions = await handoff_service.execute_handoff(

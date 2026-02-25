@@ -77,3 +77,10 @@ tmp_rovodev_*
 
 # Directories that shadow Python stdlib modules (cause circular import at startup)
 platform/
+
+# Runtime data — generated at startup, not baked into image (keeps cold-start fast)
+data/
+reports/
+benchmarks/
+examples/
+stubs/
