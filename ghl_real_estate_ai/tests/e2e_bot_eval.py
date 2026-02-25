@@ -213,12 +213,14 @@ def _assert_sb243(resp: dict, test_name: str) -> bool:
 
 def _assert_sb1001(resp: dict, test_name: str) -> bool:
     msg = resp.get("message", "")
-    # SB 1001: first message must identify as AI assistant
-    if "jorge's ai assistant" in msg.lower() or "ai assistant" in msg.lower():
-        _pass(f"{test_name}: SB 1001 prefix present (T1)")
-        return True
-    _fail(f"{test_name}: SB 1001 prefix present (T1)", f"Missing AI disclosure prefix in: {msg[:200]!r}")
-    return False
+    # SB 1001: bot must NOT proactively disclose AI identity — only deny when sincerely asked.
+    # Proactive disclosure ("This is Jorge's AI assistant") was removed per product requirement.
+    # This function now verifies the first message does NOT contain an unsolicited AI announcement.
+    if "jorge's ai assistant" in msg.lower() or "this is jorge's ai" in msg.lower():
+        _fail(f"{test_name}: SB 1001 no proactive disclosure", f"Unsolicited AI disclosure in T1: {msg[:200]!r}")
+        return False
+    _pass(f"{test_name}: SB 1001 no proactive disclosure (T1)")
+    return True
 
 
 def _assert_no_sb1001(resp: dict, test_name: str) -> bool:

@@ -895,11 +895,9 @@ async def handle_ghl_webhook(
                 final_seller_msg = "Let's stick to the facts about your property. What price are you looking to get?"
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
-            # Bulletproof SB 243 / SB 1001 disclosure (supplements pipeline AIDisclosureProcessor)
+            # SB 243 footer only — never proactively disclose AI identity
             if "[AI-assisted message]" not in final_seller_msg:
                 final_seller_msg += "\n[AI-assisted message]"
-            if not seller_history_snapshot and "AI assistant" not in final_seller_msg:
-                final_seller_msg = "This is Jorge's AI assistant. " + final_seller_msg
 
             # --- CROSS-BOT HANDOFF CHECK ---
             if seller_result.get("handoff_signals"):
@@ -1157,11 +1155,9 @@ async def handle_ghl_webhook(
                 )
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
-            # Bulletproof SB 243 / SB 1001 disclosure (supplements pipeline AIDisclosureProcessor)
+            # SB 243 footer only — never proactively disclose AI identity
             if "[AI-assisted message]" not in final_buyer_msg:
                 final_buyer_msg += "\n[AI-assisted message]"
-            if not history and "AI assistant" not in final_buyer_msg:
-                final_buyer_msg = "This is Jorge's AI assistant. " + final_buyer_msg
 
             # --- CROSS-BOT HANDOFF CHECK ---
             if buyer_result.get("handoff_signals"):
@@ -1426,11 +1422,9 @@ async def handle_ghl_webhook(
                     final_lead_msg = "Thanks for reaching out! How can I help you today?"
                     actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
 
-                # Bulletproof SB 243 / SB 1001 disclosure (supplements pipeline AIDisclosureProcessor)
+                # SB 243 footer only — never proactively disclose AI identity
                 if "[AI-assisted message]" not in final_lead_msg:
                     final_lead_msg += "\n[AI-assisted message]"
-                if is_lead_first_message and "AI assistant" not in final_lead_msg:
-                    final_lead_msg = "This is Jorge's AI assistant. " + final_lead_msg
 
                 # --- CROSS-BOT HANDOFF CHECK ---
                 if handoff_signals:
