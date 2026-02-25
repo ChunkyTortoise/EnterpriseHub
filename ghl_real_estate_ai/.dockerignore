@@ -78,8 +78,15 @@ tmp_rovodev_*
 # Directories that shadow Python stdlib modules (cause circular import at startup)
 platform/
 
-# Runtime data — generated at startup, not baked into image (keeps cold-start fast)
-data/
+# Runtime data — exclude large generated files, but keep Python source in data/
+# data/ contains rancho_cucamonga_market_data.py which is imported at startup
+data/**/*.json
+data/**/*.jsonl
+data/**/*.csv
+data/**/*.db
+data/**/*.sqlite
+data/__pycache__/
+data/*/__pycache__/
 reports/
 benchmarks/
 examples/
