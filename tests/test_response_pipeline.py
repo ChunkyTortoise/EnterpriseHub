@@ -16,8 +16,6 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import (
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.pipeline import ResponsePostProcessor
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.ai_disclosure import (
-    DISCLOSURE_EN,
-    DISCLOSURE_ES,
     AIDisclosureProcessor,
 )
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.compliance_check import (
@@ -53,49 +51,60 @@ def _make_context(**kwargs) -> ProcessingContext:
 
 
 class TestAIDisclosureProcessor:
+    """SB 1001 (CA): disclosure only when sincerely asked — no proactive footer.
+
+    AIDisclosureProcessor is a no-op pass-through stage. All tests verify that
+    messages are returned unchanged with no AI footer injected.
+    """
+
     @pytest.mark.asyncio
-    async def test_appends_english_disclosure(self):
+    async def test_passthrough_english(self):
         stage = AIDisclosureProcessor()
         ctx = _make_context(detected_language="en")
         resp = ProcessedResponse(message="Great property!", original_message="Great property!")
         result = await stage.process(resp, ctx)
-        assert result.message.endswith("[AI-assisted message]")
-        assert result.action == ProcessingAction.MODIFY
+        assert result.message == "Great property!"
+        assert "[AI-assisted message]" not in result.message
 
     @pytest.mark.asyncio
-    async def test_appends_spanish_disclosure(self):
+    async def test_passthrough_spanish(self):
         stage = AIDisclosureProcessor()
         ctx = _make_context(detected_language="es")
         resp = ProcessedResponse(message="Buena propiedad!", original_message="Buena propiedad!")
         result = await stage.process(resp, ctx)
-        assert result.message.endswith("[Mensaje asistido por IA]")
+        assert result.message == "Buena propiedad!"
+        assert "[Mensaje asistido por IA]" not in result.message
 
     @pytest.mark.asyncio
-    async def test_no_duplicate_disclosure(self):
-        stage = AIDisclosureProcessor()
-        ctx = _make_context()
-        msg = "Hello\n[AI-assisted message]"
-        resp = ProcessedResponse(message=msg, original_message=msg)
-        result = await stage.process(resp, ctx)
-        assert result.message.count("[AI-assisted message]") == 1
-
-    @pytest.mark.asyncio
-    async def test_skips_on_short_circuit(self):
+    async def test_passthrough_short_circuit(self):
         stage = AIDisclosureProcessor()
         ctx = _make_context()
         resp = ProcessedResponse(
             message="Opted out", original_message="Opted out", action=ProcessingAction.SHORT_CIRCUIT
         )
         result = await stage.process(resp, ctx)
-        assert "[AI-assisted message]" not in result.message
+        assert result.message == "Opted out"
 
     @pytest.mark.asyncio
-    async def test_skips_on_blocked(self):
+    async def test_passthrough_blocked(self):
         stage = AIDisclosureProcessor()
         ctx = _make_context()
         resp = ProcessedResponse(message="Safe fallback", original_message="Bad msg", action=ProcessingAction.BLOCK)
         result = await stage.process(resp, ctx)
-        assert "[AI-assisted message]" not in result.message
+        assert result.message == "Safe fallback"
+
+    @pytest.mark.asyncio
+    async def test_no_ai_footer_injected(self):
+        """Verify no proactive AI footer is ever added (SB 1001 compliance)."""
+        stage = AIDisclosureProcessor()
+        for lang in ["en", "es", "fr", None]:
+            ctx = _make_context(detected_language=lang) if lang else _make_context()
+            msg = "Our team will be in touch shortly."
+            resp = ProcessedResponse(message=msg, original_message=msg)
+            result = await stage.process(resp, ctx)
+            assert result.message == msg
+            assert "AI" not in result.message
+            assert "IA]" not in result.message
 
 
 # ---------------------------------------------------------------------------
@@ -243,12 +252,13 @@ class TestSMSTruncationProcessor:
 
 class TestFullPipeline:
     @pytest.mark.asyncio
-    async def test_clean_message_gets_disclosure(self):
+    async def test_clean_message_passthrough(self):
+        """SB 1001: no proactive AI footer — message passes through unchanged."""
         pipeline = create_default_pipeline()
         ctx = _make_context(contact_id="clean_1", user_message="Tell me about the house")
         result = await pipeline.process("This property features 3 bedrooms and 2 baths.", ctx)
-        assert "[AI-assisted message]" in result.message
-        assert result.action == ProcessingAction.MODIFY
+        assert "[AI-assisted message]" not in result.message
+        assert result.action == ProcessingAction.PASS
 
     @pytest.mark.asyncio
     async def test_opt_out_short_circuits(self):
@@ -270,7 +280,7 @@ class TestFullPipeline:
 
     @pytest.mark.asyncio
     async def test_stage_error_resilience(self):
-        """A stage that throws doesn't crash the pipeline."""
+        """A stage that throws doesn't crash the pipeline; subsequent stages still run."""
 
         class BrokenStage(ResponseProcessorStage):
             @property
@@ -288,11 +298,14 @@ class TestFullPipeline:
         )
         ctx = _make_context()
         result = await pipeline.process("Hello", ctx)
-        assert "[AI-assisted message]" in result.message
+        # Pipeline continues after broken stage; AIDisclosureProcessor is a no-op
+        assert result.message == "Hello"
         assert "broken:error" in result.stage_log
+        assert "ai_disclosure:pass" in result.stage_log
 
     @pytest.mark.asyncio
     async def test_spanish_full_flow(self):
+        """SB 1001: no proactive AI footer in Spanish either."""
         pipeline = create_default_pipeline()
         ctx = _make_context(
             contact_id="spanish_1",
@@ -300,7 +313,8 @@ class TestFullPipeline:
             detected_language="es",
         )
         result = await pipeline.process("Tenemos varias opciones para usted.", ctx)
-        assert "[Mensaje asistido por IA]" in result.message
+        assert "[Mensaje asistido por IA]" not in result.message
+        assert result.message == "Tenemos varias opciones para usted."
 
     @pytest.mark.asyncio
     async def test_pipeline_stage_log(self, monkeypatch):

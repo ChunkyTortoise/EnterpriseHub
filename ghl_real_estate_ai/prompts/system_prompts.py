@@ -467,7 +467,7 @@ def _get_next_seller_question(seller_data: dict, is_first_message: bool = False)
     ]
 
     for field, question in questions:
-        if not seller_data.get(field):
+        if seller_data.get(field) is None:
             return question
     return None  # All questions answered
 
