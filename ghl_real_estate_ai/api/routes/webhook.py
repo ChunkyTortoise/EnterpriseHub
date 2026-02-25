@@ -43,6 +43,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics
 from ghl_real_estate_ai.services.calendar_scheduler import CalendarScheduler
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus, compliance_guard
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer
 from ghl_real_estate_ai.services.ghl_client import GHLClient
@@ -525,6 +526,28 @@ async def handle_ghl_webhook(
             message="Ignoring outbound message",
             actions=[],
         )
+
+    # IDEMPOTENCY GUARD: Prevent duplicate bot responses from Render cold-start retries.
+    # GHL retries the webhook 3-4x when the first attempt times out (50 s+ cold start).
+    # Each retry carries the same contact_id + message body, so we fingerprint on those
+    # two fields.  A 90-second TTL covers every realistic retry window while still
+    # allowing a contact to send the same text again later (e.g. "yes" twice in one day).
+    _idem_key = f"webhook:idem:{contact_id}:{hash(user_message)}"
+    try:
+        _cache = get_cache_service()
+        _already_processing = await _cache.get(_idem_key)
+        if _already_processing:
+            logger.info(
+                "Duplicate webhook suppressed for contact %s (idempotency key hit) — "
+                "returning 200 without re-processing",
+                contact_id,
+            )
+            return GHLWebhookResponse(success=True, message="duplicate suppressed", actions=[])
+        # Mark this (contact, message) pair as in-flight for 90 seconds
+        await _cache.set(_idem_key, "1", ttl=90)
+    except Exception as _idem_err:
+        # Never let idempotency machinery block a real message — fail open
+        logger.warning("Idempotency cache check failed (%s) — proceeding without dedup", _idem_err)
 
     # SECURITY FIX: Remove PII from logs (contact_id, message content)
     logger.info(
