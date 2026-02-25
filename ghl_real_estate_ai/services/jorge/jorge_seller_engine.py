@@ -1152,6 +1152,21 @@ class JorgeSellerEngine:
 
         # 1. Hot → handoff → time ask → day ask → confirm
         if temperature == "hot":
+            # F-10 FIX: Once scheduling is confirmed, any further message should
+            # bridge to the human agent — not re-run the scheduling loop.
+            if seller_data.get("scheduling_step") == "confirmed":
+                message = (
+                    "Our team has everything they need and will be reaching out soon. "
+                    "If you have any questions in the meantime, they'll be happy to help!"
+                )
+                return {
+                    "message": message,
+                    "response_type": "post_confirm_handoff",
+                    "character_count": len(message),
+                    "compliance": self.tone_engine.validate_message_compliance(message),
+                    "directness_score": 1.0,
+                }
+
             _lr = last_response.lower() if last_response else ""
             _gave_day = bool(re.search(
                 r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b",
@@ -1318,6 +1333,20 @@ class JorgeSellerEngine:
 
         # 1. Hot Seller Handoff (first hot turn) or scheduling follow-up (subsequent hot turns)
         if temperature == "hot":
+            # F-10 FIX: Once scheduling is confirmed, bridge to human — don't loop.
+            if seller_data.get("scheduling_step") == "confirmed":
+                _pc_msg = (
+                    "Our team has everything they need and will be reaching out soon. "
+                    "If you have any questions in the meantime, they'll be happy to help!"
+                )
+                return {
+                    "message": _pc_msg,
+                    "response_type": "post_confirm_handoff",
+                    "character_count": len(_pc_msg),
+                    "compliance": self.tone_engine.validate_message_compliance(_pc_msg),
+                    "directness_score": 1.0,
+                }
+
             _hot_sched_full = bool(
                 user_message
                 and re.search(
@@ -1786,6 +1815,12 @@ class JorgeSellerEngine:
             actions.append({"type": "remove_tag", "tag": "Needs Qualifying"})
             actions.append({"type": "add_tag", "tag": "Seller-Qualified"})
 
+            # F-10 FIX: Once scheduling is confirmed, flag for human follow-up
+            # and suppress AI so Jorge doesn't loop back into the scheduling flow.
+            if seller_data.get("scheduling_step") == "confirmed":
+                actions.append({"type": "add_tag", "tag": "Human-Follow-Up-Needed"})
+                actions.append({"type": "add_tag", "tag": "AI-Off"})
+
             # Trigger agent notification workflow
             hot_workflow_id = JorgeSellerConfig.get_workflow_id("hot")
             if hot_workflow_id:
@@ -1810,7 +1845,7 @@ class JorgeSellerEngine:
                 "luxury_seeker": "script_high_end_white_glove",
                 "first_time_buyer": "script_educational_guide",
             }
-            voice_script_id = script_mapping.get(persona_data.get("primary_persona"), "script_standard_jorge")
+            voice_script_id = script_mapping.get((persona_data or {}).get("primary_persona"), "script_standard_jorge")
 
             if contact_phone:
                 # Retry configuration: 3 attempts with exponential backoff (1s, 2s, 4s)
