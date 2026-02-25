@@ -23,9 +23,15 @@ async def extract_budget_range(
             [msg.get("content", "") for msg in conversation_history if msg.get("role") == "user"]
         )
 
-        # Find dollar amounts with optional k
+        # Find dollar amounts with optional k (e.g., $450k, $500,000)
         dollar_pattern = r"\$([0-9,]+)([kK]?)"
         matches = re.findall(dollar_pattern, conversation_text)
+
+        # Fallback: also match plain number amounts without $ prefix
+        # Handles inputs like "450 to 500", "around 475k", "between 400 and 500"
+        if not matches:
+            plain_pattern = r"(?<!\$)\b(\d{1,3}(?:,\d{3})*)([kK]?)\b"
+            matches = re.findall(plain_pattern, conversation_text)
 
         amounts = []
         for val, k_suffix in matches:
