@@ -300,3 +300,139 @@ async def test_post_confirm_actions_include_ai_off_tag() -> None:
         f"Expected Human-Follow-Up-Needed tag, got: {tag_names}"
     )
     assert "AI-Off" in tag_names, f"Expected AI-Off tag, got: {tag_names}"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CAT-10: Concurrency — per-contact async lock
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@_needs_engine
+def test_contact_lock_is_class_level_and_shared_across_instances() -> None:
+    """_contact_locks must be a class-level dict so separate per-request engine
+    instances share the same lock for a given contact_id."""
+    from unittest.mock import MagicMock
+
+    engine_a = JorgeSellerEngine(MagicMock(), MagicMock())
+    engine_b = JorgeSellerEngine(MagicMock(), MagicMock())
+
+    # Both instances must point to the same class-level dict object
+    assert engine_a._contact_locks is engine_b._contact_locks, (
+        "_contact_locks must be a class variable, not an instance variable"
+    )
+
+
+@_needs_engine
+@pytest.mark.asyncio
+async def test_concurrent_requests_serialised_by_contact_lock() -> None:
+    """Two simultaneous process_seller_response calls for the same contact_id
+    must be serialised: the second call must not start reading context until
+    the first has finished writing it.
+
+    We verify this by running both coroutines concurrently with asyncio.gather
+    and checking that neither response comes back with a corrupted turn count
+    or a duplicate Q1 when the first call already established Q1's answer.
+    """
+    import asyncio
+    from unittest.mock import AsyncMock, MagicMock, call
+
+    # Build a minimal stub conversation manager whose get_context/update_context
+    # track call order so we can assert on sequencing.
+    call_log: list[str] = []
+
+    class _OrderedCM:
+        async def get_context(self, contact_id, location_id=None):
+            call_log.append(f"get:{contact_id}")
+            return {
+                "seller_preferences": {},
+                "conversation_history": [],
+                "contact_name": "Test",
+                "closing_probability": 0.0,
+            }
+
+        async def update_context(self, contact_id, **kwargs):
+            call_log.append(f"update:{contact_id}")
+
+        async def get_conversation_history(self, contact_id, location_id=None):
+            return []
+
+        # memory_service stub (used in pending_appointment path)
+        class _MS:
+            async def save_context(self, *a, **kw):
+                pass
+        memory_service = _MS()
+
+    engine = JorgeSellerEngine(
+        conversation_manager=_OrderedCM(),
+        ghl_client=MagicMock(),
+    )
+
+    # Run two calls for the same contact concurrently.
+    # Both will hit the asyncio.Lock — one must wait for the other.
+    results = await asyncio.gather(
+        engine.process_seller_response("lock-test-cid", "Moving for work", "loc-1"),
+        engine.process_seller_response("lock-test-cid", "House is move-in ready", "loc-1"),
+        return_exceptions=True,
+    )
+
+    # Neither result should be an exception
+    for r in results:
+        assert not isinstance(r, Exception), f"process_seller_response raised: {r}"
+
+    # get_context calls must interleave in strict pairs: get then update,
+    # never two gets before an update (which would indicate the race).
+    # With the lock, pattern must be: get, update, get, update (strict alternation).
+    gets_and_updates = [e for e in call_log if e.startswith(("get:", "update:"))]
+    for i in range(0, len(gets_and_updates) - 1, 2):
+        event, nxt = gets_and_updates[i], gets_and_updates[i + 1]
+        assert event.startswith("get:"), f"Expected get at position {i}, got {event!r}"
+        assert nxt.startswith("update:"), (
+            f"Expected update at position {i+1}, got {nxt!r} — "
+            "two consecutive get_context calls indicate the race condition is NOT fixed"
+        )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# EnterpriseHub-pxk1: $Xk price shorthand extraction
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@_needs_engine
+@pytest.mark.parametrize("msg,expected_contains", [
+    # $Xk format — the main regression case
+    ("I'd want around $580k", "580"),
+    ("Price around $620k for the house", "620"),
+    # $X,XXX,XXX format
+    ("I'm thinking $650,000 minimum", "650"),
+    # bare Xk (no $)
+    ("Looking for about 700k", "700"),
+    # $X.Xm — million shorthand
+    ("Would need at least $1.2m", "1.2"),
+    # multi-number message where timeline comes before price
+    ("I could close in 30-60 days and want around $580k", "580"),
+    ("Happy to close in 45 days, price around $620,000", "620"),
+])
+def test_price_extraction_from_text(msg: str, expected_contains: str) -> None:
+    """_extract_price_from_text must correctly extract prices even when
+    timeline numbers (e.g. '30-60 days') appear earlier in the message."""
+    result = JorgeSellerEngine._extract_price_from_text(msg)
+    assert result is not None, (
+        f"Expected price containing {expected_contains!r} from {msg!r}, got None"
+    )
+    assert expected_contains in result, (
+        f"Expected {expected_contains!r} in extracted price {result!r} from {msg!r}"
+    )
+
+
+@_needs_engine
+def test_price_extraction_ignores_timeline_numbers() -> None:
+    """Timeline fragments like '30', '45', '60' must NOT be extracted as prices."""
+    for msg in [
+        "I could close in 30 days",
+        "Timeline of 45 to 60 days works",
+        "About 90 days is my target",
+    ]:
+        result = JorgeSellerEngine._extract_price_from_text(msg)
+        assert result is None, (
+            f"Expected None (no price) for {msg!r}, got {result!r}"
+        )
