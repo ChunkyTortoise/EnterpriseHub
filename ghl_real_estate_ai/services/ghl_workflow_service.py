@@ -567,43 +567,40 @@ class GHLWorkflowService:
                 return
 
             current_tags = set(contact.tags)
-            updated_tags = list(current_tags)
 
-            # Process operations
-            for operation in operations:
-                if operation.action == TagAction.ADD:
-                    if operation.tag not in current_tags:
-                        updated_tags.append(operation.tag)
-                elif operation.action == TagAction.REMOVE:
-                    if operation.tag in current_tags:
-                        updated_tags.remove(operation.tag)
+            # Separate into add / remove lists (skip no-ops)
+            tags_to_add = [
+                op.tag for op in operations
+                if op.action == TagAction.ADD and op.tag not in current_tags
+            ]
+            tags_to_remove = [
+                op.tag for op in operations
+                if op.action == TagAction.REMOVE and op.tag in current_tags
+            ]
 
-            # Update contact with new tags
-            success = await self.ghl_client.update_contact(
-                contact_id,
-                {"tags": updated_tags},
+            # Use POST /tags (append) and DELETE /tags instead of PUT /contacts
+            # to avoid overwriting tags added by other code paths.
+            if tags_to_add:
+                await self.ghl_client.add_tags(contact_id, tags_to_add)
+            if tags_to_remove:
+                await self.ghl_client.remove_tags(contact_id, tags_to_remove)
+
+            # Log operation
+            await self._log_workflow_operation(
+                contact_id=contact_id,
+                operation_type="tag",
+                operation_data={
+                    "operations": [
+                        {
+                            "tag": op.tag,
+                            "action": op.action.value,
+                            "reason": op.reason,
+                        }
+                        for op in operations
+                    ]
+                },
+                status=OperationStatus.SUCCESS,
             )
-
-            if success:
-                # Log operation
-                await self._log_workflow_operation(
-                    contact_id=contact_id,
-                    operation_type="tag",
-                    operation_data={
-                        "operations": [
-                            {
-                                "tag": op.tag,
-                                "action": op.action.value,
-                                "reason": op.reason,
-                            }
-                            for op in operations
-                        ]
-                    },
-                    status=OperationStatus.SUCCESS,
-                )
-            else:
-                result.success = False
-                result.errors.append("Failed to update tags in GHL")
 
         except Exception as e:
             logger.error(f"Error executing tag operations: {e}")
