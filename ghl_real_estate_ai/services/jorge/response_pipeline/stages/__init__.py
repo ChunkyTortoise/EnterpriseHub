@@ -12,6 +12,9 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.stages.conversation_rep
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.language_mirror import (
     LanguageMirrorProcessor,
 )
+from ghl_real_estate_ai.services.jorge.response_pipeline.stages.response_translation import (
+    ResponseTranslationProcessor,
+)
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.sms_truncation import (
     SMSTruncationProcessor,
 )
@@ -24,6 +27,7 @@ __all__ = [
     "ComplianceCheckProcessor",
     "ConversationRepairProcessor",
     "LanguageMirrorProcessor",
+    "ResponseTranslationProcessor",
     "SMSTruncationProcessor",
     "TCPAOptOutProcessor",
 ]
