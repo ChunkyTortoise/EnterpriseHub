@@ -247,6 +247,31 @@ class ResponseGenerator:
                 or ("stated" if _re.search(r"\b(?:june|july|august|september|october|spring|summer|fall|winter|months?|weeks?|years?|day|days|asap|soon|quickly|urgent|ready|weekend|now|timeline|moving|relocat)\b", _user_text) else "not stated yet")
             )
 
+            # Qualification step guard — use the persisted current_qualification_step as a
+            # progress floor so that individual fields are not re-added to _todo when the
+            # conversation_history passed in is incomplete (e.g. Redis/MemoryService miss
+            # on the webhook side).  Without this, a thin history at T4 contains no dollar
+            # amounts so _known_budget reverts to "not stated yet" and the bot loops back
+            # to asking "What's your price range?" indefinitely.
+            _STEP_ORDER = [
+                "budget", "pre-approval", "bedrooms", "timeline",
+                "property_search", "property", "appointment",
+                "property_matching", "objection_handling", "handoff_ready",
+            ]
+            _STEP_IDX = {s: i for i, s in enumerate(_STEP_ORDER)}
+            _saved_step = state.get("current_qualification_step", "budget")
+            _saved_idx = _STEP_IDX.get(_saved_step, 0)
+            # For each field, if the persisted step is already past the point where that
+            # field is collected, treat it as answered even if the regex found nothing.
+            if _saved_idx >= 1 and _known_budget == "not stated yet":
+                _known_budget = "on file"
+            if _saved_idx >= 2 and _known_preapproval == "not stated yet":
+                _known_preapproval = "on file"
+            if _saved_idx >= 3 and _known_beds == "not stated yet":
+                _known_beds = "on file"
+            if _saved_idx >= 4 and _known_timeline == "not stated yet":
+                _known_timeline = "stated"
+
             # Compute next question — tell Claude exactly what to ask, not just what to skip.
             # Area is asked LAST so budget/pre-approval/bedrooms/timeline progress first.
             _todo = []

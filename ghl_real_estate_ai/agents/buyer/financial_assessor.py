@@ -62,19 +62,20 @@ class FinancialAssessor:
                 # Default based on budget clarity and urgency
                 score = min(100, urgency_score + (50 if budget_range else 0))
 
-            return {
-                "budget_range": budget_range,
+            # Return budget_range only if it was freshly extracted from conversation so
+            # we do not accidentally overwrite a previously-restored non-None value with None.
+            result: Dict = {
                 "financing_status": financing_status,
                 "financial_readiness_score": min(100, score),
-                "current_qualification_step": "property",
             }
+            if budget_range is not None:
+                result["budget_range"] = budget_range
+            return result
         except Exception as e:
             logger.error(f"Error assessing financial readiness for {state.get('buyer_id')}: {str(e)}")
             return {
-                "budget_range": None,
                 "financing_status": "assessment_error",
                 "financial_readiness_score": 25,
-                "current_qualification_step": "error",
             }
 
     async def calculate_affordability(self, state: BuyerBotState) -> Dict:
