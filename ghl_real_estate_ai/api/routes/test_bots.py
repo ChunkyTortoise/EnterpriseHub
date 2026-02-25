@@ -1,12 +1,12 @@
 """
-/test/seller and /test/buyer — smoke-test endpoints for Jorge bots.
+/test/seller and /test/buyer â smoke-test endpoints for Jorge bots.
 
 Run multi-turn bot conversations without real GHL contacts, database
 connections, or Redis. All state lives in-process per contact_id.
 Side-effects (tags, workflows) are captured and returned rather than
 being applied to GHL.
 
-Usage (Swagger):  GET /docs  → Bot Testing section
+Usage (Swagger):  GET /docs  â Bot Testing section
 Usage (curl):
   curl -X POST https://<host>/test/seller \
        -H 'Content-Type: application/json' \
@@ -20,10 +20,19 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel
+# ── jorge_hardening: compliance & safety layer ────────────────────────────────
+from jorge_hardening.filters.opt_out import check_opt_out, is_contact_opted_out
+from jorge_hardening.filters.fair_housing import check_fair_housing
+from jorge_hardening.filters.context_injection import sanitize_for_context_injection
+from jorge_hardening.filters.privacy import check_privacy_question
+from jorge_hardening.middleware.disclosure import inject_disclosure
+from jorge_hardening.filters.input_guard import sanitize_input
+# ─────────────────────────────────────────────────────────────────────────────
+
 
 router = APIRouter(prefix="/test", tags=["Bot Testing"])
 
-# ── In-memory session store (cleared on restart) ──────────────────────────────
+# ââ In-memory session store (cleared on restart) ââââââââââââââââââââââââââââââ
 _sessions: Dict[str, Dict[str, Any]] = {}
 
 
@@ -39,7 +48,7 @@ def _get_session(contact_id: str, location_id: str = "test") -> Dict[str, Any]:
     return _sessions[contact_id]
 
 
-# ── Stub ConversationManager ──────────────────────────────────────────────────
+# ââ Stub ConversationManager ââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 class _StubMemoryService:
     async def save_context(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
@@ -61,7 +70,7 @@ class _StubConversationManager:
 
     async def get_context(self, contact_id: str, location_id: Optional[str] = None) -> Dict[str, Any]:
         sess = _get_session(contact_id, location_id or "test")
-        # Return a plain dict — JorgeSellerEngine.process_seller_response() calls
+        # Return a plain dict â JorgeSellerEngine.process_seller_response() calls
         # context.get("seller_preferences", {}) and expects a dict, not a Pydantic model.
         return {
             "contact_id": contact_id,
@@ -108,12 +117,12 @@ class _StubConversationManager:
         *args: Any,
         **kwargs: Any,
     ) -> Dict[str, Any]:
-        # Return current data unchanged — the engine will call the real LLM
+        # Return current data unchanged â the engine will call the real LLM
         # for extraction as part of process_seller_response.
         return current_seller_data
 
 
-# ── Stub GHL Client ───────────────────────────────────────────────────────────
+# ââ Stub GHL Client âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 class _StubGHLClient:
     """Records all GHL side-effects without hitting the API."""
@@ -132,13 +141,13 @@ class _StubGHLClient:
         return {"success": True}
 
 
-# ── Request / Response models ─────────────────────────────────────────────────
+# ââ Request / Response models âââââââââââââââââââââââââââââââââââââââââââââââââ
 
 class TestSellerRequest(BaseModel):
     message: str
     contact_id: str = "test-seller"
     location_id: str = "test"
-    reset: bool = False  # True → wipe session and start fresh
+    reset: bool = False  # True â wipe session and start fresh
 
 
 class TestBuyerRequest(BaseModel):
@@ -158,7 +167,7 @@ class TestBotResponse(BaseModel):
     session_history: List[Dict[str, str]] = []
 
 
-# ── POST /test/seller ─────────────────────────────────────────────────────────
+# ââ POST /test/seller âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @router.post(
     "/seller",
@@ -176,6 +185,30 @@ async def test_seller(req: TestSellerRequest) -> TestBotResponse:
         _sessions.pop(req.contact_id, None)
 
     sess = _get_session(req.contact_id, req.location_id)
+
+    # ── jorge_hardening: compliance pre-flight ─────────────────────────────
+    _san = sanitize_input(req.message)
+    if _san.rejected:
+        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
+            response=_san.rejection_reason, actions=[], extracted_data={}, temperature=None, session_history=[])
+    _msg = _san.text
+    _opt = check_opt_out(req.contact_id, _msg)
+    if _opt or is_contact_opted_out(sess):
+        _reply = _opt or "You have previously opted out. Reply START to re-subscribe."
+        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
+            response=_reply, actions=[], extracted_data={}, temperature=None, session_history=[])
+    _fha = check_fair_housing(_msg)
+    if _fha:
+        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
+            response=_fha, actions=[], extracted_data={}, temperature=None, session_history=[])
+    _priv = check_privacy_question(_msg)
+    if _priv:
+        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
+            response=_priv, actions=[], extracted_data={}, temperature=None, session_history=[])
+    _msg, _injected = sanitize_for_context_injection(_msg, sess)
+    req = req.model_copy(update={"message": _msg})
+    # ─────────────────────────────────────────────────────────────────────────
+
     stub_cm = _StubConversationManager()
     stub_ghl = _StubGHLClient()
 
@@ -189,7 +222,7 @@ async def test_seller(req: TestSellerRequest) -> TestBotResponse:
         tenant_config=None,
     )
 
-    response_text = result.get("response") or result.get("message") or ""
+    response_text = inject_disclosure(result.get("response") or result.get("message") or "", sess.get("turn", 0))
     actions = result.get("actions") or []
     seller_data = result.get("seller_data") or {}
     temperature = result.get("temperature") or result.get("seller_temperature")
@@ -220,7 +253,7 @@ async def test_seller(req: TestSellerRequest) -> TestBotResponse:
     )
 
 
-# ── POST /test/buyer ──────────────────────────────────────────────────────────
+# ââ POST /test/buyer ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @router.post(
     "/buyer",
@@ -238,6 +271,29 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
 
     sess = _get_session(req.contact_id)
 
+    # ── jorge_hardening: compliance pre-flight ─────────────────────────────
+    _san = sanitize_input(req.message)
+    if _san.rejected:
+        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
+            response=_san.rejection_reason, actions=[], extracted_data={}, temperature=None, session_history=[])
+    _msg_b = _san.text
+    _opt_b = check_opt_out(req.contact_id, _msg_b)
+    if _opt_b or is_contact_opted_out(sess):
+        _reply_b = _opt_b or "You have previously opted out. Reply START to re-subscribe."
+        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
+            response=_reply_b, actions=[], extracted_data={}, temperature=None, session_history=[])
+    _fha_b = check_fair_housing(_msg_b)
+    if _fha_b:
+        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
+            response=_fha_b, actions=[], extracted_data={}, temperature=None, session_history=[])
+    _priv_b = check_privacy_question(_msg_b)
+    if _priv_b:
+        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
+            response=_priv_b, actions=[], extracted_data={}, temperature=None, session_history=[])
+    _msg_b, _injected_b = sanitize_for_context_injection(_msg_b, sess)
+    req = req.model_copy(update={"message": _msg_b})
+    # ─────────────────────────────────────────────────────────────────────────
+
     # Build history including this new user message
     history = list(sess["history"])
     history.append({"role": "user", "content": req.message})
@@ -252,7 +308,7 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
         conversation_history=history,
     )
 
-    response_text = result.get("response_content") or result.get("response") or ""
+    response_text = inject_disclosure(result.get("response_content") or result.get("response") or "", sess.get("turn", 0))
     buyer_temp = result.get("buyer_temperature")
     actions = result.get("actions") or []
 
@@ -281,7 +337,7 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
     )
 
 
-# ── Session management helpers ────────────────────────────────────────────────
+# ââ Session management helpers ââââââââââââââââââââââââââââââââââââââââââââââââ
 
 @router.delete(
     "/session/{contact_id}",
