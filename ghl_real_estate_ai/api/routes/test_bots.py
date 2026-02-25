@@ -21,25 +21,10 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-# ── inline bot-identity disclosure (discloses only when explicitly asked) ──────
-import re as _re
-_BOT_IDENTITY_PATTERNS = _re.compile(
-    r'\b(are you (a )?(real |human |actual )?(person|human|agent|bot|ai|robot|chatbot)|'
-    r'(is this|am i (talking|speaking|chatting) (to|with)) (a )?(real |human |actual )?(person|human|agent|bot|ai|robot)|'
-    r'(you|this).{0,10}(real|human|ai|bot|automated|robot)|'
-    r'(talk|speak|chat).{0,15}(human|real person|real agent))\b',
-    _re.IGNORECASE
+from ghl_real_estate_ai.api.routes.inbound_compliance import (
+    check_inbound_compliance as _check_inbound_compliance,
+    sanitise_message as _sanitise_message,
 )
-
-def _check_bot_identity(message: str) -> str | None:
-    """Return a disclosure string if the user is explicitly asking whether this is a bot."""
-    if _BOT_IDENTITY_PATTERNS.search(message):
-        return (
-            "Just to be transparent — I'm an AI assistant, not a human agent. "
-            "I'm here to help answer your real estate questions. How can I assist you?"
-        )
-    return None
-# ───────────────────────────────────────────────────────────────────────────────
 
 router = APIRouter(prefix="/test", tags=["Bot Testing"])
 
@@ -195,6 +180,26 @@ async def test_seller(req: TestSellerRequest) -> TestBotResponse:
     if req.reset:
         _sessions.pop(req.contact_id, None)
 
+    # ── Compliance pre-screen (before engine) ────────────────────────────────
+    intercepted, intercept_response, intercept_actions = _check_inbound_compliance(req.message)
+    if intercepted:
+        sess = _get_session(req.contact_id, req.location_id)
+        sess["history"].append({"role": "user", "content": req.message})
+        sess["history"].append({"role": "assistant", "content": intercept_response})
+        sess["turn"] = sess.get("turn", 0) + 1
+        return TestBotResponse(
+            contact_id=req.contact_id,
+            turn=sess["turn"],
+            response=intercept_response,
+            actions=intercept_actions,
+            extracted_data=sess.get("seller_data", {}),
+            temperature=sess.get("seller_temperature", "cold"),
+            session_history=sess["history"],
+        )
+
+    # Sanitise message to prevent JSON/structured-data injection
+    safe_message = _sanitise_message(req.message)
+
     sess = _get_session(req.contact_id, req.location_id)
     # ── bot identity: disclose when explicitly asked ──
     _seller_msg = req.message or ""
@@ -212,7 +217,7 @@ async def test_seller(req: TestSellerRequest) -> TestBotResponse:
     engine = JorgeSellerEngine(stub_cm, stub_ghl)
     result = await engine.process_seller_response(
         contact_id=req.contact_id,
-        user_message=req.message,
+        user_message=safe_message,
         location_id=req.location_id,
         tenant_config=None,
     )
@@ -264,6 +269,24 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
     if req.reset:
         _sessions.pop(req.contact_id, None)
 
+    # ── Compliance pre-screen (before engine) ────────────────────────────────
+    intercepted, intercept_response, intercept_actions = _check_inbound_compliance(req.message)
+    if intercepted:
+        sess = _get_session(req.contact_id)
+        sess["history"].append({"role": "user", "content": req.message})
+        sess["history"].append({"role": "assistant", "content": intercept_response})
+        sess["turn"] = sess.get("turn", 0) + 1
+        return TestBotResponse(
+            contact_id=req.contact_id,
+            turn=sess["turn"],
+            response=intercept_response,
+            actions=intercept_actions,
+            extracted_data={},
+            temperature="cold",
+            session_history=sess["history"],
+        )
+
+    safe_message = _sanitise_message(req.message)
     sess = _get_session(req.contact_id)
     # ── bot identity: disclose when explicitly asked ──
     _buyer_msg = req.message or ""
@@ -275,14 +298,14 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
 
     # Build history including this new user message
     history = list(sess["history"])
-    history.append({"role": "user", "content": req.message})
+    history.append({"role": "user", "content": safe_message})
 
     from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
 
     buyer_bot = JorgeBuyerBot()
     result = await buyer_bot.process_buyer_conversation(
         conversation_id=req.contact_id,
-        user_message=req.message,
+        user_message=safe_message,
         buyer_name=req.buyer_name,
         conversation_history=history,
     )
@@ -291,7 +314,7 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
     buyer_temp = result.get("buyer_temperature")
     actions = result.get("actions") or []
 
-    sess["history"].append({"role": "user", "content": req.message})
+    sess["history"].append({"role": "user", "content": safe_message})
     if response_text:
         sess["history"].append({"role": "assistant", "content": response_text})
     sess["turn"] = sess.get("turn", 0) + 1
