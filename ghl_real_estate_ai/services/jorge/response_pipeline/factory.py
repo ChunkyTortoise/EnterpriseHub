@@ -34,17 +34,15 @@ def create_default_pipeline() -> ResponsePostProcessor:
         2. TCPAOptOutProcessor           — can short-circuit on "stop"/"unsubscribe"
         3. ConversationRepairProcessor   (optional; env-gated)
         4. ComplianceCheckProcessor      — FHA/RESPA enforcement
-        5. AIDisclosureProcessor         — SB 243 AI disclosure footer
+        5. AIDisclosureProcessor         — no-op; disclosure only when sincerely asked
         6. ResponseTranslationProcessor  — mirror user language (es, …)
         7. SMSTruncationProcessor        — 320 char limit for SMS
+
+    AI disclosure policy: Jorge does NOT proactively identify as AI.
+    Disclosure happens only when a lead explicitly asks "are you a bot?" / "are you AI?"
+    Per SB 1001 (CA) — no proactive footer required or added.
     """
     repair_enabled = os.getenv("CONVERSATION_REPAIR_ENABLED", "false").lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
-    disclosure_enabled = os.getenv("AI_DISCLOSURE_ENABLED", "true").lower() in {
         "1",
         "true",
         "yes",
@@ -59,11 +57,10 @@ def create_default_pipeline() -> ResponsePostProcessor:
     if repair_enabled:
         stages.append(ConversationRepairProcessor())
     stages.append(ComplianceCheckProcessor())
-    if disclosure_enabled:
-        stages.append(AIDisclosureProcessor())
+    # AIDisclosureProcessor is a no-op stub — kept for future optional use
+    stages.append(AIDisclosureProcessor())
     # F-13 FIX: Translate fixed qualification / scheduling / handoff messages
-    # to match the user's detected language.  Runs after AI disclosure so the
-    # disclosure footer is also translated in a future iteration.
+    # to match the user's detected language.
     stages.append(ResponseTranslationProcessor())
     stages.append(SMSTruncationProcessor())
 

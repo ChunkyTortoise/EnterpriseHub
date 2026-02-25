@@ -1049,7 +1049,7 @@ async def handle_ghl_webhook(
             logger.error(f"Jorge seller mode processing failed for contact {contact_id}: {str(e)}", exc_info=True)
             # Do not fall through to other bot modes when seller preconditions are met.
             seller_rescue_msg = "What's got you considering selling? And where would you be looking to move?"
-            # Route through pipeline so SB 243 [AI-assisted message] footer is appended.
+            # Route through response pipeline (language mirror, TCPA, compliance, translation, truncation).
             try:
                 rescue_pipeline_context = ProcessingContext(
                     contact_id=contact_id,
@@ -1342,7 +1342,7 @@ async def handle_ghl_webhook(
             except Exception as tag_error:
                 logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
             buyer_rescue_msg = "Thanks for reaching out! Could you tell me more about what you're looking for in a home?"
-            # Route through pipeline so SB 243 [AI-assisted message] footer is appended.
+            # Route through response pipeline (language mirror, TCPA, compliance, translation, truncation).
             try:
                 rescue_pipeline_context = ProcessingContext(
                     contact_id=contact_id,
