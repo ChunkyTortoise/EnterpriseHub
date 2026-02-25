@@ -103,7 +103,7 @@ from ghl_real_estate_ai.api.routes import (
     reports,
     retell_webhook,  # Added Retell Webhook
     revenue_v2,  # Revenue-critical v2 contracts
-    sdr,  # SDR Agent — autonomous outbound prospecting + sequences
+    sdr,  # SDR Agent â autonomous outbound prospecting + sequences
     security,  # NEW: Security Monitoring and Management API
     sentiment_analysis,
     sms_compliance,
@@ -133,7 +133,7 @@ class OptimizedJSONResponse(JSONResponse):
     def render(self, content) -> bytes:
         """Render JSON with optimization for smaller payloads."""
         if hasattr(content, "model_dump"):
-            # Pydantic v2 model — convert to dict so json.dumps escapes control chars
+            # Pydantic v2 model â convert to dict so json.dumps escapes control chars
             content = content.model_dump()
         if isinstance(content, dict):
             # Remove null values to reduce payload size
@@ -201,9 +201,9 @@ async def lifespan(app: FastAPI):
 
         bi_started = await initialize_bi_websocket_services()
         if bi_started:
-            logger.info("✅ BI WebSocket services started successfully")
+            logger.info("â BI WebSocket services started successfully")
         else:
-            logger.warning("⚠️ BI WebSocket services failed to start - dashboard may have limited real-time features")
+            logger.warning("â ï¸ BI WebSocket services failed to start - dashboard may have limited real-time features")
 
         # Start system health monitoring
         await start_system_health_monitoring()
@@ -221,10 +221,10 @@ async def lifespan(app: FastAPI):
         if hasattr(app.state, "socketio_integration"):
             logger.info("Socket.IO integration already active in app state")
 
-        logger.info("✅ All real-time WebSocket services started successfully")
+        logger.info("â All real-time WebSocket services started successfully")
 
     except Exception as e:
-        logger.error(f"❌ Failed to start WebSocket services: {str(e)}")
+        logger.error(f"â Failed to start WebSocket services: {str(e)}")
         # Don't raise here - allow app to start but log the issue
         logger.warning("WebSocket services failed to start - real-time features may be unavailable")
 
@@ -239,13 +239,13 @@ async def lifespan(app: FastAPI):
         scheduler_started = await initialize_lead_scheduler()
 
         if scheduler_started:
-            logger.info("✅ Lead Sequence Scheduler started successfully")
+            logger.info("â Lead Sequence Scheduler started successfully")
         else:
-            logger.error("❌ Lead Sequence Scheduler failed to start")
+            logger.error("â Lead Sequence Scheduler failed to start")
             logger.warning("Lead Bot 3-7-30 sequences will not execute automatically")
 
     except Exception as e:
-        logger.error(f"❌ Failed to start Lead Sequence Scheduler: {e}")
+        logger.error(f"â Failed to start Lead Sequence Scheduler: {e}")
         logger.warning("Lead Bot automation will not function - sequences must be triggered manually")
 
     # JORGE BOT PERSISTENCE: Wire repository into services
@@ -257,11 +257,11 @@ async def lifespan(app: FastAPI):
 
         if settings.database_url:
             jorge_repository = JorgeMetricsRepository(dsn=settings.database_url)
-            logger.info("✅ Jorge metrics repository initialized")
+            logger.info("â Jorge metrics repository initialized")
         else:
-            logger.warning("⚠️ DATABASE_URL not configured - Jorge metrics will not persist to DB")
+            logger.warning("â ï¸ DATABASE_URL not configured - Jorge metrics will not persist to DB")
     except Exception as e:
-        logger.error(f"❌ Failed to initialize Jorge metrics repository: {e}")
+        logger.error(f"â Failed to initialize Jorge metrics repository: {e}")
         logger.warning("Jorge metrics will operate in memory-only mode")
 
     # REDIS HANDOFF REPOSITORY (multi-worker safe history + locks)
@@ -273,10 +273,10 @@ async def lifespan(app: FastAPI):
 
         redis_handoff_repo = RedisHandoffRepository()
         if await redis_handoff_repo.initialize():
-            logger.info("✅ Redis handoff repository initialized (history + locks)")
+            logger.info("â Redis handoff repository initialized (history + locks)")
         else:
             redis_handoff_repo = None
-            logger.info("⚠️ Redis handoff repository not available — using in-memory fallback")
+            logger.info("â ï¸ Redis handoff repository not available â using in-memory fallback")
     except Exception as e:
         logger.warning(f"Redis handoff repository init failed: {e}")
         redis_handoff_repo = None
@@ -302,7 +302,7 @@ async def lifespan(app: FastAPI):
                 alerting_service.set_repository(jorge_repository)
 
                 logger.info(
-                    "✅ Repository wired into Jorge services (PerformanceTracker, BotMetricsCollector, AlertingService)"
+                    "â Repository wired into Jorge services (PerformanceTracker, BotMetricsCollector, AlertingService)"
                 )
 
                 # Wire repository into JorgeHandoffService (module-level instance)
@@ -310,23 +310,23 @@ async def lifespan(app: FastAPI):
                     from ghl_real_estate_ai.api.routes.webhook import handoff_service
 
                     handoff_service.set_repository(jorge_repository)
-                    logger.info("✅ Repository wired into JorgeHandoffService")
+                    logger.info("â Repository wired into JorgeHandoffService")
 
                     # Hydrate handoff outcomes (last 7 days)
                     loaded_outcomes = await handoff_service.load_from_database(since_minutes=10080)
-                    logger.info(f"✅ Loaded {loaded_outcomes} handoff outcomes from database")
+                    logger.info(f"â Loaded {loaded_outcomes} handoff outcomes from database")
 
                     # Attach Redis handoff repo for multi-worker history + locks
                     if redis_handoff_repo is not None:
                         handoff_service._redis_handoff_repo = redis_handoff_repo
-                        logger.info("✅ Redis handoff repository attached to JorgeHandoffService")
+                        logger.info("â Redis handoff repository attached to JorgeHandoffService")
                 except Exception as e:
                     logger.warning(f"Failed to wire repository into handoff service: {e}")
 
                 # Hydrate metrics from database (last 60 minutes)
                 try:
                     loaded_interactions = await metrics_collector.load_from_db(since_minutes=60)
-                    logger.info(f"✅ Loaded {loaded_interactions} interaction records from database")
+                    logger.info(f"â Loaded {loaded_interactions} interaction records from database")
                 except Exception as e:
                     logger.warning(f"Failed to hydrate metrics from database: {e}")
             except Exception as e:
@@ -387,14 +387,14 @@ async def lifespan(app: FastAPI):
             )
 
             if abandonment_task_started:
-                logger.info("✅ Lead Abandonment Recovery background task started (4-hour interval)")
+                logger.info("â Lead Abandonment Recovery background task started (4-hour interval)")
             else:
-                logger.warning("⚠️ Lead Abandonment Recovery task failed to start")
+                logger.warning("â ï¸ Lead Abandonment Recovery task failed to start")
         else:
-            logger.warning("⚠️ GHL credentials not configured - abandonment recovery disabled")
+            logger.warning("â ï¸ GHL credentials not configured - abandonment recovery disabled")
 
     except Exception as e:
-        logger.error(f"❌ Failed to start Lead Abandonment Recovery: {e}")
+        logger.error(f"â Failed to start Lead Abandonment Recovery: {e}")
         logger.warning("Abandonment recovery will not function automatically")
 
     # LEAD SOURCE ROI ANALYTICS 
@@ -418,12 +418,12 @@ async def lifespan(app: FastAPI):
         )
 
         if source_roi_task_started:
-            logger.info("✅ Lead Source ROI Analytics background task started (24-hour interval)")
+            logger.info("â Lead Source ROI Analytics background task started (24-hour interval)")
         else:
-            logger.warning("⚠️ Lead Source ROI Analytics task failed to start")
+            logger.warning("â ï¸ Lead Source ROI Analytics task failed to start")
 
     except Exception as e:
-        logger.error(f"❌ Failed to start Lead Source ROI Analytics: {e}")
+        logger.error(f"â Failed to start Lead Source ROI Analytics: {e}")
         logger.warning("Source ROI metrics will not update automatically")
 
     # STARTUP ENV VAR VALIDATION (non-blocking warnings)
@@ -437,11 +437,11 @@ async def lifespan(app: FastAPI):
     try:
         ghl_init_result = await initialize_ghl_integration()
         if ghl_init_result.get("success"):
-            logger.info(f"✅ GHL Integration initialized: {ghl_init_result.get('handlers_registered')} handlers")
+            logger.info(f"â GHL Integration initialized: {ghl_init_result.get('handlers_registered')} handlers")
         else:
-            logger.warning(f"⚠️ GHL Integration init issue: {ghl_init_result.get('error')}")
+            logger.warning(f"â ï¸ GHL Integration init issue: {ghl_init_result.get('error')}")
     except Exception as e:
-        logger.error(f"❌ GHL Integration failed to initialize: {e}")
+        logger.error(f"â GHL Integration failed to initialize: {e}")
         logger.warning("GHL webhooks will not function - incoming GHL events will be rejected")
 
     yield
@@ -457,7 +457,7 @@ async def lifespan(app: FastAPI):
     # Shutdown logic - GHL Integration
     try:
         await shutdown_ghl_integration()
-        logger.info("🛑 GHL Integration shutdown complete")
+        logger.info("ð GHL Integration shutdown complete")
     except Exception as e:
         logger.warning(f"GHL Integration shutdown error: {e}")
     if alerting_task and not alerting_task.done():
@@ -496,7 +496,7 @@ async def lifespan(app: FastAPI):
     if jorge_repository:
         try:
             await jorge_repository.close()
-            logger.info("✅ Jorge metrics repository connection pool closed")
+            logger.info("â Jorge metrics repository connection pool closed")
         except Exception as e:
             logger.warning(f"Failed to close repository connection pool: {e}")
 
@@ -534,7 +534,7 @@ async def _build_alert_stats(metrics_collector, perf_tracker) -> dict:
 
     # Build flat dict matching alert rule conditions
     stats: dict = {
-        # Rule 1: sla_violation — nested dicts with p95_latency_ms
+        # Rule 1: sla_violation â nested dicts with p95_latency_ms
         "lead_bot": {"p95_latency_ms": lead_stats.get("p95", 0.0)},
         "buyer_bot": {"p95_latency_ms": buyer_stats.get("p95", 0.0)},
         "seller_bot": {"p95_latency_ms": seller_stats.get("p95", 0.0)},
@@ -544,7 +544,7 @@ async def _build_alert_stats(metrics_collector, perf_tracker) -> dict:
         "cache_hit_rate": overall.get("cache_hit_rate", 1.0),
         # Rule 4: handoff_failure
         "handoff_success_rate": handoffs.get("success_rate", 1.0),
-        # Rule 5: bot_unresponsive — last response timestamp
+        # Rule 5: bot_unresponsive â last response timestamp
         "last_response_time": metrics_collector.last_interaction_time(),
         # Rule 6: circular_handoff_spike
         "blocked_handoffs_last_hour": blocked_handoffs,
@@ -557,7 +557,7 @@ async def _build_alert_stats(metrics_collector, perf_tracker) -> dict:
 def _validate_critical_env_vars(logger) -> None:
     """Warn on missing critical env vars at startup.
 
-    Logs errors for each missing variable but does NOT raise — the app
+    Logs errors for each missing variable but does NOT raise â the app
     should still start so health endpoints are reachable for debugging.
     """
     required = {
@@ -581,11 +581,11 @@ def _validate_jorge_services_config(logger) -> None:
 
     Checks environment variables for A/B testing, performance tracking,
     alerting channels, and bot metrics. Logs warnings for misconfigurations
-    but never raises — the app should still start.
+    but never raises â the app should still start.
     """
     # -- A/B Testing --
     if os.getenv("AB_TESTING_ENABLED", "").lower() == "true":
-        logger.info("A/B testing is enabled — experiments will be registered on first bot initialization")
+        logger.info("A/B testing is enabled â experiments will be registered on first bot initialization")
 
     # -- Performance Tracking --
     if os.getenv("PERFORMANCE_TRACKING_ENABLED", "").lower() == "true":
@@ -594,10 +594,10 @@ def _validate_jorge_services_config(logger) -> None:
             rate = float(sample_rate)
             if not 0.0 <= rate <= 1.0:
                 logger.warning(
-                    "PERFORMANCE_TRACKING_SAMPLE_RATE=%s is out of range [0.0, 1.0] — defaulting to 1.0", sample_rate
+                    "PERFORMANCE_TRACKING_SAMPLE_RATE=%s is out of range [0.0, 1.0] â defaulting to 1.0", sample_rate
                 )
         except ValueError:
-            logger.warning("PERFORMANCE_TRACKING_SAMPLE_RATE=%s is not a valid float — defaulting to 1.0", sample_rate)
+            logger.warning("PERFORMANCE_TRACKING_SAMPLE_RATE=%s is not a valid float â defaulting to 1.0", sample_rate)
 
     # -- Alerting Channels (uses AlertChannelConfig.validate()) --
     try:
@@ -616,10 +616,10 @@ def _validate_jorge_services_config(logger) -> None:
             iv = int(interval)
             if iv < 10:
                 logger.warning(
-                    "BOT_METRICS_COLLECTION_INTERVAL=%s is very low (<10s) — may cause high CPU usage", interval
+                    "BOT_METRICS_COLLECTION_INTERVAL=%s is very low (<10s) â may cause high CPU usage", interval
                 )
         except ValueError:
-            logger.warning("BOT_METRICS_COLLECTION_INTERVAL=%s is not a valid integer — defaulting to 60", interval)
+            logger.warning("BOT_METRICS_COLLECTION_INTERVAL=%s is not a valid integer â defaulting to 60", interval)
 
 
 def _verify_admin_api_key():
@@ -629,9 +629,9 @@ def _verify_admin_api_key():
     async def _check(x_admin_key: str | None = Header(default=None, alias="X-Admin-Key")):
         expected = os.getenv("ADMIN_API_KEY")
         if not expected:
-            # No key configured → admin routes disabled in production
+            # No key configured â admin routes disabled in production
             if settings.environment == "production":
-                raise HTTPException(status_code=403, detail="Admin API disabled — set ADMIN_API_KEY")
+                raise HTTPException(status_code=403, detail="Admin API disabled â set ADMIN_API_KEY")
             return  # Allow in dev/demo/test
         if x_admin_key != expected:
             raise HTTPException(status_code=401, detail="Invalid admin API key")
@@ -757,12 +757,16 @@ def _setup_routers(app: FastAPI):
     app.include_router(export_engine.router)
     app.include_router(commission_forecast.router)
     app.include_router(billing.router, prefix="/api", dependencies=[Depends(get_current_user)])
-    app.include_router(checkout.router, prefix="/api")  # No auth — public checkout
+    app.include_router(checkout.router, prefix="/api")  # No auth â public checkout
 
     # Concierge Admin (multi-tenant management + hot-reload)
     from ghl_real_estate_ai.api.routes.concierge_admin import router as concierge_admin_router
 
     app.include_router(concierge_admin_router, prefix="/admin/concierge", tags=["Concierge Admin"])
+
+    # Bot smoke-test endpoints (no auth / no DB required)
+    from ghl_real_estate_ai.api.routes.test_bots import router as test_bots_router
+    app.include_router(test_bots_router)  # /test/seller, /test/buyer
 
     # GHL Unified Webhook Integration (Lead/Seller/Buyer bot handlers)
     app.include_router(ghl_router, prefix="/ghl")
@@ -872,7 +876,7 @@ async def enhanced_performance_middleware(request: Request, call_next):
     # Add compression indicators
     response.headers["X-Content-Optimized"] = "true"
 
-    # Performance monitoring headers (internal timing only — no version info exposed)
+    # Performance monitoring headers (internal timing only â no version info exposed)
     response.headers["X-Compression-Level"] = "6"
 
     # Response size optimization headers
@@ -903,7 +907,7 @@ async def enhanced_performance_middleware(request: Request, call_next):
 
     # API-specific optimizations
     if path.startswith("/api/"):
-        # Only set Content-Type for JSON responses — do not override other content types
+        # Only set Content-Type for JSON responses â do not override other content types
         existing_ct = response.headers.get("content-type", "")
         if not existing_ct or existing_ct.startswith("application/json"):
             response.headers["Content-Type"] = "application/json; charset=utf-8"
