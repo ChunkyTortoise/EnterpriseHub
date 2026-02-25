@@ -599,6 +599,15 @@ class JorgeSellerEngine:
 
             msg_lower = user_message.lower()
 
+            # 0a. Property address — detect "123 Main St" / "456 Oak Ave, City" patterns
+            if not extracted_data.get("property_address"):
+                addr_match = re.search(
+                    r'\b\d{2,6}\s+[A-Za-z]{2,}[\s\w]*(?:St|Ave|Blvd|Dr|Rd|Ln|Way|Ct|Pl|Cir|Pkwy|Hwy)\b',
+                    user_message, re.I
+                )
+                if addr_match:
+                    extracted_data["property_address"] = addr_match.group(0).strip()
+
             # 0. Motivation (most common failure point — Claude may not extract this reliably)
             if not extracted_data.get("motivation"):
                 if re.search(r"relocat|moving? to|transfer|new job|got a job|job (in|at|offer)", msg_lower):
@@ -643,8 +652,8 @@ class JorgeSellerEngine:
                 ):
                     extracted_data["timeline_acceptable"] = False
                 else:
-                    # "within X months" / "in X months" / "X to Y months" where X <= 4 → flexible/motivated
-                    _mo = re.search(r"(?:within|sell\s+in|in)\s+(\d+)\s*(?:to\s*\d+\s*)?months?", msg_lower)
+                    # "within X months" / "within the next X months" / "in X months" where X <= 4
+                    _mo = re.search(r"(?:within|sell\s+in|in)\s+(?:the\s+next\s+)?(\d+)\s*(?:to\s*\d+\s*)?months?", msg_lower)
                     if _mo and int(_mo.group(1)) <= 4:
                         extracted_data["timeline_acceptable"] = True
                     else:
@@ -751,13 +760,15 @@ class JorgeSellerEngine:
                         1 for f in question_fields if extracted_data.get(f) is not None
                     )
 
-            # Smart skip: if the user answered a later question (timeline/price/condition) but we're
-            # stalled on Q1 (motivation), infer motivation as "other" immediately (don't wait 2 stall turns).
+            # Smart skip: if the user answered a later question (timeline/price/condition) OR
+            # provided an address without motivation (1 stall on Q1), infer motivation as "other"
+            # immediately (don't wait 2 stall turns — prevents visible T2 loop in address-first flows).
             if current_q_now == 1 and not extracted_data.get("motivation") and current_seller_data:
                 _answered_later = (
                     extracted_data.get("timeline_acceptable") is not None
                     or bool(extracted_data.get("price_expectation"))
                     or bool(extracted_data.get("property_condition"))
+                    or (bool(extracted_data.get("property_address")) and stall >= 1)
                 )
                 if _answered_later:
                     extracted_data["motivation"] = "other"
