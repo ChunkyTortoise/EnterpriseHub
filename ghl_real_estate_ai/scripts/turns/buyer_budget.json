@@ -1,0 +1,22 @@
+[
+  {
+    "role": "user",
+    "content": "Hi, I saw your listing and I'm looking to buy a home in Rancho Cucamonga"
+  },
+  {
+    "role": "user",
+    "content": "Our budget is around 650 to 750 thousand"
+  },
+  {
+    "role": "user",
+    "content": "We need 4 bedrooms, at least 2 bathrooms, and a 2-car garage"
+  },
+  {
+    "role": "user",
+    "content": "We want to move in within the next 3 months"
+  },
+  {
+    "role": "user",
+    "content": "Yes we're pre-approved, we just got our letter last week"
+  }
+]
