@@ -132,7 +132,7 @@ class GHLTagWebhookEvent(BaseModel):
     so contact is Optional and we synthesise a minimal stub when absent.
     """
 
-    type: str  # "ContactTagAdded" or similar
+    type: str = "ContactTagAdded"  # GHL's custom webhook omits this field; default keeps validation passing
     contact_id: str = Field(..., alias="contactId")
     location_id: str = Field(..., alias="locationId")
     tag: str
