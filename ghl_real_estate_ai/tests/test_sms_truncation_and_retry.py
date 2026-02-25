@@ -199,13 +199,13 @@ class TestGhlClientRetry:
         )
 
         client.http_client = AsyncMock()
-        client.http_client.put = AsyncMock(return_value=mock_response)
+        client.http_client.post = AsyncMock(return_value=mock_response)
 
         with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
             with pytest.raises(httpx.HTTPStatusError):
                 await client.add_tags("contact-123", ["Hot-Lead"])
 
-            assert client.http_client.put.call_count == 3
+            assert client.http_client.post.call_count == 3
             assert mock_sleep.call_count == 2
             mock_sleep.assert_any_call(0.5)
             mock_sleep.assert_any_call(1.0)
@@ -227,13 +227,13 @@ class TestGhlClientRetry:
         success_response.json = MagicMock(return_value={"tags": ["Hot-Lead"]})
 
         client.http_client = AsyncMock()
-        client.http_client.put = AsyncMock(side_effect=[fail_response, fail_response, success_response])
+        client.http_client.post = AsyncMock(side_effect=[fail_response, fail_response, success_response])
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
             result = await client.add_tags("contact-123", ["Hot-Lead"])
 
         assert result == {"tags": ["Hot-Lead"]}
-        assert client.http_client.put.call_count == 3
+        assert client.http_client.post.call_count == 3
 
 
 # ---------------------------------------------------------------------------
