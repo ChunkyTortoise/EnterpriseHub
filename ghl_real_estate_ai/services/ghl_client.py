@@ -485,13 +485,23 @@ class GHLClient:
             )
             raise
 
+    @staticmethod
+    def _is_ghl_field_id(field_identifier: str) -> bool:
+        """Check if a field identifier looks like a GHL custom field ID (alphanumeric, 20+ chars)."""
+        return bool(field_identifier) and len(field_identifier) >= 20 and field_identifier.isalnum()
+
     async def update_custom_field(self, contact_id: str, field_id: str, value: Any) -> Dict[str, Any]:
         """
         Update a custom field on a contact.
 
+        Supports both GHL custom field IDs (e.g. '8obGRN3cr4tW1416kPT5') and
+        semantic field keys (e.g. 'seller_motivation'). When a semantic key is
+        provided, uses the GHL ``key``/``field_value`` format so the API can
+        resolve the field by name.
+
         Args:
             contact_id: GHL contact ID
-            field_id: Custom field ID
+            field_id: Custom field ID or semantic key
             value: New value for the field
 
         Returns:
@@ -506,7 +516,10 @@ class GHLClient:
 
         endpoint = f"{self.base_url}/contacts/{contact_id}"
 
-        payload = {"customFields": [{"id": field_id, "value": str(value)}]}
+        if self._is_ghl_field_id(field_id):
+            payload = {"customFields": [{"id": field_id, "value": str(value)}]}
+        else:
+            payload = {"customFields": [{"key": field_id, "field_value": str(value)}]}
 
         try:
             response = await self.http_client.put(
@@ -550,7 +563,12 @@ class GHLClient:
             return {"status": "mocked", "fields_updated": len(fields)}
 
         endpoint = f"{self.base_url}/contacts/{contact_id}"
-        payload = {"customFields": [{"id": fid, "value": str(val)} for fid, val in fields.items()]}
+        payload = {
+            "customFields": [
+                {"id": fid, "value": str(val)} if self._is_ghl_field_id(fid) else {"key": fid, "field_value": str(val)}
+                for fid, val in fields.items()
+            ]
+        }
 
         try:
             response = await self.http_client.put(
