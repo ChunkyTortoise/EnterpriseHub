@@ -2364,7 +2364,10 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         return {
             "response_content": reply,
-            "engagement_status": "qualified" if handoff_recommended else "responsive",
+            # Only mark qualified after scheduling day is confirmed — not on sell/buy intent
+            # alone. Setting it too early applied Lead-Qualified to GHL, which the webhook's
+            # live tag fetch then treated as a deactivation tag, stopping the bot at T3.
+            "engagement_status": "qualified" if (_has_day or _post_confirm) else "responsive",
             "lead_id": contact_id,
             "current_step": "real_time_converse",
             "intent_profile": None,
