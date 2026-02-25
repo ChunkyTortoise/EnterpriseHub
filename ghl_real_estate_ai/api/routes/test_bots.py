@@ -59,17 +59,21 @@ class _StubConversationManager:
     def __init__(self) -> None:
         self.memory_service = _StubMemoryService()
 
-    async def get_context(self, contact_id: str, location_id: Optional[str] = None):
-        from ghl_real_estate_ai.api.schemas.ghl import ConversationContext
-
+    async def get_context(self, contact_id: str, location_id: Optional[str] = None) -> Dict[str, Any]:
         sess = _get_session(contact_id, location_id or "test")
-        return ConversationContext(
-            contact_id=contact_id,
-            location_id=location_id or "test",
-            conversation_history=sess["history"],
-            extracted_preferences=sess.get("seller_data", {}),
-            lead_score=0,
-        )
+        # Return a plain dict — JorgeSellerEngine.process_seller_response() calls
+        # context.get("seller_preferences", {}) and expects a dict, not a Pydantic model.
+        return {
+            "contact_id": contact_id,
+            "location_id": location_id or "test",
+            "conversation_history": list(sess["history"]),
+            "seller_preferences": dict(sess.get("seller_data", {})),
+            "contact_name": "Test Lead",
+            "closing_probability": 0.0,
+            "active_ab_test": None,
+            "last_ai_message_type": None,
+            "is_returning_lead": False,
+        }
 
     async def get_conversation_history(
         self, contact_id: str, location_id: Optional[str] = None
@@ -88,6 +92,14 @@ class _StubConversationManager:
         sess["history"].append({"role": "user", "content": user_message})
         sess["history"].append({"role": "assistant", "content": ai_response})
         sess["turn"] = sess.get("turn", 0) + 1
+        # Persist extracted seller data and temperature so the next turn's
+        # get_context() returns the accumulated qualification answers.
+        extracted_data = kwargs.get("extracted_data")
+        if extracted_data and isinstance(extracted_data, dict):
+            sess.setdefault("seller_data", {}).update(extracted_data)
+        seller_temp = kwargs.get("seller_temperature")
+        if seller_temp:
+            sess["seller_temperature"] = seller_temp
 
     async def extract_seller_data(
         self,
@@ -249,12 +261,21 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
         sess["history"].append({"role": "assistant", "content": response_text})
     sess["turn"] = sess.get("turn", 0) + 1
 
+    # The buyer bot result uses different keys than the seller bot.
+    # Pull the available qualification fields into a structured dict.
+    buyer_extracted: Dict[str, Any] = {}
+    for _key in ("budget_range", "current_qualification_step", "financial_readiness",
+                 "urgency_score", "buying_motivation_score"):
+        _val = result.get(_key)
+        if _val is not None:
+            buyer_extracted[_key] = _val
+
     return TestBotResponse(
         contact_id=req.contact_id,
         turn=sess["turn"],
         response=response_text,
         actions=actions,
-        extracted_data=result.get("extracted_data") or {},
+        extracted_data=buyer_extracted,
         temperature=buyer_temp,
         session_history=sess["history"],
     )
