@@ -295,7 +295,7 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
             buyer_name=req.buyer_name,
             conversation_history=history,
         )
-    except Exception as exc:
+    except BaseException as exc:
         raise HTTPException(
             status_code=503,
             detail=f"Buyer engine unavailable in this environment: {type(exc).__name__}: {exc}",
