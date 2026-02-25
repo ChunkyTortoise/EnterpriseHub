@@ -76,14 +76,16 @@
 - H-06 CCPA: ❌ Not intercepted
 - H-01 / H-05: In `jorge_seller_engine.py` — need push to verify
 
-**OPEN findings (Beads tickets filed)**:
+**FIXED in commit `c938456f`** (push pending):
+- CAT-10: `_contact_locks: ClassVar[Dict[str,asyncio.Lock]]` on `JorgeSellerEngine`; wraps entire `process_seller_response` in `async with _lock:` — serialises concurrent contact_id calls
+- pxk1: new `_extract_price_from_text()` static helper; tries `$`-prefix → `k/m`-suffix → comma-number in priority order; both `_extract_seller_data` and `_extract_seller_data_regex` updated; `EnterpriseHub-zw87` closed
+- **54/54 regression tests passing**
+
+**OPEN findings**:
 | ID | Severity | Issue |
 |----|----------|-------|
-| `EnterpriseHub-zw87` | HIGH | F-10 — FIXED in `69697277`, ticket to be closed after push |
-| `EnterpriseHub-c10r` | HIGH | CAT-10: Race condition — turn counter +2 skip, seller_data last-writer-wins |
 | `EnterpriseHub-euuy` | MED | F-11: Objection exhaustion (5× "not interested") never triggers human handoff |
 | `EnterpriseHub-wyrt` | MED | F-13: No language mirroring — Spanish input gets English response |
-| `EnterpriseHub-pxk1` | MED | `$Xk` shorthand price not extracted (e.g. `$580k`, `$620k`) |
 
 ## 🚀 PHASE 2 PRIMARY OBJECTIVES
 
@@ -159,6 +161,6 @@
 
 ---
 
-**Last Updated**: 2026-02-25 — Red-team fully complete (CAT 1–10); 7 fixes committed in 3 commits (`8aca01d0`, `fe1015e8`, `69697277` — **push pending**); 6 Beads tickets filed; all pre-screener hardening unverified on live Render until push
-**Next Review**: `git push origin main` (3 commits) → Render auto-deploys → re-verify H-02/H-03/H-04/H-06 on live server → close `EnterpriseHub-zw87` → address CAT-10 race condition (`EnterpriseHub-c10r`)
+**Last Updated**: 2026-02-25 — 9 total fixes across 6 commits (`8aca01d0`→`c938456f`, **push pending**); 54/54 tests green; 2 medium findings remain (F-11 objection exhaustion, F-13 language mirroring)
+**Next Review**: `git push origin main` → Render redeploy → live-verify H-02/H-03/H-04/H-06 → implement F-11 objection exhaustion handoff → F-13 language mirroring
 **Context Preservation**: All decisions, patterns, and learnings captured in agent memory system
