@@ -1369,10 +1369,18 @@ async def handle_ghl_webhook(
     # Step -0.3: Check for Jorge's Lead Mode (LEAD_ACTIVATION_TAG + JORGE_LEAD_MODE)
 
     if jorge_lead_mode:
-        if jorge_seller_mode and "needs qualifying" in tags_lower:
+        # Collision guard: if the contact carries the seller tag AND seller mode is live,
+        # that means they're already in the seller pipeline — skip lead bot to avoid race.
+        # NOTE: with LEAD_ACTIVATION_TAG=lead-bot (distinct from "needs qualifying") this
+        # collision should never happen; the guard is a belt-and-suspenders safety net.
+        _lead_tag_is_seller_tag = (
+            jorge_settings.LEAD_ACTIVATION_TAG.lower() in ("needs qualifying", "seller-lead")
+        )
+        if jorge_seller_mode and _lead_tag_is_seller_tag and "needs qualifying" in tags_lower:
             logger.warning(
                 "Dual-bot collision detected: contact %s has 'Needs Qualifying' tag with both "
-                "seller and lead mode active — skipping lead bot to prevent race condition",
+                "seller and lead mode active (LEAD_ACTIVATION_TAG overlaps seller tag) — "
+                "skipping lead bot. Fix: set LEAD_ACTIVATION_TAG=lead-bot in Render env vars.",
                 contact_id,
             )
         else:

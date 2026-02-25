@@ -78,6 +78,14 @@ services:
         value: "true"
       - key: JORGE_LEAD_MODE
         value: "true"
+
+      # Tag routing — MUST be distinct from seller/buyer activation tags
+      # Seller fires on "Needs Qualifying" | Buyer fires on BUYER_LEAD_TAG
+      # Lead fires on LEAD_ACTIVATION_TAG — use a dedicated tag so there's no collision
+      - key: LEAD_ACTIVATION_TAG
+        value: "lead-bot"
+      - key: BUYER_LEAD_TAG
+        value: "Buyer-Lead"
       - key: JORGE_SIMPLE_MODE
         value: "true"
       - key: FRIENDLY_APPROACH
