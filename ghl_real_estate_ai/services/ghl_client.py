@@ -337,6 +337,12 @@ class GHLClient:
 
     async def add_tags(self, contact_id: str, tags: List[str]) -> Dict[str, Any]:
         """
+        Add tags to a contact additively (existing tags are preserved).
+
+        Uses POST /contacts/{id}/tags which adds to the existing tag set.
+        The previous PUT /contacts/{id} implementation replaced ALL tags,
+        causing every add_tags call to wipe tags set by prior calls.
+
         Returns:
             API response dict
         """
@@ -347,14 +353,14 @@ class GHLClient:
             )
             return {"status": "mocked", "tags": tags}
 
-        endpoint = f"{self.base_url}/contacts/{contact_id}"
+        endpoint = f"{self.base_url}/contacts/{contact_id}/tags"
         payload = {"tags": tags}
         max_retries = 3
         last_error = None
 
         for attempt in range(1, max_retries + 1):
             try:
-                response = await self.http_client.put(
+                response = await self.http_client.post(
                     endpoint,
                     json=payload,
                     headers=self.headers,
@@ -422,59 +428,33 @@ class GHLClient:
             return {"status": "mocked", "removed_tags": tags}
 
         try:
-            # Step 1: Fetch current contact data to get existing tags
-            contact_endpoint = f"{self.base_url}/contacts/{contact_id}"
+            # DELETE /contacts/{id}/tags removes only the specified tags, preserving others.
+            # Previous implementation fetched all tags then PUT the remainder — a read-modify-write
+            # pattern that races with concurrent calls and needlessly replaces the full tag set.
+            endpoint = f"{self.base_url}/contacts/{contact_id}/tags"
+            payload = {"tags": tags}
 
-            # Get current contact data
-            response = await self.http_client.get(
-                contact_endpoint,
+            response = await self.http_client.request(
+                "DELETE",
+                endpoint,
+                json=payload,
                 headers=self.headers,
                 timeout=settings.webhook_timeout_seconds,
             )
             response.raise_for_status()
 
-            contact_data = response.json()
-            current_tags = contact_data.get("tags", [])
-
-            # Step 2: Remove specified tags from current tags
-            if not current_tags:
-                logger.warning(
-                    f"Contact {contact_id} has no tags to remove",
-                    extra={"contact_id": contact_id, "requested_tags": tags},
-                )
-                return {"message": "No tags to remove", "current_tags": []}
-
-            # Remove the specified tags (case-insensitive)
-            tags_to_remove_lower = [tag.lower() for tag in tags]
-            updated_tags = [tag for tag in current_tags if tag.lower() not in tags_to_remove_lower]
-
-            # Step 3: Update contact with new tags list
-            payload = {"tags": updated_tags}
-
-            update_response = await self.http_client.put(
-                contact_endpoint,
-                json=payload,
-                headers=self.headers,
-                timeout=settings.webhook_timeout_seconds,
-            )
-            update_response.raise_for_status()
-
-            # Log successful removal with security context
-            removed_tags = [tag for tag in current_tags if tag.lower() in tags_to_remove_lower]
             logger.info(
-                f"Successfully removed tags from contact {contact_id}: {removed_tags}",
+                f"Successfully removed tags from contact {contact_id}: {tags}",
                 extra={
                     "contact_id": contact_id,
-                    "removed_tags": removed_tags,
-                    "remaining_tags": updated_tags,
+                    "removed_tags": tags,
                     "security_event": "tag_removal_success",
                 },
             )
 
             return {
                 "status": "success",
-                "removed_tags": removed_tags,
-                "remaining_tags": updated_tags,
+                "removed_tags": tags,
                 "contact_id": contact_id,
             }
 
