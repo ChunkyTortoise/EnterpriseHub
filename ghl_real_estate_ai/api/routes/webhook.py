@@ -1409,7 +1409,7 @@ async def handle_ghl_webhook(
                 # Determine sequence_day from first contact timestamp
                 lead_ctx = await conversation_manager.get_context(contact_id, location_id)
                 first_contact = lead_ctx.get("first_contact_at")
-                is_lead_first_message = not first_contact  # True ONLY on genuine T1
+                is_lead_first_message = not first_contact and not lead_ctx.get("initial_outreach_sent")  # True ONLY on genuine T1
                 if not first_contact:
                     lead_ctx["first_contact_at"] = datetime.utcnow().isoformat()
                     sequence_day = 0
@@ -1434,7 +1434,7 @@ async def handle_ghl_webhook(
                     # T1 — send the qualifying question and return early
                     t1_message = (
                         f"Hey {contact_first_name}! Are you looking to buy or sell "
-                        f"in the Rancho Cucamonga area?"
+                        f"in {contact_market or "your area"}?"
                     )
                     logger.info(
                         "Lead T1 qualifying question sent to %s — bypassing LangGraph", contact_id
