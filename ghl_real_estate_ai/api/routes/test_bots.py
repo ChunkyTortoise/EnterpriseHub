@@ -201,13 +201,6 @@ async def test_seller(req: TestSellerRequest) -> TestBotResponse:
     safe_message = _sanitise_message(req.message)
 
     sess = _get_session(req.contact_id, req.location_id)
-    # ── bot identity: disclose when explicitly asked ──
-    _seller_msg = req.message or ""
-    _bot_id_reply = _check_bot_identity(_seller_msg)
-    if _bot_id_reply:
-        return {"response": _bot_id_reply, "session_id": req.contact_id, "turn": sess.get("turn", 0)}
-    # ─────────────────────────────────────────────────
-
 
     stub_cm = _StubConversationManager()
     stub_ghl = _StubGHLClient()
@@ -288,13 +281,6 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
 
     safe_message = _sanitise_message(req.message)
     sess = _get_session(req.contact_id)
-    # ── bot identity: disclose when explicitly asked ──
-    _buyer_msg = req.message or ""
-    _bot_id_reply_b = _check_bot_identity(_buyer_msg)
-    if _bot_id_reply_b:
-        return {"response": _bot_id_reply_b, "session_id": req.contact_id, "turn": sess.get("turn", 0)}
-    # ─────────────────────────────────────────────────
-
 
     # Build history including this new user message
     history = list(sess["history"])
