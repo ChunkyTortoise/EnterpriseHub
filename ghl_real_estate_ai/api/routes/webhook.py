@@ -354,14 +354,17 @@ async def handle_ghl_tag_webhook(
     """
     Handle tag-added webhook from GoHighLevel.
 
-    Sends initial outreach when "Needs Qualifying" is applied
+    Sends initial outreach when the lead activation tag is applied
     and no prior conversation exists.
     """
     contact_id = event.contact_id
     location_id = event.location_id
     tag = event.tag
 
-    if tag.lower() != "needs qualifying":
+    # Accept both the configured LEAD_ACTIVATION_TAG and the legacy "needs qualifying"
+    # tag so that any in-flight contacts tagged before the migration still get outreach.
+    _lead_tag = jorge_settings.LEAD_ACTIVATION_TAG.strip().lower()
+    if tag.strip().lower() not in (_lead_tag, "needs qualifying"):
         return GHLWebhookResponse(success=True, message="Tag ignored", actions=[])
 
     context = await conversation_manager.get_context(contact_id, location_id)

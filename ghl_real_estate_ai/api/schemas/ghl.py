@@ -127,16 +127,32 @@ class GHLTagWebhookEvent(BaseModel):
     """
     Tag-added webhook event from GoHighLevel.
 
-    Used to trigger proactive outreach when "Needs Qualifying" is applied.
+    Used to trigger proactive outreach when the lead activation tag is applied.
+    GHL's native tag webhook does not always include the full contact object,
+    so contact is Optional and we synthesise a minimal stub when absent.
     """
 
     type: str  # "ContactTagAdded" or similar
     contact_id: str = Field(..., alias="contactId")
     location_id: str = Field(..., alias="locationId")
     tag: str
-    contact: GHLContact
+    contact: Optional[GHLContact] = None
 
     model_config = ConfigDict(populate_by_name=True)
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_missing_contact(cls, data: Any) -> Any:
+        """Synthesise a minimal contact stub when GHL omits the contact object."""
+        if not isinstance(data, dict):
+            return data
+        if "contact" not in data or data["contact"] is None:
+            data["contact"] = {
+                "contactId": data.get("contactId", ""),
+                "firstName": data.get("contactName", data.get("firstName", "")),
+                "tags": data.get("tags", []),
+            }
+        return data
 
 
 class ActionType(str, Enum):
