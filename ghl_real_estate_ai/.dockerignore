@@ -78,9 +78,17 @@ tmp_rovodev_*
 # Directories that shadow Python stdlib modules (cause circular import at startup)
 platform/
 
-# Runtime data — exclude large generated files, but keep Python source in data/
-# data/ contains rancho_cucamonga_market_data.py which is imported at startup
+# Runtime data — exclude large generated files, keep Python source + small static files
+# data/ contains:
+#   rancho_cucamonga_market_data.py  — imported at startup (always kept)
+#   coaching_library.json            — opened by whisper_coach.py (keep)
+#   zillow_defense_scripts.json      — opened by zillow_defense_service.py (keep)
+#   stall_breakers.json              — opened by ghost_followup_engine.py (keep)
+#   ab_tests.json (1.3 MB)          — runtime generated (exclude)
 data/**/*.json
+!data/coaching_library.json
+!data/zillow_defense_scripts.json
+!data/stall_breakers.json
 data/**/*.jsonl
 data/**/*.csv
 data/**/*.db
