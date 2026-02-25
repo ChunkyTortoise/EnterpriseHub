@@ -57,6 +57,11 @@ class MemoryService:
         self.storage_type = storage_type or ("redis" if settings.environment == "production" else "file")
         self.memory_dir = Path("data/memory")
 
+        # Process-level fallback cache: survives within a single worker dyno even if
+        # Redis is unavailable or returns False. Keyed by "location_id:contact_id".
+        # Cleared only when the process restarts. NOT shared across dynos.
+        self._process_fallback_cache: Dict[str, Dict[str, Any]] = {}
+
         if self.storage_type == "file":
             self.memory_dir.mkdir(parents=True, exist_ok=True)
             logger.info(f"Memory service initialized with file storage at {self.memory_dir}")
@@ -176,7 +181,15 @@ class MemoryService:
                         context["relevant_knowledge"] = graphiti_context
                     except Exception as ge:
                         logger.warning(f"Failed to retrieve Graphiti context for {contact_id}: {ge}")
+                # Refresh process-level cache from Redis on successful read
+                self._process_fallback_cache[cache_key] = context
                 return context
+
+            # Redis miss — check process-level fallback (same dyno, between-turn safety net)
+            fallback = self._process_fallback_cache.get(cache_key)
+            if fallback and fallback.get("location_id") == resolved_loc:
+                logger.debug(f"Process-fallback cache hit for {contact_id} (Redis miss)")
+                return fallback
 
         # 2. Fallback to Memory cache
         if self.storage_type == "memory":
@@ -335,8 +348,15 @@ class MemoryService:
         # 1. Save to Redis for production/multitenant isolation
         if self._should_use_redis(resolved_loc):
             cache_key = f"ctx:{resolved_loc}:{contact_id}"
+            # Always update process-level cache first — ensures the next request on the
+            # same dyno sees the updated context even if Redis write is slow or fails.
+            self._process_fallback_cache[cache_key] = context
             # Context lasts 7 days in Redis
-            await self.cache_service.set(cache_key, context, ttl=604800)
+            redis_saved = await self.cache_service.set(cache_key, context, ttl=604800)
+            if not redis_saved:
+                logger.warning(
+                    f"Redis save returned False for {contact_id} — process-level cache is fallback"
+                )
 
             # If we are in transition/backup mode, also save to file
             if settings.environment != "production":

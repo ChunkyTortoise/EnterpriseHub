@@ -2347,6 +2347,11 @@ class LeadBotWorkflow(BaseBotWorkflow):
                 reply = "Are you looking to buy in the Rancho Cucamonga area?"
             else:
                 reply = "Are you looking to sell in the Rancho Cucamonga area?"
+        elif _post_confirm:
+            # Safety net: post-confirm message arrived but history was incomplete
+            # (_has_day not detectable without prior turn context). Respond gracefully
+            # instead of resetting to the buy/sell question.
+            reply = "You're all set! Our team will be in touch. Talk soon!"
         else:
             reply = "Are you looking to buy or sell in the Rancho Cucamonga area?"
 

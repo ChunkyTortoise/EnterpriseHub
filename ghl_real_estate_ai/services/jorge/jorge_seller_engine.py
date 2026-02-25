@@ -91,7 +91,9 @@ class SellerQuestions:
 
         for q_type in cls.get_question_order():
             field_name = field_mapping[q_type]
-            if not answered_questions.get(field_name):
+            # Use "is None" (not "not") so that False (timeline rejected) is
+            # treated as answered and the bot advances past Q2.
+            if answered_questions.get(field_name) is None:
                 return question_mapping[q_type]
         return None
 
@@ -210,6 +212,52 @@ class JorgeSellerEngine:
             except Exception as ee:
                 self.logger.warning(f"Seller data extraction failed, using existing context: {ee}")
                 extracted_seller_data = current_seller_data
+
+            # 2b. History-scan recovery: if Redis/state was lost between turns,
+            # current_seller_data may be empty (missing previously answered fields).
+            # Scan every prior *user* message in conversation_history using regex-only
+            # extraction (no additional LLM calls) to recover fields still None in
+            # extracted_seller_data.  This ensures a single-turn context can still
+            # advance the Q-flow correctly even when the in-memory / Redis fallback
+            # cache is unavailable (e.g. a different Render dyno handled earlier turns).
+            _critical_fields_missing = (
+                extracted_seller_data.get("motivation") is None
+                or extracted_seller_data.get("timeline_acceptable") is None
+            )
+            if _critical_fields_missing:
+                conversation_history = context.get("conversation_history", [])
+                if conversation_history:
+                    # Collect all prior user messages oldest-first (the current turn is
+                    # not yet in history since update_context hasn't been called yet).
+                    prior_user_messages = [
+                        msg["content"]
+                        for msg in conversation_history
+                        if msg.get("role") == "user" and msg.get("content")
+                    ]
+                    if prior_user_messages:
+                        self.logger.info(
+                            f"History-scan recovery triggered for {contact_id}: "
+                            f"{len(prior_user_messages)} prior user messages to scan"
+                        )
+                        # Run regex-only extraction across prior messages (no LLM calls).
+                        recovered_data: Dict = {}
+                        for prior_msg in prior_user_messages:
+                            recovered_data = self._extract_seller_data_regex(
+                                prior_msg, recovered_data
+                            )
+                        # Merge: history-recovered values fill only fields still None in
+                        # extracted_seller_data (current-turn answers take priority).
+                        for field in ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]:
+                            if extracted_seller_data.get(field) is None and recovered_data.get(field) is not None:
+                                extracted_seller_data[field] = recovered_data[field]
+                                self.logger.info(
+                                    f"History-scan recovered {field}={recovered_data[field]} for {contact_id}"
+                                )
+                        # Recompute questions_answered after recovery
+                        _qfields = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
+                        extracted_seller_data["questions_answered"] = sum(
+                            1 for f in _qfields if extracted_seller_data.get(f) is not None
+                        )
 
             # 3. Calculate seller temperature (Hot/Warm/Cold)
             temperature_result = await self._calculate_seller_temperature(extracted_seller_data)
@@ -633,7 +681,11 @@ class JorgeSellerEngine:
                     extracted_data["motivation"] = "other"
 
             # 1. Timeline (30-45 days)
-            if extracted_data.get("timeline_acceptable") is None:
+            # Guard: only extract timeline if motivation was already answered in a *prior* turn.
+            # Without this guard the regex fires on motivation answers that happen to mention
+            # a month count (e.g. "relocating, need to sell within 3 months"), which causes
+            # the bot to skip Q2 entirely and jump straight to Q3.
+            if extracted_data.get("timeline_acceptable") is None and current_seller_data.get("motivation") is not None:
                 # Check explicit positives FIRST (avoids false negatives from "no problem", "no issue")
                 if re.search(
                     r"no problem|no issue|not a problem|that works|works for (me|us)|fine with|works fine|totally fine|absolutely|sounds good|that'?s fine",
@@ -792,6 +844,99 @@ class JorgeSellerEngine:
         except Exception as e:
             self.logger.error(f"Seller data extraction failed: {e}")
             return current_seller_data
+
+    def _extract_seller_data_regex(self, user_message: str, current_seller_data: Dict) -> Dict:
+        """Regex-only extraction of the 4 seller qualification fields — no LLM call.
+
+        Used by the history-scan recovery path to re-extract previously answered fields
+        from conversation history without incurring additional API costs.  Mirrors the
+        local-regex section inside _extract_seller_data.
+
+        Args:
+            user_message: A single user message to parse.
+            current_seller_data: Accumulated seller data so far (earlier turns).
+
+        Returns:
+            Dict with any newly extracted qualification fields merged into
+            current_seller_data (existing values are never overwritten).
+        """
+        extracted: Dict = dict(current_seller_data)
+        msg_lower = user_message.lower()
+
+        # --- Motivation ---
+        if not extracted.get("motivation"):
+            if re.search(r"relocat|moving? to|transfer|new job|got a job|job (in|at|offer)", msg_lower):
+                extracted["motivation"] = "relocation"
+            elif re.search(r"downsize|down-size|too big|smaller|retire|empty nest", msg_lower):
+                extracted["motivation"] = "downsizing"
+            elif re.search(r"divorce|separat|split up", msg_lower):
+                extracted["motivation"] = "divorce"
+            elif re.search(r"inherited|inherit|estate|passed away|died|probate", msg_lower):
+                extracted["motivation"] = "inherited"
+            elif re.search(r"financial|need(?: the)? money|debt|foreclosure|behind on|afford", msg_lower):
+                extracted["motivation"] = "financial"
+            elif re.search(r"upgrad|larger|bigger|more space|growing family|new baby|second baby|another baby|too small|outgrown|need more room|kids? (are )?growing", msg_lower):
+                extracted["motivation"] = "upgrading"
+            elif re.search(r"\bsell\b|\bselling\b", msg_lower) and current_seller_data:
+                extracted["motivation"] = "other"
+
+        # --- Timeline (30-45 days) ---
+        # Only extract if motivation was already answered in a prior message (same guard as
+        # the main extraction path) so the history-scan does not collapse Q1+Q2 into one step.
+        if extracted.get("timeline_acceptable") is None and current_seller_data.get("motivation") is not None:
+            if re.search(
+                r"no problem|no issue|not a problem|that works|works for (me|us)|fine with|works fine|totally fine|absolutely|sounds good|that'?s fine",
+                msg_lower,
+            ):
+                extracted["timeline_acceptable"] = True
+            elif re.search(r"\b(urgent|asap|immediately|need to move|right away|as soon as)\b", msg_lower):
+                extracted["timeline_acceptable"] = True
+            elif re.search(r"\b(30|45)\b.{0,20}\b(day|days)\b", msg_lower) and not re.search(
+                r"\b(no|not|won'?t|can'?t)\b.{0,15}\b(30|45)\b", msg_lower
+            ):
+                extracted["timeline_acceptable"] = True
+            elif re.search(r"\b(won'?t|can'?t|nope|too fast|not possible)\b", msg_lower) and re.search(
+                r"\b(30|45|thirty|forty.?five|month)\b", msg_lower
+            ):
+                extracted["timeline_acceptable"] = False
+            else:
+                _mo = re.search(r"(?:within|sell\s+in|in)\s+(?:the\s+next\s+)?(\d+)\s*(?:to\s*\d+\s*)?months?", msg_lower)
+                if _mo and int(_mo.group(1)) <= 4:
+                    extracted["timeline_acceptable"] = True
+                else:
+                    _mo2 = re.search(r"\b(\d+)\s*(?:to\s*\d+\s*)?months?\b", msg_lower)
+                    if _mo2:
+                        extracted["timeline_acceptable"] = int(_mo2.group(1)) <= 4
+                    elif re.search(r"\b(spring|summer|this year|end of year|few months|couple months|a few months)\b", msg_lower):
+                        extracted["timeline_acceptable"] = True
+                    elif re.search(r"\b(next year|no rush|not urgent|eventually|someday|not sure yet|exploring)\b", msg_lower):
+                        extracted["timeline_acceptable"] = False
+
+        # --- Property condition ---
+        if not extracted.get("property_condition"):
+            if re.search(
+                r"move.?in.?ready|great shape|good shape|great condition|good condition|pretty good|excellent|updated|remodel|renovated|recently\s+\w+|replaced (the )?roof|new roof|kept it up|well maintained|well-maintained|pristine|turnkey|turn.?key",
+                msg_lower,
+            ):
+                extracted["property_condition"] = "Move-in Ready"
+            elif re.search(r"needs?.{0,8}(work|repair|fix|updat)|fixer|rough|\bold\b|dated", msg_lower):
+                extracted["property_condition"] = "Needs Work"
+
+        # --- Price expectation ---
+        if not extracted.get("price_expectation"):
+            thousand_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:to\s*\d+(?:\.\d+)?\s*)?thousand", msg_lower)
+            if thousand_match:
+                extracted["price_expectation"] = f"{float(thousand_match.group(1)) * 1000:,.0f}"
+            else:
+                price_match = re.search(r"\$?(\d{1,3}(?:,\d{3})*(?:\.\d+)?(?:k|K)?)", user_message)
+                if price_match:
+                    raw = re.sub(r"[,$]", "", price_match.group(1))
+                    multiplier = 1000 if raw.lower().endswith("k") else 1
+                    numeric = float(re.sub(r"[kK]", "", raw) or 0) * multiplier
+                    if numeric > 10000:
+                        extracted["price_expectation"] = price_match.group(1)
+
+        return extracted
 
     async def _calculate_seller_temperature(self, seller_data: Dict) -> Dict:
         """Calculate Jorge's seller temperature classification
