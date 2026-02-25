@@ -1408,7 +1408,7 @@ async def handle_ghl_webhook(
                     bot_mode="lead",
                     channel="sms",
                     user_message=user_message,
-                    is_first_message=not history,
+                    is_first_message=is_lead_first_message,
                 )
                 pipeline = get_response_pipeline()
                 processed = await pipeline.process(final_lead_msg, pipeline_context)
@@ -1429,7 +1429,7 @@ async def handle_ghl_webhook(
                 # Bulletproof SB 243 / SB 1001 disclosure (supplements pipeline AIDisclosureProcessor)
                 if "[AI-assisted message]" not in final_lead_msg:
                     final_lead_msg += "\n[AI-assisted message]"
-                if not history and "AI assistant" not in final_lead_msg:
+                if is_lead_first_message and "AI assistant" not in final_lead_msg:
                     final_lead_msg = "This is Jorge's AI assistant. " + final_lead_msg
 
                 # --- CROSS-BOT HANDOFF CHECK ---
