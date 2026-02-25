@@ -54,12 +54,33 @@ class BuyerWorkflowService:
 
             await self._schedule_follow_up(state.get("buyer_id", "unknown"), next_action, follow_up_hours)
 
-            return {
+            result: Dict = {
                 "next_action": next_action,
                 "follow_up_scheduled": True,
                 "follow_up_hours": follow_up_hours,
                 "last_action_timestamp": datetime.now(timezone.utc),
             }
+
+            # Hot-path: buyer routed directly to schedule_next_action (bypassing
+            # generate_buyer_response).  Inject a proper appointment-booking message
+            # so the delivery safety guard never needs to fire for hot leads.
+            if next_action == "schedule_property_tour" and not str(
+                state.get("response_content", "")
+            ).strip():
+                buyer_name = state.get("buyer_name", "")
+                name_part = f"{buyer_name.split()[0]}, " if buyer_name and buyer_name.strip() else ""
+                result["response_content"] = (
+                    f"You're pre-approved and ready to move — let's get you into some homes! "
+                    f"{name_part}What works better for tours, mornings or afternoons?"
+                )
+                result["current_qualification_step"] = "appointment"
+                result["buyer_temperature"] = "hot"
+                logger.info(
+                    f"Hot-path appointment response injected for buyer "
+                    f"{state.get('buyer_id', 'unknown')}"
+                )
+
+            return result
 
         except Exception as e:
             logger.error(f"Error scheduling next action for {state.get('buyer_id')}: {str(e)}")
