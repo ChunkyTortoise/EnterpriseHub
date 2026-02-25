@@ -854,7 +854,7 @@ async def handle_ghl_webhook(
                         actions.append(
                             GHLAction(
                                 type=ActionType.UPDATE_CUSTOM_FIELD,
-                                field_id=action_data["field"],
+                                field=action_data["field"],
                                 value=action_data["value"],
                             )
                         )
@@ -1099,6 +1099,10 @@ async def handle_ghl_webhook(
             temp_tag_map = {"hot": "Hot-Buyer", "warm": "Warm-Buyer", "cold": "Cold-Buyer"}
             if buyer_temp in temp_tag_map:
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag=temp_tag_map[buyer_temp]))
+                # Remove stale temperature tags to prevent accumulation (e.g. cold+warm)
+                for temp_level, tag in temp_tag_map.items():
+                    if temp_level != buyer_temp:
+                        actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=tag))
 
             if buyer_result.get("is_qualified") or buyer_temp in ("warm", "hot"):
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Buyer-Qualified"))
@@ -1335,6 +1339,7 @@ async def handle_ghl_webhook(
                 # Determine sequence_day from first contact timestamp
                 lead_ctx = await conversation_manager.get_context(contact_id, location_id)
                 first_contact = lead_ctx.get("first_contact_at")
+                is_lead_first_message = not first_contact  # True ONLY on genuine T1
                 if not first_contact:
                     lead_ctx["first_contact_at"] = datetime.utcnow().isoformat()
                     sequence_day = 0
@@ -1365,6 +1370,10 @@ async def handle_ghl_webhook(
                 temp_tag_map = {"hot": "Hot-Lead", "warm": "Warm-Lead", "cold": "Cold-Lead"}
                 if lead_temp in temp_tag_map:
                     actions.append(GHLAction(type=ActionType.ADD_TAG, tag=temp_tag_map[lead_temp]))
+                    # Remove stale temperature tags to prevent accumulation (e.g. cold+warm)
+                    for temp_level, tag in temp_tag_map.items():
+                        if temp_level != lead_temp:
+                            actions.append(GHLAction(type=ActionType.REMOVE_TAG, tag=tag))
 
                 is_qualified = lead_result.get("engagement_status") == "qualified"
                 if is_qualified:
