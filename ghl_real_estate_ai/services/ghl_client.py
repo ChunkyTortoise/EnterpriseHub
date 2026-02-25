@@ -610,6 +610,13 @@ class GHLClient:
             )
             return {"status": "mocked", "workflow_id": workflow_id}
 
+        if not workflow_id or not str(workflow_id).strip():
+            logger.warning(
+                f"Skipping workflow trigger: workflow_id is empty for contact {contact_id}",
+                extra={"contact_id": contact_id, "workflow_id": workflow_id},
+            )
+            return {"status": "skipped", "reason": "empty_workflow_id"}
+
         endpoint = f"{self.base_url}/workflows/{workflow_id}/trigger"
 
         payload = {"contactId": contact_id}
