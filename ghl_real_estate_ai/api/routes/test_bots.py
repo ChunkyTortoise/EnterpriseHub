@@ -18,7 +18,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from ghl_real_estate_ai.api.routes.inbound_compliance import (
@@ -286,15 +286,20 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
     history = list(sess["history"])
     history.append({"role": "user", "content": safe_message})
 
-    from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
-
-    buyer_bot = JorgeBuyerBot()
-    result = await buyer_bot.process_buyer_conversation(
-        conversation_id=req.contact_id,
-        user_message=safe_message,
-        buyer_name=req.buyer_name,
-        conversation_history=history,
-    )
+    try:
+        from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+        buyer_bot = JorgeBuyerBot()
+        result = await buyer_bot.process_buyer_conversation(
+            conversation_id=req.contact_id,
+            user_message=safe_message,
+            buyer_name=req.buyer_name,
+            conversation_history=history,
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Buyer engine unavailable in this environment: {type(exc).__name__}: {exc}",
+        ) from exc
 
     response_text = inject_disclosure(result.get("response_content") or result.get("response") or "", sess.get("turn", 0))
     buyer_temp = result.get("buyer_temperature")
