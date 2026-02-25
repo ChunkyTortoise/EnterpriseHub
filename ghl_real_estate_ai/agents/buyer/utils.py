@@ -42,6 +42,10 @@ async def extract_budget_range(
                 # Only auto-multiply 100-999 range (clear K-shorthand in real estate)
                 # "$500" -> $500K, but "$50" stays $50, "$1500" stays $1500
                 amount *= 1000
+            elif amount < 100:
+                # Skip values too small to be a budget — typically bedroom/bathroom
+                # counts ("3-bedroom house" → 3) captured by the plain-number fallback.
+                continue
             amounts.append(amount)
 
         if len(amounts) >= 2:

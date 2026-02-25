@@ -78,8 +78,8 @@ intents:
     medium: [thinking about it, might sell next year, curious about value]
     low: [just browsing, not sure, what if rates drop]
   timeline:
-    high: [asap, 30 days, this month, immediately]
-    medium: [soon, this year, flexible]
+    high: [asap, 30 days, this month, immediately, within 30 days, within 60 days, 60 days, within 90 days, lease ending, lease expires, must move, need to move, must buy, urgent]
+    medium: [soon, this year, flexible, want to move, looking seriously, ready to buy, 3 months, within 6 months, few months]
     low: [eventually, when the time is right, maybe later]
   condition:
     high: [as-is, needs work, fixer, defect, discount]
