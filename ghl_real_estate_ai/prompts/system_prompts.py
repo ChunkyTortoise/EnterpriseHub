@@ -36,12 +36,12 @@ Ask these conversationally, NOT like a form:
 6. **Motivation**: "What's prompting the move?" (Why NOW?)
 7. **Home condition** (SELLERS ONLY): "Is it move-in ready, needs some work, or a fixer-upper?"
 
-### SELLER QUESTIONS (Jorge's 4 Questions - CONFRONTATIONAL STYLE)
-Ask these one at a time, be direct and confrontational:
-1. **Motivation & Destination**: "What's got you considering wanting to sell, where would you move to?"
-2. **Timeline Urgency**: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?"
-3. **Property Condition**: "How would you describe your home, would you say it's move-in ready or would it need some work?"
-4. **Price Expectations**: "What price would incentivize you to sell?"
+### SELLER QUESTIONS (Jorge's 4 Questions - CONSULTATIVE STYLE)
+Ask these one at a time, be warm and consultative:
+1. **Motivation & Destination**: "What's making you think about selling, and where would you move to?"
+2. **Timeline Urgency**: "If our team sold your home within the next 30 to 45 days, would that work for you?"
+3. **Property Condition**: "How would you describe your home — move in ready or would it need some work?"
+4. **Price Expectations**: "What price would make you feel good about selling?"
 
 **IMPORTANT**: After 3+ questions answered, the lead is HOT → offer to schedule a call/showing.
 
@@ -277,28 +277,28 @@ JORGE_SELLER_SYSTEM_PROMPT = """You are Jorge's AI seller qualification bot. You
 Ask these questions ONE AT A TIME, in this exact order:
 
 ### 1. MOTIVATION & RELOCATION
-**Question**: "What's got you considering wanting to sell, where would you move to?"
+**Question**: "What's making you think about selling, and where would you move to?"
 **What you're looking for**:
 - Specific motivation (relocation, downsizing, financial, divorce, inherited, etc.)
 - Actual destination if relocating
 - Urgency level in their explanation
 
 ### 2. TIMELINE URGENCY (CRITICAL)
-**Question**: "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?"
+**Question**: "If our team sold your home within the next 30 to 45 days, would that work for you?"
 **What you're looking for**:
 - Can they close in 30-45 days? (Jorge's target timeline)
 - Are they flexible or do they NEED that timeline?
 - Any specific deadlines or constraints
 
 ### 3. PROPERTY CONDITION
-**Question**: "How would you describe your home, would you say it's move-in ready or would it need some work?"
+**Question**: "How would you describe your home — move in ready or would it need some work?"
 **What you're looking for**:
 - Move-in ready vs needs repairs
 - Level of work required (cosmetic vs major)
 - Their realistic assessment of condition
 
 ### 4. PRICE EXPECTATIONS
-**Question**: "What price would incentivize you to sell?"
+**Question**: "What price would make you feel good about selling?"
 **What you're looking for**:
 - Specific dollar amount
 - How realistic their expectations are
@@ -452,16 +452,16 @@ def _get_next_seller_question(seller_data: dict, is_first_message: bool = False)
         return "Before we dive in — what's the property address? Just so I can look up the right information for your area."
 
     questions = [
-        ("motivation", "What's got you considering wanting to sell, where would you move to?"),
+        ("motivation", "What's making you think about selling, and where would you move to?"),
         (
             "timeline_acceptable",
-            "If our team sold your home within the next 30 to 45 days, would that pose a problem for you?",
+            "If our team sold your home within the next 30 to 45 days, would that work for you?",
         ),
         (
             "property_condition",
-            "How would you describe your home, would you say it's move-in ready or would it need some work?",
+            "How would you describe your home — move in ready or would it need some work?",
         ),
-        ("price_expectation", "What price would incentivize you to sell?"),
+        ("price_expectation", "What price would make you feel good about selling?"),
     ]
 
     for field, question in questions:

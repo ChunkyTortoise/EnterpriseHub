@@ -287,7 +287,7 @@ class TestSafeMessages:
     async def test_safe_pricing_question(self, guard, llm_passed_response):
         """Pricing questions must pass."""
         guard.llm_client.agenerate.return_value = llm_passed_response
-        msg = "What price would incentivize you to sell?"
+        msg = "What price would make you feel good about selling?"
         status, reason, violations = await guard.audit_message(msg)
         assert status == ComplianceStatus.PASSED
 
@@ -330,7 +330,7 @@ class TestSafeMessages:
         """_check_patterns must return empty list for clean messages."""
         clean_messages = [
             "The property has 3 bedrooms and 2 bathrooms",
-            "What price would incentivize you to sell?",
+            "What price would make you feel good about selling?",
             "The Rancho Cucamonga market has appreciated 5% this year",
             "Based on comparable sales, your home is valued between $650k and $720k",
             "Are you pre-approved for a mortgage?",
