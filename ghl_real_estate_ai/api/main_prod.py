@@ -41,9 +41,8 @@ class JSONSanitizeASGIMiddleware:
     Operates at the raw ASGI protocol level (http.response.body messages),
     bypassing BaseHTTPMiddleware's body_iterator streaming issues entirely.
 
-    Replaces 0x0a → \\n and 0x0d → \\r so the SB 243 footer newline
-    (\n[AI-assisted message]) is always JSON-safe, regardless of which
-    code path assembled the response.
+    Replaces 0x0a → \\n and 0x0d → \\r so any multi-line response text
+    is always JSON-safe, regardless of which code path assembled it.
     """
 
     def __init__(self, app: Any) -> None:
