@@ -301,7 +301,7 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
             detail=f"Buyer engine unavailable in this environment: {type(exc).__name__}: {exc}",
         ) from exc
 
-    response_text = inject_disclosure(result.get("response_content") or result.get("response") or "", sess.get("turn", 0))
+    response_text = result.get("response_content") or result.get("response") or ""
     buyer_temp = result.get("buyer_temperature")
     actions = result.get("actions") or []
 
