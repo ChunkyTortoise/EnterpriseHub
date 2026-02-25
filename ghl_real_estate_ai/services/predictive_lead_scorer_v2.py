@@ -275,7 +275,7 @@ class PredictiveLeadScorerV2:
                 qualification_score=qualification_score,
                 qualification_percentage=qualification_percentage,
                 # ML predictions
-                closing_probability=ml_prediction.closing_probability,
+                closing_probability=min(1.0, max(0.0, ml_prediction.closing_probability)),
                 closing_confidence_interval=ml_prediction.confidence_interval,
                 # Multi-dimensional scores
                 engagement_score=engagement_score,
