@@ -200,6 +200,13 @@ def _normalize_tags(raw_tags: list[str] | None) -> set[str]:
     return normalized
 
 
+# Tags that the lead bot itself applies — a contact carrying ONLY these tags
+# should still activate lead mode on subsequent turns (passthrough activation).
+_LEAD_PASSTHROUGH_TAGS: frozenset[str] = frozenset(
+    {"hot-lead", "warm-lead", "cold-lead", "lead-qualified"}
+)
+
+
 def _tag_present(tag: str | None, tags_lower: set[str]) -> bool:
     """Return True when a single tag exists in normalized tag set."""
     if not tag:
@@ -226,7 +233,9 @@ def _compute_mode_flags(
         ),
         "buyer": _tag_present(buyer_activation_tag, tags_lower) and buyer_mode_enabled and not should_deactivate,
         "lead": (
-            _tag_present(lead_activation_tag, tags_lower) or (not tags_lower and lead_mode_enabled)
+            _tag_present(lead_activation_tag, tags_lower)
+            or (not tags_lower and lead_mode_enabled)
+            or (lead_mode_enabled and bool(tags_lower) and tags_lower.issubset(_LEAD_PASSTHROUGH_TAGS))
         ) and lead_mode_enabled and not should_deactivate,
     }
 
@@ -492,7 +501,11 @@ async def handle_ghl_webhook(
     # Lead-mode tag also counts as activation when lead mode is enabled.
     # Unclassified contacts (empty tags) are also handled by lead bot when JORGE_LEAD_MODE=true.
     if not should_activate and jorge_settings.JORGE_LEAD_MODE:
-        should_activate = _tag_present(jorge_settings.LEAD_ACTIVATION_TAG, tags_lower) or not tags_lower
+        should_activate = (
+            _tag_present(jorge_settings.LEAD_ACTIVATION_TAG, tags_lower)
+            or not tags_lower
+            or (bool(tags_lower) and tags_lower.issubset(_LEAD_PASSTHROUGH_TAGS))
+        )
     should_deactivate = any(_tag_present(tag, tags_lower) for tag in deactivation_tags)
 
     if not should_activate:
@@ -1016,7 +1029,7 @@ async def handle_ghl_webhook(
 
             # Apply buyer bot actions (tags based on temperature)
             actions = []
-            buyer_temp = buyer_result.get("buyer_temperature", "cold")
+            buyer_temp = buyer_result.get("buyer_temperature") or "cold"
             # buyer_temperature is never set by the LangGraph workflow, so derive from signals
             _resp_content_lower = buyer_result.get("response_content", "").lower()
             _conv_len = len(conversation_history) if conversation_history else 0
