@@ -830,6 +830,42 @@ class JorgeSellerEngine:
                     )
                     # Update last_question_asked to reflect new position after skip
                     extracted_data["last_question_asked"] = SellerQuestions.get_question_number(extracted_data)
+                    current_q_now = extracted_data["last_question_asked"]
+
+            # Smart skip for Q2 (timeline): if the user's answer clearly addresses Q3 or Q4
+            # while Q2 is still pending, infer timeline_acceptable=True and advance.
+            # Fires when Redis context was lost between turns (e.g. Render cold-start between T4→T5):
+            # user already answered timeline on a previous turn but that context wasn't recovered,
+            # so they're now answering condition/price and we should not ask timeline again.
+            if (
+                current_q_now == 2
+                and extracted_data.get("timeline_acceptable") is None
+                and (
+                    extracted_data.get("property_condition") is not None
+                    or extracted_data.get("price_expectation") is not None
+                )
+            ):
+                extracted_data["timeline_acceptable"] = True  # sensible default: accept
+                extracted_data["stall_turns"] = 0
+                extracted_data["questions_answered"] = sum(
+                    1 for f in question_fields if extracted_data.get(f) is not None
+                )
+                extracted_data["last_question_asked"] = SellerQuestions.get_question_number(extracted_data)
+                current_q_now = extracted_data["last_question_asked"]
+
+            # Smart skip for Q3 (condition): if the user provided a price answer while
+            # condition is still unanswered, default condition to "Unknown" and advance.
+            if (
+                current_q_now == 3
+                and extracted_data.get("property_condition") is None
+                and extracted_data.get("price_expectation") is not None
+            ):
+                extracted_data["property_condition"] = "Unknown"
+                extracted_data["stall_turns"] = 0
+                extracted_data["questions_answered"] = sum(
+                    1 for f in question_fields if extracted_data.get(f) is not None
+                )
+                extracted_data["last_question_asked"] = SellerQuestions.get_question_number(extracted_data)
 
             # Store current user message for follow-up handling
             extracted_data["last_user_message"] = user_message
