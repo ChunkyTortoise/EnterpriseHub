@@ -303,6 +303,33 @@ def _select_slot_from_message(message: str, options: list[dict]) -> dict | None:
     return None
 
 
+def _detect_buy_sell_intent(message: str) -> str | None:
+    """Detect whether an inbound message signals buyer or seller intent.
+
+    Returns 'buyer', 'seller', or None if intent is unclear.
+    Used by the lead mode handler to route T2 responses automatically.
+    """
+    msg = message.lower()
+    seller_signals = {
+        "sell", "selling", "list", "listing", "want to sell", "looking to sell",
+        "thinking about selling", "put it on the market", "on the market",
+        "my home", "my house", "my property", "my condo", "my place",
+    }
+    buyer_signals = {
+        "buy", "buying", "purchase", "purchasing", "looking for", "find a home",
+        "looking to buy", "want to buy", "interested in buying", "find a house",
+        "searching for", "need a home", "need a house", "want a home", "want a house",
+        "first home", "first house", "investment property", "rental property",
+    }
+    seller_score = sum(1 for s in seller_signals if s in msg)
+    buyer_score = sum(1 for s in buyer_signals if s in msg)
+    if seller_score > buyer_score:
+        return "seller"
+    if buyer_score > seller_score:
+        return "buyer"
+    return None
+
+
 async def _get_tenant_ghl_client(
     location_id: str, tenant_service: TenantService, ghl_client_default: GHLClient
 ) -> GHLClient:
@@ -1356,6 +1383,121 @@ async def handle_ghl_webhook(
                     delta = datetime.utcnow() - datetime.fromisoformat(first_contact)
                     sequence_day = delta.days
                 await conversation_manager.memory_service.save_context(contact_id, lead_ctx, location_id=location_id)
+
+                # ── BUY/SELL QUALIFYING LAYER ─────────────────────────────────────
+                # T1: On first ever contact, skip the full LangGraph flow and send a
+                #     simple "buy or sell?" qualifying question so we can route the
+                #     lead to the right specialist bot on the very next reply.
+                # T2: On the second message, detect intent and apply routing tags so
+                #     the seller or buyer bot takes over from the next turn onward.
+                # If intent is still unclear, fall through to the normal lead bot.
+                # ──────────────────────────────────────────────────────────────────
+                contact_first_name = (
+                    event.contact.first_name if event.contact and event.contact.first_name else "there"
+                )
+
+                if is_lead_first_message:
+                    # T1 — send the qualifying question and return early
+                    t1_message = (
+                        f"Hey {contact_first_name}! Are you looking to buy or sell "
+                        f"in the Rancho Cucamonga area?"
+                    )
+                    logger.info(
+                        "Lead T1 qualifying question sent to %s — bypassing LangGraph", contact_id
+                    )
+                    background_tasks.add_task(
+                        safe_send_message,
+                        current_ghl_client,
+                        contact_id,
+                        t1_message,
+                        event.message.type,
+                    )
+                    await conversation_manager.update_context(
+                        contact_id=contact_id,
+                        user_message=user_message,
+                        ai_response=t1_message,
+                        location_id=location_id,
+                    )
+                    return JSONResponse(
+                        status_code=200,
+                        content={"status": "ok", "mode": "lead_t1_qualify"},
+                    )
+
+                # T2 — detect intent from the contact's reply and route accordingly
+                detected_intent = _detect_buy_sell_intent(user_message)
+                if detected_intent == "seller":
+                    logger.info(
+                        "Lead T2 seller intent detected for %s — routing to seller bot", contact_id
+                    )
+                    routing_actions = [
+                        GHLAction(type=ActionType.ADD_TAG, tag="Needs Qualifying"),
+                        GHLAction(type=ActionType.REMOVE_TAG, tag=jorge_settings.LEAD_ACTIVATION_TAG),
+                    ]
+                    t2_message = (
+                        f"Got it, {contact_first_name}! What's the address of the property "
+                        f"you're thinking about selling?"
+                    )
+                    background_tasks.add_task(
+                        safe_send_message,
+                        current_ghl_client,
+                        contact_id,
+                        t2_message,
+                        event.message.type,
+                    )
+                    background_tasks.add_task(
+                        safe_apply_actions,
+                        current_ghl_client,
+                        contact_id,
+                        routing_actions,
+                    )
+                    await conversation_manager.update_context(
+                        contact_id=contact_id,
+                        user_message=user_message,
+                        ai_response=t2_message,
+                        location_id=location_id,
+                    )
+                    return JSONResponse(
+                        status_code=200,
+                        content={"status": "ok", "mode": "lead_t2_routed_seller"},
+                    )
+
+                if detected_intent == "buyer":
+                    logger.info(
+                        "Lead T2 buyer intent detected for %s — routing to buyer bot", contact_id
+                    )
+                    routing_actions = [
+                        GHLAction(type=ActionType.ADD_TAG, tag=jorge_settings.BUYER_ACTIVATION_TAG),
+                        GHLAction(type=ActionType.REMOVE_TAG, tag=jorge_settings.LEAD_ACTIVATION_TAG),
+                    ]
+                    t2_message = (
+                        f"Perfect, {contact_first_name}! What area or neighborhoods "
+                        f"are you looking to buy in?"
+                    )
+                    background_tasks.add_task(
+                        safe_send_message,
+                        current_ghl_client,
+                        contact_id,
+                        t2_message,
+                        event.message.type,
+                    )
+                    background_tasks.add_task(
+                        safe_apply_actions,
+                        current_ghl_client,
+                        contact_id,
+                        routing_actions,
+                    )
+                    await conversation_manager.update_context(
+                        contact_id=contact_id,
+                        user_message=user_message,
+                        ai_response=t2_message,
+                        location_id=location_id,
+                    )
+                    return JSONResponse(
+                        status_code=200,
+                        content={"status": "ok", "mode": "lead_t2_routed_buyer"},
+                    )
+                # ── END BUY/SELL QUALIFYING LAYER ────────────────────────────────
+                # Intent unclear — fall through to the full LangGraph lead bot
 
                 # Initialize and run lead bot (real-time conversation handler)
                 lead_bot = LeadBotWorkflow(ghl_client=current_ghl_client)
