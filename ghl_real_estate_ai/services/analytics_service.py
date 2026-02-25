@@ -68,6 +68,7 @@ class AnalyticsService:
             # We use JSONL (JSON Lines) for efficient appending
             with open(file_path, "a") as f:
                 f.write(json.dumps(event) + "\n")
+            logger.info(f"[analytics] {event_type} | contact={contact_id} | location={location_id}")
         except Exception as e:
             logger.error(f"Failed to track event {event_type} for {location_id}: {e}")
 

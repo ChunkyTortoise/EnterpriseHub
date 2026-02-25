@@ -9,6 +9,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class RevenueAttributionEngine:
     """Track and attribute revenue to marketing channels and activities"""
