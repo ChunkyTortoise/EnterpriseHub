@@ -245,12 +245,12 @@ class TestMemoryService:
     async def test_clear_context_file(self, memory_service):
         """Test clearing context file."""
         contact_id = "clear_contact"
-        await memory_service.save_context(contact_id, {"data": 1})
+        await memory_service.save_context(contact_id, {"data": 1}, location_id=TEST_LOCATION_ID)
 
         path = memory_service._get_file_path(contact_id, location_id=TEST_LOCATION_ID)
         assert path.exists()
 
-        await memory_service.clear_context(contact_id)
+        await memory_service.clear_context(contact_id, location_id=TEST_LOCATION_ID)
         assert not path.exists()
 
     async def test_clear_context_memory(self, in_memory_service):
@@ -259,7 +259,7 @@ class TestMemoryService:
         cache_key = f"{TEST_LOCATION_ID}:{contact_id}"
         in_memory_service._memory_cache[cache_key] = {}
 
-        await in_memory_service.clear_context(contact_id)
+        await in_memory_service.clear_context(contact_id, location_id=TEST_LOCATION_ID)
         assert cache_key not in in_memory_service._memory_cache
 
     # --- Specialized Memory ---
