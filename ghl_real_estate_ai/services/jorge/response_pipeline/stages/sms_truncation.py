@@ -34,6 +34,12 @@ SPAM_TRIGGER_WORDS = [
     "NO OBLIGATION",
 ]
 
+# Known footer patterns to exclude from caps analysis
+KNOWN_FOOTERS = [
+    "[AI-assisted message]",
+    "[Mensaje asistido por IA]",
+]
+
 # URL shortener domains that carriers flag
 URL_SHORTENER_PATTERNS = re.compile(
     r"https?://(?:bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly|is\.gd|buff\.ly)/",
