@@ -20,15 +20,26 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter
 from pydantic import BaseModel
-# ── jorge_hardening: compliance & safety layer ────────────────────────────────
-from jorge_hardening.filters.opt_out import check_opt_out, is_contact_opted_out
-from jorge_hardening.filters.fair_housing import check_fair_housing
-from jorge_hardening.filters.context_injection import sanitize_for_context_injection
-from jorge_hardening.filters.privacy import check_privacy_question
-from jorge_hardening.middleware.disclosure import inject_disclosure
-from jorge_hardening.filters.input_guard import sanitize_input
-# ─────────────────────────────────────────────────────────────────────────────
 
+# ── inline bot-identity disclosure (discloses only when explicitly asked) ──────
+import re as _re
+_BOT_IDENTITY_PATTERNS = _re.compile(
+    r'\b(are you (a )?(real |human |actual )?(person|human|agent|bot|ai|robot|chatbot)|'
+    r'(is this|am i (talking|speaking|chatting) (to|with)) (a )?(real |human |actual )?(person|human|agent|bot|ai|robot)|'
+    r'(you|this).{0,10}(real|human|ai|bot|automated|robot)|'
+    r'(talk|speak|chat).{0,15}(human|real person|real agent))\b',
+    _re.IGNORECASE
+)
+
+def _check_bot_identity(message: str) -> str | None:
+    """Return a disclosure string if the user is explicitly asking whether this is a bot."""
+    if _BOT_IDENTITY_PATTERNS.search(message):
+        return (
+            "Just to be transparent — I'm an AI assistant, not a human agent. "
+            "I'm here to help answer your real estate questions. How can I assist you?"
+        )
+    return None
+# ───────────────────────────────────────────────────────────────────────────────
 
 router = APIRouter(prefix="/test", tags=["Bot Testing"])
 
@@ -185,29 +196,13 @@ async def test_seller(req: TestSellerRequest) -> TestBotResponse:
         _sessions.pop(req.contact_id, None)
 
     sess = _get_session(req.contact_id, req.location_id)
+    # ── bot identity: disclose when explicitly asked ──
+    _seller_msg = req.message or ""
+    _bot_id_reply = _check_bot_identity(_seller_msg)
+    if _bot_id_reply:
+        return {"response": _bot_id_reply, "session_id": req.contact_id, "turn": sess.get("turn", 0)}
+    # ─────────────────────────────────────────────────
 
-    # ── jorge_hardening: compliance pre-flight ─────────────────────────────
-    _san = sanitize_input(req.message)
-    if _san.rejected:
-        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
-            response=_san.rejection_reason, actions=[], extracted_data={}, temperature=None, session_history=[])
-    _msg = _san.text
-    _opt = check_opt_out(req.contact_id, _msg)
-    if _opt or is_contact_opted_out(sess):
-        _reply = _opt or "You have previously opted out. Reply START to re-subscribe."
-        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
-            response=_reply, actions=[], extracted_data={}, temperature=None, session_history=[])
-    _fha = check_fair_housing(_msg)
-    if _fha:
-        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
-            response=_fha, actions=[], extracted_data={}, temperature=None, session_history=[])
-    _priv = check_privacy_question(_msg)
-    if _priv:
-        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
-            response=_priv, actions=[], extracted_data={}, temperature=None, session_history=[])
-    _msg, _injected = sanitize_for_context_injection(_msg, sess)
-    req = req.model_copy(update={"message": _msg})
-    # ─────────────────────────────────────────────────────────────────────────
 
     stub_cm = _StubConversationManager()
     stub_ghl = _StubGHLClient()
@@ -222,7 +217,7 @@ async def test_seller(req: TestSellerRequest) -> TestBotResponse:
         tenant_config=None,
     )
 
-    response_text = inject_disclosure(result.get("response") or result.get("message") or "", sess.get("turn", 0))
+    response_text = result.get("response") or result.get("message") or "I'm here to help with your real estate needs." or "", sess.get("turn", 0))
     actions = result.get("actions") or []
     seller_data = result.get("seller_data") or {}
     temperature = result.get("temperature") or result.get("seller_temperature")
@@ -270,29 +265,13 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
         _sessions.pop(req.contact_id, None)
 
     sess = _get_session(req.contact_id)
+    # ── bot identity: disclose when explicitly asked ──
+    _buyer_msg = req.message or ""
+    _bot_id_reply_b = _check_bot_identity(_buyer_msg)
+    if _bot_id_reply_b:
+        return {"response": _bot_id_reply_b, "session_id": req.contact_id, "turn": sess.get("turn", 0)}
+    # ─────────────────────────────────────────────────
 
-    # ── jorge_hardening: compliance pre-flight ─────────────────────────────
-    _san = sanitize_input(req.message)
-    if _san.rejected:
-        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
-            response=_san.rejection_reason, actions=[], extracted_data={}, temperature=None, session_history=[])
-    _msg_b = _san.text
-    _opt_b = check_opt_out(req.contact_id, _msg_b)
-    if _opt_b or is_contact_opted_out(sess):
-        _reply_b = _opt_b or "You have previously opted out. Reply START to re-subscribe."
-        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
-            response=_reply_b, actions=[], extracted_data={}, temperature=None, session_history=[])
-    _fha_b = check_fair_housing(_msg_b)
-    if _fha_b:
-        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
-            response=_fha_b, actions=[], extracted_data={}, temperature=None, session_history=[])
-    _priv_b = check_privacy_question(_msg_b)
-    if _priv_b:
-        return TestBotResponse(contact_id=req.contact_id, turn=sess.get("turn",0),
-            response=_priv_b, actions=[], extracted_data={}, temperature=None, session_history=[])
-    _msg_b, _injected_b = sanitize_for_context_injection(_msg_b, sess)
-    req = req.model_copy(update={"message": _msg_b})
-    # ─────────────────────────────────────────────────────────────────────────
 
     # Build history including this new user message
     history = list(sess["history"])
