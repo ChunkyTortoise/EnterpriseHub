@@ -1259,7 +1259,18 @@ class JorgeSellerEngine:
                 )
                 response_type = "handoff"
 
-        # 2. Vague streak >= 2 → take-away close
+        # 2a. F-11 — Objection exhaustion: ≥5 consecutive low-quality / dismissive turns.
+        # Continuing to push after this point harms the relationship; hand off to human.
+        elif vague_streak >= 5:
+            _OBJECTION_EXHAUSTION_FLOOR = 5
+            message = (
+                "No problem at all — I appreciate your time. "
+                "If your situation ever changes and you'd like to explore your options, "
+                "our team would love to help. Feel free to reach out anytime!"
+            )
+            response_type = "objection_exhaustion_handoff"
+
+        # 2b. Vague streak >= 2 → take-away close
         elif vague_streak >= 2:
             message = self.tone_engine.generate_objection_response(
                 "just_looking",
@@ -1556,7 +1567,16 @@ class JorgeSellerEngine:
                 )
                 response_type = "qualification"
 
-        # 3. Low Probability or Vague Answer Escalation (Take-Away Close)
+        # 3a. F-11 — Objection exhaustion (enterprise path): same 5-turn floor.
+        elif vague_streak >= 5:
+            message = (
+                "No problem at all — I appreciate your time. "
+                "If your situation ever changes and you'd like to explore your options, "
+                "our team would love to help. Feel free to reach out anytime!"
+            )
+            response_type = "objection_exhaustion_handoff"
+
+        # 3b. Low Probability or Vague Answer Escalation (Take-Away Close)
         elif low_probability or vague_streak >= 2:
             # Friendly reset that keeps qualification moving.
             message = self.tone_engine.generate_objection_response(
@@ -2014,6 +2034,14 @@ class JorgeSellerEngine:
         if offer_type != "unknown":
             field_id = JorgeSellerConfig.get_ghl_custom_field_id("offer_type") or "offer_type"
             actions.append({"type": "update_custom_field", "field": field_id, "value": offer_type})
+
+        # F-11 FIX: Objection exhaustion — after 5 consecutive low-quality / dismissive
+        # turns, suppress the AI and flag for human follow-up rather than continuing to push.
+        _OBJECTION_EXHAUSTION_FLOOR = 5
+        if seller_data.get("vague_streak", 0) >= _OBJECTION_EXHAUSTION_FLOOR:
+            actions.append({"type": "add_tag", "tag": "Objection-Exhausted"})
+            actions.append({"type": "add_tag", "tag": "Human-Follow-Up-Needed"})
+            actions.append({"type": "add_tag", "tag": "AI-Off"})
 
         return actions
 

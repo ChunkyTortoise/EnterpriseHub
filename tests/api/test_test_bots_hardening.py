@@ -436,3 +436,74 @@ def test_price_extraction_ignores_timeline_numbers() -> None:
         assert result is None, (
             f"Expected None (no price) for {msg!r}, got {result!r}"
         )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# F-11: Objection exhaustion — human handoff after 5× low-quality turns
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@_needs_engine
+@pytest.mark.asyncio
+async def test_objection_exhaustion_returns_handoff_response() -> None:
+    """After vague_streak reaches 5, _generate_simple_response must return
+    response_type='objection_exhaustion_handoff' — not another nudge or question."""
+    from unittest.mock import MagicMock
+
+    engine = JorgeSellerEngine(MagicMock(), MagicMock())
+    seller_data = {
+        "questions_answered": 0,
+        "vague_streak": 5,
+        "response_quality": 0.1,
+        "last_user_message": "I don't know",
+    }
+    result = await engine._generate_simple_response(seller_data, "cold", "test-f11-001")
+    assert result["response_type"] == "objection_exhaustion_handoff", (
+        f"Expected objection_exhaustion_handoff, got {result['response_type']!r}: {result['message']!r}"
+    )
+    # Must not continue qualification or objection loop
+    msg_lower = result["message"].lower()
+    assert "what" not in msg_lower or "help" in msg_lower, (
+        "Exhaustion handoff must not ask another question"
+    )
+
+
+@_needs_engine
+@pytest.mark.asyncio
+async def test_objection_exhaustion_at_exactly_five() -> None:
+    """vague_streak == 4 should still get a clarification nudge; 5 triggers handoff."""
+    from unittest.mock import MagicMock
+
+    engine = JorgeSellerEngine(MagicMock(), MagicMock())
+    base = {"questions_answered": 0, "response_quality": 0.1, "last_user_message": "dunno"}
+
+    result_4 = await engine._generate_simple_response({**base, "vague_streak": 4}, "cold", "c")
+    assert result_4["response_type"] != "objection_exhaustion_handoff", (
+        f"vague_streak=4 must not yet trigger handoff, got {result_4['response_type']!r}"
+    )
+
+    result_5 = await engine._generate_simple_response({**base, "vague_streak": 5}, "cold", "c")
+    assert result_5["response_type"] == "objection_exhaustion_handoff", (
+        f"vague_streak=5 must trigger handoff, got {result_5['response_type']!r}"
+    )
+
+
+@_needs_engine
+@pytest.mark.asyncio
+async def test_objection_exhaustion_actions_emit_ai_off_and_human_follow_up() -> None:
+    """_create_seller_actions must emit Objection-Exhausted + Human-Follow-Up-Needed
+    + AI-Off tags when vague_streak >= 5."""
+    from unittest.mock import MagicMock
+
+    engine = JorgeSellerEngine(MagicMock(), MagicMock())
+    seller_data = {"questions_answered": 1, "vague_streak": 5}
+    actions = await engine._create_seller_actions(
+        contact_id="test-f11",
+        location_id="loc",
+        temperature="cold",
+        seller_data=seller_data,
+    )
+    tag_names = [a.get("tag") for a in actions if a.get("type") == "add_tag"]
+    assert "Human-Follow-Up-Needed" in tag_names, f"Missing tag, got: {tag_names}"
+    assert "AI-Off" in tag_names, f"Missing AI-Off tag, got: {tag_names}"
+    assert "Objection-Exhausted" in tag_names, f"Missing Objection-Exhausted tag, got: {tag_names}"
