@@ -1717,7 +1717,15 @@ class JorgeSellerEngine:
         actions = []
 
         # Apply temperature tag
-        actions.append({"type": "add_tag", "tag": f"{temperature.capitalize()}-Seller"})
+        # Normalize temperature to lowercase string (guard against enum/unexpected values)
+        temperature = str(temperature).lower().strip()
+        # Remove stale temperature tags FIRST so GHL's final state is always correct
+        _all_temp_tags = ["Hot-Seller", "Warm-Seller", "Cold-Seller"]
+        _new_temp_tag = f"{temperature.capitalize()}-Seller"
+        for _old_tag in _all_temp_tags:
+            if _old_tag != _new_temp_tag:
+                actions.append({"type": "remove_tag", "tag": _old_tag})
+        actions.append({"type": "add_tag", "tag": _new_temp_tag})
 
         # --- ROI INTELLIGENCE (Extreme Value Phase) ---
         if pricing_result:
@@ -1746,11 +1754,7 @@ class JorgeSellerEngine:
             )
 
         # Remove previous temperature tags
-        temp_tags = ["Hot-Seller", "Warm-Seller", "Cold-Seller"]
-        current_tag = f"{temperature.capitalize()}-Seller"
-        for tag in temp_tags:
-            if tag != current_tag:
-                actions.append({"type": "remove_tag", "tag": tag})
+        # (temperature tag removal handled above with correct ordering)
 
         # Write qualification progress to GHL so Jorge can see how far the seller got
         q_count = seller_data.get("questions_answered", 0)
