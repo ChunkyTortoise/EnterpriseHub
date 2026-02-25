@@ -347,20 +347,41 @@ class JorgeBuyerBot(BaseBotWorkflow):
             except Exception as e:
                 logger.error(f"Failed to calculate composite score for buyer: {e}")
 
-            return {
+            # Advance current_qualification_step only forward — never regress.
+            # When conversation_history is incomplete (e.g. Redis miss on the webhook's
+            # MemoryService), the profile scores are recalculated from a thin history
+            # and would reset the step to "budget" even though T3/T4 have already
+            # confirmed pre-approval and bedrooms.  Using the state's current step as
+            # a floor preserves the progress established in earlier turns.
+            _STEP_ORDER_INTENT = [
+                "budget", "pre-approval", "timeline", "preferences",
+                "decision_makers", "property", "property_search",
+                "property_matching", "appointment", "handoff_ready",
+            ]
+            _STEP_IDX_INTENT = {s: i for i, s in enumerate(_STEP_ORDER_INTENT)}
+            _current_step = state.get("current_qualification_step", "budget")
+            _profile_step = profile.next_qualification_step
+            _current_idx = _STEP_IDX_INTENT.get(_current_step, 0)
+            _profile_idx = _STEP_IDX_INTENT.get(_profile_step, 0)
+            _resolved_step = _profile_step if _profile_idx >= _current_idx else _current_step
+
+            # Only propagate budget_range if freshly extracted — do not overwrite an
+            # existing (restored from saved state) value with None when history is thin.
+            _return: Dict = {
                 "intent_profile": profile,
-                "budget_range": budget_range,
                 "urgency_score": urgency_score,
                 "buying_motivation_score": buying_motivation,
                 "preference_clarity": preference_clarity,
-                "current_qualification_step": profile.next_qualification_step,
+                "current_qualification_step": _resolved_step,
                 "composite_score": composite_score_data,
             }
+            if budget_range is not None:
+                _return["budget_range"] = budget_range
+            return _return
         except Exception as e:
             logger.error(f"Error analyzing buyer intent for {state.get('buyer_id')}: {str(e)}")
             return {
                 "intent_profile": None,
-                "budget_range": None,
                 "urgency_score": 25,
                 "buying_motivation_score": 25,
                 "preference_clarity": 0.5,
