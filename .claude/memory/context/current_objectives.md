@@ -50,13 +50,40 @@
 - F-06: "estate" phantom-extracts `motivation=inherited` in legal context (H-05: tightened regex)
 - F-09: CCPA deletion request not acknowledged (H-06: CCPA pre-screener)
 
-**OPEN medium findings (Beads tickets filed)**:
+**FIXED in commit `69697277`** (push pending):
+- F-10: Post-close HOT re-engagement — guard added in `_generate_simple_response`, `_generate_seller_response`, `_create_seller_actions`; emits `Human-Follow-Up-Needed` + `AI-Off` tags; 2 regression tests added (44/44 green)
+
+**CAT-6 scheduling edge cases — TESTED 2026-02-25** (old server, pre-push):
+| Sub-test | Result | Notes |
+|----------|--------|-------|
+| c6.1 Schedule intent at T1 (cold) | ✅ PASS | Ignored, Q1 asked correctly |
+| c6.2 3/4 answers + schedule intent | ✅ PASS | Warm, asking Q4 |
+| c6.3 Full multi-turn scheduling (5 turns) | ✅ PASS | warm→HOT→time→day→confirmed |
+| c6.3e F-10 post-confirm re-engagement | ⚠️ OLD BUG | Re-asks for time (fixed in `69697277`, re-test after push) |
+| c6.4/c6.5 "$Xk" price shorthand | ❌ BUG | `$580k`/`$620k` not extracted — long-form "620 thousand" works |
+
+**CAT-10 concurrency — TESTED 2026-02-25** (old server):
+| Sub-test | Result | Notes |
+|----------|--------|-------|
+| c10.1 Sequential same-contact | ✅ PASS | Correct turn order, no corruption |
+| c10.2 3 simultaneous same-contact | 🚨 RACE | Turns 2/4/6 instead of 2/3/4; seller_data corrupted |
+| c10.3 Conflicting motivations concurrent | 🚨 RACE | Last-writer-wins, first extraction silently lost |
+
+**Hardening live-verification (old server, pre-push — all FAILING as expected)**:
+- H-02 STOP: ❌ Not intercepted on live server (pre-screener not in old code)
+- H-03 Fair Housing: ❌ Not intercepted
+- H-04 JSON injection: ❌ Active vulnerability — JSON keys partially extracted as answers
+- H-06 CCPA: ❌ Not intercepted
+- H-01 / H-05: In `jorge_seller_engine.py` — need push to verify
+
+**OPEN findings (Beads tickets filed)**:
 | ID | Severity | Issue |
 |----|----------|-------|
-| `EnterpriseHub-zw87` | HIGH | F-10: Post-close HOT re-engagement — Jorge re-schedules after confirmed appointment |
+| `EnterpriseHub-zw87` | HIGH | F-10 — FIXED in `69697277`, ticket to be closed after push |
+| `EnterpriseHub-c10r` | HIGH | CAT-10: Race condition — turn counter +2 skip, seller_data last-writer-wins |
 | `EnterpriseHub-euuy` | MED | F-11: Objection exhaustion (5× "not interested") never triggers human handoff |
 | `EnterpriseHub-wyrt` | MED | F-13: No language mirroring — Spanish input gets English response |
-| `EnterpriseHub-alid` | MED | CAT-6 (scheduling) + CAT-10 (concurrency) — not yet tested |
+| `EnterpriseHub-pxk1` | MED | `$Xk` shorthand price not extracted (e.g. `$580k`, `$620k`) |
 
 ## 🚀 PHASE 2 PRIMARY OBJECTIVES
 
@@ -132,6 +159,6 @@
 
 ---
 
-**Last Updated**: 2026-02-25 — Red-team complete (CAT 1–5, 7–9); 6 critical/high fixes committed (`8aca01d0`, push pending); 4 medium Beads tickets filed; CAT-6 + CAT-10 outstanding
-**Next Review**: Push `8aca01d0`, verify fixes on live Render, run CAT-6 + CAT-10, then tackle F-10 (post-close handoff) as highest-value remaining fix
+**Last Updated**: 2026-02-25 — Red-team fully complete (CAT 1–10); 7 fixes committed in 3 commits (`8aca01d0`, `fe1015e8`, `69697277` — **push pending**); 6 Beads tickets filed; all pre-screener hardening unverified on live Render until push
+**Next Review**: `git push origin main` (3 commits) → Render auto-deploys → re-verify H-02/H-03/H-04/H-06 on live server → close `EnterpriseHub-zw87` → address CAT-10 race condition (`EnterpriseHub-c10r`)
 **Context Preservation**: All decisions, patterns, and learnings captured in agent memory system
