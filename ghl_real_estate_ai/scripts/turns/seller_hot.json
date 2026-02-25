@@ -1,0 +1,22 @@
+[
+  {
+    "role": "user",
+    "content": "I want to sell my house, I need to move in the next 60 days"
+  },
+  {
+    "role": "user",
+    "content": "123 Foothill Blvd, Rancho Cucamonga CA 91730"
+  },
+  {
+    "role": "user",
+    "content": "It's a 3 bed 2 bath, about 1,650 square feet"
+  },
+  {
+    "role": "user",
+    "content": "I owe around $320,000 on the mortgage"
+  },
+  {
+    "role": "user",
+    "content": "I need at least $480,000 to walk away clean"
+  }
+]
