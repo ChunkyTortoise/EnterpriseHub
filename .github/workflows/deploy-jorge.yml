@@ -21,9 +21,8 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    name: Build Docker image â Deploy to Render
+    name: Build Docker image - Deploy to Render
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -43,7 +42,7 @@ jobs:
           SHORT_SHA="${GITHUB_SHA::7}"
           IMAGE="docker.io/chunktort/jorge-realty-ai:sha-${SHORT_SHA}"
           echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
-          echo "image=${IMAGE}"         >> "$GITHUB_OUTPUT"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
           echo "Tagged as: ${IMAGE}"
 
       - name: Build and push Docker image
@@ -55,32 +54,29 @@ jobs:
           tags: |
             chunktort/jorge-realty-ai:sha-${{ steps.meta.outputs.short_sha }}
             chunktort/jorge-realty-ai:latest
-          # GHA layer cache â drastically cuts build time on unchanged layers
           cache-from: type=gha
-          cache-to:   type=gha,mode=max
+          cache-to: type=gha,mode=max
 
       - name: Trigger Render deploy
         id: render
         env:
-          RENDER_API_KEY:    ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
-          IMAGE:             ${{ steps.meta.outputs.image }}
         run: |
-          RESPONSE=$(curl -sf -X POST \
+          RESPONSE=$(curl -s -X POST \
             "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
             -H "Authorization: Bearer ${RENDER_API_KEY}" \
             -H "Content-Type: application/json" \
             -d '{"clearCache": "do_not_clear"}')
-
-          DEPLOY_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
+          DEPLOY_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('id',''))")
           echo "deploy_id=${DEPLOY_ID}" >> "$GITHUB_OUTPUT"
-          echo "Deploy triggered: ${DEPLOY_ID} â image: ${IMAGE}"
+          echo "Deploy triggered: ${DEPLOY_ID}"
 
       - name: Wait for deploy to go live
         env:
-          RENDER_API_KEY:    ${{ secrets.RENDER_API_KEY }}
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
-          DEPLOY_ID:         ${{ steps.render.outputs.deploy_id }}
+          DEPLOY_ID: ${{ steps.render.outputs.deploy_id }}
         run: |
           echo "Polling deploy ${DEPLOY_ID} (max 6 min) ..."
           for i in $(seq 1 18); do
@@ -90,16 +86,14 @@ jobs:
               -H "Authorization: Bearer ${RENDER_API_KEY}" | \
               python3 -c "import sys,json; print(json.load(sys.stdin).get('status','?'))")
             echo "[${i}/18] ${STATUS}"
-            case "$STATUS" in
-              live)
-                echo "â Deploy is live!"
-                exit 0
-                ;;
-              update_failed|deactivated|build_failed)
-                echo "â Deploy failed with status: ${STATUS}"
-                exit 1
-                ;;
-            esac
+            if [ "$STATUS" = "live" ]; then
+              echo "Deploy is live!"
+              exit 0
+            fi
+            if [ "$STATUS" = "update_failed" ] || [ "$STATUS" = "deactivated" ] || [ "$STATUS" = "build_failed" ]; then
+              echo "Deploy failed with status: ${STATUS}"
+              exit 1
+            fi
           done
-          echo "â± Polling timed out â Render may still be deploying. Check dashboard."
+          echo "Polling timed out - Render may still be deploying."
           exit 1
