@@ -1054,6 +1054,55 @@ class GHLClient:
             logger.error(f"Failed to fetch contact {contact_id}: {str(e)}")
             raise
 
+    async def post_internal_note(self, contact_id: str, note: str) -> Dict[str, Any]:
+        """
+        Post an internal note on a GHL contact.
+
+        Notes appear in the contact's CRM timeline and are visible to Jorge
+        but are never sent as SMS. Used by the HITL gate to surface draft
+        responses for human review.
+
+        Args:
+            contact_id: GHL contact ID
+            note: Note body text (plain text, no markdown)
+
+        Returns:
+            API response dict
+        """
+        if settings.test_mode:
+            logger.info(
+                f"[TEST MODE] Would post note on contact {contact_id}: {note[:80]}...",
+                extra={"contact_id": contact_id, "test_mode": True},
+            )
+            return {"status": "mocked", "noteId": "mock_note_123"}
+
+        endpoint = f"{self.base_url}/contacts/{contact_id}/notes"
+        payload: Dict[str, Any] = {"body": note}
+        if settings.jorge_user_id:
+            payload["userId"] = settings.jorge_user_id
+
+        try:
+            response = await self.http_client.post(
+                endpoint,
+                json=payload,
+                headers=self.headers,
+                timeout=settings.webhook_timeout_seconds,
+            )
+            response.raise_for_status()
+
+            logger.info(
+                f"Posted internal note on contact {contact_id}",
+                extra={"contact_id": contact_id},
+            )
+            return response.json()
+
+        except httpx.HTTPError as e:
+            logger.error(
+                f"Failed to post internal note on contact {contact_id}: {e}",
+                extra={"contact_id": contact_id, "error": str(e)},
+            )
+            raise
+
     async def search_contacts(self, query: str = "", limit: int = 50) -> List[Dict[str, Any]]:
         """
         Search contacts in GHL.
