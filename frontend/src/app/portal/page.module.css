@@ -1,0 +1,35 @@
+.page {
+  min-height: 100vh;
+  padding: var(--lyr-space-24) var(--lyr-space-16);
+}
+
+.container {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  gap: var(--lyr-space-16);
+}
+
+.portalNavBrand {
+  display: flex;
+  align-items: center;
+  gap: var(--lyr-space-12);
+}
+
+.portalBrandText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.portalTitle {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.portalSubtitle {
+  margin: 0;
+  font-size: 12px;
+  color: var(--lyr-color-text-muted);
+}

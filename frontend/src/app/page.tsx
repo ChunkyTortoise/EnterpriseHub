@@ -1,59 +1,87 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
-  AlertTriangle,
   Bot,
   Building2,
-  Loader2,
+  Layers,
   Send,
-  Sparkles,
   User,
   WandSparkles,
 } from 'lucide-react';
+import Link from 'next/link';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { IconInput } from '../components/ui/IconInput';
-import { InlineAlert } from '../components/ui/InlineAlert';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { StatPill } from '../components/ui/StatPill';
 import { TopNav } from '../components/ui/TopNav';
 import styles from './page.module.css';
 
-type ViewState = 'active' | 'loading' | 'error' | 'empty';
-
 const seededMessages = [
   {
     id: 'm1',
     role: 'bot' as const,
-    title: 'Signal Snapshot',
-    text: "Rancho Cucamonga inventory is tightening in 3BR segments. Lead #402 has 87% seller-intent probability.",
-    time: '2:14 PM',
+    title: 'Morning Market Briefing',
+    text: 'Rancho Cucamonga median price up 2.3% to $749K this week. Avg days on market dropped to 18 — tightest inventory since Q3 2024. Alta Loma and Etiwanda leading demand.',
+    time: '7:02 AM',
   },
   {
     id: 'm2',
-    role: 'user' as const,
-    title: 'Operator Instruction',
-    text: 'Prioritize high-equity owners with permit activity in the last 60 days.',
-    time: '2:15 PM',
+    role: 'bot' as const,
+    title: 'Hot Lead Alert',
+    text: 'Maria Gonzalez (Baseline Rd) flagged at 87% seller intent. Recent permit activity 18 days ago, 4BR/3BA, est. equity $280K. Recommend immediate CMA outreach.',
+    time: '7:15 AM',
   },
   {
     id: 'm3',
+    role: 'user' as const,
+    title: 'Operator Instruction',
+    text: 'Send Maria the CMA teaser. Prioritize Alta Loma permit owners in the 60-day window.',
+    time: '7:18 AM',
+  },
+  {
+    id: 'm4',
     role: 'bot' as const,
-    title: 'Action Drafted',
-    text: 'Drafted outreach for 12 high-confidence leads. Ready to send to Jorge for approval.',
+    title: 'Actions Completed',
+    text: 'CMA teaser sent to Maria Gonzalez via SMS. Identified 9 additional Alta Loma permit owners — outreach queued for your approval.',
+    time: '7:19 AM',
+  },
+  {
+    id: 'm5',
+    role: 'bot' as const,
+    title: 'Buyer Match Found',
+    text: 'David Chen — $750K pre-approval, Etiwanda school district preference, 30-day urgency. Matched to 3 active listings. Portal link ready to send.',
+    time: '9:41 AM',
+  },
+  {
+    id: 'm6',
+    role: 'user' as const,
+    title: 'Operator Instruction',
+    text: 'Send David the portal link and schedule a showing for Saturday.',
+    time: '9:44 AM',
+  },
+  {
+    id: 'm7',
+    role: 'bot' as const,
+    title: 'Follow-up Reminder',
+    text: '3 warm leads have not responded in 72+ hours. Auto-drafted re-engagement SMS ready — review and approve to send.',
+    time: '11:30 AM',
+  },
+  {
+    id: 'm8',
+    role: 'bot' as const,
+    title: 'Pipeline Summary',
+    text: '12 active leads tracked today. Total pipeline value: $2.1M. 4 listings pending showing, 2 offers in review. Everything on track.',
     time: '2:16 PM',
   },
 ];
 
-const quickActions = ['Generate pitch', 'Qualify lead', 'Draft SMS follow-up', 'Re-score lead cluster'];
+const quickActions = ['Draft CMA report', 'Qualify new lead', 'Send follow-up SMS', 'Schedule showing'];
 
 export default function Dashboard() {
-  const [viewState, setViewState] = useState<ViewState>('active');
   const [prompt, setPrompt] = useState('');
-
-  const messages = useMemo(() => (viewState === 'empty' ? [] : seededMessages), [viewState]);
 
   return (
     <div>
@@ -65,15 +93,21 @@ export default function Dashboard() {
             </div>
             <div>
               <h1 className={styles.brandTitle}>Lyrio Operator Console</h1>
-              <p className={styles.brandSubtitle}>Premium War Room</p>
+              <p className={styles.brandSubtitle}>Real Estate AI Command Center</p>
             </div>
           </div>
         }
         right={
           <div className={styles.topNavStats}>
-            <StatPill label="AI Health" value="97%" />
-            <StatPill label="Queue" value="12 leads" />
-            <Badge variant="success">Live Agent Sync</Badge>
+            <StatPill label="AI Health" value="99.2%" />
+            <StatPill label="Active Leads" value="12" />
+            <StatPill label="Pipeline" value="$2.1M" />
+            <Badge variant="success">All Bots Online</Badge>
+            <Link href="/portal">
+              <Button variant="ghost" icon={<Layers size={16} />}>
+                Buyer Portal
+              </Button>
+            </Link>
           </div>
         }
       />
@@ -81,9 +115,9 @@ export default function Dashboard() {
       <main className={styles.shell}>
         <div className={styles.layout}>
           <Card variant="surface" className={styles.panel}>
-            <SectionHeader title="Workspaces" subtitle="Active operating lanes" />
+            <SectionHeader title="Workspaces" subtitle="Your active projects" />
             <div className={styles.workspaceList}>
-              {['War Room', 'Market Intelligence', 'Follow-up Studio', 'Compliance'].map((item, index) => (
+              {['Lead Pipeline', 'Market Intel', 'Follow-ups', 'Listings'].map((item, index) => (
                 <button
                   key={item}
                   className={`${styles.workspaceItem} ${index === 0 ? styles.workspaceItemActive : ''}`.trim()}
@@ -91,16 +125,6 @@ export default function Dashboard() {
                   {item}
                 </button>
               ))}
-            </div>
-
-            <div className={styles.statePicker}>
-              <p className={styles.statePickerLabel}>Screen State Demo</p>
-              <div className={styles.statePickerActions}>
-                <Button variant="ghost" onClick={() => setViewState('active')}>Active</Button>
-                <Button variant="ghost" onClick={() => setViewState('loading')}>Loading</Button>
-                <Button variant="ghost" onClick={() => setViewState('error')}>Error</Button>
-                <Button variant="ghost" onClick={() => setViewState('empty')}>Empty</Button>
-              </div>
             </div>
           </Card>
 
@@ -113,33 +137,7 @@ export default function Dashboard() {
               />
 
               <div className={styles.streamBody}>
-                {viewState === 'loading' ? (
-                  <InlineAlert
-                    title="Loading stream"
-                    body="Pulling latest lead intelligence and outbound drafts."
-                    icon={<Loader2 size={16} />}
-                  />
-                ) : null}
-
-                {viewState === 'error' ? (
-                  <InlineAlert
-                    variant="error"
-                    title="Sync failed"
-                    body="Lead scoring service timed out. Retry or continue with cached results."
-                    icon={<AlertTriangle size={16} />}
-                  />
-                ) : null}
-
-                {messages.length === 0 && viewState !== 'loading' && viewState !== 'error' ? (
-                  <InlineAlert
-                    variant="warning"
-                    title="No active items"
-                    body="New lead events will populate here when the next workflow triggers."
-                    icon={<Sparkles size={16} />}
-                  />
-                ) : null}
-
-                {messages.map((message) => {
+                {seededMessages.map((message) => {
                   const isBot = message.role === 'bot';
                   return (
                     <Card
@@ -187,16 +185,19 @@ export default function Dashboard() {
           <Card variant="surface" className={styles.contextPanel}>
             <SectionHeader title="Lead Context" subtitle="Live qualification signals" />
             <div className={styles.contextBadges}>
-              <Badge variant="success">Lead #402 • High Equity</Badge>
-              <Badge variant="primary">Intent Score 87%</Badge>
+              <Badge variant="success">Maria Gonzalez — Seller Lead</Badge>
+              <Badge variant="primary">Intent Score: 87%</Badge>
               <Badge variant="warning">Permit Activity: 18 days ago</Badge>
+              <Badge variant="neutral">4BR/3BA · 2,650 sqft</Badge>
+              <Badge variant="neutral">Est. Equity: $280K</Badge>
             </div>
             <Card variant="surface" className={styles.contextCard}>
               <p className={styles.contextTitle}>Suggested next actions</p>
               <ul className={styles.contextList}>
-                <li>Send valuation teaser with permit insight.</li>
-                <li>Queue follow-up call in 90 minutes.</li>
-                <li>Trigger comparative market snapshot.</li>
+                <li>Send CMA teaser with permit insight.</li>
+                <li>Highlight neighborhood appreciation trend.</li>
+                <li>Schedule follow-up call within 90 minutes.</li>
+                <li>Queue market snapshot for comparison.</li>
               </ul>
             </Card>
             <Button variant="secondary">Open full lead dossier</Button>
