@@ -871,6 +871,26 @@ class JorgeSellerEngine:
             extracted_data["stall_turns"] = stall
             extracted_data["last_question_asked"] = current_q_now
 
+            # Urgency fast-path: stalled at Q2 + urgency signal → accept timeline immediately.
+            # Fires even on the first stall so T3 "need to sell quickly" advances without a T4 retry.
+            if (
+                current_q_now == 2
+                and extracted_data.get("timeline_acceptable") is None
+                and re.search(
+                    r"\b(urgent|asap|immediately|need to move|right away|as soon as|"
+                    r"quickly|sell quickly|sell fast|fast sale|need to sell)\b",
+                    msg_lower,
+                )
+            ):
+                extracted_data["timeline_acceptable"] = True
+                extracted_data["timeline_urgency"] = "urgent"
+                extracted_data["stall_turns"] = 0
+                extracted_data["questions_answered"] = sum(
+                    1 for f in question_fields if extracted_data.get(f) is not None
+                )
+                extracted_data["last_question_asked"] = SellerQuestions.get_question_number(extracted_data)
+                current_q_now = extracted_data["last_question_asked"]
+
             # After 2 turns stuck on same question, accept as unknown and advance
             if stall >= 2:
                 stall_field_defaults = {
@@ -954,7 +974,7 @@ class JorgeSellerEngine:
 
         except Exception as e:
             self.logger.error(f"Seller data extraction failed: {e}")
-            return current_seller_data
+            return self._extract_seller_data_regex(user_message, current_seller_data)
 
     def _extract_seller_data_regex(self, user_message: str, current_seller_data: Dict) -> Dict:
         """Regex-only extraction of the 4 seller qualification fields — no LLM call.
