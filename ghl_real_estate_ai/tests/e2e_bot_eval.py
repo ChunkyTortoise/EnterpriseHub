@@ -159,13 +159,18 @@ async def _send_webhook(
         print(f"    → POST {BASE}")
         print(f"      contact={contact_id!r}  msg={message!r}  tags={tags}")
 
-    # Retry on 502/503/504 (Render cold start / transient)
-    for attempt in range(3):
-        resp = await client.post(BASE, content=body_bytes, headers=headers, timeout=30)
-        if resp.status_code not in (502, 503, 504):
-            break
-        if attempt < 2:
-            await asyncio.sleep(3)
+    # Retry on 502/503/504 and connection/read timeouts (Render cold start / transient)
+    for attempt in range(5):
+        try:
+            resp = await client.post(BASE, content=body_bytes, headers=headers, timeout=30)
+            if resp.status_code not in (502, 503, 504):
+                break
+        except (httpx.ConnectTimeout, httpx.ReadTimeout, httpx.ConnectError):
+            if attempt == 4:
+                raise
+            resp = None
+        if attempt < 4:
+            await asyncio.sleep(5 if attempt >= 2 else 3)
 
     if VERBOSE:
         print(f"    ← HTTP {resp.status_code}  body={resp.text[:200]!r}")
@@ -331,8 +336,27 @@ def _contact_id(bot: str) -> str:
 
 # ─── Phase 0: Harness self-test ──────────────────────────────────────────────
 
+async def _warmup_service(client: httpx.AsyncClient, max_wait: int = 60) -> bool:
+    """Poll /health until the service is up (handles Render cold starts). Returns True if ready."""
+    base_url = BASE.replace("/api/ghl/webhook", "")
+    for i in range(max_wait // 5):
+        try:
+            r = await client.get(f"{base_url}/api/health/live", timeout=10)
+            if r.status_code < 500:
+                return True
+        except Exception:
+            pass
+        if i == 0:
+            print("  ⏳ Waiting for service to wake (Render cold start)…", flush=True)
+        await asyncio.sleep(5)
+    return False
+
+
 async def phase_0(client: httpx.AsyncClient):
     _section("Phase 0: Test Harness Self-Test")
+
+    # Warm up the service before any tests (handles Render free-tier cold starts)
+    await _warmup_service(client)
 
     # 0a. HMAC signing produces correct hex digest
     body = b'{"test":"hello"}'
