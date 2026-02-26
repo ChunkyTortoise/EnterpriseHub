@@ -1360,6 +1360,17 @@ class JorgeSellerEngine:
                     context=seller_data,
                 )
                 response_type = "address_capture"
+            # STALL ANTI-LOOP (Layer 5): if the current question would be asked for the
+            # second consecutive turn (stall_turns >= 1), use a follow-up variant so the
+            # bot never repeats the EXACT same string as the previous turn.
+            # stall_turns is computed in _extract_seller_data from last_question_asked.
+            elif seller_data.get("stall_turns", 0) >= 1 and current_question_number > 1:
+                message = self.tone_engine.generate_follow_up_message(
+                    last_response=last_response or "",
+                    question_number=current_question_number,
+                    seller_name=seller_data.get("contact_name"),
+                )
+                response_type = "qualification"
             # Only push back on vague answers when Q1 has already been asked AND
             # the preceding question's field is still unanswered.
             # Guard: if the regex or LLM already resolved the preceding question

@@ -54,8 +54,8 @@ import httpx
 # ─── Infrastructure constants ────────────────────────────────────────────────
 import os
 
-BASE        = os.getenv("BASE_URL",    "https://jorge-realty-ai-xxdf.onrender.com/api/ghl/webhook")
-SECRET      = os.getenv("HMAC_SECRET", "ffb42fb9b69801686e04edbcb2f54f4f123eb3389bb1dedf9317930a0518bd10")
+BASE        = os.getenv("BASE_URL",    "https://jorge-realty-ai.onrender.com/api/ghl/webhook")
+SECRET      = os.getenv("HMAC_SECRET", "bc46c793aad3863d23e3e756f6a7a0bc2daa2747a5f9eddf457bc622e19b6b2d")
 GHL_API     = "https://services.leadconnectorhq.com"
 GHL_KEY     = os.getenv("GHL_API_KEY", "pit-9569e075-ab20-4104-bf29-be64c2be4199")
 LOCATION    = os.getenv("GHL_LOCATION", "3xt4qayAh35BlDLaUv7P")
