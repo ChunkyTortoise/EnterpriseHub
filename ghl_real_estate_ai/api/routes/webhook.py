@@ -671,6 +671,10 @@ async def handle_ghl_webhook(
         "leave me alone",
         "take me off",
         "no thanks",
+        "parar",
+        "cancelar",
+        "no más",
+        "no mas",
     ]
     msg_lower = user_message.lower().strip()
     if any(phrase in msg_lower for phrase in OPT_OUT_PHRASES):

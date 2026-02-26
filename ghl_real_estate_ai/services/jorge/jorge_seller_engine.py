@@ -770,7 +770,7 @@ class JorgeSellerEngine:
                     msg_lower,
                 ):
                     extracted_data["timeline_acceptable"] = True
-                elif re.search(r"\b(urgent|asap|immediately|need to move|right away|as soon as)\b", msg_lower):
+                elif re.search(r"\b(urgent|asap|immediately|need to move|right away|as soon as|quickly|sell quickly|sell fast|fast sale)\b", msg_lower):
                     extracted_data["timeline_acceptable"] = True
                 elif re.search(r"\b(30|45)\b.{0,20}\b(day|days)\b", msg_lower) and not re.search(
                     r"\b(no|not|won'?t|can'?t)\b.{0,15}\b(30|45)\b", msg_lower
@@ -1003,7 +1003,7 @@ class JorgeSellerEngine:
                 msg_lower,
             ):
                 extracted["timeline_acceptable"] = True
-            elif re.search(r"\b(urgent|asap|immediately|need to move|right away|as soon as)\b", msg_lower):
+            elif re.search(r"\b(urgent|asap|immediately|need to move|right away|as soon as|quickly|sell quickly|sell fast|fast sale)\b", msg_lower):
                 extracted["timeline_acceptable"] = True
             elif re.search(r"\b(30|45)\b.{0,20}\b(day|days)\b", msg_lower) and not re.search(
                 r"\b(no|not|won'?t|can'?t)\b.{0,15}\b(30|45)\b", msg_lower
