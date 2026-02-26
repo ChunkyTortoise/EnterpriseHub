@@ -784,11 +784,19 @@ async def handle_ghl_webhook(
                     fallback_message,
                     event.message.type,
                 )
+                booking_failed_actions = [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")]
+                if settings.manual_scheduling_workflow_id:
+                    booking_failed_actions.append(
+                        GHLAction(
+                            type=ActionType.TRIGGER_WORKFLOW,
+                            workflow_id=settings.manual_scheduling_workflow_id,
+                        )
+                    )
                 background_tasks.add_task(
                     safe_apply_actions,
                     current_ghl_client,
                     contact_id,
-                    [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                    booking_failed_actions,
                 )
 
                 context["pending_appointment"] = None
@@ -805,7 +813,7 @@ async def handle_ghl_webhook(
                 return GHLWebhookResponse(
                     success=True,
                     message=fallback_message,
-                    actions=[GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                    actions=booking_failed_actions,
                 )
 
             # No selection parsed: re-offer or escalate
@@ -834,11 +842,19 @@ async def handle_ghl_webhook(
                 fallback_message,
                 event.message.type,
             )
+            no_selection_actions = [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")]
+            if settings.manual_scheduling_workflow_id:
+                no_selection_actions.append(
+                    GHLAction(
+                        type=ActionType.TRIGGER_WORKFLOW,
+                        workflow_id=settings.manual_scheduling_workflow_id,
+                    )
+                )
             background_tasks.add_task(
                 safe_apply_actions,
                 current_ghl_client,
                 contact_id,
-                [GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                no_selection_actions,
             )
             context["pending_appointment"] = None
             await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
@@ -854,7 +870,7 @@ async def handle_ghl_webhook(
             return GHLWebhookResponse(
                 success=True,
                 message=fallback_message,
-                actions=[GHLAction(type=ActionType.ADD_TAG, tag="Needs-Manual-Scheduling")],
+                actions=no_selection_actions,
             )
         except Exception as e:
             logger.error(f"Pending appointment handling failed for {contact_id}: {e}", exc_info=True)
@@ -978,6 +994,13 @@ async def handle_ghl_webhook(
                     draft_msg,
                 )
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="HITL-Review"))
+                if settings.notify_agent_workflow_id:
+                    actions.append(
+                        GHLAction(
+                            type=ActionType.TRIGGER_WORKFLOW,
+                            workflow_id=settings.notify_agent_workflow_id,
+                        )
+                    )
                 seller_result["requires_human_approval"] = True
 
                 logger.info(
@@ -1261,6 +1284,13 @@ async def handle_ghl_webhook(
                     draft_msg,
                 )
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="HITL-Review"))
+                if settings.notify_agent_workflow_id:
+                    actions.append(
+                        GHLAction(
+                            type=ActionType.TRIGGER_WORKFLOW,
+                            workflow_id=settings.notify_agent_workflow_id,
+                        )
+                    )
                 buyer_result["requires_human_approval"] = True
 
                 logger.info(
