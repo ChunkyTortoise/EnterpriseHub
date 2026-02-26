@@ -1041,9 +1041,14 @@ class JorgeSellerEngine:
                 extracted["motivation"] = "other"
 
         # --- Timeline (30-45 days) ---
-        # Only extract if motivation was already answered in a prior message (same guard as
-        # the main extraction path) so the history-scan does not collapse Q1+Q2 into one step.
-        if extracted.get("timeline_acceptable") is None and current_seller_data.get("motivation") is not None:
+        # Guard: only extract timeline if motivation is known (either from a prior turn OR
+        # just extracted from this message) so the history-scan does not collapse Q1+Q2 into
+        # one step on T1, while still allowing same-turn extraction when motivation+urgency
+        # appear together (e.g. "relocating for work, need to sell quickly" at T3).
+        if extracted.get("timeline_acceptable") is None and (
+            current_seller_data.get("motivation") is not None
+            or extracted.get("motivation") is not None
+        ):
             if re.search(
                 r"no problem|no issue|not a problem|that works|works for (me|us)|fine with|works fine|totally fine|absolutely|sounds good|that'?s fine",
                 msg_lower,
@@ -1326,6 +1331,24 @@ class JorgeSellerEngine:
 
         # 3. Questions < 4 → next question (or confrontational follow-up if vague)
         elif questions_answered < 4 and current_question_number <= 4:
+            # URGENCY SAFETY NET (Layer 4): if extraction left timeline_acceptable=None but
+            # the user's message contains urgency language, accept the timeline and advance.
+            # seller_data IS extracted_seller_data so this mutation persists to Redis via
+            # update_context — no separate save needed.
+            if current_question_number == 2 and seller_data.get("timeline_acceptable") is None:
+                _urgency_msg = (last_response or "").lower()
+                if re.search(
+                    r"\b(urgent|asap|immediately|need to move|right away|as soon as|"
+                    r"quickly|sell quickly|sell fast|fast sale|need to sell)\b",
+                    _urgency_msg,
+                ):
+                    seller_data["timeline_acceptable"] = True
+                    seller_data["timeline_urgency"] = "urgent"
+                    _qf = ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]
+                    seller_data["questions_answered"] = sum(1 for f in _qf if seller_data.get(f) is not None)
+                    current_question_number = SellerQuestions.get_question_number(seller_data)
+                    questions_answered = seller_data["questions_answered"]
+
             # Q0: On the very first exchange, capture property address before qualification.
             # This ensures T1 (greeting) asks address (Q0), T2 (address answer) triggers
             # the explicit motivation question (Q1) — preventing the T1=T2 duplicate loop
