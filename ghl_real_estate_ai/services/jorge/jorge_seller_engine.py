@@ -706,6 +706,32 @@ class JorgeSellerEngine:
                 extracted_data.pop("timeline_acceptable", None)
                 extracted_data.pop("timeline_urgency", None)
 
+            # --- FIRST-TURN MOTIVATION QUALITY GATE ---
+            # On the absolute first message (current_seller_data is empty), only keep
+            # LLM-extracted motivation if the message contains a SPECIFIC selling reason.
+            # Without this gate, Claude interprets "Hi, I'm thinking about selling" as
+            # motivation="other", which causes the bot to skip Q1 (motivation question)
+            # and jump straight to Q2 (timeline question) on T2 — producing T2=T3=TIMELINE
+            # (the "T2/T3 loop" regression). Specific reasons pass through; vague intent
+            # greetings are cleared so Q1 is asked normally on T2.
+            if not current_seller_data and extracted_data.get("motivation"):
+                _msg_lower_mq = user_message.lower()
+                _has_specific_reason = bool(re.search(
+                    r"relocat|movin[g']?\s+to|transfer|new job|got a job|job\s+(?:in|at|offer)|"
+                    r"downsize|down-size|too big|smaller|retire|empty nest|"
+                    r"divorce|separat|split up|"
+                    r"inherited|inherit|passed away|died|probate|"
+                    r"financial|need(?:\s+the)?\s+money|debt|foreclosure|behind on|afford|"
+                    r"upgrad|larger|bigger|more space|growing family|new baby|too small|outgrown",
+                    _msg_lower_mq
+                ))
+                if not _has_specific_reason:
+                    extracted_data.pop("motivation", None)
+                    self.logger.debug(
+                        "First-turn motivation quality gate: cleared vague LLM-extracted motivation "
+                        f"(no specific reason found in {user_message[:60]!r})"
+                    )
+
             # --- LOCAL REGEX ENHANCEMENT (Pillar 1: NLP Optimization) ---
             # Fallback/Validation if ConversationManager missed it
             import re
@@ -1300,20 +1326,42 @@ class JorgeSellerEngine:
 
         # 3. Questions < 4 → next question (or confrontational follow-up if vague)
         elif questions_answered < 4 and current_question_number <= 4:
-            # Only push back on vague answers when Q1 has already been asked (not on the very first message)
-            if response_quality < 0.5 and last_response and current_question_number > 1:
+            # Q0: On the very first exchange, capture property address before qualification.
+            # This ensures T1 (greeting) asks address (Q0), T2 (address answer) triggers
+            # the explicit motivation question (Q1) — preventing the T1=T2 duplicate loop
+            # that arises when both turns would otherwise ask Q1 (MOTIVATION Q).
+            if not seller_data.get("property_address") and questions_answered == 0:
+                message = self.tone_engine.generate_qualification_message(
+                    question_number=0,
+                    seller_name=seller_data.get("contact_name"),
+                    context=seller_data,
+                )
+                response_type = "address_capture"
+            # Only push back on vague answers when Q1 has already been asked AND
+            # the preceding question's field is still unanswered.
+            # Guard: if the regex or LLM already resolved the preceding question
+            # (e.g. "need to sell quickly" sets timeline_acceptable=True and advances
+            # current_question_number from 2→3), do NOT re-ask Q2 just because the
+            # quality assessor rated the answer as vague.
+            elif response_quality < 0.5 and last_response and current_question_number > 1 and (
+                {2: "motivation", 3: "timeline_acceptable", 4: "property_condition"}.get(current_question_number) is None
+                or seller_data.get(
+                    {2: "motivation", 3: "timeline_acceptable", 4: "property_condition"}[current_question_number]
+                ) is None
+            ):
                 message = self.tone_engine.generate_follow_up_message(
                     last_response=last_response,
                     question_number=current_question_number - 1,
                     seller_name=seller_data.get("contact_name"),
                 )
+                response_type = "qualification"
             else:
                 message = self.tone_engine.generate_qualification_message(
                     question_number=current_question_number,
                     seller_name=seller_data.get("contact_name"),
                     context=seller_data,
                 )
-            response_type = "qualification"
+                response_type = "qualification"
 
         # 4. All 4 answered but not hot → check for scheduling intent first
         else:
