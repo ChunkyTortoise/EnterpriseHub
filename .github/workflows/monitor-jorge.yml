@@ -134,6 +134,28 @@ jobs:
           print('PASS H-02 TCPA STOP (buyer compliance layer)')
           "
 
+      - name: Hot buyer path (pre-approved + 60-day timeline → appointment step)
+        if: steps.wake.outputs.awake == 'true'
+        run: |
+          RESP=$(curl -s --max-time 40 -X POST "$BASE_URL/test/buyer" \
+            -H 'Content-Type: application/json' \
+            -d '{"message":"I am pre-approved up to $550k and need to move within 60 days","buyer_id":"monitor-buyer-hot","reset":true}')
+          echo "$RESP" | python3 -c "
+          import sys, json; d = json.load(sys.stdin)
+          data = d.get('extracted_data', {})
+          step = data.get('current_qualification_step', '')
+          temp = d.get('temperature', '')
+          frs  = data.get('financial_readiness', 0)
+          bms  = data.get('buying_motivation_score', 0)
+          resp = d.get('response', '')
+          assert temp == 'hot', f'Expected temperature=hot got {temp!r}'
+          assert step == 'appointment', f'Expected step=appointment got {step!r}'
+          assert frs >= 75, f'Expected FRS>=75 got {frs}'
+          assert bms >= 50, f'Expected BMS>=50 got {bms} (was 37.5 before fix)'
+          assert resp, f'Empty response on hot path'
+          print('PASS hot buyer path -- temp:', temp, 'step:', step, 'frs:', frs, 'bms:', bms)
+          "
+
       - name: Service unreachable
         if: steps.wake.outputs.awake != 'true'
         run: |
