@@ -156,6 +156,35 @@ jobs:
           print('PASS hot buyer path -- temp:', temp, 'step:', step, 'frs:', frs, 'bms:', bms)
           "
 
+      - name: Appointment confirmation round-trip (turn 1→2, step appointment→appointment_confirmed)
+        if: steps.wake.outputs.awake == 'true'
+        run: |
+          # Turn 1: hot buyer → step=appointment, bot asks morning/afternoon
+          RESP1=$(curl -s --max-time 40 -X POST "$BASE_URL/test/buyer" \
+            -H 'Content-Type: application/json' \
+            -d '{"message":"I am pre-approved up to $550k and need to move within 60 days","contact_id":"monitor-appt-confirm","reset":true}')
+          echo "$RESP1" | python3 -c "
+          import sys, json; d = json.load(sys.stdin)
+          step = d.get('extracted_data', {}).get('current_qualification_step', '')
+          resp = d.get('response', '')
+          assert step == 'appointment', f'Turn 1: expected step=appointment got {step!r}'
+          assert resp, 'Turn 1: empty response'
+          print('Turn 1 PASS -- step:', step)
+          "
+          # Turn 2: user gives time preference → step=appointment_confirmed, response contains "reach out"
+          RESP2=$(curl -s --max-time 40 -X POST "$BASE_URL/test/buyer" \
+            -H 'Content-Type: application/json' \
+            -d '{"message":"Mornings work best for me","contact_id":"monitor-appt-confirm","reset":false}')
+          echo "$RESP2" | python3 -c "
+          import sys, json; d = json.load(sys.stdin)
+          step = d.get('extracted_data', {}).get('current_qualification_step', '')
+          resp = d.get('response', '').lower()
+          assert step == 'appointment_confirmed', f'Turn 2: expected step=appointment_confirmed got {step!r}'
+          assert 'reach out' in resp, f'Turn 2: confirmation phrase missing: {resp}'
+          print('Turn 2 PASS -- step:', step, '| response contains reach out')
+          print('PASS appointment confirmation round-trip')
+          "
+
       - name: Service unreachable
         if: steps.wake.outputs.awake != 'true'
         run: |

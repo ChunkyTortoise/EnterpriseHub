@@ -356,7 +356,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
             _STEP_ORDER_INTENT = [
                 "budget", "pre-approval", "timeline", "preferences",
                 "decision_makers", "property", "property_search",
-                "property_matching", "appointment", "handoff_ready",
+                "property_matching", "appointment", "appointment_confirmed", "handoff_ready",
             ]
             _STEP_IDX_INTENT = {s: i for i, s in enumerate(_STEP_ORDER_INTENT)}
             _current_step = state.get("current_qualification_step", "budget")
@@ -719,6 +719,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
                     )
                     if _sg_sched_asked >= 1 and _sg_user_gave_time:
                         result["response_content"] = "Jorge's team will reach out to confirm everything. Talk soon!"
+                        result["current_qualification_step"] = "appointment_confirmed"
                     elif _sg_sched_asked >= 2:
                         result["response_content"] = "Jorge will give you a call tomorrow morning to set up tours."
                     else:
