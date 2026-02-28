@@ -67,7 +67,7 @@ All four bots will respond and qualify leads, but will not trigger any follow-up
 |----------|-------------|-----------------|---------------------|
 | `HOT_SELLER_WORKFLOW_ID` | Triggers agent notification + handoff for hot sellers | GHL → Automation → Workflows → copy ID | `sync: false` — set manually |
 | `WARM_SELLER_WORKFLOW_ID` | Triggers nurture sequence for warm sellers | GHL → Automation → Workflows → copy ID | `sync: false` — set manually |
-| `HOT_BUYER_WORKFLOW_ID` | Triggers showing coordination for hot buyers | GHL → Automation → Workflows → copy ID | `sync: false` — set manually |
+| `HOT_BUYER_WORKFLOW_ID` | "Jorge — Bot Activation" workflow — handles Buyer-Lead + Needs Qualifying tag triggers (consolidated Feb 2026) | GHL → Automation → Workflows → copy ID | `sync: false` — set manually |
 | `WARM_BUYER_WORKFLOW_ID` | Triggers buyer nurture sequence | GHL → Automation → Workflows → copy ID | `sync: false` — set manually |
 | `NOTIFY_AGENT_WORKFLOW_ID` | SMS + email to agent for any qualified lead | GHL → Automation → Workflows → copy ID | `sync: false` — set manually |
 | `MANUAL_SCHEDULING_WORKFLOW_ID` | Fallback when auto calendar booking fails | GHL → Automation → Workflows → copy ID | Not in render.yaml — add manually |

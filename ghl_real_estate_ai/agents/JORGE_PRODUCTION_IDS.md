@@ -1,5 +1,5 @@
 # Jorge Bot — Production IDs Reference
-# Last updated: 2026-02-27
+# Last updated: 2026-02-27 (workflow consolidation)
 # Service: jorge-realty-ai-xxdf.onrender.com (srv-d6d5go15pdvs73fcjjq0)
 
 ---
@@ -9,11 +9,15 @@
 | Env Var | Workflow Name | ID |
 |---------|---------------|----|
 | `HOT_SELLER_WORKFLOW_ID` | Hot Seller | `577d56c4-28af-4668-8d84-80f5db234f48` |
-| `WARM_SELLER_WORKFLOW_ID` | Warm Seller | `64b82875-89fb-4e67-807c-ceba2116b838` |
-| `HOT_BUYER_WORKFLOW_ID` | Hot Buyer | `1ea9197e-143c-45bd-acb3-8162eeda84c9` |
+| `WARM_SELLER_WORKFLOW_ID` | Bot Activation (fka Seller Bot Trigger) | `64b82875-89fb-4e67-807c-ceba2116b838` |
+| `HOT_BUYER_WORKFLOW_ID` | Bot Activation (fka Buyer Bot Trigger — DELETED) | `64b82875-89fb-4e67-807c-ceba2116b838` |
 | `WARM_BUYER_WORKFLOW_ID` | Warm Buyer / Agent Notify | `f3fc268b-5f16-4854-af28-200024cb3c8b` |
 | `NOTIFY_AGENT_WORKFLOW_ID` | Agent Notification | `f3fc268b-5f16-4854-af28-200024cb3c8b` |
 
+> **2026-02-27 consolidation**: "Jorge — Seller Bot Trigger" (64b82875) and "Jorge — Buyer Bot
+> Trigger" (1ea9197e) were merged into **"Jorge — Bot Activation"** (64b82875). The Buyer Bot
+> Trigger workflow has been deleted. HOT_BUYER_WORKFLOW_ID now points to Bot Activation.
+>
 > Note: WARM_BUYER and NOTIFY_AGENT currently share the same ID. If Jorge creates a dedicated
 > warm-buyer nurture workflow, update WARM_BUYER_WORKFLOW_ID separately.
 
@@ -107,5 +111,4 @@
 | Workflow | URL |
 |----------|-----|
 | Inbound Message Handler | `https://jorge-realty-ai-xxdf.onrender.com/api/ghl/webhook` |
-| Seller Bot Trigger | `https://jorge-realty-ai-xxdf.onrender.com/api/ghl/tag-webhook` |
-| Buyer Bot Trigger | `https://jorge-realty-ai-xxdf.onrender.com/api/ghl/tag-webhook` |
+| Bot Activation (handles both Seller + Buyer tags) | `https://jorge-realty-ai-xxdf.onrender.com/api/ghl/tag-webhook` |
