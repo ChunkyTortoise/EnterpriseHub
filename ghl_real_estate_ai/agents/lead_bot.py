@@ -2326,9 +2326,11 @@ class LeadBotWorkflow(BaseBotWorkflow):
         _post_confirm = any(kw in user_message.lower() for kw in [
             "sounds good", "perfect", "great", "thank", "all set", "see you", "looking forward"
         ])
-        # Track whether the scheduling question has already been sent so we
-        # don't repeat it verbatim when the user keeps answering other questions.
-        _sched_asked_count = sum(1 for m in _bot_msgs if "morning or afternoon" in m)
+        # Use user-turn count (not bot history) to pick scheduling variant.
+        # Bot history can be absent on first load; user turns are always present.
+        # sched_turn=0 → first ask, 1 → second, 2 → third, 3+ → wrap-up.
+        _user_turn_count = sum(1 for m in llm_history if m["role"] == "user")
+        _sched_turn = max(0, _user_turn_count - 2)
 
         if _post_confirm and _has_day:
             reply = "You're all set. Our team will reach out to confirm everything. Talk soon!"
@@ -2337,22 +2339,27 @@ class LeadBotWorkflow(BaseBotWorkflow):
         elif _has_time_pref:
             reply = "What day works best, this week or next?"
         elif (_is_buyer or _is_seller) and _has_timeline:
-            if _sched_asked_count == 0:
+            if _sched_turn == 0:
                 if _is_buyer:
                     reply = "What time works for a quick call with our buyer specialist, morning or afternoon?"
                 else:
                     reply = "What time works for a quick call with our team, morning or afternoon?"
-            elif _sched_asked_count == 1:
+            elif _sched_turn == 1:
                 if _is_buyer:
                     reply = "One last thing — would morning or afternoon work better for a quick call?"
                 else:
                     reply = "Almost there! Would morning or afternoon work better for a call with our team?"
-            else:
-                # Third+ ask: keep it short and distinct to avoid loop detection
+            elif _sched_turn == 2:
                 if _is_buyer:
                     reply = "Just need morning or afternoon and we will get you connected right away."
                 else:
                     reply = "Just need morning or afternoon and we will get you on with our team."
+            else:
+                # 4th+ turn without time preference — wrap up gracefully
+                if _is_buyer:
+                    reply = "Our team will reach out directly to find a good time that works for you."
+                else:
+                    reply = "Our team will reach out directly to lock in a time. Talk soon!"
         elif _is_seller and not _has_timeline:
             reply = "Got it. What is your timeline for selling?"
         elif _is_buyer and not _has_timeline:
