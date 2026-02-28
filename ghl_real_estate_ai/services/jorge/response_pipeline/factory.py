@@ -1,7 +1,5 @@
 """Factory functions for creating pipeline instances."""
 
-import os
-
 from ghl_real_estate_ai.services.jorge.response_pipeline.pipeline import ResponsePostProcessor
 from ghl_real_estate_ai.services.jorge.response_pipeline.stages.ai_disclosure import (
     AIDisclosureProcessor,
@@ -32,7 +30,7 @@ def create_default_pipeline() -> ResponsePostProcessor:
     Order:
         1. LanguageMirrorProcessor       — detect language, set context
         2. TCPAOptOutProcessor           — can short-circuit on "stop"/"unsubscribe"
-        3. ConversationRepairProcessor   (optional; env-gated)
+        3. ConversationRepairProcessor   — breakdown detection, graduated repair ladder
         4. ComplianceCheckProcessor      — FHA/RESPA enforcement
         5. AIDisclosureProcessor         — no-op; disclosure only when sincerely asked
         6. ResponseTranslationProcessor  — mirror user language (es, …)
@@ -42,29 +40,19 @@ def create_default_pipeline() -> ResponsePostProcessor:
     Disclosure happens only when a lead explicitly asks "are you a bot?" / "are you AI?"
     Per SB 1001 (CA) — no proactive footer required or added.
     """
-    repair_enabled = os.getenv("CONVERSATION_REPAIR_ENABLED", "false").lower() in {
-        "1",
-        "true",
-        "yes",
-        "on",
-    }
-
-    stages = [
+    return ResponsePostProcessor(stages=[
         LanguageMirrorProcessor(),
         # Defense-in-depth: primary opt-out check is in webhook.py (lines 408-437)
         TCPAOptOutProcessor(),
-    ]
-    if repair_enabled:
-        stages.append(ConversationRepairProcessor())
-    stages.append(ComplianceCheckProcessor())
-    # AIDisclosureProcessor is a no-op stub — kept for future optional use
-    stages.append(AIDisclosureProcessor())
-    # F-13 FIX: Translate fixed qualification / scheduling / handoff messages
-    # to match the user's detected language.
-    stages.append(ResponseTranslationProcessor())
-    stages.append(SMSTruncationProcessor())
-
-    return ResponsePostProcessor(stages=stages)
+        ConversationRepairProcessor(),
+        ComplianceCheckProcessor(),
+        # AIDisclosureProcessor is a no-op stub — kept for future optional use
+        AIDisclosureProcessor(),
+        # F-13 FIX: Translate fixed qualification / scheduling / handoff messages
+        # to match the user's detected language.
+        ResponseTranslationProcessor(),
+        SMSTruncationProcessor(),
+    ])
 
 
 _pipeline: ResponsePostProcessor | None = None
