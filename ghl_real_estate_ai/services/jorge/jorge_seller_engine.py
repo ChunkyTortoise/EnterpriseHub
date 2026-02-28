@@ -2000,16 +2000,20 @@ class JorgeSellerEngine:
                 actions.append({"type": "add_tag", "tag": "Human-Follow-Up-Needed"})
                 actions.append({"type": "add_tag", "tag": "AI-Off"})
 
-            # Trigger agent notification workflow
-            hot_workflow_id = JorgeSellerConfig.get_workflow_id("hot")
-            if hot_workflow_id:
-                actions.append(
-                    {
-                        "type": "trigger_workflow",
-                        "workflow_id": hot_workflow_id,
-                        "data": {**seller_data, "persona": persona_data},
-                    }
-                )
+            # Trigger agent notification workflow ONLY after booking is confirmed.
+            # Firing it on initial HOT classification causes the GHL workflow to send
+            # its own SMS campaign on top of the bot's calendar slot offer, spamming
+            # the client with duplicate/redundant messages.
+            if seller_data.get("scheduling_step") == "confirmed":
+                hot_workflow_id = JorgeSellerConfig.get_workflow_id("hot")
+                if hot_workflow_id:
+                    actions.append(
+                        {
+                            "type": "trigger_workflow",
+                            "workflow_id": hot_workflow_id,
+                            "data": {**seller_data, "persona": persona_data},
+                        }
+                    )
 
             # Trigger Vapi Outbound Call (Voice AI Handoff) with exponential backoff retry
             from ghl_real_estate_ai.services.vapi_service import VapiService
