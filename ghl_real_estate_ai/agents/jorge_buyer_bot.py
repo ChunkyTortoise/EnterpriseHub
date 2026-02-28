@@ -694,7 +694,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 _sg_user = " ".join(m.get("content", "") for m in _sg_hist if m.get("role") == "user").lower()
                 _sg_bot = [m.get("content", "").lower() for m in _sg_hist if m.get("role") in ("assistant", "bot", "ai")]
                 _sg_todo = []
-                if not _sg_re.search(r"\$[\d,k]+|\d+\s*(?:k|thousand|million)", _sg_user):
+                if not _sg_re.search(r"\$[\d,.]+\s*[mkMK]?|\d+\s*(?:m\b|k\b|thousand|million)|\d{6,}", _sg_user):
                     _sg_todo.append("budget range")
                 if not _sg_re.search(r"pre.?approv|pre.?qual|been approved|got approved|approved up to", _sg_user):
                     _sg_todo.append("pre-approval")
