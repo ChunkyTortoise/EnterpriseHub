@@ -70,7 +70,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"imageUrl\": \"${IMAGE}\"}")
           echo "API response: ${RESPONSE}"
-          DEPLOY_ID=$(echo "${RESPONSE}" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
+          DEPLOY_ID=$(echo "${RESPONSE}" | python3 -c "import sys,json; d=sys.stdin.read().strip(); print(json.loads(d).get('id','') if d else '')" 2>/dev/null || echo "")
           echo "deploy_id=${DEPLOY_ID}" >> "$GITHUB_OUTPUT"
           echo "Deploy triggered. ID=${DEPLOY_ID}"
 
