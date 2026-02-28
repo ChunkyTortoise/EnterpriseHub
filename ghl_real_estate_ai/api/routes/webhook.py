@@ -1485,9 +1485,10 @@ async def handle_ghl_webhook(
 
                 if is_lead_first_message:
                     # T1 — send the qualifying question and return early
+                    contact_market = rancho_config.MARKET_CONFIG.MARKET_NAME
                     t1_message = (
                         f"Hey {contact_first_name}! Are you looking to buy or sell "
-                        f"in {contact_market or "your area"}?"
+                        f"in {contact_market}?"
                     )
                     logger.info(
                         "Lead T1 qualifying question sent to %s — bypassing LangGraph", contact_id
