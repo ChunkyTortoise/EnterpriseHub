@@ -1504,7 +1504,69 @@ async def handle_ghl_webhook(
                 )
 
                 if is_lead_first_message:
-                    # T1 — send the qualifying question and return early
+                    # T1 — check if intent is already clear in the opening message.
+                    # If so, route immediately (skip the buy/sell question).
+                    t1_intent = _detect_buy_sell_intent(user_message)
+
+                    if t1_intent == "seller":
+                        logger.info(
+                            "Lead T1 seller intent detected for %s — routing directly to seller bot", contact_id
+                        )
+                        routing_actions = [
+                            GHLAction(type=ActionType.ADD_TAG, tag="Needs Qualifying"),
+                            GHLAction(type=ActionType.REMOVE_TAG, tag=jorge_settings.LEAD_ACTIVATION_TAG),
+                        ]
+                        t1_message = (
+                            f"Got it, {contact_first_name}! What's the address of the property "
+                            f"you're thinking about selling?"
+                        )
+                        background_tasks.add_task(
+                            safe_send_message, current_ghl_client, contact_id, t1_message, event.message.type
+                        )
+                        background_tasks.add_task(
+                            safe_apply_actions, current_ghl_client, contact_id, routing_actions
+                        )
+                        await conversation_manager.update_context(
+                            contact_id=contact_id,
+                            user_message=user_message,
+                            ai_response=t1_message,
+                            location_id=location_id,
+                        )
+                        return JSONResponse(
+                            status_code=200,
+                            content={"status": "ok", "mode": "lead_t1_routed_seller"},
+                        )
+
+                    if t1_intent == "buyer":
+                        logger.info(
+                            "Lead T1 buyer intent detected for %s — routing directly to buyer bot", contact_id
+                        )
+                        routing_actions = [
+                            GHLAction(type=ActionType.ADD_TAG, tag=jorge_settings.BUYER_ACTIVATION_TAG),
+                            GHLAction(type=ActionType.REMOVE_TAG, tag=jorge_settings.LEAD_ACTIVATION_TAG),
+                        ]
+                        t1_message = (
+                            f"Perfect, {contact_first_name}! What area or neighborhoods "
+                            f"are you looking to buy in?"
+                        )
+                        background_tasks.add_task(
+                            safe_send_message, current_ghl_client, contact_id, t1_message, event.message.type
+                        )
+                        background_tasks.add_task(
+                            safe_apply_actions, current_ghl_client, contact_id, routing_actions
+                        )
+                        await conversation_manager.update_context(
+                            contact_id=contact_id,
+                            user_message=user_message,
+                            ai_response=t1_message,
+                            location_id=location_id,
+                        )
+                        return JSONResponse(
+                            status_code=200,
+                            content={"status": "ok", "mode": "lead_t1_routed_buyer"},
+                        )
+
+                    # Intent unclear — send the qualifying question and return early
                     contact_market = rancho_config.MARKET_CONFIG.MARKET_NAME
                     t1_message = (
                         f"Hey {contact_first_name}! Are you looking to buy or sell "
