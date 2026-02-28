@@ -67,18 +67,29 @@ class BuyerWorkflowService:
             if next_action == "schedule_property_tour" and not str(
                 state.get("response_content", "")
             ).strip():
-                buyer_name = state.get("buyer_name", "")
-                name_part = f"{buyer_name.split()[0]}, " if buyer_name and buyer_name.strip() else ""
-                result["response_content"] = (
-                    f"You're pre-approved and ready to move — let's get you into some homes! "
-                    f"{name_part}What works better for tours, mornings or afternoons?"
+                # Don't re-ask the tour-time question on subsequent turns.
+                # Check conversation_history (always passed explicitly) for a prior ask.
+                _history = state.get("conversation_history") or []
+                _already_asked = any(
+                    "mornings or afternoons" in str(m.get("content", "")).lower()
+                    for m in _history
+                    if m.get("role") in ("assistant", "bot", "ai")
                 )
-                result["current_qualification_step"] = "appointment"
-                result["buyer_temperature"] = "hot"
-                logger.info(
-                    f"Hot-path appointment response injected for buyer "
-                    f"{state.get('buyer_id', 'unknown')}"
-                )
+                if not _already_asked:
+                    buyer_name = state.get("buyer_name", "")
+                    name_part = f"{buyer_name.split()[0]}, " if buyer_name and buyer_name.strip() else ""
+                    result["response_content"] = (
+                        f"You're pre-approved and ready to move — let's get you into some homes! "
+                        f"{name_part}What works better for tours, mornings or afternoons?"
+                    )
+                    result["current_qualification_step"] = "appointment"
+                    result["buyer_temperature"] = "hot"
+                    logger.info(
+                        f"Hot-path appointment response injected for buyer "
+                        f"{state.get('buyer_id', 'unknown')}"
+                    )
+                # If already asked, leave response_content empty so the delivery
+                # safety guard reads conversation_history and advances the flow.
 
             return result
 
