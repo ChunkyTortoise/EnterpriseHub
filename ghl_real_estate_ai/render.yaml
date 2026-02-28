@@ -19,8 +19,8 @@ services:
     plan: starter  # $7/mo — free tier spins down after 15 min (bots won't respond)
     branch: main
     rootDir: ghl_real_estate_ai
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT --workers 1
+    buildCommand: pip install -r requirements-prod.txt
+    startCommand: PYTHONPATH=.. uvicorn api.main_prod:app --host 0.0.0.0 --port $PORT --workers 1
     healthCheckPath: /api/health/live
     envVars:
       # Runtime
