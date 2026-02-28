@@ -698,7 +698,8 @@ class JorgeBuyerBot(BaseBotWorkflow):
                     _sg_todo.append("budget range")
                 if not _sg_re.search(r"pre.?approv|pre.?qual|been approved|got approved|approved up to", _sg_user):
                     _sg_todo.append("pre-approval")
-                if not _sg_re.search(r"\d+\s*(?:bed|br|bedroom)", _sg_user):
+                # "3 and yes/ya/yeah" — user answering bedroom question directly
+                if not _sg_re.search(r"\d+\s*(?:bed|br|bedroom)|\b[1-9]\b\s+and\s+\w+", _sg_user):
                     _sg_todo.append("bedrooms")
                 if not _sg_re.search(r"\b(?:june|july|august|september|october|spring|summer|fall|winter|months?|weeks?|years?|day|days|asap|soon|quickly|urgent|ready|timeline|moving|relocat|by \w+)\b", _sg_user):
                     _sg_todo.append("timeline")
@@ -708,10 +709,24 @@ class JorgeBuyerBot(BaseBotWorkflow):
                     "bedrooms": "How many bedrooms are you looking for and do you need a yard?",
                     "timeline": "When are you hoping to be in your new home?",
                 }
+                # Loop guard: if we've already asked this exact question 2+ times, skip to next
                 if _sg_todo:
-                    result["response_content"] = _sg_fallbacks[_sg_todo[0]]
+                    _sg_next_q = _sg_fallbacks[_sg_todo[0]]
+                    _sg_asked_count = sum(1 for m in _sg_bot if _sg_next_q.lower()[:30] in m)
+                    if _sg_asked_count >= 2 and len(_sg_todo) > 1:
+                        result["response_content"] = _sg_fallbacks[_sg_todo[1]]
+                    elif _sg_asked_count >= 3:
+                        # Escape hatch: move to scheduling
+                        result["response_content"] = "What time works best for tours — morning or afternoon?"
+                    else:
+                        result["response_content"] = _sg_next_q
                 else:
-                    _sg_sched_asked = sum(1 for m in _sg_bot if "morning or afternoon" in m or "morning, afternoon" in m)
+                    # All info collected — check scheduling step
+                    _sg_sched_asked = sum(
+                        1 for m in _sg_bot
+                        if "morning or afternoon" in m or "morning, afternoon" in m
+                        or "mornings or afternoons" in m
+                    )
                     # Advance to confirmation if: bot already asked once AND user replied with a time preference
                     _sg_user_gave_time = _sg_re.search(
                         r"\bmorning\b|\bafternoon\b|\bevening\b|\bnoon\b|\bam\b|\bpm\b|\b\d+[: ]\d*\s*(?:am|pm)\b",
