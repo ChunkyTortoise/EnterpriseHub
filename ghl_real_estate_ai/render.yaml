@@ -83,7 +83,7 @@ services:
       # Seller fires on "Needs Qualifying" | Buyer fires on BUYER_LEAD_TAG
       # Lead fires on LEAD_ACTIVATION_TAG — use a dedicated tag so there's no collision
       - key: LEAD_ACTIVATION_TAG
-        value: "lead-bot"
+        value: "Needs Qualifying"
       - key: BUYER_LEAD_TAG
         value: "Buyer-Lead"
       - key: JORGE_SIMPLE_MODE

@@ -259,20 +259,30 @@ def _compute_mode_flags(
     buyer_activation_tag: str,
     lead_activation_tag: str,
 ) -> dict[str, bool]:
-    """Compute bot mode flags in one place to keep routing deterministic."""
-    return {
-        "seller": (
-            ("needs qualifying" in tags_lower or "seller-lead" in tags_lower)
-            and seller_mode_enabled
-            and not should_deactivate
-        ),
-        "buyer": _tag_present(buyer_activation_tag, tags_lower) and buyer_mode_enabled and not should_deactivate,
-        "lead": (
+    """Compute bot mode flags in one place to keep routing deterministic.
+
+    Flags are mutually exclusive at the tag-match level: if seller or buyer
+    claims the contact via their activation tag, lead mode does not also fire.
+    The fallback cases (empty tags, passthrough-only tags) are unambiguous and
+    remain lead-only, so they are unaffected by this exclusion.
+    """
+    seller_active = (
+        ("needs qualifying" in tags_lower or "seller-lead" in tags_lower)
+        and seller_mode_enabled
+        and not should_deactivate
+    )
+    buyer_active = _tag_present(buyer_activation_tag, tags_lower) and buyer_mode_enabled and not should_deactivate
+    lead_active = (
+        (
+            # Tag-match activation — excluded when seller or buyer already owns this contact.
             _tag_present(lead_activation_tag, tags_lower)
-            or (not tags_lower and lead_mode_enabled)
-            or (lead_mode_enabled and bool(tags_lower) and tags_lower.issubset(_LEAD_PASSTHROUGH_TAGS))
-        ) and lead_mode_enabled and not should_deactivate,
-    }
+            and not seller_active
+            and not buyer_active
+        )
+        or (not tags_lower and lead_mode_enabled)
+        or (lead_mode_enabled and bool(tags_lower) and tags_lower.issubset(_LEAD_PASSTHROUGH_TAGS))
+    ) and lead_mode_enabled and not should_deactivate
+    return {"seller": seller_active, "buyer": buyer_active, "lead": lead_active}
 
 
 def _select_primary_mode(mode_flags: dict[str, bool]) -> str | None:
@@ -364,7 +374,16 @@ async def handle_ghl_tag_webhook(
     # Accept both the configured LEAD_ACTIVATION_TAG and the legacy "needs qualifying"
     # tag so that any in-flight contacts tagged before the migration still get outreach.
     _lead_tag = jorge_settings.LEAD_ACTIVATION_TAG.strip().lower()
-    if tag.strip().lower() not in (_lead_tag, "needs qualifying"):
+    _tag_lower = tag.strip().lower()
+    if _tag_lower not in (_lead_tag, "needs qualifying", "seller-lead", "buyer-lead"):
+        return GHLWebhookResponse(success=True, message="Tag ignored", actions=[])
+
+    # Route to the owning bot based on active modes — avoids sending lead-style
+    # outreach when seller or buyer mode will handle the conversation.
+    _seller_tag = _tag_lower in ("needs qualifying", "seller-lead") and jorge_settings.JORGE_SELLER_MODE
+    _buyer_tag = _tag_lower == jorge_settings.BUYER_ACTIVATION_TAG.strip().lower() and jorge_settings.JORGE_BUYER_MODE
+    _lead_tag_match = _tag_lower in (_lead_tag, "needs qualifying") and not _seller_tag and not _buyer_tag
+    if not (_seller_tag or _buyer_tag or _lead_tag_match):
         return GHLWebhookResponse(success=True, message="Tag ignored", actions=[])
 
     context = await conversation_manager.get_context(contact_id, location_id)

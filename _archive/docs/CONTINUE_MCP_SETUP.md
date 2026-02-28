@@ -76,8 +76,8 @@ mcp__firecrawl__scrape url="https://www.zillow.com/rancho_cucamonga-tx/"
 ## 📞 Jorge's Credentials (Reference)
 
 ```
-Location ID: 3xt4qayAh35BIDLaUv7P
-API Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsb2NhdGlvbl9pZCI6IjN4dDRxYXlBaDM1QklETGFVdjdQIiwidmVyc2lvbiI6MSwiaWF0IjoxNzUzODYxMTU4OTk3LCJzdWIiOiJPcjRJbVNVeFVhclBKUXlhd0E1VyJ9._2BeC7R5a1X3R05N40iDcxLhy8Kz8L1vBydudDLL_As
+Location ID: [REPLACE_WITH_JORGE_LOCATION_ID]
+API Key: [REPLACE_WITH_JORGE_GHL_API_KEY]
 Realtor Email: realtorjorgesalas@gmail.com
 ```
 
