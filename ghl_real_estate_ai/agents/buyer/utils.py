@@ -23,21 +23,23 @@ async def extract_budget_range(
             [msg.get("content", "") for msg in conversation_history if msg.get("role") == "user"]
         )
 
-        # Find dollar amounts with optional k (e.g., $450k, $500,000)
-        dollar_pattern = r"\$([0-9,]+)([kK]?)"
+        # Find dollar amounts with optional k/m suffix (e.g., $450k, $1.2m, $500,000)
+        dollar_pattern = r"\$([0-9,]+(?:\.[0-9]+)?)([kKmM]?)"
         matches = re.findall(dollar_pattern, conversation_text)
 
         # Fallback: also match plain number amounts without $ prefix
         # Handles inputs like "450 to 500", "around 475k", "between 400 and 500"
         if not matches:
-            plain_pattern = r"(?<!\$)\b(\d{1,3}(?:,\d{3})*)([kK]?)\b"
+            plain_pattern = r"(?<!\$)\b(\d{1,3}(?:,\d{3})*)([kKmM]?)\b"
             matches = re.findall(plain_pattern, conversation_text)
 
         amounts = []
         for val, k_suffix in matches:
-            amount = int(val.replace(",", ""))
-            if k_suffix:
-                amount *= 1000
+            amount = int(float(val.replace(",", "")))
+            if k_suffix.lower() == "m":
+                amount = int(float(val.replace(",", "")) * 1_000_000)
+            elif k_suffix.lower() == "k":
+                amount = int(float(val.replace(",", "")) * 1_000)
             elif 100 <= amount < config.BUDGET_AMOUNT_K_THRESHOLD:
                 # Only auto-multiply 100-999 range (clear K-shorthand in real estate)
                 # "$500" -> $500K, but "$50" stays $50, "$1500" stays $1500

@@ -656,6 +656,25 @@ async def handle_ghl_webhook(
     jorge_seller_mode = mode_flags["seller"]
     jorge_buyer_mode = mode_flags["buyer"]
     jorge_lead_mode = mode_flags["lead"]
+
+    # Intent override: if contact has Buyer-Lead tag but message signals seller intent,
+    # flip to seller mode and backfill the Needs Qualifying tag so CRM stays consistent.
+    if jorge_buyer_mode and not jorge_seller_mode and jorge_settings.JORGE_SELLER_MODE:
+        if _detect_buy_sell_intent(user_message) == "seller":
+            jorge_buyer_mode = False
+            jorge_seller_mode = True
+            mode_flags = {"seller": True, "buyer": False, "lead": jorge_lead_mode}
+            background_tasks.add_task(
+                safe_apply_actions,
+                ghl_client_default,
+                contact_id,
+                [GHLAction(type=ActionType.ADD_TAG, tag="Needs Qualifying")],
+            )
+            logger.info(
+                "Buyer-Lead contact expressed seller intent — overriding to seller mode",
+                extra={"contact_id": contact_id},
+            )
+
     primary_mode = _select_primary_mode(mode_flags)
 
     logger.info(
