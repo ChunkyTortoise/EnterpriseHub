@@ -2337,16 +2337,22 @@ class LeadBotWorkflow(BaseBotWorkflow):
         elif _has_time_pref:
             reply = "What day works best, this week or next?"
         elif (_is_buyer or _is_seller) and _has_timeline:
-            if _sched_asked_count >= 1:
-                # Already asked — user is still sharing context; nudge without repeating verbatim
+            if _sched_asked_count == 0:
+                if _is_buyer:
+                    reply = "What time works for a quick call with our buyer specialist, morning or afternoon?"
+                else:
+                    reply = "What time works for a quick call with our team, morning or afternoon?"
+            elif _sched_asked_count == 1:
                 if _is_buyer:
                     reply = "One last thing — would morning or afternoon work better for a quick call?"
                 else:
                     reply = "Almost there! Would morning or afternoon work better for a call with our team?"
-            elif _is_buyer:
-                reply = "What time works for a quick call with our buyer specialist, morning or afternoon?"
             else:
-                reply = "What time works for a quick call with our team, morning or afternoon?"
+                # Third+ ask: keep it short and distinct to avoid loop detection
+                if _is_buyer:
+                    reply = "Just need morning or afternoon and we will get you connected right away."
+                else:
+                    reply = "Just need morning or afternoon and we will get you on with our team."
         elif _is_seller and not _has_timeline:
             reply = "Got it. What is your timeline for selling?"
         elif _is_buyer and not _has_timeline:
