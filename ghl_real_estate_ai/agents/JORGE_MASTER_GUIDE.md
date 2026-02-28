@@ -302,6 +302,7 @@ These are set in Render Dashboard → jorge-realty-ai → Environment. Never sha
 ### 6.1 Self-Service (No Developer)
 
 **In GHL:**
+
 - Edit workflow steps and message text
 - Add/remove tags from contacts
 - Modify calendar availability
@@ -309,6 +310,7 @@ These are set in Render Dashboard → jorge-realty-ai → Environment. Never sha
 - Edit pipeline stages
 
 **Via Render Env Vars:**
+
 - Toggle bots: `JORGE_SELLER_MODE=false`
 - Switch to 10-question mode: `JORGE_SIMPLE_MODE=false`
 - Adjust thresholds: `HOT_SELLER_THRESHOLD`
@@ -419,7 +421,7 @@ Takes about 10 minutes. Do this at the start of each month to keep everything he
 | Gate 2 — Unit Tests | Full automated test suite | ✅ PASSED · 484/484 |
 | Gate 3 — Smoke Test | Live webhook, HMAC verified | ✅ PASSED · 4/4 |
 | Gate 4 — Full Live Eval | 18 phases, real HTTP calls to production | ✅ PASSED · 478/478 |
-| Gate 5 — Phone Test | Real SMS → HOT → calendar booked | ⏳ Jorge performs this (below) |
+| Gate 5 — Phone Test | Real SMS → HOT → calendar booked | ⏳ Jorge performs this · see script below |
 
 **Gate 4 confirmed on your live system:** Prompt injection blocked · Fair Housing compliance active · STOP/opt-out handled · Calendar slot offer working · Cross-contact isolation verified · SQL injection rejected · Spanish input handled · 478 of 478 checks green.
 
@@ -437,6 +439,8 @@ One test remaining: send a real SMS through your GHL number to confirm the full 
 | 6 | `1` | "You're all set!" — appointment booked in GHL Calendars |
 
 **Verify after step 6:** GHL → Calendars → "Zoom Call With Jorge Sales" → new appointment appears. GHL → Contacts → test contact → tags include `Hot-Seller` and `Seller-Qualified`. You should also receive the SMS/email via your Hot Seller workflow.
+
+**After completing Gate 5:** Screenshot the appointment in GHL Calendars and text Cayman the result — or reply "Gate 5 passed" with the screenshot to confirm full delivery.
 
 ### Current Live Configuration
 
@@ -483,6 +487,7 @@ These are pre-existing workflows in Jorge's GHL account that interact with the b
 | **2. AI OFF/ON Tag Added** | Monitors `AI-Off` / `AI-On` tags — updates the "AI Assistant Is" custom field so bots check status before responding |
 | **3. AI Tag Removal** | Cleans up old AI state tags when a new bot activates |
 | **5. Process Message — Which Bot?** | Secondary webhook entry point — reads contact tags to determine which bot should handle a message |
+> **Note:** GHL numbered these workflows 1–5 internally. Workflow #4 was deleted from your GHL account before delivery — the remaining four (1, 2, 3, 5) are active.
 | **New Inbound Lead** | Fires on new contact creation — applies `Needs Qualifying`, creates opportunity, routes to appropriate activation |
 | **"For Seller" Disposition Changed** | Fires when seller disposition field changes — triggers appropriate follow-up campaign |
 | **Retail Buyer Disposition Changed** | Fires when buyer disposition changes — routes to appropriate stage workflow |
@@ -527,6 +532,8 @@ Removing these mid-conversation can cause the bot to re-run a completed flow or 
 | `Compliance-Alert` | Response pipeline | Message blocked for FHA/RESPA violation | Flags contact for review — bot response was replaced with safe fallback |
 | `Human-Escalation-Needed` | Conversation repair | Bot tried multiple repair strategies and failed | Flags for Jorge to step in manually (see Part 6.4) |
 
+> **Buyer bot note:** The Buyer bot classifies contacts as HOT/WARM/COLD and writes this to the **`Buyer Temperature` custom field** on the contact card — it does not apply `Hot-Buyer` / `Warm-Buyer` / `Cold-Buyer` tags. To find your hottest buyers: GHL → Contacts → Filter by custom field "Buyer Temperature = Hot".
+
 ---
 
 ### What You Can Safely Edit in GHL
@@ -548,7 +555,7 @@ Removing these mid-conversation can cause the bot to re-run a completed flow or 
 | File | Contents |
 |------|---------|
 | `JORGE_QUICK_REFERENCE.md` | 1-page cheat sheet — tags, kill switches, costs, monthly checks |
-| `HANDOFF.md` | Repo root · quick-reference for GHL config, bot tags, and Gate 5 test script |
+| `HANDOFF.md` | Repo root · developer handoff reference — service URL, webhook config, deploy history |
 | `AGENTS.md` | Agent personas and tone details |
 | `DEPLOYMENT_CHECKLIST.md` | Full env var reference and deploy steps |
 | `JORGE_PRODUCTION_IDS.md` | All production GHL IDs — workflows, custom fields, calendar |
