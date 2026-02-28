@@ -11,6 +11,8 @@ API Documentation: https://highlevel.stoplight.io/
 """
 
 import asyncio
+import re
+from datetime import datetime, timezone as dt_timezone
 from typing import Any, Dict, List, Optional
 
 import httpx
@@ -676,7 +678,24 @@ class GHLClient:
 
         endpoint = f"{self.base_url}/calendars/{calendar_id}/free-slots"
 
-        params = {"startDate": start_date, "endDate": end_date, "timezone": timezone}
+        # GHL requires epoch milliseconds, not ISO strings
+        def _to_epoch_ms(date_val: str) -> int:
+            dt = datetime.fromisoformat(date_val.replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=dt_timezone.utc)
+            return int(dt.timestamp() * 1000)
+
+        try:
+            start_ms = _to_epoch_ms(start_date)
+            end_ms = _to_epoch_ms(end_date)
+        except (ValueError, AttributeError) as e:
+            logger.error(
+                f"Invalid date format for calendar slots: {start_date} / {end_date} — {e}",
+                extra={"calendar_id": calendar_id},
+            )
+            return []
+
+        params = {"startDate": start_ms, "endDate": end_ms, "timezone": timezone}
 
         try:
             response = await self.http_client.get(
@@ -688,9 +707,31 @@ class GHLClient:
             response.raise_for_status()
 
             data = response.json()
-            # GHL usually returns slots in a dict under 'slots' or directly
-            slots = data.get("slots", []) if isinstance(data, dict) else []
 
+            # GHL returns date-keyed dict: {"2026-03-02": {"slots": [...]}, "traceId": "..."}
+            # Extract all slot start times as {"start_time": "<iso>"} dicts
+            slots: List[Dict[str, Any]] = []
+            date_key_pattern = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+            if isinstance(data, dict):
+                for key, value in data.items():
+                    if not date_key_pattern.match(key):
+                        continue
+                    if isinstance(value, dict):
+                        slot_list = value.get("slots", [])
+                    elif isinstance(value, list):
+                        slot_list = value
+                    else:
+                        continue
+                    for entry in slot_list:
+                        if isinstance(entry, str):
+                            slots.append({"start_time": entry})
+                        elif isinstance(entry, dict):
+                            slots.append(entry)
+
+            logger.info(
+                f"Fetched {len(slots)} raw slots from calendar {calendar_id}",
+                extra={"calendar_id": calendar_id, "slot_count": len(slots)},
+            )
             return slots
 
         except httpx.HTTPError as e:
