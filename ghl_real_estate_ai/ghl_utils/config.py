@@ -307,27 +307,30 @@ class Settings(BaseSettings):
     @field_validator("ghl_webhook_secret")
     @classmethod
     def validate_webhook_secret(cls, v: Optional[str], info: ValidationInfo):
-        """SECURITY FIX: Validate webhook secret in production."""
+        """Validate webhook secret in production."""
         environment = info.data.get("environment", "development")
         if environment == "production" and not v:
-            print("❌ SECURITY ERROR: GHL_WEBHOOK_SECRET is required in production")
-            print("   Generate with: openssl rand -hex 32")
-            sys.exit(1)
-        if v and len(v) < 32:
-            print("⚠️  WARNING: Webhook secret should be at least 32 characters")
+            logging.warning(
+                "GHL_WEBHOOK_SECRET not set — webhook requests will be rejected. "
+                "Set via: openssl rand -hex 32"
+            )
+        elif v and len(v) < 32:
+            logging.warning("Webhook secret should be at least 32 characters")
         return v
 
     @field_validator("redis_password")
     @classmethod
     def validate_redis_password(cls, v: Optional[str], info: ValidationInfo):
-        """SECURITY FIX: Validate Redis password in production."""
-        environment = info.data.get("environment", "development")
-        if environment == "production" and not v:
-            print("❌ SECURITY ERROR: REDIS_PASSWORD is required in production")
-            print("   Generate with: openssl rand -hex 32")
-            sys.exit(1)
-        if v and len(v) < 32:
-            print("⚠️  WARNING: Redis password should be at least 32 characters")
+        """Validate Redis password. REDIS_URL (if set) embeds credentials — standalone REDIS_PASSWORD is optional."""
+        redis_url = info.data.get("redis_url")
+        if not v and not redis_url:
+            environment = info.data.get("environment", "development")
+            if environment == "production":
+                logging.warning(
+                    "Neither REDIS_PASSWORD nor REDIS_URL is set — Redis cache will use in-memory fallback"
+                )
+        elif v and len(v) < 32:
+            logging.warning("Redis password should be at least 32 characters")
         return v
 
     @field_validator("anthropic_api_key")
