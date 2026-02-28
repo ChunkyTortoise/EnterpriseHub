@@ -231,7 +231,7 @@ def _turn(transcript: List[TurnResult], label: str) -> TurnResult:
 def test_service_health():
     """Health endpoint must return 200 and status=healthy."""
     try:
-        with urllib.request.urlopen(f"{BASE_URL}/api/ghl/health", timeout=15) as r:
+        with urllib.request.urlopen(f"{BASE_URL}/health", timeout=15) as r:
             status_code = r.status
             body = json.loads(r.read())
     except Exception as exc:

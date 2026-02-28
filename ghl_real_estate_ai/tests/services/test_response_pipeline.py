@@ -670,7 +670,7 @@ class TestPipelineIntegration:
 
         assert "[AI-assisted message]" not in result.message
         assert result.message.startswith("Here are some great options!")
-        assert len(result.stage_log) == 5  # all 5 stages ran
+        assert len(result.stage_log) == 6  # all 6 stages ran
 
     @pytest.mark.asyncio
     async def test_opt_out_short_circuits_pipeline(self):
@@ -851,8 +851,8 @@ class TestPipelineIntegration:
 class TestPipelineInfrastructure:
     """Pipeline construction, chaining, factory tests."""
 
-    def test_create_default_pipeline_has_5_stages(self):
-        """Default pipeline has all 5 stages in correct order."""
+    def test_create_default_pipeline_has_6_stages(self):
+        """Default pipeline has all 6 stages in correct order."""
         pipeline = create_default_pipeline()
         names = [s.name for s in pipeline.stages]
         assert names == [
@@ -860,6 +860,7 @@ class TestPipelineInfrastructure:
             "tcpa_opt_out",
             "compliance_check",
             "ai_disclosure",
+            "response_translation",
             "sms_truncation",
         ]
 

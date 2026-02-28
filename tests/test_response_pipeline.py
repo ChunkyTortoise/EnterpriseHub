@@ -322,7 +322,7 @@ class TestFullPipeline:
         pipeline = create_default_pipeline()
         ctx = _make_context(contact_id="log_test_1", user_message="Hello")
         result = await pipeline.process("Reply", ctx)
-        assert len(result.stage_log) == 5  # all 5 stages ran (incl. language_mirror)
+        assert len(result.stage_log) == 6  # all 6 stages ran (incl. language_mirror, response_translation)
 
     def test_stage_order_repair_disabled(self, monkeypatch):
         monkeypatch.delenv("CONVERSATION_REPAIR_ENABLED", raising=False)
@@ -333,6 +333,7 @@ class TestFullPipeline:
             "tcpa_opt_out",
             "compliance_check",
             "ai_disclosure",
+            "response_translation",
             "sms_truncation",
         ]
 
@@ -346,5 +347,6 @@ class TestFullPipeline:
             "conversation_repair",
             "compliance_check",
             "ai_disclosure",
+            "response_translation",
             "sms_truncation",
         ]

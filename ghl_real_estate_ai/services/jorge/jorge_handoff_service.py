@@ -484,8 +484,10 @@ class JorgeHandoffService:
             db_outcomes = await self._repository.load_handoff_outcomes(cutoff)
 
             # Build set of existing keys for dedup
+            # Use cls._handoff_outcomes (class var) because @classmethods write there
+            cls_outcomes = type(self)._handoff_outcomes
             existing_keys: set = set()
-            for route, outcomes in self._handoff_outcomes.items():
+            for route, outcomes in cls_outcomes.items():
                 for o in outcomes:
                     existing_keys.add((o.get("contact_id", ""), o.get("timestamp", 0)))
 
@@ -495,10 +497,10 @@ class JorgeHandoffService:
                     continue
 
                 pair_key = f"{row['source_bot']}->{row['target_bot']}"
-                if pair_key not in self._handoff_outcomes:
-                    self._handoff_outcomes[pair_key] = []
+                if pair_key not in cls_outcomes:
+                    cls_outcomes[pair_key] = []
 
-                self._handoff_outcomes[pair_key].append(
+                cls_outcomes[pair_key].append(
                     {
                         "contact_id": row["contact_id"],
                         "outcome": row["outcome"],
@@ -886,7 +888,8 @@ class JorgeHandoffService:
             return 0
 
         persisted = 0
-        for route, outcomes in self._handoff_outcomes.items():
+        # Use cls._handoff_outcomes (class var) because @classmethods write there
+        for route, outcomes in type(self)._handoff_outcomes.items():
             parts = route.split("->")
             if len(parts) != 2:
                 continue
