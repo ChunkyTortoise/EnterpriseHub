@@ -570,7 +570,7 @@ class JorgeEnvironmentSettings:
     def __init__(self):
         """Initialize with environment variables"""
         self.jorge_seller_mode = os.getenv("JORGE_SELLER_MODE", "false").lower() == "true"
-        self.jorge_buyer_mode = os.getenv("JORGE_BUYER_MODE", "false").lower() == "true"
+        self.jorge_buyer_mode = os.getenv("JORGE_BUYER_MODE", "true").lower() == "true"
         self.buyer_activation_tag = os.getenv("BUYER_LEAD_TAG", "Buyer-Lead")
         self.activation_tags = self._parse_list_env("ACTIVATION_TAGS", JorgeSellerConfig.ACTIVATION_TAGS)
         self.deactivation_tags = self._parse_list_env("DEACTIVATION_TAGS", JorgeSellerConfig.DEACTIVATION_TAGS)
@@ -614,7 +614,7 @@ class JorgeEnvironmentSettings:
 
         # Lead bot mode
         self.jorge_lead_mode = os.getenv("JORGE_LEAD_MODE", "true").lower() == "true"
-        self.lead_activation_tag = os.getenv("LEAD_ACTIVATION_TAG", "Needs Qualifying")
+        self.lead_activation_tag = os.getenv("LEAD_ACTIVATION_TAG", "lead-bot")
 
     def _parse_list_env(self, env_var: str, default: List[str]) -> List[str]:
         """Parse environment variable as list"""
