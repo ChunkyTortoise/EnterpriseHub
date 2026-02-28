@@ -19,56 +19,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
-    name: Build Docker image - Deploy to Render
+  deploy:
+    name: Deploy to Render (source)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Compute image tag
-        id: meta
+      - name: Update Render service start command
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
-          SHORT_SHA="${GITHUB_SHA::7}"
-          IMAGE="docker.io/chunktort/jorge-realty-ai:sha-${SHORT_SHA}"
-          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
-          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
-          echo "Tagged as: ${IMAGE}"
+          echo "Patching Render service start/build command (srv-d6d5go15pdvs73fcjjq0)..."
+          PATCH_RESPONSE=$(curl -s -X PATCH \
+            "https://api.render.com/v1/services/srv-d6d5go15pdvs73fcjjq0" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "serviceDetails": {
+                "buildCommand": "pip install -r requirements-prod.txt",
+                "startCommand": "PYTHONPATH=.. uvicorn api.main_prod:app --host 0.0.0.0 --port $PORT --workers 1"
+              }
+            }')
+          echo "PATCH response: ${PATCH_RESPONSE}"
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ghl_real_estate_ai/
-          platforms: linux/amd64
-          push: true
-          tags: |
-            chunktort/jorge-realty-ai:sha-${{ steps.meta.outputs.short_sha }}
-            chunktort/jorge-realty-ai:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Trigger Render deploy
+      - name: Trigger Render source deploy
         id: render
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
-          echo "Triggering Render deploy via API (srv-d6d5go15pdvs73fcjjq0)..."
-          SHORT_SHA="${GITHUB_SHA::7}"
-          IMAGE="docker.io/chunktort/jorge-realty-ai:sha-${SHORT_SHA}"
+          echo "Triggering Render source deploy (srv-d6d5go15pdvs73fcjjq0)..."
           RESPONSE=$(curl -s -X POST \
             "https://api.render.com/v1/services/srv-d6d5go15pdvs73fcjjq0/deploys" \
             -H "Authorization: Bearer ${RENDER_API_KEY}" \
             -H "Content-Type: application/json" \
-            -d "{\"imageUrl\": \"${IMAGE}\"}")
+            -d "{}")
           echo "API response: ${RESPONSE}"
           DEPLOY_ID=$(echo "${RESPONSE}" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
           echo "deploy_id=${DEPLOY_ID}" >> "$GITHUB_OUTPUT"
@@ -80,19 +62,19 @@ jobs:
           DEPLOY_ID: ${{ steps.render.outputs.deploy_id }}
         run: |
           if [ -z "${DEPLOY_ID}" ]; then
-            echo "No deploy ID available, waiting 3 min for deploy to settle..."
-            sleep 180
+            echo "No deploy ID available, waiting 5 min for deploy to settle..."
+            sleep 300
             echo "Wait complete."
             exit 0
           fi
-          echo "Polling deploy ${DEPLOY_ID} (max 6 min) ..."
-          for i in $(seq 1 18); do
+          echo "Polling deploy ${DEPLOY_ID} (max 15 min) ..."
+          for i in $(seq 1 45); do
             sleep 20
             STATUS=$(curl -sf \
               "https://api.render.com/v1/services/srv-d6d5go15pdvs73fcjjq0/deploys/${DEPLOY_ID}" \
               -H "Authorization: Bearer ${RENDER_API_KEY}" | \
               python3 -c "import sys,json; print(json.load(sys.stdin).get('status','?'))")
-            echo "[${i}/18] ${STATUS}"
+            echo "[${i}/45] ${STATUS}"
             if [ "$STATUS" = "live" ]; then
               echo "Deploy is live!"
               exit 0
@@ -102,5 +84,5 @@ jobs:
               exit 1
             fi
           done
-          echo "Polling timed out - Render may still be deploying."
+          echo "Polling timed out after 15 min — Render may still be deploying."
           exit 1
