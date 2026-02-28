@@ -10,6 +10,7 @@ billing portal, Socket.IO — none needed for bot operation.
 """
 
 from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import Any
 
 from fastapi import FastAPI
@@ -105,7 +106,14 @@ app.add_middleware(
 app.add_middleware(JSONSanitizeASGIMiddleware)
 
 # Render health check: GET /api/health/live → 200
+# Also /health alias for backward-compat with any legacy Render health-check config
 app.include_router(health.router, prefix="/api")
+
+
+@app.get("/health", include_in_schema=False)
+async def health_alias():
+    """Backward-compat alias — Render may poll /health if configured before switch."""
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
 # GHL webhook: POST /api/ghl/webhook → bot logic
 app.include_router(webhook.router, prefix="/api")
