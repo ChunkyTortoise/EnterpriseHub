@@ -16,8 +16,8 @@
 ✅ **GHL Integration** - Seamlessly works with your existing workflows
 
 ### **Real API Integration**
-✅ **Claude AI** - sk-ant-api03-E2ox... (configured and working)
-✅ **GHL Location** - 3xt4qayAh35BlDLaUv7P (connected)
+✅ **Claude AI** - [REPLACE_WITH_ANTHROPIC_KEY] (configured and working)
+✅ **GHL Location** - [REPLACE_WITH_JORGE_LOCATION_ID] (connected)
 ✅ **Live Testing** - Both bots tested and operational
 
 ---

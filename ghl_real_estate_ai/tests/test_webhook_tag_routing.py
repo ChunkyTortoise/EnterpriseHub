@@ -33,6 +33,9 @@ def test_normalize_tags_is_case_and_whitespace_insensitive() -> None:
 
 
 def test_mode_priority_prefers_seller_over_other_modes() -> None:
+    # When a contact has both "needs qualifying" (seller tag) and "buyer-lead",
+    # seller claims the contact and lead/buyer flags must not also fire —
+    # flags are mutually exclusive at the tag-match level.
     tags_lower = _normalize_tags(["needs qualifying", "buyer-lead"])
     mode_flags = _compute_mode_flags(
         tags_lower,
@@ -45,8 +48,10 @@ def test_mode_priority_prefers_seller_over_other_modes() -> None:
     )
 
     assert mode_flags["seller"] is True
+    # buyer-lead tag is unrelated to seller, so buyer still fires independently.
     assert mode_flags["buyer"] is True
-    assert mode_flags["lead"] is True
+    # lead must NOT fire — seller already claims "Needs Qualifying".
+    assert mode_flags["lead"] is False
     assert _select_primary_mode(mode_flags) == "seller"
 
 
