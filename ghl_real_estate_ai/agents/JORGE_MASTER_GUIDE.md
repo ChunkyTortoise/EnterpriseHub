@@ -65,16 +65,33 @@ Every lead is a **Contact**. Each has: name, phone, email, **tags**, and **custo
 
 ### 2.3 Tags — The On/Off Switches
 
+Tags control which bot runs and what happens next. Full reference in [Section 10](#section-10--complete-tag-reference).
+
+**Tags you add manually to start or stop a bot:**
+
 | Tag | What It Does |
 |-----|-------------|
 | `Needs Qualifying` | Activates the Lead/Seller bot |
+| `Seller-Lead` | Also activates the Seller bot (same effect as Needs Qualifying) |
 | `Buyer-Lead` | Activates the Buyer bot |
 | `AI-Off` | Turns off ALL bots for this contact immediately |
 | `Stop-Bot` | Same as AI-Off |
-| `Hot-Seller` | Applied by bot when seller answers all 4 questions — triggers HOT workflow |
-| `Warm-Seller` | Partial qualification — triggers nurture drip sequence |
-| `TCPA-Opt-Out` | Applied when lead replies STOP — bot will never text them again |
-| `Seller-Qualified` | Bot finished the conversation — won't restart |
+
+**Tags the bot applies automatically:**
+
+| Tag | When It's Applied |
+|-----|-----------------|
+| `Hot-Seller` | Seller answers all 4 questions with quality responses → triggers HOT workflow |
+| `Warm-Seller` | Seller gives partial answers → triggers nurture drip |
+| `Cold-Seller` | Seller unresponsive or too vague → long-term follow-up |
+| `Hot-Lead` | Lead score ≥ 80 → priority workflow + agent notification |
+| `Warm-Lead` | Lead score 40–79 → nurture sequence |
+| `Cold-Lead` | Lead score < 40 → educational content, periodic check-in |
+| `Seller-Qualified` | Seller bot finished — won't restart on next message |
+| `Qualified` | Qualification complete (any bot) — deactivates further bot processing |
+| `TCPA-Opt-Out` | Lead replied STOP/unsubscribe — bot never texts them again |
+| `Compliance-Alert` | Bot detected an FHA/RESPA violation attempt — blocked and flagged |
+| `Human-Escalation-Needed` | Bot exhausted all automated repair strategies — needs Jorge |
 
 ### 2.5 Workflows (Automation) — Quick Summary
 
@@ -328,6 +345,58 @@ One test remaining: send a real SMS through your GHL number to confirm the full 
 | **Retail Buyer Disposition Changed** | Fires when buyer disposition changes — routes to appropriate STG stage workflow |
 | **Seller Dispo + Assign User** | Assigns Jorge as owner on seller contacts and logs disposition change |
 | **#1 Inbound Lead Force Call** | Fires on inbound lead tags — triggers forced call task to Jorge for immediate outreach |
+
+---
+
+## Section 10 — Complete Tag Reference
+
+This is the full list of every tag the bot system uses. Use this to know which tags are safe to add, remove, or rename in GHL.
+
+### Tags You Control (Safe to Add/Remove Manually)
+
+| Tag | Add To... | Effect |
+|-----|-----------|--------|
+| `Needs Qualifying` | Any contact | Starts the Lead or Seller bot |
+| `Seller-Lead` | Any contact | Same as Needs Qualifying — starts Seller bot |
+| `Buyer-Lead` | Any contact | Starts the Buyer bot |
+| `AI-Off` | Any contact | **Immediately stops all bots** for that contact. Bot will not respond until removed. |
+| `Stop-Bot` | Any contact | Same as AI-Off |
+
+> **Tip:** To pause the bot on one contact, add `AI-Off`. To restart it, remove `AI-Off`. The bot picks up fresh on the next message.
+
+---
+
+### Tags the Bots Apply Automatically (Do Not Remove Without Reason)
+
+Removing these mid-conversation can cause the bot to re-run a completed flow or lose context.
+
+| Tag | Applied By | When | Triggers |
+|-----|-----------|------|----------|
+| `Hot-Seller` | Seller bot | All 4 questions answered with quality responses | Hot Seller workflow (Jorge notified, calendar offered) |
+| `Warm-Seller` | Seller bot | Partial qualification (good signal, not complete) | Warm Seller nurture drip |
+| `Cold-Seller` | Seller bot | Unresponsive or vague answers | Long-term follow-up sequence |
+| `Seller-Qualified` | Seller bot | Qualification flow finished | Prevents bot from restarting |
+| `Hot-Lead` | Lead bot | Lead score ≥ 80 | Priority workflow + agent notification |
+| `Warm-Lead` | Lead bot | Lead score 40–79 | Nurture sequence + follow-up reminder |
+| `Cold-Lead` | Lead bot | Lead score < 40 | Educational content + periodic check-in |
+| `Qualified` | Any bot | Qualification complete | Deactivates all further bot processing |
+| `TCPA-Opt-Out` | Response pipeline | Lead sent STOP, unsubscribe, or opt-out phrase | Bot permanently silenced for this contact |
+| `Compliance-Alert` | Response pipeline | Message blocked for FHA/RESPA violation | Flags contact for review — bot response was replaced with safe fallback |
+| `Human-Escalation-Needed` | Conversation repair | Bot tried multiple repair strategies and failed | Flags for Jorge to step in manually |
+
+---
+
+### What You Can Safely Edit in GHL
+
+| Action | Safe? | Notes |
+|--------|-------|-------|
+| Add `AI-Off` or `Stop-Bot` | ✅ Yes | Standard kill switch — use any time |
+| Remove `AI-Off` or `Stop-Bot` | ✅ Yes | Restarts bot on next message |
+| Add `Needs Qualifying` or `Buyer-Lead` | ✅ Yes | Manually activates the appropriate bot |
+| Remove `Hot-Seller` / `Warm-Seller` / `Cold-Seller` | ⚠️ Careful | Bot won't re-apply unless it re-qualifies. Only remove if you want to reset the classification. |
+| Remove `Seller-Qualified` or `Qualified` | ⚠️ Careful | Bot will restart the qualification flow on next message |
+| Remove `TCPA-Opt-Out` | ❌ No | This is a legal compliance record. Only remove if you have confirmed re-consent from the contact. |
+| Rename any tag | ❌ No | Tag names are hardcoded in the bot — renaming breaks routing. Contact developer to change. |
 
 ---
 
