@@ -81,7 +81,7 @@ Resources:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `HOT_BUYER_WORKFLOW_ID` | (empty) | GHL workflow for hot buyers |
+| `HOT_BUYER_WORKFLOW_ID` | (empty) | "Jorge — Bot Activation" workflow ID (handles both Needs Qualifying + Buyer-Lead tags) |
 | `WARM_BUYER_WORKFLOW_ID` | (empty) | GHL workflow for warm buyers |
 | `CUSTOM_FIELD_BUYER_TEMPERATURE` | (empty) | GHL custom field ID |
 | `CUSTOM_FIELD_PRE_APPROVAL_STATUS` | (empty) | GHL custom field ID |
