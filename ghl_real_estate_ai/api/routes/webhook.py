@@ -22,6 +22,7 @@ from functools import lru_cache
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from ghl_real_estate_ai.api.schemas.billing import UsageRecordRequest
