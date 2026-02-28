@@ -288,7 +288,10 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
 
     try:
         from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
-        buyer_bot = JorgeBuyerBot()
+        # Reuse the same bot instance across turns so conversation_memory persists state
+        if "buyer_bot" not in sess:
+            sess["buyer_bot"] = JorgeBuyerBot()
+        buyer_bot = sess["buyer_bot"]
         result = await buyer_bot.process_buyer_conversation(
             conversation_id=req.contact_id,
             user_message=safe_message,

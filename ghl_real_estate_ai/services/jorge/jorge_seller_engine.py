@@ -1960,9 +1960,14 @@ class JorgeSellerEngine:
                 {"type": "update_custom_field", "field": roi_field, "value": f"{pricing_result.expected_roi}%"}
             )
             actions.append({"type": "update_custom_field", "field": tier_field, "value": pricing_result.tier.upper()})
-            actions.append(
-                {"type": "update_custom_field", "field": price_field, "value": f"${pricing_result.final_price}"}
-            )
+            # Use seller's stated price expectation as the AI valuation.
+            # pricing_result.final_price is a lead-pricing metric (not property value);
+            # the seller's own price_expectation is a far more meaningful field value.
+            _price_expectation = seller_data.get("price_expectation") or seller_data.get("asking_price")
+            if _price_expectation:
+                actions.append(
+                    {"type": "update_custom_field", "field": price_field, "value": str(_price_expectation)}
+                )
 
         # --- PERSONA INTELLIGENCE ---
         if persona_data:
