@@ -23,6 +23,7 @@
 | Tag | What It Does |
 |-----|-------------|
 | `Needs Qualifying` | Starts seller or lead bot |
+| `Seller-Lead` | Same as Needs Qualifying — starts seller bot |
 | `Buyer-Lead` | Starts buyer bot |
 | `AI-Off` | Stops all bots |
 | `Stop-Bot` | Stops all bots |
@@ -107,6 +108,7 @@
 | Calendar not booking | GHL → Calendars → check available slots exist |
 | `Human-Escalation-Needed` on many contacts | Call Cayman — may need bot tuning |
 | Contact wants human now | Add `AI-Off` tag, respond manually |
+| Bots stopped responding | Check Anthropic credits at console.anthropic.com — top up if < $10 |
 
 ---
 
