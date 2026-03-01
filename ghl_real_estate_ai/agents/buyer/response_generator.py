@@ -356,19 +356,41 @@ class ResponseGenerator:
             # Deterministic qualification map — primary response when _todo is non-empty.
             # Claude is unreliable for structured qualification sequences, so we bypass it entirely
             # during the qualification phase and only invoke it post-qualification for scheduling.
+            # Question text is overridable from the Lyrio dashboard via bot_settings_store.
+            try:
+                from ghl_real_estate_ai.services.jorge import bot_settings_store as _bss
+
+                _bq = _bss.get_questions("buyer")
+                _bp = _bss.get_phrases("buyer")
+            except Exception:
+                _bq, _bp = {}, []
+            import random as _random
+
             _fallback_map = {
-                "budget range": "What's your price range? That helps me focus on the right options for you.",
-                "mortgage pre-approval status": "Have you spoken with a lender yet? Getting pre-approved opens up a lot more doors.",
-                "bedrooms and property size": "How many bedrooms are you looking for, and anything specific about the size or style?",
-                "move-in timeline": "When are you hoping to be in your new home?",
+                "budget range": _bq.get("1") or "What's your price range? That helps me focus on the right options for you.",
+                "mortgage pre-approval status": _bq.get("2") or "Have you spoken with a lender yet? Getting pre-approved opens up a lot more doors.",
+                "move-in timeline": _bq.get("3") or "When are you hoping to be in your new home?",
+                "bedrooms and property size": _bq.get("4") or "How many bedrooms are you looking for, and anything specific about the size or style?",
                 "preferred area or neighborhood in Rancho Cucamonga": "Any specific neighborhoods you have in mind? Etiwanda, Alta Loma, Day Creek?",
             }
 
             if _todo:
                 # Qualification still incomplete — use deterministic response, skip Claude entirely.
-                content = _fallback_map.get(_todo[0], "What matters most to you in your next home? Area, size, or style?")
+                _q_text = _fallback_map.get(_todo[0], "What matters most to you in your next home? Area, size, or style?")
+                if _bp:
+                    _q_text = f"{_random.choice(_bp)} — {_q_text}"
+                content = _q_text
             else:
                 # All key info collected — call Claude for post-qualification scheduling conversation.
+                # Inject buyer persona override from Lyrio dashboard if set
+                try:
+                    from ghl_real_estate_ai.services.jorge import bot_settings_store as _bss_buyer
+
+                    _buyer_override = _bss_buyer.get_system_prompt_override("buyer")
+                    if _buyer_override:
+                        response_prompt = f"PERSONA INSTRUCTION (apply throughout):\n{_buyer_override}\n\n" + response_prompt
+                except Exception:
+                    pass
                 raw_response = await self.claude.generate_response(response_prompt)
                 # Guard: orchestrator error strings must never surface as SMS messages
                 if isinstance(raw_response, str) and raw_response.startswith("Error processing request:"):

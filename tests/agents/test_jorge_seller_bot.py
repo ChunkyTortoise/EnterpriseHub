@@ -717,7 +717,8 @@ class TestAdaptiveQuestionEngine:
     async def test_select_standard_question_first(self, engine):
         state = {"current_question": 1, "intent_profile": _make_profile(pcs_total=30)}
         question = await engine._select_standard_question(state)
-        assert question == engine.jorge_core_questions[0]
+        # Question may be prefixed with an opener phrase (e.g. "Happy to help — <Q1>")
+        assert engine.jorge_core_questions[0] in question
 
     @pytest.mark.asyncio
     async def test_select_standard_question_overflow(self, engine):

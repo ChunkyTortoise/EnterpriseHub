@@ -272,6 +272,16 @@ class ResponseGenerator:
         Tailor your response to the seller's persona type above and detected sentiment.
         """
 
+        # Inject persona override from Lyrio dashboard (if Jorge customized it)
+        try:
+            from ghl_real_estate_ai.services.jorge import bot_settings_store as _bss
+
+            _override = _bss.get_system_prompt_override("seller")
+            if _override:
+                prompt = f"PERSONA INSTRUCTION (apply throughout):\n{_override}\n\n" + prompt
+        except Exception:
+            pass
+
         # Inject CMA market context if available
         cma_report = state.get("cma_report")
         if cma_report:
@@ -420,6 +430,16 @@ class ResponseGenerator:
         Reply with ONLY the short SMS message (max 290 chars). No headers or markdown.
         Do not open with 'Hey' and do not identify yourself as an AI — that is handled separately.
         """
+
+        # Inject persona override from Lyrio dashboard (if Jorge customized it)
+        try:
+            from ghl_real_estate_ai.services.jorge import bot_settings_store as _bss
+
+            _override = _bss.get_system_prompt_override("seller")
+            if _override:
+                prompt = f"PERSONA INSTRUCTION (apply throughout):\n{_override}\n\n" + prompt
+        except Exception:
+            pass
 
         content = await self.claude.generate_response(prompt) or next_question
 
