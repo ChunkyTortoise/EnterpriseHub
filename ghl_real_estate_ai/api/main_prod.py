@@ -123,3 +123,9 @@ app.include_router(webhook.router, prefix="/api")
 from ghl_real_estate_ai.api.routes.test_bots import router as test_bots_router
 
 app.include_router(test_bots_router)
+
+# Lyrio dashboard bot tone/question editing
+# GET /admin/settings  PUT /admin/settings/{bot}  DELETE /api/jorge-{bot}/{id}/state
+from ghl_real_estate_ai.api.routes.admin_settings import router as admin_settings_router
+
+app.include_router(admin_settings_router)
