@@ -373,9 +373,10 @@ class JorgeSellerEngine:
                 )
 
                 # 5c. Detect Negotiation Drift (Tactical Behavioral Response)
-                # We await the swarm result specifically for NegotiationStrategistAgent (COMMUNICATION_OPTIMIZER)
+                # We await the swarm result with a tight timeout so we never block the SMS reply.
+                # The swarm caches results; first-run latency can exceed 60s on cold start.
                 try:
-                    swarm_consensus = await swarm_task
+                    swarm_consensus = await asyncio.wait_for(swarm_task, timeout=3.0)
                     optimizer_insight = next(
                         (i for i in swarm_consensus.agent_insights if i.agent_type.value == "communication_optimizer"), None
                     )
@@ -392,6 +393,11 @@ class JorgeSellerEngine:
                         drift = self.tone_engine.detect_negotiation_drift(context.get("conversation_history", []))
                         extracted_seller_data["drift_softening"] = drift.is_softening
                         extracted_seller_data["price_break_probability"] = drift.price_break_probability
+                except asyncio.TimeoutError:
+                    self.logger.warning("Swarm analysis timed out (>3s) — falling back to local drift detection")
+                    drift = self.tone_engine.detect_negotiation_drift(context.get("conversation_history", []))
+                    extracted_seller_data["drift_softening"] = drift.is_softening
+                    extracted_seller_data["price_break_probability"] = drift.price_break_probability
                 except Exception as se:
                     self.logger.warning(f"Swarm analysis failed, falling back to local drift: {se}")
                     drift = self.tone_engine.detect_negotiation_drift(context.get("conversation_history", []))
