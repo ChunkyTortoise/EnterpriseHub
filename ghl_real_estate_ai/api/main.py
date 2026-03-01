@@ -58,6 +58,7 @@ from ghl_real_estate_ai.api.middleware.error_handler import ErrorHandlerMiddlewa
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.api.mobile.mobile_router import router as mobile_router
 from ghl_real_estate_ai.api.routes import (
+    admin_settings,  # Lyrio dashboard bot tone/question editing
     agent_ecosystem,  # NEW: Agent ecosystem API for frontend integration
     agent_sync,
     agent_ui,
@@ -763,6 +764,7 @@ def _setup_routers(app: FastAPI):
     from ghl_real_estate_ai.api.routes.concierge_admin import router as concierge_admin_router
 
     app.include_router(concierge_admin_router, prefix="/admin/concierge", tags=["Concierge Admin"])
+    app.include_router(admin_settings.router)  # Bot tone/question editing from Lyrio dashboard
 
     # Bot smoke-test endpoints (no auth / no DB required)
     from ghl_real_estate_ai.api.routes.test_bots import router as test_bots_router

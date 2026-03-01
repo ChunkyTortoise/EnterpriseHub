@@ -189,8 +189,26 @@ class AdaptiveQuestionEngine:
         return "What's the most important outcome for you in this process?"
 
     async def _select_standard_question(self, state: JorgeSellerState) -> str:
-        """Select from core Jorge questions"""
+        """Select from core Jorge questions, applying runtime overrides from Lyrio dashboard."""
+        import random
+
+        from ghl_real_estate_ai.services.jorge import bot_settings_store
+
         current_q = state.get("current_question", 1)
-        if current_q <= len(self.jorge_core_questions):
-            return self.jorge_core_questions[current_q - 1]
-        return "How can I best help you with your property goals?"
+        q_key = str(current_q)
+
+        # Runtime question override takes precedence over hardcoded defaults
+        overrides = bot_settings_store.get_questions("seller")
+        if q_key in overrides and overrides[q_key]:
+            question = overrides[q_key]
+        elif current_q <= len(self.jorge_core_questions):
+            question = self.jorge_core_questions[current_q - 1]
+        else:
+            question = "How can I best help you with your property goals?"
+
+        # Prepend a random opener phrase if configured
+        phrases = bot_settings_store.get_phrases("seller")
+        if phrases:
+            opener = random.choice(phrases)
+            return f"{opener} — {question}"
+        return question
