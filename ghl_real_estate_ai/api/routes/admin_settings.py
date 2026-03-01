@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 
 router = APIRouter(tags=["Bot Admin"])
 
-_VALID_BOTS = {"seller", "buyer"}
+_VALID_BOTS = {"seller", "buyer", "lead"}
 
 
 class BotSettingsUpdate(BaseModel):
@@ -50,14 +50,32 @@ async def update_settings(bot: str, body: BotSettingsUpdate) -> dict[str, Any]:
 
 
 @router.delete("/api/jorge-{bot}/{contact_id}/state")
-async def reset_contact_state(bot: str, contact_id: str) -> dict[str, Any]:
-    """Clear a contact's conversation state so the bot starts fresh from Q1."""
+async def reset_contact_state(
+    bot: str,
+    contact_id: str,
+    location_id: Optional[str] = Query(None, description="GHL location ID for scoped Redis key"),
+) -> dict[str, Any]:
+    """Clear a contact's conversation state so the bot starts fresh from Q1.
+
+    Also clears the initial_outreach_sent flag so the tag-webhook will resend
+    the opening message on the next activation tag event.
+    """
     if bot not in _VALID_BOTS:
         raise HTTPException(status_code=400, detail=f"bot must be one of {sorted(_VALID_BOTS)}")
 
     cleared: list[str] = []
 
-    # 1. Clear Redis conversation sessions via ConversationSessionManager
+    # 1. Clear full memory-service context (includes initial_outreach_sent + conversation_history)
+    try:
+        from ghl_real_estate_ai.services.memory_service import MemoryService
+
+        memory_service = MemoryService()
+        await memory_service.clear_context(contact_id, location_id=location_id)
+        cleared.append(f"memory-context:{location_id or 'default'}:{contact_id}")
+    except Exception as exc:
+        logger.warning(f"Memory context clear failed for contact {contact_id}: {exc}")
+
+    # 2. Clear Redis conversation sessions via ConversationSessionManager
     try:
         from ghl_real_estate_ai.services.conversation_session_manager import get_session_manager
 
@@ -71,7 +89,7 @@ async def reset_contact_state(bot: str, contact_id: str) -> dict[str, Any]:
     except Exception as exc:
         logger.warning(f"Redis session clear failed for contact {contact_id}: {exc}")
 
-    # 2. Clear in-memory test sessions (from /test/ smoke-test endpoints)
+    # 3. Clear in-memory test sessions (from /test/ smoke-test endpoints)
     try:
         from ghl_real_estate_ai.api.routes.test_bots import _sessions
 
@@ -86,5 +104,6 @@ async def reset_contact_state(bot: str, contact_id: str) -> dict[str, Any]:
         "status": "cleared",
         "contact_id": contact_id,
         "bot": bot,
+        "location_id": location_id,
         "cleared": cleared,
     }
