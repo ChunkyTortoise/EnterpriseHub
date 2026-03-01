@@ -7,9 +7,10 @@ Tests fixes for:
 from __future__ import annotations
 
 import asyncio
+import os
 import pytest
 from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 
 # ── Seller smoke test via _StubConversationManager ─────────────────────────
@@ -92,13 +93,18 @@ async def test_seller_valuation_field_uses_price_expectation_not_lead_pricing() 
         "property_condition": "Move-in Ready",
     }
 
-    actions = await engine._create_seller_actions(
-        contact_id="test",
-        location_id="test",
-        temperature="hot",
-        seller_data=seller_data,
-        pricing_result=pricing_mock,
-    )
+    # Unset CUSTOM_FIELD_AI_VALUATION_PRICE so the field falls back to the
+    # human-readable name "ai_valuation_price" (contains "valuation"). Without
+    # this, a real GHL field ID set by a prior test (e.g. "u1HiHi9wv9...") would
+    # make the "valuation" substring check fail non-deterministically.
+    with patch.dict(os.environ, {"CUSTOM_FIELD_AI_VALUATION_PRICE": ""}):
+        actions = await engine._create_seller_actions(
+            contact_id="test",
+            location_id="test",
+            temperature="hot",
+            seller_data=seller_data,
+            pricing_result=pricing_mock,
+        )
 
     valuation_actions = [a for a in actions if "valuation" in str(a.get("field", ""))]
     assert valuation_actions, "Expected an ai_valuation_price action"
