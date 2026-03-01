@@ -850,6 +850,121 @@
         "company_name": "TestValue"
       },
       "installed_at": "2026-02-28T23:37:14.686772"
+    },
+    {
+      "installation_id": "313540ec-eacb-467c-bf14-da73c079e210",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "f44c6c16-1378-4061-87a8-6d72184fcfe0",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-03-01T03:26:44.949501"
+    },
+    {
+      "installation_id": "ea7b0866-2083-4269-8ded-c97e073cd1f3",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "93eff789-1c5f-4f2a-9d21-9b2eebd3af2b",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-03-01T03:26:44.967210"
+    },
+    {
+      "installation_id": "f80ea557-ee44-42b0-bc2a-cb9832bfa49b",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "e8cd1616-4528-4eb9-94b8-3845142f6910",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-03-01T03:33:46.545630"
+    },
+    {
+      "installation_id": "46101ed1-9299-4431-9405-913f72ff93b5",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "36595c95-0f47-4f14-b3a1-2f58973adc72",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-03-01T03:33:46.552039"
+    },
+    {
+      "installation_id": "349087ef-1a41-4607-98b4-51d8dcfac71a",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "ed11aca3-bea8-4aa5-a66b-afe162eedc80",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-03-01T03:39:48.870193"
+    },
+    {
+      "installation_id": "5ed0ecda-ce79-4535-b32a-7d9708aad885",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "867789e2-27db-40de-8f37-bf25470909bb",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-03-01T03:39:48.876844"
+    },
+    {
+      "installation_id": "a6b0738e-1071-46da-b3bf-a92efeb1417b",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "879e711d-6b26-41b7-9a6a-d5b7f4b60576",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-03-01T03:42:06.314341"
+    },
+    {
+      "installation_id": "f35ade0f-f41c-4c0a-b498-ab91565a0ab6",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "49684197-08bd-44c5-b642-909cd0c31cb7",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-03-01T03:42:06.320475"
+    },
+    {
+      "installation_id": "f1662674-5ce4-43ab-8287-fa7927a336eb",
+      "template_id": "tpl_002",
+      "template_name": "Appointment Booking Bot",
+      "workflow_id": "76a83e9e-9c99-4fef-bc8e-41b8c051234a",
+      "tenant_id": "test_user",
+      "customizations": {
+        "calendar_link": "TestValue"
+      },
+      "installed_at": "2026-03-01T03:48:40.900763"
+    },
+    {
+      "installation_id": "7a29472e-b9fe-4b25-a880-c787e42f92eb",
+      "template_id": "tpl_001",
+      "template_name": "Ultimate Lead Nurturing",
+      "workflow_id": "b5a79580-3f67-4036-8f1d-09988a0021d9",
+      "tenant_id": "integration_test",
+      "customizations": {
+        "agent_name": "TestValue",
+        "company_name": "TestValue"
+      },
+      "installed_at": "2026-03-01T03:48:40.907792"
     }
   ]
 }
