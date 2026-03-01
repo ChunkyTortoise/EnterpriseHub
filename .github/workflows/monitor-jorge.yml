@@ -193,7 +193,7 @@ jobs:
 
       - name: Open GitHub issue on failure
         if: failure()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const title = 'Jorge Bot monitor failed -- ' + new Date().toISOString().slice(0,16) + ' UTC';
@@ -222,7 +222,7 @@ jobs:
 
       - name: Close alert issue on recovery
         if: success()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const {data: issues} = await github.rest.issues.listForRepo({
