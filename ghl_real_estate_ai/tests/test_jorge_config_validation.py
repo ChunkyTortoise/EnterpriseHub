@@ -96,7 +96,7 @@ class TestJorgeConfigValidation:
         """Test that valid configuration produces no warnings."""
         from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeEnvironmentSettings
 
-        # Set all required workflow IDs and custom fields
+        # Set all required workflow IDs and custom fields (including CC DTS workflows)
         env_valid = {
             "JORGE_SELLER_MODE": "true",
             "JORGE_BUYER_MODE": "true",
@@ -107,6 +107,16 @@ class TestJorgeConfigValidation:
             "CUSTOM_FIELD_LEAD_SCORE": "field_lead_123",
             "CUSTOM_FIELD_SELLER_TEMPERATURE": "field_temp_456",
             "CUSTOM_FIELD_BUDGET": "field_budget_789",
+            "CC_NEGATIVE_CONVO_WORKFLOW_ID": "cc-neg-001",
+            "CC_GHOSTING_WORKFLOW_ID": "cc-ghost-002",
+            "CC_COLD_CAMPAIGN_WORKFLOW_ID": "cc-cold-003",
+            "CC_10DIH_WORKFLOW_ID": "cc-10dih-004",
+            "CC_INBOUND_SELLER_WORKFLOW_ID": "cc-inbound-005",
+            "CC_REJECTED_OFFER_WORKFLOW_ID": "cc-rejected-006",
+            "CC_UNSTALE_LEAD_WORKFLOW_ID": "cc-unstale-007",
+            "CC_SELLER_DISPO_WORKFLOW_ID": "cc-dispo-008",
+            "CC_AI_TAG_WORKFLOW_ID": "cc-ai-tag-009",
+            "CC_AI_OFF_TAG_WORKFLOW_ID": "cc-ai-off-010",
         }
 
         with patch.dict(os.environ, env_valid, clear=False):
@@ -207,7 +217,7 @@ class TestJorgeConfigEdgeCases:
         """Test validation with mixed seller/buyer mode configuration."""
         from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeEnvironmentSettings
 
-        # Seller mode with workflows, buyer mode without
+        # Seller mode with workflows, buyer mode without; CC workflows all set
         with patch.dict(
             os.environ,
             {
@@ -217,6 +227,16 @@ class TestJorgeConfigEdgeCases:
                 "WARM_SELLER_WORKFLOW_ID": "seller-warm-456",
                 "HOT_BUYER_WORKFLOW_ID": "",
                 "WARM_BUYER_WORKFLOW_ID": "",
+                "CC_NEGATIVE_CONVO_WORKFLOW_ID": "cc-neg-001",
+                "CC_GHOSTING_WORKFLOW_ID": "cc-ghost-002",
+                "CC_COLD_CAMPAIGN_WORKFLOW_ID": "cc-cold-003",
+                "CC_10DIH_WORKFLOW_ID": "cc-10dih-004",
+                "CC_INBOUND_SELLER_WORKFLOW_ID": "cc-inbound-005",
+                "CC_REJECTED_OFFER_WORKFLOW_ID": "cc-rejected-006",
+                "CC_UNSTALE_LEAD_WORKFLOW_ID": "cc-unstale-007",
+                "CC_SELLER_DISPO_WORKFLOW_ID": "cc-dispo-008",
+                "CC_AI_TAG_WORKFLOW_ID": "cc-ai-tag-009",
+                "CC_AI_OFF_TAG_WORKFLOW_ID": "cc-ai-off-010",
             },
             clear=False,
         ):

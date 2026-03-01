@@ -134,7 +134,7 @@ class TestMemoryService:
         with open(path, "w") as f:
             json.dump(data, f)
 
-        context = await memory_service.get_context(contact_id)
+        context = await memory_service.get_context(contact_id, location_id=TEST_LOCATION_ID)
         assert context["some_key"] == "some_value"
 
     async def test_get_context_in_memory(self, in_memory_service):
@@ -145,7 +145,7 @@ class TestMemoryService:
 
         in_memory_service._memory_cache[cache_key] = data
 
-        context = await in_memory_service.get_context(contact_id)
+        context = await in_memory_service.get_context(contact_id, location_id=TEST_LOCATION_ID)
         assert context["cached"] is True
 
     async def test_get_context_graphiti_integration(self, memory_service, mock_graphiti):
@@ -159,7 +159,7 @@ class TestMemoryService:
         with open(path, "w") as f:
             json.dump({"contact_id": contact_id, "location_id": TEST_LOCATION_ID}, f)
 
-        context = await memory_service.get_context(contact_id)
+        context = await memory_service.get_context(contact_id, location_id=TEST_LOCATION_ID)
 
         assert context["relevant_knowledge"] == "Mocked Graphiti Context"
         mock_graphiti.retrieve_context.assert_called_once_with(contact_id)
@@ -171,7 +171,7 @@ class TestMemoryService:
         contact_id = "save_contact"
         context = {"contact_id": contact_id, "test_val": 123}
 
-        await memory_service.save_context(contact_id, context)
+        await memory_service.save_context(contact_id, context, location_id=TEST_LOCATION_ID)
 
         # save_context uses location_id subdirectory
         path = memory_service._get_file_path(contact_id, location_id=TEST_LOCATION_ID)
@@ -187,7 +187,7 @@ class TestMemoryService:
         contact_id = "save_mem_contact"
         context = {"contact_id": contact_id, "val": 456}
 
-        await in_memory_service.save_context(contact_id, context)
+        await in_memory_service.save_context(contact_id, context, location_id=TEST_LOCATION_ID)
 
         cache_key = f"{TEST_LOCATION_ID}:{contact_id}"
         assert cache_key in in_memory_service._memory_cache

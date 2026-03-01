@@ -156,31 +156,25 @@ class TestGHLClient:
         """Test successful tag removal."""
         with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = False
+            mock_settings.webhook_timeout_seconds = 30.0
 
-            # Mock GET contact response
-            mock_get_response = Mock()
-            mock_get_response.json.return_value = {"tags": ["Tag A", "Tag B"]}
-            mock_get_response.status_code = 200
-            mock_get_response.raise_for_status = Mock()
-            client.http_client.get = AsyncMock(return_value=mock_get_response)
-
-            # Mock PUT contact response
-            mock_put_response = Mock()
-            mock_put_response.status_code = 200
-            mock_put_response.raise_for_status = Mock()
-            client.http_client.put = AsyncMock(return_value=mock_put_response)
+            # Mock DELETE request response (impl uses DELETE, not GET+PUT)
+            mock_delete_response = Mock()
+            mock_delete_response.status_code = 200
+            mock_delete_response.raise_for_status = Mock()
+            client.http_client.request = AsyncMock(return_value=mock_delete_response)
 
             response = await client.remove_tags("contact_123", ["Tag A"])
 
             assert response["status"] == "success"
             assert response["removed_tags"] == ["Tag A"]
-            assert response["remaining_tags"] == ["Tag B"]
 
     async def test_remove_tags_critical_failure(self, client):
         """Test critical failure in tag removal."""
         with patch("ghl_real_estate_ai.services.ghl_client.settings") as mock_settings:
             mock_settings.test_mode = False
-            client.http_client.get = AsyncMock(side_effect=httpx.HTTPError("API Error"))
+            mock_settings.webhook_timeout_seconds = 30.0
+            client.http_client.request = AsyncMock(side_effect=httpx.HTTPError("API Error"))
 
             with pytest.raises(httpx.HTTPError):
                 await client.remove_tags("contact_123", ["Tag A"])
