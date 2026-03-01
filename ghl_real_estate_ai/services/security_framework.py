@@ -334,14 +334,15 @@ class SecurityFramework:
 
     def _verify_ghl_signature(self, request: Request, body: bytes) -> bool:
         """Verify GoHighLevel webhook signature."""
+        if settings.ghl_allow_unsigned_webhooks:
+            logger.warning(
+                "GHL webhook signature check bypassed via GHL_ALLOW_UNSIGNED_WEBHOOKS",
+                extra={"client_ip": self._get_client_ip(request)},
+            )
+            return True
+
         signature = request.headers.get("X-GHL-Signature")
         if not signature:
-            if settings.ghl_allow_unsigned_webhooks:
-                logger.warning(
-                    "GHL webhook received without signature — allowed via GHL_ALLOW_UNSIGNED_WEBHOOKS",
-                    extra={"client_ip": self._get_client_ip(request)},
-                )
-                return True
             logger.error(
                 "GHL webhook signature missing - potential unauthorized access attempt",
                 extra={"client_ip": self._get_client_ip(request), "error_id": "WEBHOOK_SIGNATURE_MISSING"},
