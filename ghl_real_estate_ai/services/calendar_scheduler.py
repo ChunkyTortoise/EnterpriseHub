@@ -615,6 +615,7 @@ class CalendarScheduler:
                 contact_id=contact_id,
                 calendar_id=self.calendar_id,
                 start_time=time_slot.start_time.isoformat(),
+                end_time=time_slot.end_time.isoformat(),
                 title=appointment_title,
                 assigned_user_id=settings.jorge_user_id,
             )

@@ -667,6 +667,7 @@ class EnhancedGHLClient(GHLClient):
         start_time: str,
         end_time: str,
         title: str = "Consultation",
+        assigned_user_id: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """Create an appointment on a GHL calendar.
 
@@ -676,6 +677,7 @@ class EnhancedGHLClient(GHLClient):
             start_time: ISO format start time.
             end_time: ISO format end time.
             title: Appointment title.
+            assigned_user_id: Optional GHL user ID to assign the appointment to.
 
         Returns:
             Appointment dict on success, None on failure.
@@ -699,7 +701,7 @@ class EnhancedGHLClient(GHLClient):
                 "status": "confirmed",
             }
 
-        payload = {
+        payload: Dict[str, Any] = {
             "calendarId": calendar_id,
             "locationId": self.config.location_id,
             "contactId": contact_id,
@@ -707,6 +709,8 @@ class EnhancedGHLClient(GHLClient):
             "endTime": end_time,
             "title": title,
         }
+        if assigned_user_id:
+            payload["assignedUserId"] = assigned_user_id
 
         try:
             response = await self._make_request("POST", "/calendars/events", data=payload)
