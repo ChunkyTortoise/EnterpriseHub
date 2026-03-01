@@ -342,6 +342,71 @@ def _detect_buy_sell_intent(message: str) -> str | None:
     return None
 
 
+_CC_NEGATIVE_KEYWORDS = frozenset([
+    "angry", "frustrated", "disappointed", "furious", "upset", "scam", "rip off",
+    "waste of time", "terrible", "awful", "horrible", "ridiculous", "unacceptable",
+    "this is bs", "this is b.s", "forget it", "never mind", "stop contacting",
+])
+
+
+def _detect_negative_sentiment(message: str) -> bool:
+    """Lightweight negative-sentiment detection for CC workflow routing."""
+    msg = message.lower()
+    return any(kw in msg for kw in _CC_NEGATIVE_KEYWORDS)
+
+
+async def _build_cc_workflow_actions(
+    seller_result: dict,
+    user_message: str,
+    settings: "JorgeEnvironmentSettings",  # noqa: F821
+    is_new_lead: bool,
+    contact_id: str,
+) -> list[GHLAction]:
+    """Return GHLAction list for CC DTS campaigns based on context.
+
+    Uses Redis dedup (cc_wf_enrolled:{contact_id}:{wf_id[:8]}, TTL 7d)
+    to prevent enrolling the same contact in the same workflow twice.
+    """
+    cache = get_cache_service()
+    actions: list[GHLAction] = []
+    temperature = seller_result.get("temperature", "cold")
+
+    async def _enqueue(workflow_id: str | None) -> None:
+        """Append workflow trigger action if workflow_id set and not already enrolled."""
+        if not workflow_id:
+            return
+        dedup_key = f"cc_wf_enrolled:{contact_id}:{workflow_id[:8]}"
+        if await cache.get(dedup_key):
+            logger.debug(f"CC workflow {workflow_id[:8]} already enrolled for {contact_id} — skipping")
+            return
+        await cache.set(dedup_key, "1", ttl=604800)  # 7 days
+        actions.append(GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=workflow_id))
+
+    # Negative sentiment → Negative Conversation workflow
+    if _detect_negative_sentiment(user_message):
+        await _enqueue(settings.cc_negative_convo_workflow_id)
+
+    # New inbound seller lead → DTS Inbound Seller Lead Email
+    if is_new_lead:
+        await _enqueue(settings.cc_inbound_seller_workflow_id)
+
+    # Temperature-based DTS enrollment
+    if temperature == "cold":
+        await _enqueue(settings.cc_cold_campaign_workflow_id)
+        await _enqueue(settings.cc_10dih_workflow_id)
+    elif temperature in ("hot", "warm"):
+        await _enqueue(settings.cc_seller_dispo_workflow_id)
+
+    # Un-stale: contact re-engaging after a ghost period
+    ghost_key = f"ghost_state:{contact_id}"
+    ghost_status = await cache.get(ghost_key)
+    if ghost_status == "ghosted":
+        await _enqueue(settings.cc_unstale_lead_workflow_id)
+        await cache.set(ghost_key, "active", ttl=2592000)  # reset to active, 30d TTL
+
+    return actions
+
+
 async def _get_tenant_ghl_client(
     location_id: str, tenant_service: TenantService, ghl_client_default: GHLClient
 ) -> GHLClient:
@@ -726,10 +791,15 @@ async def handle_ghl_webhook(
             channel=event.message.type,
         )
         background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["AI-Off"])
+        ai_off_actions: list[GHLAction] = [GHLAction(type=ActionType.ADD_TAG, tag="AI-Off")]
+        if jorge_settings.cc_ai_off_tag_workflow_id:
+            ai_off_actions.append(
+                GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=jorge_settings.cc_ai_off_tag_workflow_id)
+            )
         return GHLWebhookResponse(
             success=True,
             message=opt_out_msg,
-            actions=[GHLAction(type=ActionType.ADD_TAG, tag="AI-Off")],
+            actions=ai_off_actions,
         )
 
     # Pending appointment selection flow (slot offer -> confirmation)
@@ -964,6 +1034,21 @@ async def handle_ghl_webhook(
                                 value=action_data["value"],
                             )
                         )
+
+            # Enroll in CC DTS campaigns based on temperature, sentiment, and lead status
+            cc_actions = await _build_cc_workflow_actions(
+                seller_result=seller_result,
+                user_message=user_message,
+                settings=jorge_settings,
+                is_new_lead=not seller_history_snapshot,
+                contact_id=contact_id,
+            )
+            if cc_actions:
+                logger.info(
+                    f"CC workflow enrollment: {len(cc_actions)} trigger(s) for {contact_id}",
+                    extra={"contact_id": contact_id, "cc_actions_count": len(cc_actions)},
+                )
+                actions.extend(cc_actions)
 
             # Track Jorge seller analytics
             background_tasks.add_task(

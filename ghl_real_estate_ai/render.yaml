@@ -123,6 +123,29 @@ services:
       - key: NOTIFY_AGENT_WORKFLOW_ID
         sync: false
 
+      # DTS campaign / disposition workflow IDs (patterned after CC templates — Jorge creates these in his own GHL location)
+      # Set values in Render dashboard after Jorge creates matching workflows in his location
+      - key: CC_NEGATIVE_CONVO_WORKFLOW_ID
+        sync: false   # Negative Conversation Added — trigger on angry/frustrated/disappointed
+      - key: CC_GHOSTING_WORKFLOW_ID
+        sync: false   # DTS Ghosting Campaign — trigger when contact ghosts
+      - key: CC_COLD_CAMPAIGN_WORKFLOW_ID
+        sync: false   # DTS Cold Campaign — trigger when seller temp == cold
+      - key: CC_10DIH_WORKFLOW_ID
+        sync: false   # DTS 10 Days in Heaven — trigger alongside cold campaign
+      - key: CC_INBOUND_SELLER_WORKFLOW_ID
+        sync: false   # DTS Inbound Seller Lead Email — trigger on first message
+      - key: CC_REJECTED_OFFER_WORKFLOW_ID
+        sync: false   # DTS Rejected Offer Campaign — manual trigger
+      - key: CC_UNSTALE_LEAD_WORKFLOW_ID
+        sync: false   # Un-Stale Lead — trigger when ghosted contact re-engages
+      - key: CC_SELLER_DISPO_WORKFLOW_ID
+        sync: false   # Seller Disposition Changed — trigger on hot/warm temperature
+      - key: CC_AI_TAG_WORKFLOW_ID
+        sync: false   # AI Tag Workflow — trigger when AI tag added (manual)
+      - key: CC_AI_OFF_TAG_WORKFLOW_ID
+        sync: false   # AI Off Tag — trigger on opt-out / session end
+
       # GHL Custom Field IDs (set in dashboard — run jorge_ghl_setup to get IDs)
       - key: CUSTOM_FIELD_LEAD_SCORE
         sync: false
