@@ -1,0 +1,156 @@
+{
+  "timestamp": "2026-02-21T03:40:54.120164",
+  "probes": [
+    {
+      "name": "A: Flat + lowercase 'needs qualifying'",
+      "payload": {
+        "type": "message_received",
+        "contact_id": "INCSVVBKWW6qLFZ1oXnr",
+        "location_id": "3xt4qayAh35BlDLaUv7P",
+        "tags": [
+          "needs qualifying"
+        ],
+        "contact": {
+          "id": "INCSVVBKWW6qLFZ1oXnr",
+          "first_name": "Test",
+          "last_name": "Lead",
+          "email": "test@example.com",
+          "phone": "+15551234567",
+          "tags": []
+        },
+        "message": {
+          "type": "SMS",
+          "body": "Test message",
+          "direction": "inbound",
+          "timestamp": "2026-02-21T03:39:53.310321"
+        }
+      },
+      "error": "HTTPSConnectionPool(host='jorge-realty-ai.onrender.com', port=443): Read timed out. (read timeout=10)"
+    },
+    {
+      "name": "B: Nested + lowercase 'needs qualifying'",
+      "payload": {
+        "type": "message_received",
+        "contact_id": "INCSVVBKWW6qLFZ1oXnr",
+        "location_id": "3xt4qayAh35BlDLaUv7P",
+        "contact": {
+          "id": "INCSVVBKWW6qLFZ1oXnr",
+          "first_name": "Test",
+          "last_name": "Lead",
+          "email": "test@example.com",
+          "phone": "+15551234567",
+          "tags": [
+            "needs qualifying"
+          ]
+        },
+        "message": {
+          "type": "SMS",
+          "body": "Test message",
+          "direction": "inbound",
+          "timestamp": "2026-02-21T03:40:03.439237"
+        }
+      },
+      "error": "HTTPSConnectionPool(host='jorge-realty-ai.onrender.com', port=443): Read timed out. (read timeout=10)"
+    },
+    {
+      "name": "C: Nested + title-case 'Needs Qualifying'",
+      "payload": {
+        "type": "message_received",
+        "contact_id": "INCSVVBKWW6qLFZ1oXnr",
+        "location_id": "3xt4qayAh35BlDLaUv7P",
+        "contact": {
+          "id": "INCSVVBKWW6qLFZ1oXnr",
+          "first_name": "Test",
+          "last_name": "Lead",
+          "email": "test@example.com",
+          "phone": "+15551234567",
+          "tags": [
+            "Needs Qualifying"
+          ]
+        },
+        "message": {
+          "type": "SMS",
+          "body": "Test message",
+          "direction": "inbound",
+          "timestamp": "2026-02-21T03:40:13.576704"
+        }
+      },
+      "error": "HTTPSConnectionPool(host='jorge-realty-ai.onrender.com', port=443): Read timed out. (read timeout=10)"
+    },
+    {
+      "name": "D: Nested + 'Seller-Lead'",
+      "payload": {
+        "type": "message_received",
+        "contact_id": "INCSVVBKWW6qLFZ1oXnr",
+        "location_id": "3xt4qayAh35BlDLaUv7P",
+        "contact": {
+          "id": "INCSVVBKWW6qLFZ1oXnr",
+          "first_name": "Test",
+          "last_name": "Lead",
+          "email": "test@example.com",
+          "phone": "+15551234567",
+          "tags": [
+            "Seller-Lead"
+          ]
+        },
+        "message": {
+          "type": "SMS",
+          "body": "Test message",
+          "direction": "inbound",
+          "timestamp": "2026-02-21T03:40:23.778579"
+        }
+      },
+      "error": "HTTPSConnectionPool(host='jorge-realty-ai.onrender.com', port=443): Read timed out. (read timeout=10)"
+    },
+    {
+      "name": "Debug: Flat + lowercase",
+      "payload": {
+        "type": "message_received",
+        "contact_id": "INCSVVBKWW6qLFZ1oXnr",
+        "location_id": "3xt4qayAh35BlDLaUv7P",
+        "contact": {
+          "id": "INCSVVBKWW6qLFZ1oXnr",
+          "first_name": "Test",
+          "last_name": "Lead",
+          "email": "test@example.com",
+          "phone": "+15551234567",
+          "tags": [
+            "needs qualifying"
+          ]
+        },
+        "message": {
+          "type": "SMS",
+          "body": "Test message",
+          "direction": "inbound",
+          "timestamp": "2026-02-21T03:40:33.886274"
+        }
+      },
+      "error": "HTTPSConnectionPool(host='jorge-realty-ai.onrender.com', port=443): Read timed out. (read timeout=10)"
+    },
+    {
+      "name": "Debug: Nested + title-case",
+      "payload": {
+        "type": "message_received",
+        "contact_id": "INCSVVBKWW6qLFZ1oXnr",
+        "location_id": "3xt4qayAh35BlDLaUv7P",
+        "contact": {
+          "id": "INCSVVBKWW6qLFZ1oXnr",
+          "first_name": "Test",
+          "last_name": "Lead",
+          "email": "test@example.com",
+          "phone": "+15551234567",
+          "tags": [
+            "Needs Qualifying"
+          ]
+        },
+        "message": {
+          "type": "SMS",
+          "body": "Test message",
+          "direction": "inbound",
+          "timestamp": "2026-02-21T03:40:44.033631"
+        }
+      },
+      "error": "HTTPSConnectionPool(host='jorge-realty-ai.onrender.com', port=443): Read timed out. (read timeout=10)"
+    }
+  ]
+}

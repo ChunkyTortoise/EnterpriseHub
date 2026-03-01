@@ -1,0 +1,123 @@
+{
+  "generated_at_utc": "2026-02-21T02:18:33.666717+00:00",
+  "target": "https://jorge-realty-ai.onrender.com/api/ghl/webhook",
+  "results": [
+    {
+      "probe": "A_flat_lower",
+      "request_payload": {
+        "type": "InboundMessage",
+        "locationId": "3xt4qayAh35BlDLaUv7P",
+        "contactId": "INCSVVBKWW6qLFZ1oXnr",
+        "body": "Hi, I want to sell my house",
+        "messageType": "SMS",
+        "tags": [
+          "needs qualifying"
+        ]
+      },
+      "status_code": 200,
+      "response": {
+        "success": true,
+        "message": "AI not triggered (activation tag missing)",
+        "actions": []
+      }
+    },
+    {
+      "probe": "B_nested_lower",
+      "request_payload": {
+        "type": "InboundMessage",
+        "locationId": "3xt4qayAh35BlDLaUv7P",
+        "contactId": "INCSVVBKWW6qLFZ1oXnr",
+        "body": "Hi, I want to sell my house",
+        "messageType": "SMS",
+        "contact": {
+          "contactId": "INCSVVBKWW6qLFZ1oXnr",
+          "tags": [
+            "needs qualifying"
+          ]
+        },
+        "message": {
+          "type": "SMS",
+          "body": "Hi, I want to sell my house",
+          "direction": "inbound"
+        }
+      },
+      "status_code": 200,
+      "response": {
+        "success": true,
+        "message": "Thanks for reaching out! How can I help you today?",
+        "actions": [
+          {
+            "type": "add_tag",
+            "tag": "Bot-Fallback-Active",
+            "field": null,
+            "value": null,
+            "workflow_id": null,
+            "message": null,
+            "channel": null,
+            "calendar_id": null,
+            "appointment_id": null,
+            "start_time": null,
+            "end_time": null,
+            "appointment_title": null,
+            "appointment_type": null,
+            "assigned_user_id": null
+          }
+        ]
+      }
+    },
+    {
+      "probe": "C_nested_title",
+      "request_payload": {
+        "type": "InboundMessage",
+        "locationId": "3xt4qayAh35BlDLaUv7P",
+        "contactId": "INCSVVBKWW6qLFZ1oXnr",
+        "body": "Hi, I want to sell my house",
+        "messageType": "SMS",
+        "contact": {
+          "contactId": "INCSVVBKWW6qLFZ1oXnr",
+          "tags": [
+            "Needs Qualifying"
+          ]
+        },
+        "message": {
+          "type": "SMS",
+          "body": "Hi, I want to sell my house",
+          "direction": "inbound"
+        }
+      },
+      "status_code": 200,
+      "response": {
+        "success": true,
+        "message": "Hey! I'm Jorge's AI assistant. Hey! What's got you considering wanting to sell, where would you move to?\n[AI-assisted message]",
+        "actions": []
+      }
+    },
+    {
+      "probe": "D_nested_sellerlead",
+      "request_payload": {
+        "type": "InboundMessage",
+        "locationId": "3xt4qayAh35BlDLaUv7P",
+        "contactId": "INCSVVBKWW6qLFZ1oXnr",
+        "body": "Hi, I want to sell my house",
+        "messageType": "SMS",
+        "contact": {
+          "contactId": "INCSVVBKWW6qLFZ1oXnr",
+          "tags": [
+            "Seller-Lead"
+          ]
+        },
+        "message": {
+          "type": "SMS",
+          "body": "Hi, I want to sell my house",
+          "direction": "inbound"
+        }
+      },
+      "status_code": 200,
+      "response": {
+        "success": true,
+        "message": "AI not triggered (activation tag missing)",
+        "actions": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-02-21T03:42:14.827195",
+  "probes": [
+    {
+      "name": "A: lowercase",
+      "tags": [
+        "needs qualifying"
+      ],
+      "status": 401,
+      "error": "{\"detail\":\"Invalid webhook signature\"}"
+    },
+    {
+      "name": "B: title-case",
+      "tags": [
+        "Needs Qualifying"
+      ],
+      "status": 401,
+      "error": "{\"detail\":\"Invalid webhook signature\"}"
+    },
+    {
+      "name": "C: seller-lead",
+      "tags": [
+        "Seller-Lead"
+      ],
+      "status": 401,
+      "error": "{\"detail\":\"Invalid webhook signature\"}"
+    },
+    {
+      "name": "Debug: lowercase",
+      "tags": [
+        "needs qualifying"
+      ],
+      "status": 404
+    }
+  ]
+}
