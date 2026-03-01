@@ -609,6 +609,18 @@ class JorgeEnvironmentSettings:
         self.hot_buyer_workflow_id = os.getenv("HOT_BUYER_WORKFLOW_ID")
         self.warm_buyer_workflow_id = os.getenv("WARM_BUYER_WORKFLOW_ID")
 
+        # CC (Closer Control) workflow IDs — DTS campaigns and disposition handlers
+        self.cc_negative_convo_workflow_id = os.getenv("CC_NEGATIVE_CONVO_WORKFLOW_ID")
+        self.cc_ghosting_workflow_id = os.getenv("CC_GHOSTING_WORKFLOW_ID")
+        self.cc_cold_campaign_workflow_id = os.getenv("CC_COLD_CAMPAIGN_WORKFLOW_ID")
+        self.cc_10dih_workflow_id = os.getenv("CC_10DIH_WORKFLOW_ID")
+        self.cc_inbound_seller_workflow_id = os.getenv("CC_INBOUND_SELLER_WORKFLOW_ID")
+        self.cc_rejected_offer_workflow_id = os.getenv("CC_REJECTED_OFFER_WORKFLOW_ID")
+        self.cc_unstale_lead_workflow_id = os.getenv("CC_UNSTALE_LEAD_WORKFLOW_ID")
+        self.cc_seller_dispo_workflow_id = os.getenv("CC_SELLER_DISPO_WORKFLOW_ID")
+        self.cc_ai_tag_workflow_id = os.getenv("CC_AI_TAG_WORKFLOW_ID")
+        self.cc_ai_off_tag_workflow_id = os.getenv("CC_AI_OFF_TAG_WORKFLOW_ID")
+
         # Analytics
         self.analytics_enabled = os.getenv("JORGE_ANALYTICS_ENABLED", "true").lower() == "true"
 
@@ -680,6 +692,22 @@ class JorgeEnvironmentSettings:
         for field in critical_fields:
             if not os.getenv(f"CUSTOM_FIELD_{field}"):
                 warnings.append(f"CUSTOM_FIELD_{field} not set — field updates will use semantic names")
+        # CC workflow warnings (optional — only warn, never block)
+        cc_workflow_vars = [
+            "CC_NEGATIVE_CONVO_WORKFLOW_ID",
+            "CC_GHOSTING_WORKFLOW_ID",
+            "CC_COLD_CAMPAIGN_WORKFLOW_ID",
+            "CC_10DIH_WORKFLOW_ID",
+            "CC_INBOUND_SELLER_WORKFLOW_ID",
+            "CC_REJECTED_OFFER_WORKFLOW_ID",
+            "CC_UNSTALE_LEAD_WORKFLOW_ID",
+            "CC_SELLER_DISPO_WORKFLOW_ID",
+            "CC_AI_TAG_WORKFLOW_ID",
+            "CC_AI_OFF_TAG_WORKFLOW_ID",
+        ]
+        for var in cc_workflow_vars:
+            if not os.getenv(var):
+                warnings.append(f"{var} not set — CC DTS campaign enrollment disabled for this trigger")
         return warnings
 
 

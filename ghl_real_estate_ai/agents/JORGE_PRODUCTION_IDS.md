@@ -1,5 +1,5 @@
 # Jorge Bot — Production IDs Reference
-# Last updated: 2026-02-27 (workflow consolidation)
+# Last updated: 2026-02-28 (CC DTS workflow integration)
 # Service: jorge-realty-ai-xxdf.onrender.com (srv-d6d5go15pdvs73fcjjq0)
 
 ---
@@ -20,6 +20,32 @@
 >
 > Note: WARM_BUYER and NOTIFY_AGENT currently share the same ID. If Jorge creates a dedicated
 > warm-buyer nurture workflow, update WARM_BUYER_WORKFLOW_ID separately.
+
+---
+
+## DTS Campaign Workflow IDs (CC-Patterned, Jorge's Own Location)
+
+> **Note**: CC (Closer Control) is used as a **template reference**, not a linked location.
+> Jorge must create equivalent workflows in his own GHL location and paste those IDs here
+> and into the Render dashboard env vars. The CC template IDs are listed for reference only
+> and will NOT work in Jorge's location.
+
+| Env Var | Workflow Type | CC Template ID (ref only) | Trigger Condition |
+|---------|---------------|--------------------------|-------------------|
+| `CC_NEGATIVE_CONVO_WORKFLOW_ID` | Negative Conversation Added | `70524142-fdea-457d-97c6-aeaa9b8a7b85` | Angry/frustrated/disappointed sentiment |
+| `CC_GHOSTING_WORKFLOW_ID` | DTS - Ghosting Campaign | `7174d3dc-2c95-418c-8bad-3dcedb0ba5fa` | Contact ghosts (no reply) |
+| `CC_COLD_CAMPAIGN_WORKFLOW_ID` | DTS - Cold Campaign | `f66c0661-80b9-4aa4-97e7-95063df72f79` | Seller temperature == cold |
+| `CC_10DIH_WORKFLOW_ID` | DTS - 10 Days in Heaven | `c946fc0d-29ca-4d3d-b3a0-33e5df9a8681` | First failed call / cold seller |
+| `CC_INBOUND_SELLER_WORKFLOW_ID` | DTS - Inbound Seller Lead Email | `bec3f293-665f-4b30-a524-5964620dd75c` | New inbound seller lead (first message) |
+| `CC_REJECTED_OFFER_WORKFLOW_ID` | DTS - Rejected Offer Campaign | `42a36bf2-fbec-478b-a0ee-af63e8b16d7e` | Offer rejected (manual trigger) |
+| `CC_UNSTALE_LEAD_WORKFLOW_ID` | Un-Stale Lead Workflow | `f81f593f-8cff-4309-8864-b1fa4d779574` | Ghosted contact re-engages |
+| `CC_SELLER_DISPO_WORKFLOW_ID` | Seller Disposition Changed | `57884662-61e8-4b56-bd1d-4eda63600bea` | Seller temp transitions to hot/warm |
+| `CC_AI_TAG_WORKFLOW_ID` | AI Tag Workflow | `47fc0922-dae1-48d1-863f-a62bbc0c4e60` | AI tag added (manual trigger) |
+| `CC_AI_OFF_TAG_WORKFLOW_ID` | AI Assistant Off | `bb7cb261-70ab-43d6-8094-ba82e2d4ac6b` | Bot session ends / opt-out detected |
+
+**Setup**: Jorge creates these workflows in his GHL location → copies IDs into Render dashboard.
+**Deduplication**: Redis key `cc_wf_enrolled:{contact_id}:{workflow_id[:8]}` (7-day TTL) prevents
+duplicate enrollments.
 
 ---
 
