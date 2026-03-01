@@ -16,15 +16,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
     - name: Cache dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt', '**/requirements-dev.txt') }}
@@ -60,15 +60,15 @@ jobs:
         python-version: ['3.12']
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
 
     - name: Cache dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements.txt', '**/requirements-dev.txt') }}
@@ -94,7 +94,7 @@ jobs:
         pytest ghl_real_estate_ai/tests/unit/ -m unit --override-ini="addopts=" --cov=ghl_real_estate_ai --cov-report=xml --cov-report=term-missing --cov-fail-under=1 -v
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: ./coverage.xml
         flags: unittests
@@ -107,15 +107,15 @@ jobs:
     needs: [test-unit]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python 3.12
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
     - name: Cache dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v5
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-3.12-${{ hashFiles('**/requirements.txt', '**/requirements-dev.txt') }}
@@ -145,10 +145,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
@@ -167,10 +167,10 @@ jobs:
     needs: [lint, test-unit]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
