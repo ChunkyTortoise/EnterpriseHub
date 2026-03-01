@@ -1,0 +1,33 @@
+{
+  "timestamp_utc": "2026-02-21T05:29:18.997663Z",
+  "steps": [
+    {
+      "step": 1,
+      "input": "I am pre-approved and ready to buy in 30 days in Rancho Cucamonga. Budget 850k.",
+      "response_content": "",
+      "response_len": 0,
+      "next_action": "qualify_more",
+      "financial_readiness_score": 25,
+      "buyer_temperature": null
+    },
+    {
+      "step": 2,
+      "input": "I want 4 beds near Etiwanda schools.",
+      "response_content": "",
+      "response_len": 0,
+      "next_action": "qualify_more",
+      "financial_readiness_score": 25,
+      "buyer_temperature": null
+    },
+    {
+      "step": 3,
+      "input": "Can we schedule tours this week?",
+      "response_content": "",
+      "response_len": 0,
+      "next_action": "qualify_more",
+      "financial_readiness_score": 25,
+      "buyer_temperature": null
+    }
+  ],
+  "any_response": false
+}

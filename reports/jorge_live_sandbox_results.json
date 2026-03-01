@@ -1,0 +1,68 @@
+{
+  "timestamp_utc": "2026-02-21T05:34:08.718889Z",
+  "seller": {
+    "steps": [
+      {
+        "step": 1,
+        "input": "I might sell my house in Rancho Cucamonga, but I am not sure yet.",
+        "response": "Hi! I'm Jorge, a real estate specialist here in Rancho Cucamonga. I'd love to help you explore your home's potential whenever you're ready. No pressure\u2014just here to answer questions and share what's happening in our market. What brings you in today?",
+        "response_len": 249,
+        "seller_temperature": null,
+        "next_action": null
+      },
+      {
+        "step": 2,
+        "input": "Let me think about it.",
+        "response": "Hi! No pressure at all. I'd love to help you feel confident about your home's value. What would be most helpful\u2014local comps, market timing insights, or prep tips to maximize your sale? Happy to share what I know about Rancho Cucamonga. \ud83c\udfe1",
+        "response_len": 237,
+        "seller_temperature": null,
+        "next_action": null
+      },
+      {
+        "step": 3,
+        "input": "Zillow says 750k. Why are you saying different?",
+        "response": "Hi! Zestimates are a great starting point, but they can't account for your home's unique features or recent neighborhood sales. I'd love to show you what similar homes in your area actually sold for\u2014might surprise you! When works best to chat?",
+        "response_len": 243,
+        "seller_temperature": null,
+        "next_action": null
+      }
+    ],
+    "checks": {
+      "responses_non_empty": true,
+      "sms_length_under_320": true,
+      "stall_step_empathy_hint": true,
+      "pricing_step_local_data_hint": true
+    }
+  },
+  "buyer": {
+    "steps": [
+      {
+        "step": 1,
+        "input": "I am pre-approved and ready to buy in 30 days in Rancho Cucamonga. Budget 850k.",
+        "response": "Thanks for sharing. What area in Rancho Cucamonga are you most interested in?",
+        "response_len": 77,
+        "buyer_temperature": null,
+        "next_action": "qualify_more",
+        "financial_readiness_score": 25
+      },
+      {
+        "step": 2,
+        "input": "schedule_next_action(financial_readiness_score=80)",
+        "response": "n/a",
+        "next_action": "schedule_property_tour",
+        "follow_up_hours": 2,
+        "follow_up_scheduled": true
+      }
+    ],
+    "checks": {
+      "response_non_empty": true,
+      "hot_lead_follow_up_2h": true,
+      "hot_lead_action_tour": true
+    }
+  },
+  "overall": {
+    "seller_pass": true,
+    "buyer_pass": true,
+    "all_pass": true
+  }
+}

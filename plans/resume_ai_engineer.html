@@ -35,7 +35,7 @@
 </div>
 
 <h2>Summary</h2>
-<p class="summary">AI Engineer specializing in production LLM orchestration, multi-agent systems, and RAG pipelines. Built and deployed a multi-agent AI platform with three specialized chatbots, cross-bot handoff orchestration, and a three-tier caching architecture that reduced token costs by 89%. 750+ automated tests across seven open-source repositories, all CI green. Full-stack Python: FastAPI, PostgreSQL, Redis, Docker, GitHub Actions.</p>
+<p class="summary">AI Engineer specializing in production LLM orchestration, multi-agent systems, and RAG pipelines. Shipped a live client deployment of a multi-bot real estate sales AI (seller + buyer qualification, GHL CRM integration, Redis-backed state, deployed on Render). Built a multi-agent platform with three specialized chatbots, cross-bot handoff orchestration, and three-tier caching reducing token costs by 89%. 1,050+ automated tests across production and open-source repositories. Full-stack Python: FastAPI, PostgreSQL, Redis, Docker, GitHub Actions.</p>
 
 <h2>Technical Skills</h2>
 <dl class="skills-grid">
@@ -64,6 +64,19 @@
   <li>Developed NLP intent decoding pipeline with confidence scoring, real-time CRM enrichment via GoHighLevel API, and temperature-based lead classification triggering automated workflows</li>
   <li>Implemented production monitoring: alerting service with 7 configurable rules and cooldowns, P50/P95/P99 latency tracker with SLA compliance, A/B testing framework with z-test significance analysis</li>
   <li>Built Streamlit BI dashboards with Monte Carlo simulation, sentiment analysis, and churn detection</li>
+</ul>
+
+<div class="project-header">
+  <h3>Jorge Real Estate Bots &mdash; Production Sales AI</h3>
+  <span class="project-link">github.com/ChunkyTortoise/jorge_real_estate_bots</span>
+</div>
+<div class="subtitle">FastAPI + GoHighLevel CRM + Redis + Docker | 422 tests | Live on Render — Client Deployment</div>
+<ul>
+  <li>Deployed production multi-bot qualification system for a real estate investor, handling seller and buyer lead conversations end-to-end via SMS webhooks through GoHighLevel CRM</li>
+  <li>Implemented Q1&ndash;Q4 seller qualification framework extracting property condition, price expectation, motivation, and offer acceptance; routes to Haiku classification fallback when keyword matching fails, guaranteeing conversation always advances</li>
+  <li>Resolved critical P0 stuck-lead bugs: expanded keyword parsers across all four question handlers, added Claude Haiku fallback classifier, fixed pre-approval false-positive logic, and separated offer/timeline acceptance into independent signals</li>
+  <li>Integrated GoHighLevel CRM &mdash; temperature tag lifecycle management (remove stale tags before applying new), custom field updates, and workflow triggers on lead qualification</li>
+  <li>Redis + MemoryCache fallback architecture for conversation state persistence; exception handler preserves lead temperature and progress on error rather than resetting to cold</li>
 </ul>
 
 <div class="project-header">
@@ -114,19 +127,19 @@
 </div>
 <div class="subtitle">Full-Stack AI Development | Remote</div>
 <ul>
-  <li>Designed and built seven production-grade open-source AI repositories totaling 750+ automated tests with full CI/CD pipelines</li>
-  <li>Delivered AI automation solutions for clients including chatbot systems, RAG pipelines, and data analytics dashboards</li>
-  <li>Maintained 100% CI green status across all repositories with comprehensive test coverage and automated linting</li>
+  <li>Shipped live client deployment of a production sales AI: multi-bot qualification system (seller + buyer) integrated with GoHighLevel CRM, Redis state persistence, and Docker on Render</li>
+  <li>Designed and built seven production-grade open-source AI repositories totaling 1,050+ automated tests with full CI/CD pipelines</li>
+  <li>Delivered AI automation solutions for clients including chatbot systems, RAG pipelines, and BI dashboards; maintained CI green status with comprehensive test coverage across all repositories</li>
 </ul>
 
 <div class="role-line">
-  <h3>Software Engineer &mdash; Self-Directed Training</h3>
+  <h3>Software Engineer &mdash; Independent Study &amp; Projects</h3>
   <span class="date">January 2023 &ndash; December 2024</span>
 </div>
-<div class="subtitle">AI/ML Engineering Focus | Coursework + Independent Projects</div>
+<div class="subtitle">AI/ML Engineering Focus | Remote</div>
 <ul>
-  <li>Completed 19 professional certifications in AI/ML, Python, cloud computing, and software engineering</li>
-  <li>Built foundational skills in Python, SQL, data structures, algorithms, and machine learning through structured coursework and hands-on projects</li>
+  <li>Completed 19 professional certifications spanning AI/ML, Python, cloud computing, and software engineering (AWS, Google, IBM, DeepLearning.AI, Meta, HarvardX)</li>
+  <li>Built Python, SQL, data structures, and machine learning foundations through structured coursework and hands-on projects, transitioning into full-stack AI development</li>
 </ul>
 
 <h2>Certifications</h2>

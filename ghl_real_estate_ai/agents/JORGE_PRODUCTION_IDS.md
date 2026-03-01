@@ -23,29 +23,31 @@
 
 ---
 
-## DTS Campaign Workflow IDs (CC-Patterned, Jorge's Own Location)
+## DTS Campaign Workflow IDs (Lyrio Location — Jorge's GHL)
 
-> **Note**: CC (Closer Control) is used as a **template reference**, not a linked location.
-> Jorge must create equivalent workflows in his own GHL location and paste those IDs here
-> and into the Render dashboard env vars. The CC template IDs are listed for reference only
-> and will NOT work in Jorge's location.
+> **Status as of 2026-03-01**: 5 workflows confirmed live in Lyrio (3xt4qayAh35BlDLaUv7P).
+> 5 have no Lyrio equivalent yet — set to `""` in Render (bot skips them gracefully).
+> CC (Closer Control) template IDs are shown for reference only and will NOT work in Jorge's location.
 
-| Env Var | Workflow Type | CC Template ID (ref only) | Trigger Condition |
-|---------|---------------|--------------------------|-------------------|
-| `CC_NEGATIVE_CONVO_WORKFLOW_ID` | Negative Conversation Added | `70524142-fdea-457d-97c6-aeaa9b8a7b85` | Angry/frustrated/disappointed sentiment |
-| `CC_GHOSTING_WORKFLOW_ID` | DTS - Ghosting Campaign | `7174d3dc-2c95-418c-8bad-3dcedb0ba5fa` | Contact ghosts (no reply) |
-| `CC_COLD_CAMPAIGN_WORKFLOW_ID` | DTS - Cold Campaign | `f66c0661-80b9-4aa4-97e7-95063df72f79` | Seller temperature == cold |
-| `CC_10DIH_WORKFLOW_ID` | DTS - 10 Days in Heaven | `c946fc0d-29ca-4d3d-b3a0-33e5df9a8681` | First failed call / cold seller |
-| `CC_INBOUND_SELLER_WORKFLOW_ID` | DTS - Inbound Seller Lead Email | `bec3f293-665f-4b30-a524-5964620dd75c` | New inbound seller lead (first message) |
-| `CC_REJECTED_OFFER_WORKFLOW_ID` | DTS - Rejected Offer Campaign | `42a36bf2-fbec-478b-a0ee-af63e8b16d7e` | Offer rejected (manual trigger) |
-| `CC_UNSTALE_LEAD_WORKFLOW_ID` | Un-Stale Lead Workflow | `f81f593f-8cff-4309-8864-b1fa4d779574` | Ghosted contact re-engages |
-| `CC_SELLER_DISPO_WORKFLOW_ID` | Seller Disposition Changed | `57884662-61e8-4b56-bd1d-4eda63600bea` | Seller temp transitions to hot/warm |
-| `CC_AI_TAG_WORKFLOW_ID` | AI Tag Workflow | `47fc0922-dae1-48d1-863f-a62bbc0c4e60` | AI tag added (manual trigger) |
-| `CC_AI_OFF_TAG_WORKFLOW_ID` | AI Assistant Off | `bb7cb261-70ab-43d6-8094-ba82e2d4ac6b` | Bot session ends / opt-out detected |
+| Env Var | Workflow Type | Lyrio ID (active) | Trigger Condition |
+|---------|---------------|-------------------|-------------------|
+| `CC_AI_OFF_TAG_WORKFLOW_ID` | AI Assistant Off | `d43d02f5-d8fd-4973-9fb6-18aa2fbe9530` | Bot session ends / opt-out detected |
+| `CC_AI_TAG_WORKFLOW_ID` | AI Tag Workflow | `d43d02f5-d8fd-4973-9fb6-18aa2fbe9530` | AI tag added (manual trigger) |
+| `CC_GHOSTING_WORKFLOW_ID` | DTS - Ghosting Campaign | `29a84840-cd2b-4c26-a8b0-a46aba7b731d` | Contact ghosts (no reply) |
+| `CC_INBOUND_SELLER_WORKFLOW_ID` | DTS - Inbound Seller Lead Email | `058eb095-7398-48c5-b40b-c11a6cbb2df1` | New inbound seller lead (first message) |
+| `CC_SELLER_DISPO_WORKFLOW_ID` | Seller Disposition Changed | `c0613ef1-336a-43e6-9691-4b5047a6556b` | Seller temp transitions to hot/warm |
+| `CC_NEGATIVE_CONVO_WORKFLOW_ID` | Negative Conversation Added | *(not configured — create in Lyrio)* | Angry/frustrated/disappointed sentiment |
+| `CC_COLD_CAMPAIGN_WORKFLOW_ID` | DTS - Cold Campaign | *(not configured — create in Lyrio)* | Seller temperature == cold |
+| `CC_10DIH_WORKFLOW_ID` | DTS - 10 Days in Heaven | *(not configured — create in Lyrio)* | First failed call / cold seller |
+| `CC_REJECTED_OFFER_WORKFLOW_ID` | DTS - Rejected Offer Campaign | *(not configured — create in Lyrio)* | Offer rejected (manual trigger) |
+| `CC_UNSTALE_LEAD_WORKFLOW_ID` | Un-Stale Lead Workflow | *(not configured — create in Lyrio)* | Ghosted contact re-engages |
 
-**Setup**: Jorge creates these workflows in his GHL location → copies IDs into Render dashboard.
 **Deduplication**: Redis key `cc_wf_enrolled:{contact_id}:{workflow_id[:8]}` (7-day TTL) prevents
-duplicate enrollments.
+duplicate enrollments. Bot skips any workflow ID that is empty/not set.
+
+**CC Template IDs (reference only — do NOT use in Render):**
+`CC_NEGATIVE_CONVO`=70524142 · `CC_COLD_CAMPAIGN`=f66c0661 · `CC_10DIH`=c946fc0d
+`CC_REJECTED_OFFER`=42a36bf2 · `CC_UNSTALE_LEAD`=f81f593f
 
 ---
 
