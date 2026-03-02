@@ -1369,6 +1369,44 @@ async def handle_ghl_webhook(
                     GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=jorge_settings.warm_buyer_workflow_id)
                 )
 
+            # HOT buyer: offer calendar slots the same way seller flow does
+            _buyer_booking_msg = ""
+            if buyer_temp == "hot" and not context.get("pending_appointment"):
+                try:
+                    from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, get_smart_scheduler
+
+                    _sched = get_smart_scheduler(current_ghl_client)
+                    _slots = await _sched.get_available_slots(
+                        appointment_type=AppointmentType.BUYER_CONSULTATION, days_ahead=7
+                    )
+                    if _slots:
+                        _opts, _lines = [], []
+                        for i, slot in enumerate(_slots[:3], 1):
+                            _opts.append(
+                                {
+                                    "label": str(i),
+                                    "display": slot.format_for_lead(),
+                                    "start_time": slot.start_time.isoformat(),
+                                    "end_time": slot.end_time.isoformat(),
+                                    "appointment_type": slot.appointment_type.value,
+                                }
+                            )
+                            _lines.append(f"{i}) {slot.format_for_lead()}")
+                        _buyer_booking_msg = (
+                            "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n" + "\n".join(_lines)
+                        )
+                        context["pending_appointment"] = {
+                            "status": "awaiting_selection",
+                            "options": _opts,
+                            "attempts": 0,
+                            "expires_at": datetime.utcnow().isoformat(),
+                        }
+                        await conversation_manager.memory_service.save_context(
+                            contact_id, context, location_id=location_id
+                        )
+                except Exception as _cal_e:
+                    logger.warning(f"Buyer calendar slot fetch failed for {contact_id}: {_cal_e}")
+
             # Track buyer analytics
             background_tasks.add_task(
                 analytics_service.track_event,
@@ -1384,7 +1422,7 @@ async def handle_ghl_webhook(
             )
 
             # Run through response pipeline (AI disclosure + SMS truncation + spam guard)
-            final_buyer_msg = buyer_result.get(
+            final_buyer_msg = _buyer_booking_msg or buyer_result.get(
                 "response_content", "I'd love to help you find the perfect property. What area are you looking in?"
             )
             pipeline_context = ProcessingContext(
