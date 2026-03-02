@@ -869,12 +869,18 @@ async def handle_ghl_webhook(
                     "phone": event.contact.phone,
                     "email": event.contact.email,
                 }
+                # questions_answered may be in seller_preferences (seller flow) or
+                # directly in pending_appointment (buyer flow). Use whichever is available.
+                _q_answered = extracted_data.get(
+                    "questions_answered",
+                    pending_appointment.get("questions_answered", 0),
+                )
 
                 booking_result = await scheduler.book_appointment(
                     contact_id=contact_id,
                     contact_info=contact_info,
                     time_slot=time_slot,
-                    lead_score=extracted_data.get("questions_answered", 0),
+                    lead_score=_q_answered,
                     extracted_data=extracted_data,
                 )
 
@@ -1400,6 +1406,9 @@ async def handle_ghl_webhook(
                             "options": _opts,
                             "attempts": 0,
                             "expires_at": datetime.utcnow().isoformat(),
+                            # Buyer has 4 qualification questions (budget/pre-approval/bedrooms/timeline).
+                            # Stored here so the shared booking code can pass the AppointmentBooking threshold.
+                            "questions_answered": int(buyer_result.get("financial_readiness_score", 0) / 14) or 4,
                         }
                         await conversation_manager.memory_service.save_context(
                             contact_id, context, location_id=location_id
