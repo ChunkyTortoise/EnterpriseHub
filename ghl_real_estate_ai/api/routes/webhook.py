@@ -469,6 +469,15 @@ async def handle_ghl_tag_webhook(
     # outreach when seller or buyer mode will handle the conversation.
     _seller_tag = _tag_lower in ("needs qualifying", "seller-lead") and jorge_settings.JORGE_SELLER_MODE
     _buyer_tag = _tag_lower == jorge_settings.BUYER_ACTIVATION_TAG.strip().lower() and jorge_settings.JORGE_BUYER_MODE
+    # If the contact already holds Buyer-Lead, buyer mode wins even when a seller-routing
+    # tag (e.g. "Needs Qualifying") is the one that fired this webhook.  This prevents
+    # seller outreach when the GHL "Bot Activation" workflow adds Needs Qualifying as a
+    # side-effect of the Buyer-Lead activation, triggering a second tag-webhook call.
+    if _seller_tag and not _buyer_tag:
+        _contact_tags_lower = {t.lower() for t in (event.contact.tags if event.contact else [])}
+        if "buyer-lead" in _contact_tags_lower:
+            _seller_tag = False
+            _buyer_tag = jorge_settings.JORGE_BUYER_MODE
     _lead_tag_match = _tag_lower in (_lead_tag, "needs qualifying") and not _seller_tag and not _buyer_tag
     if not (_seller_tag or _buyer_tag or _lead_tag_match):
         return GHLWebhookResponse(success=True, message="Tag ignored", actions=[])
