@@ -759,7 +759,9 @@ class JorgeSellerEngine:
                     extracted_data["property_address"] = addr_match.group(0).strip()
 
             # 0. Motivation (most common failure point — Claude may not extract this reliably)
-            if not extracted_data.get("motivation"):
+            # Also re-run when LLM returned the weak fallback "other" — specific keyword
+            # signals (relocat, job offer, transfer, etc.) must override it.
+            if not extracted_data.get("motivation") or extracted_data.get("motivation") == "other":
                 if re.search(r"relocat|moving? to|transfer|new job|got a job|job (in|at|offer)", msg_lower):
                     extracted_data["motivation"] = "relocation"
                     dest_match = re.search(
@@ -1027,7 +1029,9 @@ class JorgeSellerEngine:
         msg_lower = user_message.lower()
 
         # --- Motivation ---
-        if not extracted.get("motivation"):
+        # Also re-run when motivation is "other" — the weak LLM fallback must be
+        # overridden by specific keyword signals (relocat, job offer, transfer, etc.).
+        if not extracted.get("motivation") or extracted.get("motivation") == "other":
             if re.search(r"relocat|moving? to|transfer|new job|got a job|job (in|at|offer)", msg_lower):
                 extracted["motivation"] = "relocation"
             elif re.search(r"downsize|down-size|too big|smaller|retire|empty nest", msg_lower):
