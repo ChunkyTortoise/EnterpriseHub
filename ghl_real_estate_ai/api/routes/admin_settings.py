@@ -89,7 +89,21 @@ async def reset_contact_state(
     except Exception as exc:
         logger.warning(f"Redis session clear failed for contact {contact_id}: {exc}")
 
-    # 3. Clear in-memory test sessions (from /test/ smoke-test endpoints)
+    # 3. Clear BuyerConversationMemory (buyer_conversation_memory:{contact_id})
+    # This is separate from MemoryService and stores current_qualification_step,
+    # financial_readiness_score, etc. across sessions.
+    if bot == "buyer":
+        try:
+            from ghl_real_estate_ai.services.jorge.buyer_conversation_memory import BuyerConversationMemory
+
+            buyer_mem = BuyerConversationMemory()
+            cache_key = buyer_mem._get_cache_key(contact_id)
+            await buyer_mem.cache.delete(cache_key)
+            cleared.append(f"buyer-conversation-memory:{contact_id}")
+        except Exception as exc:
+            logger.warning(f"Buyer conversation memory clear failed for contact {contact_id}: {exc}")
+
+    # 4. Clear in-memory test sessions (from /test/ smoke-test endpoints)
     try:
         from ghl_real_estate_ai.api.routes.test_bots import _sessions
 
