@@ -829,7 +829,10 @@ class BuyerBudgetConfig:
     # ========== ROUTING THRESHOLDS ==========
     # Score thresholds for routing decisions
     ROUTING_QUALIFIED_THRESHOLD: int = 50
-    ROUTING_SCHEDULE_THRESHOLD: int = 30
+    # Set to 90 so buyer flow ALWAYS goes through generate_buyer_response first.
+    # A score of 30 was too low — having a budget alone scores 75 (urgency 25 + 50),
+    # which bypassed qualification questions and jumped straight to scheduling.
+    ROUTING_SCHEDULE_THRESHOLD: int = 90
 
     # ========== ENVIRONMENT OVERRIDES ==========
 
@@ -849,7 +852,7 @@ class BuyerBudgetConfig:
         - BUYER_QUALIFICATION_WARM_THRESHOLD: int (default 50)
         - BUYER_QUALIFICATION_LUKEWARM_THRESHOLD: int (default 30)
         - BUYER_ROUTING_QUALIFIED_THRESHOLD: int (default 50)
-        - BUYER_ROUTING_SCHEDULE_THRESHOLD: int (default 30)
+        - BUYER_ROUTING_SCHEDULE_THRESHOLD: int (default 90)
         """
         import json
 
@@ -874,7 +877,7 @@ class BuyerBudgetConfig:
             QUALIFICATION_WARM_THRESHOLD=int(os.getenv("BUYER_QUALIFICATION_WARM_THRESHOLD", "50")),
             QUALIFICATION_LUKEWARM_THRESHOLD=int(os.getenv("BUYER_QUALIFICATION_LUKEWARM_THRESHOLD", "30")),
             ROUTING_QUALIFIED_THRESHOLD=int(os.getenv("BUYER_ROUTING_QUALIFIED_THRESHOLD", "50")),
-            ROUTING_SCHEDULE_THRESHOLD=int(os.getenv("BUYER_ROUTING_SCHEDULE_THRESHOLD", "30")),
+            ROUTING_SCHEDULE_THRESHOLD=int(os.getenv("BUYER_ROUTING_SCHEDULE_THRESHOLD", "90")),
         )
 
     # ========== HELPER METHODS ==========
