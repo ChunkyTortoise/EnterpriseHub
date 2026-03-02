@@ -713,7 +713,7 @@ class EnhancedGHLClient(GHLClient):
             payload["assignedUserId"] = assigned_user_id
 
         try:
-            response = await self._make_request("POST", "/calendars/events", data=payload)
+            response = await self._make_request("POST", "/calendars/events/appointments", data=payload)
             logger.info(
                 f"Created appointment for contact {contact_id} in calendar {calendar_id}",
                 extra={"contact_id": contact_id, "calendar_id": calendar_id},
