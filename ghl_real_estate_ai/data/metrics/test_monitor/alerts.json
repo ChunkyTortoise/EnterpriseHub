@@ -558,5 +558,26 @@
     "message": "api_response_time_ms = 600 (threshold: 500)",
     "timestamp": "2026-02-28T19:48:40.933503",
     "location_id": "test_monitor"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-03-01T15:58:11.414670",
+    "location_id": "test_monitor"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-03-01T16:40:18.092668",
+    "location_id": "test_monitor"
+  },
+  {
+    "level": "warning",
+    "title": "api_response_time_ms exceeded threshold",
+    "message": "api_response_time_ms = 600 (threshold: 500)",
+    "timestamp": "2026-03-01T16:41:26.945483",
+    "location_id": "test_monitor"
   }
 ]
