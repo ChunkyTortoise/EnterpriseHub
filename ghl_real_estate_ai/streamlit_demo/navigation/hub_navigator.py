@@ -56,6 +56,7 @@ HUB_CATEGORIES = {
         "Voice AI Assistant",
         "Sales Copilot",
         "Deep Research",
+        "RAG Document Intelligence",
         "Automation Studio",
     ],
     "Bot Management": [

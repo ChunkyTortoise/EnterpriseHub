@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import aiohttp
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from src.core.exceptions import RAGException
 
@@ -67,14 +67,12 @@ class ToolResult(BaseModel):
     execution_time_ms: float = Field(default=0.0, ge=0.0)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    @field_validator("error")
-    @classmethod
-    def validate_error(cls, v: Optional[str], info) -> Optional[str]:
+    @model_validator(mode="after")
+    def validate_error_on_failure(self) -> "ToolResult":
         """Ensure error is set if success is False."""
-        values = info.data
-        if not values.get("success", True) and not v:
-            return "Unknown error"
-        return v
+        if not self.success and not self.error:
+            self.error = "Unknown error"
+        return self
 
 
 class ToolMetadata(BaseModel):
@@ -299,6 +297,7 @@ class VectorSearchTool(BaseTool):
                     "top_k": top_k,
                     "threshold": threshold,
                     "use_hybrid": use_hybrid,
+                    "filters": filters,
                 },
             )
 

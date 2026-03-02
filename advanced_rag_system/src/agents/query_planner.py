@@ -327,6 +327,7 @@ class QueryPlanner:
         QueryIntent.PROCEDURAL: [
             r"^how to\b",
             r"^how do\s+(i|you|we)\b",
+            r"^how does\b",
             r"^steps?\s+to\b",
             r"^guide\s+(me|us)?\s+(to|on|for)\b",
             r"\bprocess\s+of\b",
@@ -398,7 +399,7 @@ class QueryPlanner:
             score = 0.0
             for pattern in patterns:
                 if re.search(pattern, query_lower, re.IGNORECASE):
-                    score += 0.3
+                    score += 0.6
             scores[intent] = min(score, 1.0)
 
         # Keyword-based scoring for calculation
