@@ -746,6 +746,7 @@ class GHLClient:
         contact_id: str,
         calendar_id: str,
         start_time: str,
+        end_time: Optional[str] = None,
         title: str = "AI Assistant Appointment",
         assigned_user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -789,6 +790,8 @@ class GHLClient:
             "appointmentStatus": "confirmed",
         }
 
+        if end_time:
+            payload["endTime"] = end_time
         if assigned_user_id:
             payload["assignedUserId"] = assigned_user_id
 
