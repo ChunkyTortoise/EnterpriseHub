@@ -508,7 +508,18 @@ async def handle_ghl_tag_webhook(
     context["initial_outreach_sent_at"] = datetime.utcnow().isoformat()
     await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
 
-    return GHLWebhookResponse(success=True, message=outreach_message, actions=[])
+    # Enroll contact in CC AI-tag workflow (dedup via Redis, 7-day TTL)
+    tag_actions: list[GHLAction] = []
+    if jorge_settings.cc_ai_tag_workflow_id:
+        cache = get_cache_service()
+        dedup_key = f"cc_wf_enrolled:{contact_id}:{jorge_settings.cc_ai_tag_workflow_id[:8]}"
+        if not await cache.get(dedup_key):
+            await cache.set(dedup_key, "1", ttl=604800)
+            tag_actions.append(
+                GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=jorge_settings.cc_ai_tag_workflow_id)
+            )
+
+    return GHLWebhookResponse(success=True, message=outreach_message, actions=tag_actions)
 
 
 @router.post("/webhook", response_model=GHLWebhookResponse)
