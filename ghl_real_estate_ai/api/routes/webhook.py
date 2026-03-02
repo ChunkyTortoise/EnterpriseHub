@@ -355,6 +355,19 @@ def _detect_negative_sentiment(message: str) -> bool:
     return any(kw in msg for kw in _CC_NEGATIVE_KEYWORDS)
 
 
+_CC_REJECTED_OFFER_KEYWORDS = frozenset([
+    "rejected", "won't accept", "not accepting", "turned down", "declined the offer",
+    "offer was rejected", "offer rejected", "no deal", "not interested in the offer",
+    "below asking", "too low", "lowball", "insulting offer",
+])
+
+
+def _detect_rejected_offer(message: str) -> bool:
+    """Detect rejected offer signals for CC workflow routing."""
+    msg = message.lower()
+    return any(kw in msg for kw in _CC_REJECTED_OFFER_KEYWORDS)
+
+
 async def _build_cc_workflow_actions(
     seller_result: dict,
     user_message: str,
@@ -385,6 +398,10 @@ async def _build_cc_workflow_actions(
     # Negative sentiment → Negative Conversation workflow
     if _detect_negative_sentiment(user_message):
         await _enqueue(settings.cc_negative_convo_workflow_id)
+
+    # Rejected offer signal → DTS Rejected Offer Campaign
+    if _detect_rejected_offer(user_message):
+        await _enqueue(settings.cc_rejected_offer_workflow_id)
 
     # New inbound seller lead → DTS Inbound Seller Lead Email
     if is_new_lead:
@@ -460,7 +477,10 @@ async def handle_ghl_tag_webhook(
         return GHLWebhookResponse(success=True, message="Conversation already started", actions=[])
 
     contact_name = event.contact.first_name if event.contact and event.contact.first_name else "there"
-    outreach_template = random.choice(rancho_config.INITIAL_OUTREACH_MESSAGES)
+    if _buyer_tag:
+        outreach_template = random.choice(rancho_config.BUYER_INITIAL_OUTREACH_MESSAGES)
+    else:
+        outreach_template = random.choice(rancho_config.INITIAL_OUTREACH_MESSAGES)
     outreach_message = outreach_template.format(name=contact_name)
 
     current_ghl_client = await _get_tenant_ghl_client(location_id, tenant_service, ghl_client_default)
