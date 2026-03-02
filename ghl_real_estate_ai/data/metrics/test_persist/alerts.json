@@ -551,5 +551,26 @@
     "message": "Test",
     "timestamp": "2026-02-28T19:48:40.945401",
     "location_id": "test_persist"
+  },
+  {
+    "level": "critical",
+    "title": "Critical Issue",
+    "message": "Test",
+    "timestamp": "2026-03-01T15:58:11.433226",
+    "location_id": "test_persist"
+  },
+  {
+    "level": "critical",
+    "title": "Critical Issue",
+    "message": "Test",
+    "timestamp": "2026-03-01T16:40:18.103697",
+    "location_id": "test_persist"
+  },
+  {
+    "level": "critical",
+    "title": "Critical Issue",
+    "message": "Test",
+    "timestamp": "2026-03-01T16:41:26.957681",
+    "location_id": "test_persist"
   }
 ]
