@@ -112,8 +112,8 @@ class AppointmentBooking(BaseModel):
     @classmethod
     def validate_score_threshold(cls, v):
         """Ensure lead score meets booking threshold."""
-        if v < 5:  # 70% threshold = 5 questions answered
-            raise ValueError(f"Lead score {v} below booking threshold (5)")
+        if v < 4:  # Jorge seller bot has 4 qualification questions
+            raise ValueError(f"Lead score {v} below booking threshold (4)")
         return v
 
 
@@ -150,7 +150,7 @@ class CalendarScheduler:
         """
         self.ghl_client = ghl_client or GHLClient()
         self.calendar_id = settings.ghl_calendar_id
-        self.booking_threshold = 5  # 70% = 5 questions answered
+        self.booking_threshold = 4  # Jorge seller bot: 4 qualification questions
         self.buffer_minutes = settings.appointment_buffer_minutes or 15
         self.business_hours = self._get_business_hours()
 
