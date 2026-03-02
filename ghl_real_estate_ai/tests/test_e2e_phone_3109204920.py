@@ -791,8 +791,13 @@ class TestWebhookTagRouting:
 
         assert flags["seller"] is False, "Stop-Bot must prevent seller activation"
 
-    def test_seller_has_priority_over_buyer_on_simultaneous_tags(self) -> None:
-        """When both Needs Qualifying and Buyer-Lead are present, seller wins."""
+    def test_buyer_wins_over_seller_on_simultaneous_tags(self) -> None:
+        """When both Needs Qualifying and Buyer-Lead are present, buyer wins.
+
+        Buyer-Lead is an explicit re-tag that overrides the earlier
+        'Needs Qualifying' seller activation. This prevents re-tagged
+        leads from being routed to seller questions instead of buyer questions.
+        """
         from ghl_real_estate_ai.api.routes.webhook import (
             _compute_mode_flags,
             _normalize_tags,
@@ -810,7 +815,7 @@ class TestWebhookTagRouting:
             lead_activation_tag="Needs Qualifying",
         )
 
-        assert _select_primary_mode(flags) == "seller"
+        assert _select_primary_mode(flags) == "buyer"
 
 
 # ---------------------------------------------------------------------------

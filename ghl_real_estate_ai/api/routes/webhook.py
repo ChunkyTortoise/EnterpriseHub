@@ -267,12 +267,16 @@ def _compute_mode_flags(
     The fallback cases (empty tags, passthrough-only tags) are unambiguous and
     remain lead-only, so they are unaffected by this exclusion.
     """
+    # Buyer-Lead tag explicitly overrides "Needs Qualifying" for seller routing.
+    # When both are present (e.g. re-tagged lead), buyer wins.
+    buyer_tag_present = _tag_present(buyer_activation_tag, tags_lower)
     seller_active = (
         ("needs qualifying" in tags_lower or "seller-lead" in tags_lower)
         and seller_mode_enabled
         and not should_deactivate
+        and not buyer_tag_present
     )
-    buyer_active = _tag_present(buyer_activation_tag, tags_lower) and buyer_mode_enabled and not should_deactivate
+    buyer_active = buyer_tag_present and buyer_mode_enabled and not should_deactivate
     lead_active = (
         (
             # Tag-match activation — excluded when seller or buyer already owns this contact.
