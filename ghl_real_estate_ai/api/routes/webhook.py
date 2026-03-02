@@ -241,6 +241,9 @@ def _normalize_tags(raw_tags: list[str] | None) -> set[str]:
 _LEAD_PASSTHROUGH_TAGS: frozenset[str] = frozenset(
     {"hot-lead", "warm-lead", "cold-lead", "lead-qualified"}
 )
+_SELLER_PASSTHROUGH_TAGS: frozenset[str] = frozenset(
+    {"hot-seller", "warm-seller", "cold-seller", "seller-qualified"}
+)
 
 
 def _tag_present(tag: str | None, tags_lower: set[str]) -> bool:
@@ -709,8 +712,14 @@ async def handle_ghl_webhook(
 
     should_activate = any(_tag_present(tag, tags_lower) for tag in activation_tags)
     # Seller-mode tags also count as activation when seller mode is enabled.
+    # Passthrough tags (hot/warm/cold-seller, seller-qualified) keep the bot active
+    # for post-qualification turns (e.g. slot selection after calendar offer).
     if not should_activate and jorge_settings.JORGE_SELLER_MODE:
-        should_activate = "needs qualifying" in tags_lower or "seller-lead" in tags_lower
+        should_activate = (
+            "needs qualifying" in tags_lower
+            or "seller-lead" in tags_lower
+            or (bool(tags_lower) and tags_lower.issubset(_SELLER_PASSTHROUGH_TAGS | {"direct to seller bot"}))
+        )
     # Buyer-mode tag also counts as activation when buyer mode is enabled
     if not should_activate and jorge_settings.JORGE_BUYER_MODE:
         should_activate = _tag_present(jorge_settings.BUYER_ACTIVATION_TAG, tags_lower)
@@ -925,10 +934,18 @@ async def handle_ghl_webhook(
                         data={"appointment_time": selected["display"]},
                     )
 
+                    # Deactivate AI after a successful booking so subsequent inbound
+                    # messages don't re-trigger the bot for a contact that is now
+                    # appointment-confirmed.
+                    ai_off_action = GHLAction(type=ActionType.ADD_TAG, tag="AI-Off")
+                    confirmation_plus_ai_off = list(booking_result.confirmation_actions) + [ai_off_action]
+                    background_tasks.add_task(
+                        ghl_client_default.add_tags, contact_id, ["AI-Off"]
+                    )
                     return GHLWebhookResponse(
                         success=True,
                         message=response_message,
-                        actions=booking_result.confirmation_actions,
+                        actions=confirmation_plus_ai_off,
                     )
 
                 # Booking failed -> manual fallback
