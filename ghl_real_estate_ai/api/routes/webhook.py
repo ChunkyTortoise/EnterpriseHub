@@ -1384,12 +1384,14 @@ async def handle_ghl_webhook(
                     GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=jorge_settings.warm_buyer_workflow_id)
                 )
 
-            # HOT or WARM+scheduling buyer: offer calendar slots
-            # Triggers when: (a) buyer_temp==hot, or (b) warm buyer with a scheduling response
-            # after all 4 qualification questions (conv_len>=5).
+            # HOT or WARM buyer: offer calendar slots
+            # Triggers when: (a) buyer_temp==hot, or (b) warm buyer after all 4 qualification
+            # questions have been answered (conv_len>=5 guards against premature offers).
+            # We do NOT require _scheduling_response here because Claude generates too many
+            # phrasings to reliably enumerate (e.g. "ready to see a few this week").
             _buyer_booking_msg = ""
             _offer_slots = (buyer_temp == "hot") or (
-                buyer_temp == "warm" and _scheduling_response and _conv_len >= 5
+                buyer_temp == "warm" and _conv_len >= 5
             )
             if _offer_slots and not context.get("pending_appointment"):
                 try:
