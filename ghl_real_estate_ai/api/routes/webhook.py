@@ -1312,22 +1312,31 @@ async def handle_ghl_webhook(
                 or "jorge will reach out" in _resp_content_lower
                 or "lock in a time" in _resp_content_lower
                 or "set up tours" in _resp_content_lower
+                or "let's get you scheduled" in _resp_content_lower
+                or "get you scheduled" in _resp_content_lower
+                or "schedule" in _resp_content_lower
+                or "see a couple" in _resp_content_lower
+                or "see some homes" in _resp_content_lower
+                or "set up a tour" in _resp_content_lower
+                or "home tour" in _resp_content_lower
+                or "property tour" in _resp_content_lower
+            )
+            _conv_history_text = " ".join(m.get("content", "") for m in (conversation_history or [])).lower()
+            _pre_approved = any(
+                kw in _conv_history_text
+                for kw in ("pre-approved", "pre approved", "preapproved", "approved up to", "approval letter")
+            )
+            _has_timeline = any(
+                kw in _conv_history_text
+                for kw in ("days", "weeks", "months", "asap", "soon", "quickly", "ready", "by ", "within", "moving", "relocat")
             )
             if buyer_result.get("is_qualified"):
                 buyer_temp = "warm"
-            elif _scheduling_response and _conv_len >= 3:
-                # All qualification fields gathered — buyer is at least warm
+            elif _scheduling_response and _conv_len >= 5:
+                # All 4 qualification fields gathered (B-INIT + 4 answers = 5 messages) — buyer is warm
                 buyer_temp = "warm"
-            # Upgrade cold→hot when buyer is fully committed: pre-approval + hard deadline + scheduling
-            _pre_approved = any(
-                kw in (user_message or "").lower()
-                for kw in ("pre-approved", "pre approved", "preapproved", "approved up to", "approval letter")
-            )
-            _has_deadline = any(
-                kw in " ".join(m.get("content", "") for m in (conversation_history or [])).lower()
-                for kw in ("lease", "move in by", "by july", "by august", "by month", "closing date", "our deadline")
-            )
-            if buyer_temp == "warm" and _pre_approved and _has_deadline and _scheduling_response:
+            # Upgrade warm→hot when buyer is pre-approved, has timeline, and Claude is scheduling
+            if buyer_temp == "warm" and _pre_approved and _has_timeline and _scheduling_response:
                 buyer_temp = "hot"
             temp_tag_map = {"hot": "Hot-Buyer", "warm": "Warm-Buyer", "cold": "Cold-Buyer"}
             if buyer_temp in temp_tag_map:
@@ -1375,9 +1384,14 @@ async def handle_ghl_webhook(
                     GHLAction(type=ActionType.TRIGGER_WORKFLOW, workflow_id=jorge_settings.warm_buyer_workflow_id)
                 )
 
-            # HOT buyer: offer calendar slots the same way seller flow does
+            # HOT or WARM+scheduling buyer: offer calendar slots
+            # Triggers when: (a) buyer_temp==hot, or (b) warm buyer with a scheduling response
+            # after all 4 qualification questions (conv_len>=5).
             _buyer_booking_msg = ""
-            if buyer_temp == "hot" and not context.get("pending_appointment"):
+            _offer_slots = (buyer_temp == "hot") or (
+                buyer_temp == "warm" and _scheduling_response and _conv_len >= 5
+            )
+            if _offer_slots and not context.get("pending_appointment"):
                 try:
                     from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, get_smart_scheduler
 
