@@ -6,14 +6,18 @@ Autonomous multi-channel re-engagement using stall-breaking logic and FRS-driven
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
 from ghl_real_estate_ai.agents.cma_generator import CMAGenerator
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
+from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
 from ghl_real_estate_ai.utils.pdf_renderer import PDFRenderer
+
+if TYPE_CHECKING:
+    from ghl_real_estate_ai.services.ghl_client import GHLClient
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +37,11 @@ class GhostFollowUpEngine:
     Implements the 3-7-30 Day Follow-Up Architecture with stall-breaking logic.
     """
 
-    def __init__(self):
+    def __init__(self, ghl_client: Optional["GHLClient"] = None):
         self.decoder = LeadIntentDecoder()
         self.claude = get_claude_orchestrator()
         self.cma_generator = CMAGenerator()
+        self.ghl_client = ghl_client
         # Ensure we use the correct relative path for data
         import os
 
@@ -48,6 +53,33 @@ class GhostFollowUpEngine:
             # Fallback for relative execution
             with open("ghl_real_estate_ai/data/stall_breakers.json", "r") as f:
                 self.stall_breakers = json.load(f)
+
+    async def mark_as_ghosted(self, contact_id: str) -> None:
+        """Mark a contact as ghosted in Redis and trigger CC_GHOSTING_WORKFLOW_ID.
+
+        Uses a dedup key (cc_wf_enrolled:{contact_id}:{wf_id[:8]}, TTL 7d) to ensure
+        the ghosting workflow is triggered at most once per contact per week.
+        """
+        from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
+
+        cache = get_cache_service()
+
+        # Write ghost_state key so webhook can detect re-engagement
+        ghost_key = f"ghost_state:{contact_id}"
+        await cache.set(ghost_key, "ghosted", ttl=2592000)  # 30-day TTL
+        logger.info(f"Ghost state set for contact {contact_id}")
+
+        # Trigger CC_GHOSTING_WORKFLOW_ID (with dedup guard)
+        workflow_id = jorge_settings.cc_ghosting_workflow_id
+        if workflow_id and self.ghl_client:
+            dedup_key = f"cc_wf_enrolled:{contact_id}:{workflow_id[:8]}"
+            if not await cache.get(dedup_key):
+                await cache.set(dedup_key, "1", ttl=604800)  # 7-day TTL
+                try:
+                    await self.ghl_client.trigger_workflow(contact_id, workflow_id)
+                    logger.info(f"CC_GHOSTING_WORKFLOW_ID triggered for contact {contact_id}")
+                except Exception as exc:
+                    logger.error(f"Failed to trigger CC ghosting workflow for {contact_id}: {exc}")
 
     async def process_lead_step(self, ghost_state: GhostState, history: List[Dict[str, str]]) -> Dict[str, Any]:
         """
@@ -139,6 +171,7 @@ class GhostFollowUpEngine:
         Day 30 - Final Nudge + Re-Qualification.
         Last-chance follow-up with a gentle tone and CMA/market update value-add.
         Outcome: Archive if unresponsive or route to Jorge for live handoff.
+        Marks the contact as ghosted in Redis and triggers CC_GHOSTING_WORKFLOW_ID.
         """
         address = state.property_address or "your area"
 
@@ -157,6 +190,10 @@ class GhostFollowUpEngine:
         else:
             content = f"Last check: still interested in exploring {address}? If not, I'll close your file for now—happy to reconnect anytime."
             logic = f"FRS {state.frs_score} - Low intent graceful close"
+
+        # Transition to ghosted: write Redis key + trigger CC ghosting workflow
+        state.status = "ghosted"
+        await self.mark_as_ghosted(state.contact_id)
 
         return {"channel": "sms", "content": content, "logic": logic}
 
