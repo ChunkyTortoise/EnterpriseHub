@@ -883,7 +883,7 @@ async def handle_ghl_webhook(
                 contact_info = {
                     "contact_id": contact_id,
                     "first_name": event.contact.first_name or "Lead",
-                    "last_name": event.contact.last_name,
+                    "last_name": event.contact.last_name or "",
                     "phone": event.contact.phone,
                     "email": event.contact.email,
                 }
@@ -924,6 +924,7 @@ async def handle_ghl_webhook(
                         )
 
                     context["pending_appointment"] = None
+                    context["appointment_confirmed"] = True
                     await conversation_manager.memory_service.save_context(contact_id, context, location_id=location_id)
 
                     background_tasks.add_task(
@@ -941,6 +942,11 @@ async def handle_ghl_webhook(
                     confirmation_plus_ai_off = list(booking_result.confirmation_actions) + [ai_off_action]
                     background_tasks.add_task(
                         ghl_client_default.add_tags, contact_id, ["AI-Off"]
+                    )
+                    background_tasks.add_task(
+                        ghl_client_default.remove_tags,
+                        contact_id,
+                        ["Needs Qualifying", "Buyer-Lead", "direct to seller bot"],
                     )
                     return GHLWebhookResponse(
                         success=True,
@@ -1416,8 +1422,11 @@ async def handle_ghl_webhook(
             # We do NOT require _scheduling_response here because Claude generates too many
             # phrasings to reliably enumerate (e.g. "ready to see a few this week").
             _buyer_booking_msg = ""
-            _offer_slots = (buyer_temp == "hot") or (
-                buyer_temp == "warm" and _conv_len >= 5
+            _offer_slots = (
+                not context.get("appointment_confirmed")
+                and (
+                    (buyer_temp == "hot") or (buyer_temp == "warm" and _conv_len >= 5)
+                )
             )
             if _offer_slots and not context.get("pending_appointment"):
                 try:

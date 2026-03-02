@@ -356,3 +356,79 @@ async def test_default_thresholds_backward_compatibility(mock_conversation_manag
     assert analytics["thresholds_used"]["hot_quality"] == 0.7  # Default
     assert analytics["thresholds_used"]["warm_questions"] == 3  # Default
     assert analytics["thresholds_used"]["warm_quality"] == 0.5  # Default
+
+
+# ---------------------------------------------------------------------------
+# Regression tests: seller motivation misclassification (GHL field bug)
+# Bug: "I got a job offer in Texas and need to relocate within 30 days" was
+# written as "other" instead of "relocation" because the regex override gate
+# was only entered when motivation was None, not when it was "other".
+# ---------------------------------------------------------------------------
+
+
+class TestSellerMotivationRegexOverride:
+    """Ensure the regex motivation override fires even when the LLM returned 'other'."""
+
+    @pytest.fixture
+    def engine(self):
+        return JorgeSellerEngine(AsyncMock(), AsyncMock())
+
+    _RELOCATION_MESSAGES = [
+        "I got a job offer in Texas and need to relocate within 30 days",
+        "Got a job offer in Dallas, need to move fast",
+        "We're relocating to Austin for work",
+        "My company is transferring me to Chicago",
+        "Moving to Seattle for a new job",
+        "I need to move — job offer in Denver",
+    ]
+
+    @pytest.mark.parametrize("message", _RELOCATION_MESSAGES)
+    def test_relocation_overrides_other_in_extract_seller_data(self, engine, message):
+        """_extract_seller_data must set 'relocation' even when LLM pre-set 'other'."""
+        result = engine._extract_seller_data_regex(
+            message,
+            {"motivation": "other"},  # LLM fallback already present
+        )
+        assert result.get("motivation") == "relocation", (
+            f"Expected 'relocation' but got {result.get('motivation')!r} for: {message!r}"
+        )
+
+    @pytest.mark.parametrize("message", _RELOCATION_MESSAGES)
+    def test_relocation_overrides_none_motivation(self, engine, message):
+        """Sanity-check: 'relocation' is set when motivation is absent."""
+        result = engine._extract_seller_data_regex(message, {})
+        assert result.get("motivation") == "relocation"
+
+    _NON_RELOCATION_MESSAGES = [
+        "I just want to downsize, kids are gone",
+        "Getting divorced, need to sell",
+        "Just ready for a change",
+        "The house is too big now that the kids left",
+    ]
+
+    @pytest.mark.parametrize("message", _NON_RELOCATION_MESSAGES)
+    def test_other_motivation_preserved_when_no_relocation_keyword(self, engine, message):
+        """'other' should not be blindly overwritten when no specific keyword matches."""
+        result = engine._extract_seller_data_regex(
+            message,
+            {"motivation": "other"},
+        )
+        # Motivation may be overridden to a more specific value (downsize, retirement,
+        # divorce) or remain "other" — just must NOT become "relocation".
+        assert result.get("motivation") != "relocation", (
+            f"Should not classify as relocation: {message!r}"
+        )
+
+    def test_transfer_keyword_triggers_relocation(self, engine):
+        result = engine._extract_seller_data_regex(
+            "My company is transferring me to Phoenix next month",
+            {"motivation": "other"},
+        )
+        assert result.get("motivation") == "relocation"
+
+    def test_new_job_keyword_triggers_relocation(self, engine):
+        result = engine._extract_seller_data_regex(
+            "We got a new job opportunity and need to relocate ASAP",
+            {"motivation": "other"},
+        )
+        assert result.get("motivation") == "relocation"
