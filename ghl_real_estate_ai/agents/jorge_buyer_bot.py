@@ -353,8 +353,11 @@ class JorgeBuyerBot(BaseBotWorkflow):
             # and would reset the step to "budget" even though T3/T4 have already
             # confirmed pre-approval and bedrooms.  Using the state's current step as
             # a floor preserves the progress established in earlier turns.
+            # "bedrooms" is added so this list matches response_generator._STEP_ORDER.
+            # Without it, "timeline" (decoder idx=2) maps to resp idx=3, skipping the
+            # bedrooms question when the step guard fires.
             _STEP_ORDER_INTENT = [
-                "budget", "pre-approval", "timeline", "preferences",
+                "budget", "pre-approval", "bedrooms", "timeline", "preferences",
                 "decision_makers", "property", "property_search",
                 "property_matching", "appointment", "appointment_confirmed", "handoff_ready",
             ]
@@ -363,7 +366,14 @@ class JorgeBuyerBot(BaseBotWorkflow):
             _profile_step = profile.next_qualification_step
             _current_idx = _STEP_IDX_INTENT.get(_current_step, 0)
             _profile_idx = _STEP_IDX_INTENT.get(_profile_step, 0)
-            _resolved_step = _profile_step if _profile_idx >= _current_idx else _current_step
+            # Cap advance to +1 per turn so the intent decoder can't skip
+            # qualification fields (e.g. pre-approval → timeline, skipping bedrooms).
+            _capped_profile_idx = min(_profile_idx, _current_idx + 1)
+            _resolved_step = (
+                _STEP_ORDER_INTENT[_capped_profile_idx]
+                if _capped_profile_idx < len(_STEP_ORDER_INTENT)
+                else _current_step
+            )
 
             # Only propagate budget_range if freshly extracted — do not overwrite an
             # existing (restored from saved state) value with None when history is thin.
