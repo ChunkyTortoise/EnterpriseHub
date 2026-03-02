@@ -388,6 +388,89 @@ class TestTagWebhookCCAIWorkflowEnrollment:
         # set() should not have been called again since key already exists
         mock_cache.set.assert_not_called()
 
+    @pytest.mark.asyncio
+    async def test_needs_qualifying_tag_on_buyer_lead_contact_sends_buyer_outreach(self):
+        """
+        When GHL Bot Activation workflow fires on Buyer-Lead and then adds Needs Qualifying,
+        a second tag-webhook fires with tag='Needs Qualifying'.  The contact already holds
+        Buyer-Lead, so we must send buyer-style outreach — NOT seller outreach.
+        """
+        contact_id = "buyer_contact_nq_override"
+        # The incoming tag is seller-routing, but the contact also has Buyer-Lead.
+        event = GHLTagWebhookEvent(
+            contactId=contact_id,
+            locationId="location_test",
+            tag="Needs Qualifying",
+            contact=GHLContact(
+                id=contact_id,
+                first_name="Maria",
+                last_name="Lopez",
+                tags=["Buyer-Lead", "Needs Qualifying"],
+            ),
+        )
+
+        mock_context = {}
+        mock_conv_manager = AsyncMock()
+        mock_conv_manager.get_context = AsyncMock(return_value=mock_context)
+        mock_conv_manager.memory_service = AsyncMock()
+        mock_conv_manager.memory_service.save_context = AsyncMock()
+
+        mock_cache = AsyncMock()
+        mock_cache.get = AsyncMock(return_value=None)
+        mock_cache.set = AsyncMock(return_value=True)
+
+        mock_settings = MagicMock()
+        mock_settings.LEAD_ACTIVATION_TAG = "lead-bot"
+        mock_settings.BUYER_ACTIVATION_TAG = "Buyer-Lead"
+        mock_settings.JORGE_SELLER_MODE = True
+        mock_settings.JORGE_BUYER_MODE = True
+        mock_settings.cc_ai_tag_workflow_id = None
+
+        mock_request = MagicMock()
+        mock_background = MagicMock()
+        mock_background.add_task = MagicMock()
+        mock_tenant_service = AsyncMock()
+        mock_tenant_service.get_tenant_config = AsyncMock(return_value=None)
+        mock_ghl_client = AsyncMock()
+        mock_analytics = AsyncMock()
+        mock_analytics.track_event = AsyncMock()
+
+        mock_rancho = MagicMock()
+        mock_rancho.BUYER_INITIAL_OUTREACH_MESSAGES = ["Hi {name}, glad you reached out! Still searching?"]
+        mock_rancho.INITIAL_OUTREACH_MESSAGES = ["Hi {name}, thinking about selling?"]
+
+        sent_messages: list[str] = []
+
+        def capture_add_task(fn, *args, **kwargs):
+            if fn.__name__ == "safe_send_message" or (hasattr(fn, "__self__") and hasattr(fn, "send_message")):
+                sent_messages.append(kwargs.get("message") or (args[2] if len(args) > 2 else ""))
+
+        mock_background.add_task.side_effect = capture_add_task
+
+        with (
+            patch("ghl_real_estate_ai.api.routes.webhook.jorge_settings", mock_settings),
+            patch("ghl_real_estate_ai.api.routes.webhook.rancho_config", mock_rancho),
+            patch("ghl_real_estate_ai.api.routes.webhook.get_cache_service", return_value=mock_cache),
+        ):
+            response = await handle_ghl_tag_webhook.__wrapped__(
+                request=mock_request,
+                event=event,
+                background_tasks=mock_background,
+                conversation_manager=mock_conv_manager,
+                tenant_service=mock_tenant_service,
+                ghl_client_default=mock_ghl_client,
+                analytics_service=mock_analytics,
+            )
+
+        # Response message must be buyer-style, not seller-style
+        assert response.success is True
+        assert "selling" not in response.message.lower(), (
+            f"Seller outreach sent to buyer contact: {response.message!r}"
+        )
+        assert "searching" in response.message.lower() or "glad" in response.message.lower(), (
+            f"Expected buyer-style outreach, got: {response.message!r}"
+        )
+
 
 # ---------------------------------------------------------------------------
 # GhostFollowUpEngine — CC_GHOSTING_WORKFLOW_ID pipeline tests
