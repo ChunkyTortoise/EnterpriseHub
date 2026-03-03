@@ -52,6 +52,15 @@ jobs:
     - name: Revenue ops artifact QA
       run: python3 scripts/ci/revenue_ops_qa.py
 
+    - name: Generate weekly KPI CSV from outcome events
+      run: python3 scripts/generate_weekly_pilot_kpis.py
+
+    - name: Render weekly executive proof-pack
+      run: python3 scripts/generate_weekly_executive_proof_pack.py --tenant-id tenant_demo
+
+    - name: Smoke-check pilot data persistence script (DB-independent)
+      run: python3 scripts/persist_revenue_pilot_data.py --dry-run --events reports/outcome_events.jsonl --kpis reports/weekly_pilot_kpis.csv
+
   test-unit:
     name: Unit Tests
     runs-on: ubuntu-latest

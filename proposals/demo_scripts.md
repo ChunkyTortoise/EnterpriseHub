@@ -1,16 +1,15 @@
-# Demo Scripts Mapped to Packages
+# Demo Scripts (Lead Response Copilot)
 
-## Starter Sprint Demo (15 min)
-1. Show lead intake and immediate qualification response.
-2. Show CRM sync and temperature tagging.
-3. Show KPI dashboard with SLA metric.
+## 15-Minute Pilot Demo
+1. Show lead intake and qualification in under 5 minutes.
+2. Show CRM sync with handoff status visibility.
+3. Call v2 routes and verify `data/meta/error` contract and source headers.
+4. Show weekly KPI proof-pack format and explain renewal criteria.
 
-## Growth Sprint Demo (20 min)
-1. Walk through multi-bot handoff.
-2. Show compliance score endpoint and alert signals.
-3. Show conversion/revenue analytics slice.
-
-## Scale Sprint Demo (25 min)
-1. Trigger orchestrated workflow with failover behavior.
-2. Show SLA telemetry and alert routing.
-3. Show proof-pack artifact generation.
+## Objection-Handling Script
+- Objection: "How fast can we go live?"
+  - Answer: "Within 5 business days after access handoff, with a documented launch runbook and checklist."
+- Objection: "How do we measure ROI?"
+  - Answer: "Weekly proof-packs track SLA attainment, qualification throughput, appointments booked, and cost per qualified lead."
+- Objection: "How much does it cost?"
+  - Answer: "$2,000 setup and $1,500/month. Renewal is tied to agreed KPI deltas."

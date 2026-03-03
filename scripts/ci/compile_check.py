@@ -14,6 +14,9 @@ DEFAULT_TARGETS = [
     "ghl_real_estate_ai/services/learning/test_behavior_tracking.py",
     "ghl_real_estate_ai/api/routes/revenue_v2.py",
     "ghl_real_estate_ai/api/schemas/revenue_v2.py",
+    "scripts/generate_weekly_pilot_kpis.py",
+    "scripts/generate_weekly_executive_proof_pack.py",
+    "scripts/persist_revenue_pilot_data.py",
 ]
 
 
