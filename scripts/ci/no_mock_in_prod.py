@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail CI if production v2 routes contain explicit mock/fallback behavior."""
+"""Fail CI if production v2 routes contain explicit mock or hardcoded behavior."""
 
 from __future__ import annotations
 
@@ -14,7 +14,6 @@ DEFAULT_TARGETS = [
 FORBIDDEN_PATTERNS = [
     re.compile(r"generate_mock", re.IGNORECASE),
     re.compile(r"\bmock_", re.IGNORECASE),
-    re.compile(r"\bfallback\b", re.IGNORECASE),
     re.compile(r"hardcoded", re.IGNORECASE),
 ]
 

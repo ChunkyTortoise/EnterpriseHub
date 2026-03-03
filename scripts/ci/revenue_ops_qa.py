@@ -12,8 +12,17 @@ REQUIRED_FILES = [
     Path("proposals/scale-sprint-one-pager.md"),
     Path("proposals/SOW_TEMPLATE.md"),
     Path("proposals/demo_scripts.md"),
+    Path("proposals/onboarding_checklist.md"),
+    Path("proposals/launch_runbook.md"),
     Path("reports/proposal_pipeline_tracker.csv"),
     Path("reports/metrics_snapshot.md"),
+    Path("reports/weekly_executive_proof_pack_template.md"),
+    Path("reports/outcome_events.jsonl"),
+    Path("docs/OPERATIONS_WEEKLY_PROOF_PACK.md"),
+    Path("scripts/generate_weekly_pilot_kpis.py"),
+    Path("scripts/generate_weekly_executive_proof_pack.py"),
+    Path("scripts/persist_revenue_pilot_data.py"),
+    Path("alembic/versions/2026_03_03_013_add_revenue_reporting_tables.py"),
 ]
 
 REQUIRED_CSV_HEADERS = [

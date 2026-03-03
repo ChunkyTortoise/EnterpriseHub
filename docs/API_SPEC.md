@@ -26,7 +26,8 @@
 16. [WebSocket Real-Time](#websocket-real-time)
 17. [Error Monitoring](#error-monitoring)
 18. [Security](#security)
-19. [Error Codes](#error-codes)
+19. [Revenue v2 Contract](#revenue-v2-contract)
+20. [Error Codes](#error-codes)
 
 ---
 
@@ -250,6 +251,66 @@ List all leads with filtering and pagination.
   "per_page": 20
 }
 ```
+
+---
+
+## Revenue v2 Contract
+
+Revenue-critical pilot routes under `/api/v2` use a strict envelope:
+
+```json
+{
+  "data": {},
+  "meta": {
+    "source": "database",
+    "correlation_id": "uuid",
+    "generated_at": "2026-03-03T00:00:00Z",
+    "freshness_seconds": 0
+  },
+  "error": null
+}
+```
+
+### Required Headers
+
+- `X-Response-Source: database|cache|live_provider`
+- `X-Data-Freshness: <seconds>`
+- `X-Correlation-Id: <uuid>`
+
+### Tenant Scope Rules
+
+- `tenant_id` is required for:
+  - `GET /api/v2/prediction/deal-outcome/{deal_id}`
+  - `GET /api/v2/customer-journeys/{lead_id}`
+  - `GET /api/v2/property-intelligence/{property_id}`
+  - `GET /api/v2/market-intelligence/recommendations/stream`
+- `location_id` path parameter is tenant scope for billing/sms routes.
+- Cross-tenant access is rejected with `error.code = "tenant_scope_violation"` when ownership metadata is present.
+- If a sensitive table lacks an ownership column (`tenant_id|location_id|account_id`), routes fail closed with `error.code = "tenant_scope_unenforceable"`.
+
+### Streaming Contract
+
+`GET /api/v2/market-intelligence/recommendations/stream` emits SSE events in this set only:
+- `start`
+- `token`
+- `complete`
+- `error`
+
+Error events include retry guidance payload fields.
+
+### Weekly Proof-Pack Route
+
+- `GET /api/v2/reports/weekly-proof-pack?tenant_id=<id>&week_start=<YYYY-MM-DD optional>&allow_latest_fallback=<bool>`
+- DB-first behavior:
+  - reads `pilot_kpi_records` first
+  - renders markdown from DB KPI row
+  - `meta.source = database`
+- Missing requested week:
+  - returns `weekly_proof_pack_unavailable` with `retryable=false`
+  - unless `allow_latest_fallback=true`, in which case latest tenant week is returned
+- DB/table unavailable:
+  - explicit fallback to file artifacts (`reports/weekly_pilot_kpis.csv`, `reports/weekly_executive_proof_pack.md`)
+  - `meta.source = live_provider`
 
 ### PATCH /api/leads/{lead_id}
 

@@ -1,30 +1,25 @@
-# Starter Sprint ($2K-$5K)
+# Lead Response Copilot (Starter Offer)
+
+## Price
+- $2,000 one-time setup
+- $1,500/month recurring
 
 ## Outcome
-Deploy lead qualification + basic dashboard for SMB teams in 7-14 days.
+Deploy a reusable lead response and qualification system for SMB real-estate teams in <=5 business days after access handoff.
 
-## Scope
-- Lead intake + qualification workflow
-- Core CRM sync and lead temperature tags
-- Basic KPI dashboard (response time, qualification counts)
-- Handoff playbook and operator runbook
-
-## Exclusions
-- Custom multi-region infra
-- Enterprise SSO/compliance expansion
-- Advanced bespoke model training
+## Included
+- Lead intake + qualification automation
+- CRM sync + handoff reliability
+- Weekly KPI proof-pack
+- Compliance and response-SLA monitoring
 
 ## KPIs
-- First-response SLA under 3 minutes
-- 100% lead capture from configured channels
-- Dashboard latency under 2s for core views
+- 5-minute response SLA attainment reported weekly
+- Lead qualification throughput trend
+- Appointments booked trend
+- Cost per qualified lead trend
 
-## Acceptance Tests
-- Integration test pass on intake -> qualification -> CRM sync path
-- Dashboard smoke tests pass
-- API health and route checks pass
-
-## Timeline
-- Discovery: 1 day
-- Implementation: 4-8 days
-- QA + handoff: 1-2 days
+## Acceptance
+- First weekly proof-pack delivered within first 7 days post go-live
+- v2 pilot endpoints return contractual envelope + headers
+- Tenant-scoped access validated for pilot account

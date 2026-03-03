@@ -1,5 +1,10 @@
 # Sales Cadence (SMB Focus)
 
+## Primary Offer
+- Product: Lead Response Copilot
+- Price: $2,000 setup + $1,500/month
+- Go-live SLA: <=5 business days after access handoff
+
 ## Weekly Targets
 - 40 targeted outbound contacts
 - 8 qualified conversations
@@ -14,3 +19,9 @@
 - Proposal->paid close rate >= 20%
 - Avg deal size: $4K-$8K
 - Month-3 booked revenue: $12K-$20K
+
+## Weekly Proof-Pack Review
+- Response SLA attainment (5-minute target)
+- Lead qualification throughput
+- Appointments booked
+- Cost per qualified lead

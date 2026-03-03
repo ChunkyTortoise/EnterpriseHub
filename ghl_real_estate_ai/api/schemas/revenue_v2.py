@@ -1,6 +1,6 @@
 """Strict response contracts for revenue-critical v2 APIs."""
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from enum import Enum
 from typing import Any, Dict, Optional
 from uuid import uuid4
@@ -14,23 +14,31 @@ class ResponseSource(str, Enum):
     LIVE_PROVIDER = "live_provider"
 
 
-class RevenueError(BaseModel):
-    error_code: str
-    error_message: str
-    recoverable: bool
-    suggested_action: str
+class ErrorEnvelope(BaseModel):
+    code: str
+    message: str
     correlation_id: str
+    retryable: bool
+    details: Dict[str, Any] = Field(default_factory=dict)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class ResponseMeta(BaseModel):
+    source: ResponseSource
+    correlation_id: str
+    generated_at: datetime
+    freshness_seconds: int = Field(ge=0)
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class RevenueV2Envelope(BaseModel):
-    """Single strict envelope for all v2 monetized responses."""
+    """Strict envelope for monetized v2 routes."""
 
-    source: ResponseSource
-    data_freshness_seconds: int = Field(ge=0)
-    generated_at: datetime
-    correlation_id: str
     data: Dict[str, Any]
-    error: Optional[RevenueError] = None
+    meta: ResponseMeta
+    error: Optional[ErrorEnvelope] = None
 
     model_config = ConfigDict(extra="forbid")
 
@@ -39,6 +47,29 @@ class RevenueSSEEvent(BaseModel):
     event: str
     correlation_id: str
     payload: Dict[str, Any]
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class PilotKPIRecord(BaseModel):
+    tenant_id: str
+    week_start: date
+    leads_received: int = Field(ge=0)
+    qualified_leads: int = Field(ge=0)
+    response_sla_pct: float = Field(ge=0.0, le=100.0)
+    appointments_booked: int = Field(ge=0)
+    cost_per_qualified_lead: float = Field(ge=0.0)
+
+    model_config = ConfigDict(extra="forbid")
+
+
+class OutcomeEvent(BaseModel):
+    event_id: str
+    tenant_id: str
+    lead_id: str
+    event_type: str
+    event_value: Optional[float] = None
+    timestamp: datetime
 
     model_config = ConfigDict(extra="forbid")
 

@@ -1,18 +1,22 @@
 # Weekly Metrics Snapshot
 
-- Generated at (UTC): 2026-02-20T21:52:58.738584+00:00
-- Git commit: `4e6f5d7c`
-- Coverage lines: 4774/198567
-- Coverage percent: 1.998763401534837
+- Generated at (UTC): 2026-03-03T00:00:00Z
+- Revenue Motion: Lead Response Copilot
+- Pricing Anchor: $2,000 setup + $1,500/month
+
+## KPI Snapshot (Current Week)
+- 5-minute response SLA attainment: TODO
+- Lead qualification throughput: TODO
+- Appointments booked: TODO
+- Cost per qualified lead: TODO
+
+## Sales Cadence Targets
+- Contacts: 40 / week
+- Qualified conversations: 8 / week
+- Proposals sent: 2-3 / week
 
 ## Trust Gates
-
 - Parse/compile gate: `scripts/ci/compile_check.py`
 - No-mock production gate: `scripts/ci/no_mock_in_prod.py`
-
-## Revenue Ops Placeholder
-
-- Proposals sent this week: TODO
-- Qualified conversations this week: TODO
-- Deals closed this week: TODO
-- Pilot MRR: TODO
+- Revenue ops QA: `scripts/ci/revenue_ops_qa.py`
+- Weekly KPI aggregation: `scripts/generate_weekly_pilot_kpis.py`

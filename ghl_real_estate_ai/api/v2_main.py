@@ -10,7 +10,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from ghl_real_estate_ai.api.routes import health
+from ghl_real_estate_ai.api.routes import health, revenue_v2
 from ghl_real_estate_ai.api.v2.routes import properties as properties_v2
 
 # CORS configuration - must not use wildcard with credentials
@@ -42,6 +42,7 @@ app.add_middleware(
 # Add routes
 app.include_router(health.router, prefix="/api/v2/health", tags=["Health"])
 app.include_router(properties_v2.router, prefix="/api/v2/properties", tags=["Properties"])
+app.include_router(revenue_v2.router)
 
 
 @app.middleware("http")

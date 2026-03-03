@@ -1,6 +1,6 @@
 # Makefile for Enterprise Hub
 
-.PHONY: help install install-dev test lint format type-check clean run demo build ghl-setup ghl-setup-check ghl-setup-guide compile-check no-mock-check metrics-snapshot revenue-ops-qa
+.PHONY: help install install-dev test lint format type-check clean run demo build ghl-setup ghl-setup-check ghl-setup-guide compile-check no-mock-check metrics-snapshot weekly-pilot-kpis weekly-proof-pack persist-pilot-data pilot-proof-pack pilot-proof-pack-sync revenue-ops-qa
 
 help:  ## Show this help message
 	@echo 'Usage: make [target]'
@@ -33,6 +33,24 @@ no-mock-check:  ## Guard v2 production routes against mock/fallback logic
 
 metrics-snapshot:  ## Generate weekly proof-pack metrics snapshot
 	python3 scripts/generate_metrics_snapshot.py
+
+weekly-pilot-kpis:  ## Aggregate weekly pilot KPI records from outcome events
+	python3 scripts/generate_weekly_pilot_kpis.py
+
+weekly-proof-pack:  ## Render weekly executive proof-pack markdown from KPI CSV
+	python3 scripts/generate_weekly_executive_proof_pack.py --tenant-id tenant_demo
+
+persist-pilot-data:  ## Persist outcome events and KPI rows to database tables
+	python3 scripts/persist_revenue_pilot_data.py
+
+pilot-proof-pack:  ## End-to-end weekly pipeline (KPI CSV + executive proof-pack)
+	python3 scripts/generate_weekly_pilot_kpis.py
+	python3 scripts/generate_weekly_executive_proof_pack.py --tenant-id tenant_demo
+
+pilot-proof-pack-sync:  ## End-to-end weekly pipeline + DB sync (CI-safe when DB is unavailable)
+	python3 scripts/generate_weekly_pilot_kpis.py
+	python3 scripts/generate_weekly_executive_proof_pack.py --tenant-id tenant_demo
+	python3 scripts/persist_revenue_pilot_data.py --allow-db-unavailable
 
 revenue-ops-qa:  ## Validate proposal and revenue tracking artifacts
 	python3 scripts/ci/revenue_ops_qa.py
