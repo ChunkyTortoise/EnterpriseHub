@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from .dependencies import DemoAuthError
 from .models import ApiErrorDetail, ApiErrorResponse, HealthResponse
 from .routers import admin as admin_router
+from .routers import accelerator_v2 as accelerator_v2_router
 from .routers import ghl as ghl_router
 from .routers import portal as portal_router
 from .routers import root as root_router
@@ -54,6 +55,7 @@ def create_app() -> FastAPI:
     app.include_router(portal_router.router)
     app.include_router(ghl_router.router)
     app.include_router(admin_router.router)
+    app.include_router(accelerator_v2_router.router)
 
     @app.get("/health", response_model=HealthResponse)
     async def health() -> HealthResponse:
