@@ -94,6 +94,12 @@ class DetailedHealthResponse(BaseModel):
 _service_start_time = time.time()
 
 
+@router.get("/ping", tags=["Health Checks"])
+async def ping() -> dict:
+    """Zero-dependency liveness probe. Safe to call without DB or Redis."""
+    return {"status": "ok"}
+
+
 @router.get("/", response_model=HealthResponse)
 async def basic_health(
     db: DatabaseDep,
