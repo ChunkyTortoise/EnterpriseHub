@@ -42,12 +42,14 @@ DEMO_SCRIPT = """
 "This system handles 500+ concurrent calls. That's 500 leads being qualified simultaneously while your agents focus on closing the deals in person. That's the power of Enterprise Voice AI."
 """
 
+
 def main():
     print(DEMO_SCRIPT.format(timestamp=datetime.now().isoformat()))
-    
+
     with open("VOICE_AI_DEMO_SCRIPT.md", "w") as f:
         f.write(DEMO_SCRIPT.format(timestamp=datetime.now().isoformat()))
     print("\n✅ Demo script saved to VOICE_AI_DEMO_SCRIPT.md")
+
 
 if __name__ == "__main__":
     main()

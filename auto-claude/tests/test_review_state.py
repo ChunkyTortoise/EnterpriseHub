@@ -17,8 +17,8 @@ import pytest
 from review import ReviewState, REVIEW_STATE_FILE
 from tests.review_fixtures import approved_state, pending_state
 
-@pytest.mark.integration
 
+@pytest.mark.integration
 
 # =============================================================================
 # REVIEW STATE - BASIC FUNCTIONALITY
@@ -94,6 +94,7 @@ class TestReviewStateBasics:
 # =============================================================================
 # REVIEW STATE - LOAD/SAVE
 # =============================================================================
+
 
 class TestReviewStatePersistence:
     """Tests for ReviewState load and save operations."""

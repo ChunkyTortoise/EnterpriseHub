@@ -64,9 +64,7 @@ class BuyerWorkflowService:
             # Hot-path: buyer routed directly to schedule_next_action (bypassing
             # generate_buyer_response).  Inject a proper appointment-booking message
             # so the delivery safety guard never needs to fire for hot leads.
-            if next_action == "schedule_property_tour" and not str(
-                state.get("response_content", "")
-            ).strip():
+            if next_action == "schedule_property_tour" and not str(state.get("response_content", "")).strip():
                 # Don't re-ask the tour-time question on subsequent turns.
                 # Check conversation_history (always passed explicitly) for a prior ask.
                 _history = state.get("conversation_history") or []
@@ -84,10 +82,7 @@ class BuyerWorkflowService:
                     )
                     result["current_qualification_step"] = "appointment"
                     result["buyer_temperature"] = "hot"
-                    logger.info(
-                        f"Hot-path appointment response injected for buyer "
-                        f"{state.get('buyer_id', 'unknown')}"
-                    )
+                    logger.info(f"Hot-path appointment response injected for buyer {state.get('buyer_id', 'unknown')}")
                 # If already asked, leave response_content empty so the delivery
                 # safety guard reads conversation_history and advances the flow.
 

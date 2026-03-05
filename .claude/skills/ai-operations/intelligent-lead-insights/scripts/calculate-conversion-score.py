@@ -26,6 +26,7 @@ from dataclasses import dataclass, asdict
 @dataclass
 class ConversionScore:
     """Conversion score with detailed breakdown."""
+
     lead_id: str
     final_score: float  # 0-100
     classification: str  # hot, warm, cold
@@ -41,19 +42,14 @@ class ConversionScore:
 
 
 # Weight configuration
-WEIGHTS = {
-    "jorge": 0.40,
-    "ml": 0.35,
-    "market": 0.15,
-    "engagement": 0.10
-}
+WEIGHTS = {"jorge": 0.40, "ml": 0.35, "market": 0.15, "engagement": 0.10}
 
 # Segment-specific weight adjustments
 SEGMENT_WEIGHTS = {
     "first_time_buyer": {"jorge": 1.2, "ml": 0.8},
     "investor": {"jorge": 0.8, "ml": 1.3},
     "luxury": {"market": 1.5, "jorge": 1.0},
-    "relocation": {"engagement": 1.3, "jorge": 1.1}
+    "relocation": {"engagement": 1.3, "jorge": 1.1},
 }
 
 
@@ -68,6 +64,7 @@ def load_lead_features(lead_id: str) -> Dict[str, Any]:
     """
     try:
         from ghl_real_estate_ai.services.claude_enhanced_lead_scorer import ClaudeEnhancedLeadScorer
+
         scorer = ClaudeEnhancedLeadScorer()
         # Would call scorer.get_lead_features(lead_id)
         return {}
@@ -86,7 +83,7 @@ def load_lead_features(lead_id: str) -> Dict[str, Any]:
             "page_views": 8,
             "email_open_rate": 0.75,
             "return_visits": 3,
-            "buyer_type": "first_time_buyer"
+            "buyer_type": "first_time_buyer",
         }
 
 
@@ -115,7 +112,7 @@ def calculate_jorge_score(features: Dict[str, Any]) -> Tuple[float, Dict[str, bo
         "timeline": features.get("timeline") is not None and features.get("timeline") != "unknown",
         "pre_approval": features.get("pre_approval") is not None,
         "motivation": features.get("motivation") is not None and features.get("motivation") != "",
-        "seller_condition": features.get("seller_condition") is not None
+        "seller_condition": features.get("seller_condition") is not None,
     }
 
     answered_count = sum(1 for v in questions.values() if v)
@@ -146,11 +143,15 @@ def calculate_ml_score(features: Dict[str, Any]) -> Tuple[float, Dict[str, float
     """
     feature_weights = {
         "message_count": {"weight": 0.15, "max": 30, "value": features.get("message_count", 0)},
-        "response_velocity": {"weight": 0.20, "max": 24, "value": max(0, 24 - features.get("avg_response_time_hours", 24))},
+        "response_velocity": {
+            "weight": 0.20,
+            "max": 24,
+            "value": max(0, 24 - features.get("avg_response_time_hours", 24)),
+        },
         "page_views": {"weight": 0.15, "max": 20, "value": features.get("page_views", 0)},
         "email_engagement": {"weight": 0.20, "max": 1, "value": features.get("email_open_rate", 0)},
         "return_visits": {"weight": 0.15, "max": 5, "value": features.get("return_visits", 0)},
-        "document_downloads": {"weight": 0.15, "max": 3, "value": features.get("document_downloads", 0)}
+        "document_downloads": {"weight": 0.15, "max": 3, "value": features.get("document_downloads", 0)},
     }
 
     total_score = 0
@@ -272,7 +273,7 @@ def calculate_confidence(features: Dict[str, Any], jorge_questions: Dict[str, bo
         "investor": 0.78,
         "luxury": 0.85,
         "relocation": 0.80,
-        "unknown": 0.75
+        "unknown": 0.75,
     }.get(segment, 0.75)
 
     confidence = (completeness * 0.4) + (quality * 0.3) + (segment_accuracy * 0.3)
@@ -280,11 +281,7 @@ def calculate_confidence(features: Dict[str, Any], jorge_questions: Dict[str, bo
 
 
 def generate_reasoning(
-    final_score: float,
-    jorge_score: float,
-    ml_score: float,
-    jorge_questions: Dict[str, bool],
-    features: Dict[str, Any]
+    final_score: float, jorge_score: float, ml_score: float, jorge_questions: Dict[str, bool], features: Dict[str, Any]
 ) -> str:
     """Generate human-readable reasoning for the score."""
     reasons = []
@@ -384,10 +381,10 @@ def calculate_conversion_score(lead_id: str, features: Optional[Dict] = None) ->
 
     # Calculate final score
     final_score = (
-        jorge_score * jorge_weight +
-        ml_score * ml_weight +
-        market_score * market_weight +
-        engagement_score * engagement_weight
+        jorge_score * jorge_weight
+        + ml_score * ml_weight
+        + market_score * market_weight
+        + engagement_score * engagement_weight
     )
 
     # Determine classification and confidence
@@ -395,9 +392,7 @@ def calculate_conversion_score(lead_id: str, features: Optional[Dict] = None) ->
     confidence = calculate_confidence(features, jorge_questions)
 
     # Generate reasoning
-    reasoning = generate_reasoning(
-        final_score, jorge_score, ml_score, jorge_questions, features
-    )
+    reasoning = generate_reasoning(final_score, jorge_score, ml_score, jorge_questions, features)
 
     # Determine next action
     next_action = determine_next_action(classification, features)
@@ -407,7 +402,7 @@ def calculate_conversion_score(lead_id: str, features: Optional[Dict] = None) ->
         "jorge_questions_answered": sum(1 for v in jorge_questions.values() if v),
         **{f"ml_{k}": v for k, v in ml_breakdown.items()},
         "market_timing": market_score,
-        "engagement_pattern": engagement_score
+        "engagement_pattern": engagement_score,
     }
 
     return ConversionScore(
@@ -422,7 +417,7 @@ def calculate_conversion_score(lead_id: str, features: Optional[Dict] = None) ->
         feature_breakdown=feature_breakdown,
         reasoning=reasoning,
         next_best_action=next_action,
-        calculated_at=datetime.now().isoformat()
+        calculated_at=datetime.now().isoformat(),
     )
 
 

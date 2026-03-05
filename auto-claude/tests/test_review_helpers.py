@@ -24,8 +24,8 @@ from review import (
 )
 from tests.review_fixtures import review_spec_dir, complete_spec_dir
 
-@pytest.mark.integration
 
+@pytest.mark.integration
 
 # =============================================================================
 # TEXT HELPER FUNCTIONS
@@ -114,6 +114,7 @@ Last content.
 # REVIEW STATUS SUMMARY
 # =============================================================================
 
+
 class TestReviewStatusSummary:
     """Tests for get_review_status_summary()."""
 
@@ -160,7 +161,9 @@ class TestReviewStatusSummary:
 
         assert summary["feedback_count"] == 3
 
-    def test_status_summary_reflects_current_state(self, complete_spec_dir: Path) -> None:
+    def test_status_summary_reflects_current_state(
+        self, complete_spec_dir: Path
+    ) -> None:
         """Test that get_review_status_summary() accurately reflects state."""
         # Not approved
         summary1 = get_review_status_summary(complete_spec_dir)
@@ -192,6 +195,7 @@ class TestReviewStatusSummary:
 # =============================================================================
 # REVIEW MENU OPTIONS
 # =============================================================================
+
 
 class TestReviewMenuOptions:
     """Tests for review menu configuration."""

@@ -1,4 +1,3 @@
-
 import asyncio
 import sys
 import os
@@ -11,6 +10,7 @@ sys.path.append(os.getcwd())
 from ghl_real_estate_ai.services.perplexity_researcher import PerplexityResearcher
 from ghl_real_estate_ai.services.claude_orchestrator import get_claude_orchestrator
 
+
 async def run_search(query):
     """Simple web search via Perplexity."""
     researcher = PerplexityResearcher()
@@ -18,6 +18,7 @@ async def run_search(query):
     result = await researcher.research_topic(query)
     print("\n--- SEARCH RESULTS ---")
     print(result)
+
 
 async def run_research(topic, context=None):
     """Deep research synthesized by Claude."""
@@ -27,21 +28,23 @@ async def run_research(topic, context=None):
     print("\n--- STRATEGIC RESEARCH REPORT ---")
     print(response.content)
 
+
 async def run_compare(items, category="properties"):
     """Compare multiple items using Perplexity and Claude."""
     orchestrator = get_claude_orchestrator()
     items_str = ", ".join(items)
     print(f"⚖️ Comparing {category}: {items_str}...")
-    
+
     prompt = f"Perform a detailed side-by-side comparison of the following {category}: {items_str}."
     if category == "properties":
         prompt += " Focus on market value, neighborhood appreciation, school ratings, and investment potential."
     elif category == "markets":
         prompt += " Focus on inventory levels, median price trends, economic drivers, and rental yields."
-        
+
     response = await orchestrator.perform_research(prompt)
     print(f"\n--- {category.upper()} COMPARISON ---")
     print(response.content)
+
 
 def main():
     parser = argparse.ArgumentParser(description="EnterpriseHub Research & Intelligence Tools")
@@ -59,7 +62,9 @@ def main():
     # Compare command
     compare_parser = subparsers.add_parser("compare", help="Side-by-side comparison")
     compare_parser.add_argument("items", nargs="+", help="Items to compare")
-    compare_parser.add_argument("--category", default="properties", help="Category of items (properties, markets, etc.)")
+    compare_parser.add_argument(
+        "--category", default="properties", help="Category of items (properties, markets, etc.)"
+    )
 
     args = parser.parse_args()
 
@@ -71,6 +76,7 @@ def main():
         asyncio.run(run_compare(args.items, args.category))
     else:
         parser.print_help()
+
 
 if __name__ == "__main__":
     main()

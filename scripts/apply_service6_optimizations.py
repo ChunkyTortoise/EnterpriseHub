@@ -69,7 +69,7 @@ class Service6OptimizationDeployer:
 
         # Check database connectivity and health
         health = await db.health_check()
-        if health.get('status') != 'healthy':
+        if health.get("status") != "healthy":
             raise Exception(f"Database health check failed: {health}")
 
         # Check if Service 6 tables exist
@@ -98,11 +98,13 @@ class Service6OptimizationDeployer:
 
             # Check current performance (baseline measurement)
             baseline_performance = await self._measure_query_performance(conn)
-            self.deployment_log.append({
-                'stage': 'pre_deployment',
-                'baseline_performance': baseline_performance,
-                'timestamp': datetime.now().isoformat()
-            })
+            self.deployment_log.append(
+                {
+                    "stage": "pre_deployment",
+                    "baseline_performance": baseline_performance,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            )
 
         logger.info("✅ Pre-deployment checks passed")
 
@@ -113,11 +115,12 @@ class Service6OptimizationDeployer:
         # Test high-intent leads query (most critical for Service 6)
         try:
             import time
+
             start_time = time.perf_counter()
 
             # Use the actual table name that exists
-            table_name = 'leads'
-            score_column = 'score'
+            table_name = "leads"
+            score_column = "score"
 
             # Check if score column exists, if not use lead_score
             score_exists = await conn.fetchval(f"""
@@ -128,7 +131,7 @@ class Service6OptimizationDeployer:
             """)
 
             if not score_exists:
-                score_column = 'lead_score'
+                score_column = "lead_score"
 
             await conn.fetch(f"""
                 SELECT id FROM {table_name}
@@ -138,11 +141,11 @@ class Service6OptimizationDeployer:
             """)
 
             end_time = time.perf_counter()
-            performance['high_intent_leads_ms'] = (end_time - start_time) * 1000
+            performance["high_intent_leads_ms"] = (end_time - start_time) * 1000
 
         except Exception as e:
             logger.warning(f"Could not measure high-intent leads performance: {e}")
-            performance['high_intent_leads_ms'] = 0
+            performance["high_intent_leads_ms"] = 0
 
         return performance
 
@@ -152,69 +155,68 @@ class Service6OptimizationDeployer:
 
         db = await get_database()
         async with db.get_connection() as conn:
-
             # Critical optimizations for Service 6 (90%+ improvement expected)
             optimizations = [
                 {
-                    'name': 'Lead Scoring Performance Index',
-                    'sql': """
+                    "name": "Lead Scoring Performance Index",
+                    "sql": """
                         CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service6_leads_scoring_perf
                         ON leads(score DESC, status, created_at DESC)
                         WHERE deleted_at IS NULL OR deleted_at > NOW()
                     """,
-                    'fallback_sql': """
+                    "fallback_sql": """
                         CREATE INDEX IF NOT EXISTS idx_service6_leads_scoring_perf
                         ON leads(score DESC, status, created_at DESC)
-                    """
+                    """,
                 },
                 {
-                    'name': 'Lead Temperature & Interaction Index',
-                    'sql': """
+                    "name": "Lead Temperature & Interaction Index",
+                    "sql": """
                         CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service6_leads_temp_interaction
                         ON leads(temperature, last_interaction_at DESC, status)
                         WHERE deleted_at IS NULL OR deleted_at > NOW()
                     """,
-                    'fallback_sql': """
+                    "fallback_sql": """
                         CREATE INDEX IF NOT EXISTS idx_service6_leads_temp_interaction
                         ON leads(temperature, last_interaction_at DESC, status)
-                    """
+                    """,
                 },
                 {
-                    'name': 'High-Intent Lead Routing Index',
-                    'sql': """
+                    "name": "High-Intent Lead Routing Index",
+                    "sql": """
                         CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service6_high_intent_routing
                         ON leads(score DESC, status, assigned_agent_id)
                         WHERE score >= 50 AND status IN ('new', 'contacted', 'qualified', 'nurturing', 'hot')
                     """,
-                    'fallback_sql': """
+                    "fallback_sql": """
                         CREATE INDEX IF NOT EXISTS idx_service6_high_intent_routing
                         ON leads(score DESC, status, assigned_agent_id)
-                    """
+                    """,
                 },
                 {
-                    'name': 'Follow-up History Performance Index',
-                    'sql': """
+                    "name": "Follow-up History Performance Index",
+                    "sql": """
                         CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service6_followup_history
                         ON communication_logs(lead_id, direction, sent_at DESC)
                         WHERE direction = 'outbound'
                     """,
-                    'fallback_sql': """
+                    "fallback_sql": """
                         CREATE INDEX IF NOT EXISTS idx_service6_followup_history
                         ON communication_logs(lead_id, direction, sent_at DESC)
-                    """
+                    """,
                 },
                 {
-                    'name': 'Lead Profile Covering Index (90% I/O reduction)',
-                    'sql': """
+                    "name": "Lead Profile Covering Index (90% I/O reduction)",
+                    "sql": """
                         CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service6_lead_profile_covering
                         ON leads(id, first_name, last_name, email, phone, status, score, temperature, created_at, last_interaction_at)
                         WHERE deleted_at IS NULL OR deleted_at > NOW()
                     """,
-                    'fallback_sql': """
+                    "fallback_sql": """
                         CREATE INDEX IF NOT EXISTS idx_service6_lead_profile_covering
                         ON leads(id, first_name, last_name, email, phone, status, score, temperature, created_at, last_interaction_at)
-                    """
-                }
+                    """,
+                },
             ]
 
             successful_optimizations = 0
@@ -226,12 +228,12 @@ class Service6OptimizationDeployer:
 
                     # Try CONCURRENT index creation first (production-safe)
                     try:
-                        await conn.execute(optimization['sql'])
+                        await conn.execute(optimization["sql"])
                         logger.info(f"✅ {optimization['name']} applied successfully (CONCURRENT)")
                     except Exception as e:
                         # Fallback to non-concurrent if CONCURRENT fails
                         logger.warning(f"⚠️ CONCURRENT creation failed, trying fallback: {e}")
-                        await conn.execute(optimization['fallback_sql'])
+                        await conn.execute(optimization["fallback_sql"])
                         logger.info(f"✅ {optimization['name']} applied successfully (FALLBACK)")
 
                     successful_optimizations += 1
@@ -251,18 +253,17 @@ class Service6OptimizationDeployer:
                 logger.warning(f"⚠️ Statistics update failed: {e}")
 
             optimization_summary = {
-                'successful_optimizations': successful_optimizations,
-                'total_optimizations': total_optimizations,
-                'success_rate': (successful_optimizations / total_optimizations) * 100,
-                'timestamp': datetime.now().isoformat()
+                "successful_optimizations": successful_optimizations,
+                "total_optimizations": total_optimizations,
+                "success_rate": (successful_optimizations / total_optimizations) * 100,
+                "timestamp": datetime.now().isoformat(),
             }
 
-            self.deployment_log.append({
-                'stage': 'optimization_deployment',
-                'summary': optimization_summary
-            })
+            self.deployment_log.append({"stage": "optimization_deployment", "summary": optimization_summary})
 
-            logger.info(f"✅ Optimization deployment complete: {successful_optimizations}/{total_optimizations} successful")
+            logger.info(
+                f"✅ Optimization deployment complete: {successful_optimizations}/{total_optimizations} successful"
+            )
 
     async def _post_deployment_validation(self):
         """Validate performance improvements after optimization."""
@@ -270,15 +271,14 @@ class Service6OptimizationDeployer:
 
         db = await get_database()
         async with db.get_connection() as conn:
-
             # Measure performance after optimization
             post_performance = await self._measure_query_performance(conn)
 
             # Compare with baseline
             baseline = None
             for log_entry in self.deployment_log:
-                if log_entry.get('stage') == 'pre_deployment':
-                    baseline = log_entry.get('baseline_performance', {})
+                if log_entry.get("stage") == "pre_deployment":
+                    baseline = log_entry.get("baseline_performance", {})
                     break
 
             if baseline:
@@ -288,26 +288,32 @@ class Service6OptimizationDeployer:
                     if baseline_value > 0:
                         improvement_pct = ((baseline_value - post_value) / baseline_value) * 100
                         improvements[metric] = {
-                            'baseline_ms': baseline_value,
-                            'optimized_ms': post_value,
-                            'improvement_percent': improvement_pct,
-                            'target_achieved': improvement_pct > 50  # Target 50%+ improvement
+                            "baseline_ms": baseline_value,
+                            "optimized_ms": post_value,
+                            "improvement_percent": improvement_pct,
+                            "target_achieved": improvement_pct > 50,  # Target 50%+ improvement
                         }
 
-                self.deployment_log.append({
-                    'stage': 'post_deployment_validation',
-                    'performance_improvements': improvements,
-                    'timestamp': datetime.now().isoformat()
-                })
+                self.deployment_log.append(
+                    {
+                        "stage": "post_deployment_validation",
+                        "performance_improvements": improvements,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
 
                 # Log improvements
                 total_improvements = len(improvements)
-                successful_improvements = sum(1 for imp in improvements.values() if imp.get('target_achieved', False))
+                successful_improvements = sum(1 for imp in improvements.values() if imp.get("target_achieved", False))
 
-                logger.info(f"📈 Performance Improvements: {successful_improvements}/{total_improvements} exceeded 50% target")
+                logger.info(
+                    f"📈 Performance Improvements: {successful_improvements}/{total_improvements} exceeded 50% target"
+                )
 
                 for metric, improvement in improvements.items():
-                    logger.info(f"  {metric}: {improvement['baseline_ms']:.1f}ms → {improvement['optimized_ms']:.1f}ms ({improvement['improvement_percent']:.1f}% improvement)")
+                    logger.info(
+                        f"  {metric}: {improvement['baseline_ms']:.1f}ms → {improvement['optimized_ms']:.1f}ms ({improvement['improvement_percent']:.1f}% improvement)"
+                    )
 
             else:
                 logger.warning("⚠️ No baseline performance data available for comparison")
@@ -317,11 +323,9 @@ class Service6OptimizationDeployer:
         logger.error(f"❌ Handling deployment failure: {error}")
 
         # Log failure details
-        self.deployment_log.append({
-            'stage': 'deployment_failure',
-            'error': str(error),
-            'timestamp': datetime.now().isoformat()
-        })
+        self.deployment_log.append(
+            {"stage": "deployment_failure", "error": str(error), "timestamp": datetime.now().isoformat()}
+        )
 
         # Note: Index creation is generally safe and doesn't require rollback
         # The indexes will simply not exist if creation failed
@@ -330,9 +334,11 @@ class Service6OptimizationDeployer:
 
 async def main():
     """Main deployment entry point."""
-    parser = argparse.ArgumentParser(description='Deploy Service 6 Performance Optimizations')
-    parser.add_argument('--validate-only', action='store_true', help='Only validate readiness without applying optimizations')
-    parser.add_argument('--force', action='store_true', help='Continue deployment even if some optimizations fail')
+    parser = argparse.ArgumentParser(description="Deploy Service 6 Performance Optimizations")
+    parser.add_argument(
+        "--validate-only", action="store_true", help="Only validate readiness without applying optimizations"
+    )
+    parser.add_argument("--force", action="store_true", help="Continue deployment even if some optimizations fail")
 
     args = parser.parse_args()
 

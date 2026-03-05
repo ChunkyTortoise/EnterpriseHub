@@ -35,9 +35,8 @@ from models import (
 )
 from bot_detection import BotDetector
 
+
 @pytest.mark.integration
-
-
 # ============================================================================
 # Fixtures
 # ============================================================================
@@ -108,11 +107,14 @@ def sample_review_with_findings():
 # E2E Test: Review Result Persistence
 # ============================================================================
 
+
 class TestReviewResultE2E:
     """Test review result save/load flow end-to-end."""
 
     @pytest.mark.asyncio
-    async def test_save_load_review_with_findings(self, temp_github_dir, sample_review_with_findings):
+    async def test_save_load_review_with_findings(
+        self, temp_github_dir, sample_review_with_findings
+    ):
         """Test saving and loading a complete review result."""
         # Save the review
         await sample_review_with_findings.save(temp_github_dir)
@@ -136,7 +138,9 @@ class TestReviewResultE2E:
         assert len(loaded.posted_finding_ids) == 2
 
     @pytest.mark.asyncio
-    async def test_review_result_json_format(self, temp_github_dir, sample_review_with_findings):
+    async def test_review_result_json_format(
+        self, temp_github_dir, sample_review_with_findings
+    ):
         """Test that saved JSON has correct format."""
         await sample_review_with_findings.save(temp_github_dir)
 
@@ -156,6 +160,7 @@ class TestReviewResultE2E:
 # ============================================================================
 # E2E Test: Follow-up Review Flow
 # ============================================================================
+
 
 class TestFollowupReviewE2E:
     """Test follow-up review context and result flow."""
@@ -208,7 +213,9 @@ class TestFollowupReviewE2E:
         assert "finding-002" in loaded.unresolved_findings
 
     @pytest.mark.asyncio
-    async def test_followup_context_with_error(self, temp_github_dir, sample_review_with_findings):
+    async def test_followup_context_with_error(
+        self, temp_github_dir, sample_review_with_findings
+    ):
         """Test follow-up context when there's an error."""
         await sample_review_with_findings.save(temp_github_dir)
 
@@ -245,6 +252,7 @@ class TestFollowupReviewE2E:
 # E2E Test: Bot Detection Flow
 # ============================================================================
 
+
 class TestBotDetectionE2E:
     """Test bot detection end-to-end."""
 
@@ -253,7 +261,9 @@ class TestBotDetectionE2E:
         state_dir = tmp_path / "github"
         state_dir.mkdir(parents=True)
 
-        with patch.object(BotDetector, "_get_bot_username", return_value="auto-claude[bot]"):
+        with patch.object(
+            BotDetector, "_get_bot_username", return_value="auto-claude[bot]"
+        ):
             detector = BotDetector(
                 state_dir=state_dir,
                 bot_token="ghp_bot_token",
@@ -330,6 +340,7 @@ class TestBotDetectionE2E:
 # E2E Test: Blocker Generation Flow
 # ============================================================================
 
+
 class TestBlockerGenerationE2E:
     """Test blocker generation from findings."""
 
@@ -400,6 +411,7 @@ class TestBlockerGenerationE2E:
 # ============================================================================
 # E2E Test: Complete Review Lifecycle
 # ============================================================================
+
 
 class TestReviewLifecycleE2E:
     """Test the complete review lifecycle."""

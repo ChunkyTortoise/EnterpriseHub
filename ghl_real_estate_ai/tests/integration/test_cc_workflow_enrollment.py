@@ -22,6 +22,7 @@ from ghl_real_estate_ai.services.ghost_followup_engine import GhostFollowUpEngin
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def cc_settings():
     """Minimal JorgeEnvironmentSettings-like object with CC workflow IDs set."""
@@ -69,6 +70,7 @@ def _make_cache(existing_keys: set[str] | None = None):
 # _detect_negative_sentiment unit tests
 # ---------------------------------------------------------------------------
 
+
 class TestDetectNegativeSentiment:
     def test_angry_keyword(self):
         assert _detect_negative_sentiment("I'm angry about this") is True
@@ -93,8 +95,8 @@ class TestDetectNegativeSentiment:
 # _build_cc_workflow_actions integration tests
 # ---------------------------------------------------------------------------
 
-class TestBuildCCWorkflowActions:
 
+class TestBuildCCWorkflowActions:
     @pytest.mark.asyncio
     async def test_negative_sentiment_triggers_cc_workflow(self, cc_settings):
         with patch("ghl_real_estate_ai.api.routes.webhook.get_cache_service", return_value=_make_cache()):
@@ -265,6 +267,7 @@ class TestBuildCCWorkflowActions:
 # ---------------------------------------------------------------------------
 # handle_ghl_tag_webhook — CC_AI_TAG_WORKFLOW_ID enrollment tests
 # ---------------------------------------------------------------------------
+
 
 def _make_tag_event(contact_id: str = "tag_contact_001", tag: str = "Needs Qualifying") -> GHLTagWebhookEvent:
     """Build a minimal GHLTagWebhookEvent for an activation tag."""
@@ -468,9 +471,7 @@ class TestTagWebhookCCAIWorkflowEnrollment:
 
         # Response message must be buyer-style, not seller-style
         assert response.success is True
-        assert "selling" not in response.message.lower(), (
-            f"Seller outreach sent to buyer contact: {response.message!r}"
-        )
+        assert "selling" not in response.message.lower(), f"Seller outreach sent to buyer contact: {response.message!r}"
         assert "searching" in response.message.lower() or "glad" in response.message.lower(), (
             f"Expected buyer-style outreach, got: {response.message!r}"
         )
@@ -591,8 +592,7 @@ class TestUnstaleFiresWhenGhostedContactMessages:
 
         triggered_ids = [a.workflow_id for a in actions if a.type == ActionType.TRIGGER_WORKFLOW]
         assert _CC_UNSTALE_WF_ID in triggered_ids, (
-            f"Expected cc_unstale_lead_workflow_id to fire when ghosted contact sends new message. "
-            f"Got: {triggered_ids}"
+            f"Expected cc_unstale_lead_workflow_id to fire when ghosted contact sends new message. Got: {triggered_ids}"
         )
 
     @pytest.mark.asyncio

@@ -217,9 +217,7 @@ class TestVoiceAIIntegration:
         call_id = await voice_ai.start_call_analysis(sample_call_metadata)
 
         # Add some mock segments with correct VoiceSegment fields
-        voice_ai.call_sessions[call_id]["segments"] = [
-            make_voice_segment(speaker_id="lead", text="I need a house")
-        ]
+        voice_ai.call_sessions[call_id]["segments"] = [make_voice_segment(speaker_id="lead", text="I need a house")]
 
         analysis = await voice_ai.end_call_analysis(call_id)
 
@@ -437,9 +435,7 @@ class TestIntentAnalysisService:
     @pytest.mark.asyncio
     async def test_analyze_intent_property_search(self, intent_service):
         """Test intent analysis for property search"""
-        segment = make_voice_segment(
-            text="I'm looking for a three bedroom house with good schools in downtown"
-        )
+        segment = make_voice_segment(text="I'm looking for a three bedroom house with good schools in downtown")
         # Patch Claude call to avoid external dependency + missing _alert_voice_failure
         with patch.object(intent_service, "_analyze_intent_with_claude", new_callable=AsyncMock, return_value={}):
             result = await intent_service.analyze_intent(segment, [])
@@ -457,9 +453,7 @@ class TestIntentAnalysisService:
     @pytest.mark.asyncio
     async def test_analyze_intent_objections(self, intent_service):
         """Test intent analysis for objections"""
-        segment = make_voice_segment(
-            text="This is too expensive and I need to think about it more"
-        )
+        segment = make_voice_segment(text="This is too expensive and I need to think about it more")
         with patch.object(intent_service, "_analyze_intent_with_claude", new_callable=AsyncMock, return_value={}):
             result = await intent_service.analyze_intent(segment, [])
 

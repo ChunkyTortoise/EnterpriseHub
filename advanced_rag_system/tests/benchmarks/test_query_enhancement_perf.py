@@ -79,7 +79,6 @@ ALL_QUERIES = [q for queries in BENCHMARK_QUERIES.values() for q in queries]
 # ============================================================================
 
 
-
 @pytest.mark.integration
 class TestQueryExpansionPerformance:
     """Benchmark query expansion latency and quality."""

@@ -438,7 +438,6 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
     # ENHANCED FEATURE METHODS
 
-
     async def gather_lead_intelligence(self, state: LeadFollowUpState) -> Dict:
         """
         Gather comprehensive intelligence context for Lead Bot nurture sequence optimization.
@@ -1243,7 +1242,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
             _intent_start_time = time.time()
             profile = self.intent_decoder.analyze_lead(state["lead_id"], state["conversation_history"])
 
-        # Sync to Lyrio 
+        # Sync to Lyrio
         lyrio = LyrioClient()
 
         # Run sync in background with error tracking
@@ -1570,9 +1569,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         if self.ghl_client:
             try:
-                await self.ghl_client.send_message(
-                    contact_id=state["lead_id"], message=msg, channel=MessageType.SMS
-                )
+                await self.ghl_client.send_message(contact_id=state["lead_id"], message=msg, channel=MessageType.SMS)
             except Exception as e:
                 logger.error(f"Failed to send qualifier SMS via GHL: {e}")
 
@@ -2068,7 +2065,6 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
     # INTELLIGENCE HELPER METHODS
 
-
     def _extract_churn_risk_from_intelligence(self, intelligence_context) -> float:
         """Extract churn risk score from intelligence context for nurture optimization."""
         if not intelligence_context:
@@ -2302,30 +2298,43 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
         # State-machine response: derive next question from conversation state
         # Collects all user content (history + current) to track what's been shared
-        _all_user = " ".join(
-            m["content"].lower() for m in llm_history if m["role"] == "user"
-        ) + " " + user_message.lower()
+        _all_user = (
+            " ".join(m["content"].lower() for m in llm_history if m["role"] == "user") + " " + user_message.lower()
+        )
         _bot_msgs = [m["content"].lower() for m in llm_history if m["role"] == "assistant"]
 
-        _is_buyer = any(kw in _all_user for kw in [
-            "buy", "purchase", "looking for a home", "want to buy", "pre-approv", "pre approv"
-        ])
-        _is_seller = any(kw in _all_user for kw in [
-            "sell", "selling", "my house", "my home", "my property", "want to sell", "list"
-        ])
-        _has_timeline = any(kw in _all_user for kw in [
-            "month", "week", "year", "asap", "soon", "now", "day", "days", "ready", "moving", "relocat"
-        ])
-        _has_time_pref = any(kw in _all_user for kw in [
-            "morning", "afternoon", "evening"
-        ])
-        _has_day = any(kw in _all_user for kw in [
-            "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
-            "today", "tomorrow", "this week", "next week"
-        ])
-        _post_confirm = any(kw in user_message.lower() for kw in [
-            "sounds good", "perfect", "great", "thank", "all set", "see you", "looking forward"
-        ])
+        _is_buyer = any(
+            kw in _all_user
+            for kw in ["buy", "purchase", "looking for a home", "want to buy", "pre-approv", "pre approv"]
+        )
+        _is_seller = any(
+            kw in _all_user for kw in ["sell", "selling", "my house", "my home", "my property", "want to sell", "list"]
+        )
+        _has_timeline = any(
+            kw in _all_user
+            for kw in ["month", "week", "year", "asap", "soon", "now", "day", "days", "ready", "moving", "relocat"]
+        )
+        _has_time_pref = any(kw in _all_user for kw in ["morning", "afternoon", "evening"])
+        _has_day = any(
+            kw in _all_user
+            for kw in [
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday",
+                "today",
+                "tomorrow",
+                "this week",
+                "next week",
+            ]
+        )
+        _post_confirm = any(
+            kw in user_message.lower()
+            for kw in ["sounds good", "perfect", "great", "thank", "all set", "see you", "looking forward"]
+        )
         # Use user-turn count (not bot history) to pick scheduling variant.
         # Bot history can be absent on first load; user turns are always present.
         # sched_turn=0 → first ask, 1 → second, 2 → third, 3+ → wrap-up.
@@ -2384,8 +2393,7 @@ class LeadBotWorkflow(BaseBotWorkflow):
             for kw in ["buy", "purchase", "looking for a home", "pre-approval", "pre approval", "budget", "want to buy"]
         )
         sell_signals = any(
-            kw in msg_lower
-            for kw in ["sell", "listing", "home worth", "my house", "my home", "cma", "want to sell"]
+            kw in msg_lower for kw in ["sell", "listing", "home worth", "my house", "my home", "cma", "want to sell"]
         )
         handoff_recommended = buy_signals or sell_signals
 
@@ -2748,7 +2756,6 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
     # FACTORY METHODS
 
-
     @classmethod
     def create_standard_lead_bot(cls, ghl_client=None) -> "LeadBotWorkflow":
         """Factory method: Create standard lead bot (3-7-30 sequence only)"""
@@ -2784,7 +2791,6 @@ class LeadBotWorkflow(BaseBotWorkflow):
 
 
 # FACTORY FUNCTIONS FOR EASY USE
-
 
 
 def get_lead_bot(enhancement_level: str = "standard", ghl_client=None) -> LeadBotWorkflow:

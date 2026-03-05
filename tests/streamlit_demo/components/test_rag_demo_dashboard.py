@@ -72,9 +72,7 @@ class TestBM25Index:
         bm25.fit(corpus)
         scores = bm25.get_scores(["real", "estate", "prices"])
         assert len(scores) == len(corpus)
-        assert scores[2] > scores[0], (
-            "Real estate doc should score highest for real estate query"
-        )
+        assert scores[2] > scores[0], "Real estate doc should score highest for real estate query"
 
     def test_empty_query(self):
         corpus = ["some document text"]
@@ -105,9 +103,7 @@ class TestDenseIndex:
         dense.fit(corpus)
         scores = dense.get_scores("HOA fee payment")
         assert len(scores) == len(corpus)
-        assert scores[0] > scores[1], (
-            "HOA doc should score highest for HOA query"
-        )
+        assert scores[0] > scores[1], "HOA doc should score highest for HOA query"
 
     def test_cosine_identical(self):
         v = [1.0, 0.5, 0.0]

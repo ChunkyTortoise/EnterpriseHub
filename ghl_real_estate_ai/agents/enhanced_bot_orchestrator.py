@@ -68,7 +68,7 @@ class EnhancedBotOrchestrator:
         self.config = config or BotOrchestrationConfig()
 
         # Initialize enhanced bots
-        self.adaptive_jorge = get_adaptive_jorge_bot()
+        self.adaptive_jorge = get_adaptive_jorge_bot() if get_adaptive_jorge_bot is not None else None
         self.predictive_lead = get_predictive_lead_bot()
         self.realtime_intent = get_realtime_intent_decoder()
 

@@ -2,6 +2,7 @@
 Sync Bridge: Obsidian <-> NotebookLM
 Adds bridge tools to the Obsidian MCP server for bidirectional sync.
 """
+
 import json
 import logging
 import os
@@ -50,7 +51,9 @@ def _save_sync_map(vault: Path, sync_map: dict):
     sync_file.write_text(json.dumps(sync_map, indent=2, default=str), encoding="utf-8")
 
 
-def register_bridge_tools(mcp, get_vault: Callable, safe_path: Callable, parse_frontmatter: Callable, format_note: Callable):
+def register_bridge_tools(
+    mcp, get_vault: Callable, safe_path: Callable, parse_frontmatter: Callable, format_note: Callable
+):
     """Register sync bridge tools on the Obsidian MCP server."""
 
     @mcp.tool()
@@ -90,21 +93,26 @@ def register_bridge_tools(mcp, get_vault: Callable, safe_path: Callable, parse_f
 
         # Track sync
         sync_map = _load_sync_map(vault)
-        sync_map["syncs"].append({
-            "direction": "nlm_to_vault",
-            "notebook_id": notebook_id,
-            "vault_path": str(note.relative_to(vault)),
-            "query": query,
-            "synced_at": datetime.now().isoformat(),
-        })
+        sync_map["syncs"].append(
+            {
+                "direction": "nlm_to_vault",
+                "notebook_id": notebook_id,
+                "vault_path": str(note.relative_to(vault)),
+                "query": query,
+                "synced_at": datetime.now().isoformat(),
+            }
+        )
         _save_sync_map(vault, sync_map)
 
-        return json.dumps({
-            "success": True,
-            "path": str(note.relative_to(vault)),
-            "answer_length": len(result.answer),
-            "citations": len(result.references) if result.references else 0,
-        }, indent=2)
+        return json.dumps(
+            {
+                "success": True,
+                "path": str(note.relative_to(vault)),
+                "answer_length": len(result.answer),
+                "citations": len(result.references) if result.references else 0,
+            },
+            indent=2,
+        )
 
     @mcp.tool()
     async def sync_note_to_notebook(
@@ -126,29 +134,32 @@ def register_bridge_tools(mcp, get_vault: Callable, safe_path: Callable, parse_f
         metadata, body = parse_frontmatter(content)
         source_title = title or metadata.get("title", note.stem)
 
-        source = await client.sources.add_text(
-            notebook_id, text=body, title=source_title
-        )
+        source = await client.sources.add_text(notebook_id, text=body, title=source_title)
 
         # Track sync
         sync_map = _load_sync_map(vault)
-        sync_map["syncs"].append({
-            "direction": "vault_to_nlm",
-            "notebook_id": notebook_id,
-            "vault_path": str(note.relative_to(vault)),
-            "source_id": source.id,
-            "synced_at": datetime.now().isoformat(),
-        })
+        sync_map["syncs"].append(
+            {
+                "direction": "vault_to_nlm",
+                "notebook_id": notebook_id,
+                "vault_path": str(note.relative_to(vault)),
+                "source_id": source.id,
+                "synced_at": datetime.now().isoformat(),
+            }
+        )
         _save_sync_map(vault, sync_map)
 
-        return json.dumps({
-            "success": True,
-            "source_id": source.id,
-            "notebook_id": notebook_id,
-            "note_path": str(note.relative_to(vault)),
-            "title": source_title,
-            "content_length": len(body),
-        }, indent=2)
+        return json.dumps(
+            {
+                "success": True,
+                "source_id": source.id,
+                "notebook_id": notebook_id,
+                "note_path": str(note.relative_to(vault)),
+                "title": source_title,
+                "content_length": len(body),
+            },
+            indent=2,
+        )
 
     @mcp.tool()
     async def sync_study_guide(
@@ -180,20 +191,25 @@ def register_bridge_tools(mcp, get_vault: Callable, safe_path: Callable, parse_f
 
         # Track sync
         sync_map = _load_sync_map(vault)
-        sync_map["syncs"].append({
-            "direction": "nlm_to_vault",
-            "notebook_id": notebook_id,
-            "vault_path": str(note.relative_to(vault)),
-            "type": "study_guide",
-            "synced_at": datetime.now().isoformat(),
-        })
+        sync_map["syncs"].append(
+            {
+                "direction": "nlm_to_vault",
+                "notebook_id": notebook_id,
+                "vault_path": str(note.relative_to(vault)),
+                "type": "study_guide",
+                "synced_at": datetime.now().isoformat(),
+            }
+        )
         _save_sync_map(vault, sync_map)
 
-        return json.dumps({
-            "success": True,
-            "path": str(note.relative_to(vault)),
-            "guide_length": len(str(guide)),
-            "notebook_title": notebook_title,
-        }, indent=2)
+        return json.dumps(
+            {
+                "success": True,
+                "path": str(note.relative_to(vault)),
+                "guide_length": len(str(guide)),
+                "notebook_title": notebook_title,
+            },
+            indent=2,
+        )
 
     logger.info("Sync bridge tools registered: sync_notebook_to_vault, sync_note_to_notebook, sync_study_guide")

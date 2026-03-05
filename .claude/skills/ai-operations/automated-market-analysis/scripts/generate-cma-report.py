@@ -22,6 +22,7 @@ import math
 @dataclass
 class PropertyDetails:
     """Subject property details."""
+
     property_id: str
     address: str
     bedrooms: int
@@ -38,6 +39,7 @@ class PropertyDetails:
 @dataclass
 class Comparable:
     """Comparable property with adjustments."""
+
     property_id: str
     address: str
     sale_price: int
@@ -55,6 +57,7 @@ class Comparable:
 @dataclass
 class Valuation:
     """Valuation result."""
+
     estimated_value: int
     value_low: int
     value_high: int
@@ -65,6 +68,7 @@ class Valuation:
 @dataclass
 class MarketContext:
     """Market context for the CMA."""
+
     median_price: int
     avg_dom: int
     months_supply: float
@@ -76,6 +80,7 @@ class MarketContext:
 @dataclass
 class CMAReport:
     """Complete CMA report."""
+
     report_id: str
     generated_at: str
     subject_property: PropertyDetails
@@ -248,7 +253,7 @@ def calculate_valuation(comps: List[Comparable], subject: PropertyDetails) -> Va
         value_low=int(round(min_price * 0.97, -3)),
         value_high=int(round(max_price * 1.03, -3)),
         price_per_sqft=int(round(avg_ppsf)),
-        confidence=round(confidence, 2)
+        confidence=round(confidence, 2),
     )
 
 
@@ -261,14 +266,11 @@ def get_market_context(area: str) -> MarketContext:
         months_supply=3.2,
         list_to_sale_ratio=0.99,
         market_type="seller",
-        trend="appreciating"
+        trend="appreciating",
     )
 
 
-def generate_recommendations(
-    valuation: Valuation,
-    market: MarketContext
-) -> Dict[str, str]:
+def generate_recommendations(valuation: Valuation, market: MarketContext) -> Dict[str, str]:
     """Generate recommendations based on valuation and market."""
     recommendations = {}
 
@@ -283,15 +285,12 @@ def generate_recommendations(
     elif market.market_type == "balanced":
         listing_price = valuation.estimated_value
         recommendations["listing_price"] = f"${listing_price:,}"
-        recommendations["price_strategy"] = (
-            "Price at or near estimated value for balanced market conditions."
-        )
+        recommendations["price_strategy"] = "Price at or near estimated value for balanced market conditions."
     else:
         listing_price = int(valuation.estimated_value * 0.98)
         recommendations["listing_price"] = f"${listing_price:,}"
         recommendations["price_strategy"] = (
-            "Consider competitive pricing below estimated value to attract buyers "
-            "in current market conditions."
+            "Consider competitive pricing below estimated value to attract buyers in current market conditions."
         )
 
     # Timing advice
@@ -300,28 +299,20 @@ def generate_recommendations(
             f"Excellent time to list. Properties averaging {market.avg_dom} days on market."
         )
     elif market.avg_dom < 60:
-        recommendations["timing_advice"] = (
-            f"Good market activity with {market.avg_dom} average days on market."
-        )
+        recommendations["timing_advice"] = f"Good market activity with {market.avg_dom} average days on market."
     else:
         recommendations["timing_advice"] = (
-            f"Slower market with {market.avg_dom} average days. "
-            "Consider strategic timing or pricing."
+            f"Slower market with {market.avg_dom} average days. Consider strategic timing or pricing."
         )
 
     # Confidence note
     if valuation.confidence >= 0.8:
-        recommendations["confidence_note"] = (
-            "High confidence valuation based on strong comparable data."
-        )
+        recommendations["confidence_note"] = "High confidence valuation based on strong comparable data."
     elif valuation.confidence >= 0.6:
-        recommendations["confidence_note"] = (
-            "Moderate confidence. Consider additional market research."
-        )
+        recommendations["confidence_note"] = "Moderate confidence. Consider additional market research."
     else:
         recommendations["confidence_note"] = (
-            "Lower confidence due to limited comparable data. "
-            "Professional appraisal recommended."
+            "Lower confidence due to limited comparable data. Professional appraisal recommended."
         )
 
     return recommendations
@@ -345,7 +336,7 @@ def generate_mock_comps(subject: PropertyDetails) -> List[Dict]:
             "lat": base_lat + 0.005,
             "lng": base_lng + 0.003,
             "features": ["pool"],
-            "condition": "good"
+            "condition": "good",
         },
         {
             "property_id": "comp_002",
@@ -359,7 +350,7 @@ def generate_mock_comps(subject: PropertyDetails) -> List[Dict]:
             "lat": base_lat - 0.004,
             "lng": base_lng + 0.002,
             "features": ["updated_kitchen"],
-            "condition": "excellent"
+            "condition": "excellent",
         },
         {
             "property_id": "comp_003",
@@ -373,7 +364,7 @@ def generate_mock_comps(subject: PropertyDetails) -> List[Dict]:
             "lat": base_lat + 0.003,
             "lng": base_lng - 0.004,
             "features": [],
-            "condition": "average"
+            "condition": "average",
         },
         {
             "property_id": "comp_004",
@@ -387,7 +378,7 @@ def generate_mock_comps(subject: PropertyDetails) -> List[Dict]:
             "lat": base_lat - 0.002,
             "lng": base_lng - 0.003,
             "features": ["pool", "updated_kitchen"],
-            "condition": "excellent"
+            "condition": "excellent",
         },
         {
             "property_id": "comp_005",
@@ -401,8 +392,8 @@ def generate_mock_comps(subject: PropertyDetails) -> List[Dict]:
             "lat": base_lat + 0.006,
             "lng": base_lng + 0.001,
             "features": ["garage"],
-            "condition": "good"
-        }
+            "condition": "good",
+        },
     ]
 
     return mock_comps
@@ -428,25 +419,24 @@ def process_comparables(subject: PropertyDetails, raw_comps: List[Dict]) -> List
         adjusted_price = comp["sale_price"] + total_adjustment
 
         # Calculate distance
-        distance = haversine_distance(
-            subject.coordinates,
-            (comp["lat"], comp["lng"])
-        )
+        distance = haversine_distance(subject.coordinates, (comp["lat"], comp["lng"]))
 
-        processed.append(Comparable(
-            property_id=comp["property_id"],
-            address=comp["address"],
-            sale_price=comp["sale_price"],
-            sale_date=comp["sale_date"],
-            bedrooms=comp["bedrooms"],
-            bathrooms=comp["bathrooms"],
-            sqft=comp["sqft"],
-            year_built=comp["year_built"],
-            distance_miles=round(distance, 2),
-            comparability_score=round(score, 3),
-            adjustments=adjustments,
-            adjusted_price=adjusted_price
-        ))
+        processed.append(
+            Comparable(
+                property_id=comp["property_id"],
+                address=comp["address"],
+                sale_price=comp["sale_price"],
+                sale_date=comp["sale_date"],
+                bedrooms=comp["bedrooms"],
+                bathrooms=comp["bathrooms"],
+                sqft=comp["sqft"],
+                year_built=comp["year_built"],
+                distance_miles=round(distance, 2),
+                comparability_score=round(score, 3),
+                adjustments=adjustments,
+                adjusted_price=adjusted_price,
+            )
+        )
 
     # Sort by score and return top 5
     processed.sort(key=lambda x: x.comparability_score, reverse=True)
@@ -479,7 +469,7 @@ def generate_report(subject: PropertyDetails, area: str) -> CMAReport:
         valuation=valuation,
         comparables=comparables,
         market_context=market,
-        recommendations=recommendations
+        recommendations=recommendations,
     )
 
     return report
@@ -500,14 +490,14 @@ def report_to_dict(report: CMAReport) -> Dict:
             "year_built": report.subject_property.year_built,
             "property_type": report.subject_property.property_type,
             "features": report.subject_property.features,
-            "condition": report.subject_property.condition
+            "condition": report.subject_property.condition,
         },
         "valuation": {
             "estimated_value": report.valuation.estimated_value,
             "value_low": report.valuation.value_low,
             "value_high": report.valuation.value_high,
             "price_per_sqft": report.valuation.price_per_sqft,
-            "confidence": report.valuation.confidence
+            "confidence": report.valuation.confidence,
         },
         "comparables": [
             {
@@ -522,7 +512,7 @@ def report_to_dict(report: CMAReport) -> Dict:
                 "distance_miles": c.distance_miles,
                 "comparability_score": c.comparability_score,
                 "adjustments": c.adjustments,
-                "adjusted_price": c.adjusted_price
+                "adjusted_price": c.adjusted_price,
             }
             for c in report.comparables
         ],
@@ -532,54 +522,21 @@ def report_to_dict(report: CMAReport) -> Dict:
             "months_supply": report.market_context.months_supply,
             "list_to_sale_ratio": report.market_context.list_to_sale_ratio,
             "market_type": report.market_context.market_type,
-            "trend": report.market_context.trend
+            "trend": report.market_context.trend,
         },
-        "recommendations": report.recommendations
+        "recommendations": report.recommendations,
     }
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Generate CMA Report"
-    )
-    parser.add_argument(
-        "--address",
-        help="Subject property address"
-    )
-    parser.add_argument(
-        "--property-id",
-        help="Subject property ID"
-    )
-    parser.add_argument(
-        "--bedrooms",
-        type=int,
-        default=4,
-        help="Number of bedrooms"
-    )
-    parser.add_argument(
-        "--bathrooms",
-        type=float,
-        default=3.0,
-        help="Number of bathrooms"
-    )
-    parser.add_argument(
-        "--sqft",
-        type=int,
-        default=2800,
-        help="Square footage"
-    )
-    parser.add_argument(
-        "--year-built",
-        type=int,
-        default=2018,
-        help="Year built"
-    )
-    parser.add_argument(
-        "--output",
-        choices=["json", "text"],
-        default="text",
-        help="Output format"
-    )
+    parser = argparse.ArgumentParser(description="Generate CMA Report")
+    parser.add_argument("--address", help="Subject property address")
+    parser.add_argument("--property-id", help="Subject property ID")
+    parser.add_argument("--bedrooms", type=int, default=4, help="Number of bedrooms")
+    parser.add_argument("--bathrooms", type=float, default=3.0, help="Number of bathrooms")
+    parser.add_argument("--sqft", type=int, default=2800, help="Square footage")
+    parser.add_argument("--year-built", type=int, default=2018, help="Year built")
+    parser.add_argument("--output", choices=["json", "text"], default="text", help="Output format")
 
     args = parser.parse_args()
 
@@ -597,7 +554,7 @@ def main():
         property_type="single_family",
         features=["pool", "updated_kitchen"],
         condition="good",
-        coordinates=(30.508, -97.678)
+        coordinates=(30.508, -97.678),
     )
 
     try:

@@ -16,16 +16,14 @@ import tempfile
 import shutil
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger('SkillsIntegration')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger("SkillsIntegration")
 
 
 @dataclass
 class TestResult:
     """Represents the result of an integration test."""
+
     test_name: str
     success: bool
     duration: float
@@ -53,7 +51,7 @@ class SkillsIntegrationTester:
             self.test_design_skills_integration,
             self.test_orchestration_skills_integration,
             self.test_end_to_end_workflow,
-            self.test_performance_characteristics
+            self.test_performance_characteristics,
         ]
 
         for test_method in test_methods:
@@ -65,12 +63,11 @@ class SkillsIntegrationTester:
                     logger.error(f"   Error: {result.message}")
             except Exception as e:
                 logger.error(f"❌ Test {test_method.__name__} failed with exception: {e}")
-                self.results.append(TestResult(
-                    test_name=test_method.__name__,
-                    success=False,
-                    duration=0.0,
-                    message=f"Exception: {str(e)}"
-                ))
+                self.results.append(
+                    TestResult(
+                        test_name=test_method.__name__, success=False, duration=0.0, message=f"Exception: {str(e)}"
+                    )
+                )
 
         return self.results
 
@@ -97,7 +94,7 @@ class SkillsIntegrationTester:
                 "design/web-artifacts-builder",
                 "design/theme-factory",
                 "orchestration/subagent-driven-development",
-                "orchestration/dispatching-parallel-agents"
+                "orchestration/dispatching-parallel-agents",
             ]
 
             for skill_path in expected_skills:
@@ -127,15 +124,12 @@ class SkillsIntegrationTester:
                 success=success,
                 duration=time.time() - start_time,
                 message=message,
-                details={"errors": errors}
+                details={"errors": errors},
             )
 
         except Exception as e:
             return TestResult(
-                test_name=test_name,
-                success=False,
-                duration=time.time() - start_time,
-                message=f"Test failed: {str(e)}"
+                test_name=test_name, success=False, duration=time.time() - start_time, message=f"Test failed: {str(e)}"
             )
 
     async def test_manifest_integrity(self) -> TestResult:
@@ -151,12 +145,13 @@ class SkillsIntegrationTester:
                     test_name=test_name,
                     success=False,
                     duration=time.time() - start_time,
-                    message="MANIFEST.yaml not found"
+                    message="MANIFEST.yaml not found",
                 )
 
             # Basic YAML loading test
             import yaml
-            with open(manifest_path, 'r') as f:
+
+            with open(manifest_path, "r") as f:
                 manifest_data = yaml.safe_load(f)
 
             errors = []
@@ -206,15 +201,12 @@ class SkillsIntegrationTester:
                 success=success,
                 duration=time.time() - start_time,
                 message=message,
-                details={"errors": errors, "skills_count": len(manifest_data.get("skills", []))}
+                details={"errors": errors, "skills_count": len(manifest_data.get("skills", []))},
             )
 
         except Exception as e:
             return TestResult(
-                test_name=test_name,
-                success=False,
-                duration=time.time() - start_time,
-                message=f"Test failed: {str(e)}"
+                test_name=test_name, success=False, duration=time.time() - start_time, message=f"Test failed: {str(e)}"
             )
 
     async def test_cross_skill_compatibility(self) -> TestResult:
@@ -229,20 +221,20 @@ class SkillsIntegrationTester:
                 {
                     "name": "Testing + Core Integration",
                     "description": "TDD workflow with verification gates",
-                    "skills": ["test-driven-development", "verification-before-completion", "condition-based-waiting"]
+                    "skills": ["test-driven-development", "verification-before-completion", "condition-based-waiting"],
                 },
                 # Design skills should work with deployment
                 {
                     "name": "Design + Deployment Integration",
                     "description": "Frontend design deployed with Vercel",
-                    "skills": ["frontend-design", "theme-factory", "vercel-deploy"]
+                    "skills": ["frontend-design", "theme-factory", "vercel-deploy"],
                 },
                 # Orchestration should work with testing
                 {
                     "name": "Orchestration + Testing Integration",
                     "description": "Multi-agent testing workflows",
-                    "skills": ["subagent-driven-development", "testing-anti-patterns", "defense-in-depth"]
-                }
+                    "skills": ["subagent-driven-development", "testing-anti-patterns", "defense-in-depth"],
+                },
             ]
 
             success_count = 0
@@ -276,24 +268,23 @@ class SkillsIntegrationTester:
                 details.append(test_details)
 
             overall_success = success_count == len(integration_tests)
-            message = (f"Integration compatibility: {success_count}/{len(integration_tests)} passed"
-                      if overall_success
-                      else f"Some integration tests failed: {success_count}/{len(integration_tests)} passed")
+            message = (
+                f"Integration compatibility: {success_count}/{len(integration_tests)} passed"
+                if overall_success
+                else f"Some integration tests failed: {success_count}/{len(integration_tests)} passed"
+            )
 
             return TestResult(
                 test_name=test_name,
                 success=overall_success,
                 duration=time.time() - start_time,
                 message=message,
-                details={"integration_tests": details}
+                details={"integration_tests": details},
             )
 
         except Exception as e:
             return TestResult(
-                test_name=test_name,
-                success=False,
-                duration=time.time() - start_time,
-                message=f"Test failed: {str(e)}"
+                test_name=test_name, success=False, duration=time.time() - start_time, message=f"Test failed: {str(e)}"
             )
 
     async def test_testing_skills_integration(self) -> TestResult:
@@ -306,7 +297,7 @@ class SkillsIntegrationTester:
                 "test-driven-development",
                 "condition-based-waiting",
                 "testing-anti-patterns",
-                "defense-in-depth"
+                "defense-in-depth",
             ]
 
             skill_checks = []
@@ -317,58 +308,55 @@ class SkillsIntegrationTester:
                 if skill_dir.exists():
                     skill_md = skill_dir / "SKILL.md"
                     if skill_md.exists():
-                        with open(skill_md, 'r') as f:
+                        with open(skill_md, "r") as f:
                             content = f.read()
 
                         # Check for integration keywords
                         integration_indicators = [
-                            "integration", "compatible", "works with",
-                            "combines with", "enhances", "complements"
+                            "integration",
+                            "compatible",
+                            "works with",
+                            "combines with",
+                            "enhances",
+                            "complements",
                         ]
 
-                        has_integration_info = any(
-                            indicator in content.lower() for indicator in integration_indicators
-                        )
+                        has_integration_info = any(indicator in content.lower() for indicator in integration_indicators)
 
-                        skill_checks.append({
-                            "skill": skill_name,
-                            "exists": True,
-                            "has_integration_info": has_integration_info
-                        })
+                        skill_checks.append(
+                            {"skill": skill_name, "exists": True, "has_integration_info": has_integration_info}
+                        )
                     else:
-                        skill_checks.append({
-                            "skill": skill_name,
-                            "exists": True,
-                            "has_integration_info": False,
-                            "error": "SKILL.md missing"
-                        })
+                        skill_checks.append(
+                            {
+                                "skill": skill_name,
+                                "exists": True,
+                                "has_integration_info": False,
+                                "error": "SKILL.md missing",
+                            }
+                        )
                 else:
-                    skill_checks.append({
-                        "skill": skill_name,
-                        "exists": False,
-                        "error": "Skill directory missing"
-                    })
+                    skill_checks.append({"skill": skill_name, "exists": False, "error": "Skill directory missing"})
 
             success = all(check.get("exists", False) for check in skill_checks)
             integration_count = sum(1 for check in skill_checks if check.get("has_integration_info", False))
 
-            message = (f"Testing skills integration: {len([c for c in skill_checks if c.get('exists')])}/4 exist, "
-                      f"{integration_count}/4 have integration info")
+            message = (
+                f"Testing skills integration: {len([c for c in skill_checks if c.get('exists')])}/4 exist, "
+                f"{integration_count}/4 have integration info"
+            )
 
             return TestResult(
                 test_name=test_name,
                 success=success,
                 duration=time.time() - start_time,
                 message=message,
-                details={"skill_checks": skill_checks}
+                details={"skill_checks": skill_checks},
             )
 
         except Exception as e:
             return TestResult(
-                test_name=test_name,
-                success=False,
-                duration=time.time() - start_time,
-                message=f"Test failed: {str(e)}"
+                test_name=test_name, success=False, duration=time.time() - start_time, message=f"Test failed: {str(e)}"
             )
 
     async def test_design_skills_integration(self) -> TestResult:
@@ -377,11 +365,7 @@ class SkillsIntegrationTester:
         test_name = "Design Skills Integration"
 
         try:
-            design_skills = [
-                "frontend-design",
-                "web-artifacts-builder",
-                "theme-factory"
-            ]
+            design_skills = ["frontend-design", "web-artifacts-builder", "theme-factory"]
 
             skill_validation = []
 
@@ -399,7 +383,7 @@ class SkillsIntegrationTester:
                     # Check SKILL.md for Streamlit integration
                     skill_md = skill_dir / "SKILL.md"
                     if skill_md.exists():
-                        with open(skill_md, 'r') as f:
+                        with open(skill_md, "r") as f:
                             content = f.read()
 
                         streamlit_mentions = content.lower().count("streamlit")
@@ -417,23 +401,22 @@ class SkillsIntegrationTester:
             success = all(v.get("exists", False) for v in skill_validation)
             streamlit_integration = sum(1 for v in skill_validation if v.get("streamlit_integration", False))
 
-            message = (f"Design skills: {len([v for v in skill_validation if v.get('exists')])}/3 exist, "
-                      f"{streamlit_integration}/3 have Streamlit integration")
+            message = (
+                f"Design skills: {len([v for v in skill_validation if v.get('exists')])}/3 exist, "
+                f"{streamlit_integration}/3 have Streamlit integration"
+            )
 
             return TestResult(
                 test_name=test_name,
                 success=success,
                 duration=time.time() - start_time,
                 message=message,
-                details={"validations": skill_validation}
+                details={"validations": skill_validation},
             )
 
         except Exception as e:
             return TestResult(
-                test_name=test_name,
-                success=False,
-                duration=time.time() - start_time,
-                message=f"Test failed: {str(e)}"
+                test_name=test_name, success=False, duration=time.time() - start_time, message=f"Test failed: {str(e)}"
             )
 
     async def test_orchestration_skills_integration(self) -> TestResult:
@@ -442,10 +425,7 @@ class SkillsIntegrationTester:
         test_name = "Orchestration Skills Integration"
 
         try:
-            orchestration_skills = [
-                "subagent-driven-development",
-                "dispatching-parallel-agents"
-            ]
+            orchestration_skills = ["subagent-driven-development", "dispatching-parallel-agents"]
 
             validations = []
 
@@ -458,24 +438,26 @@ class SkillsIntegrationTester:
 
                     skill_md = skill_dir / "SKILL.md"
                     if skill_md.exists():
-                        with open(skill_md, 'r') as f:
+                        with open(skill_md, "r") as f:
                             content = f.read()
 
                         # Check for agent coordination concepts
                         agent_keywords = [
-                            "agent", "orchestrat", "parallel", "concurrent",
-                            "dispatch", "coordinate", "workflow"
+                            "agent",
+                            "orchestrat",
+                            "parallel",
+                            "concurrent",
+                            "dispatch",
+                            "coordinate",
+                            "workflow",
                         ]
 
-                        keyword_matches = sum(1 for keyword in agent_keywords
-                                            if keyword in content.lower())
+                        keyword_matches = sum(1 for keyword in agent_keywords if keyword in content.lower())
                         validation["orchestration_keywords"] = keyword_matches > 3
 
                         # Check for async/await patterns
                         async_patterns = ["async", "await", "asyncio"]
-                        validation["async_support"] = any(
-                            pattern in content for pattern in async_patterns
-                        )
+                        validation["async_support"] = any(pattern in content for pattern in async_patterns)
 
                     else:
                         validation["orchestration_keywords"] = False
@@ -490,24 +472,23 @@ class SkillsIntegrationTester:
             orchestration_count = sum(1 for v in validations if v.get("orchestration_keywords", False))
             async_count = sum(1 for v in validations if v.get("async_support", False))
 
-            message = (f"Orchestration skills: {len([v for v in validations if v.get('exists')])}/2 exist, "
-                      f"{orchestration_count}/2 have orchestration patterns, "
-                      f"{async_count}/2 support async")
+            message = (
+                f"Orchestration skills: {len([v for v in validations if v.get('exists')])}/2 exist, "
+                f"{orchestration_count}/2 have orchestration patterns, "
+                f"{async_count}/2 support async"
+            )
 
             return TestResult(
                 test_name=test_name,
                 success=success,
                 duration=time.time() - start_time,
                 message=message,
-                details={"validations": validations}
+                details={"validations": validations},
             )
 
         except Exception as e:
             return TestResult(
-                test_name=test_name,
-                success=False,
-                duration=time.time() - start_time,
-                message=f"Test failed: {str(e)}"
+                test_name=test_name, success=False, duration=time.time() - start_time, message=f"Test failed: {str(e)}"
             )
 
     async def test_end_to_end_workflow(self) -> TestResult:
@@ -523,49 +504,45 @@ class SkillsIntegrationTester:
                     {
                         "name": "Planning & Architecture",
                         "skills": ["systematic-debugging", "verification-before-completion"],
-                        "outputs": ["architecture_design", "requirements_analysis"]
+                        "outputs": ["architecture_design", "requirements_analysis"],
                     },
                     {
                         "name": "Development",
                         "skills": ["test-driven-development", "condition-based-waiting"],
                         "inputs": ["architecture_design"],
-                        "outputs": ["feature_implementation", "test_suite"]
+                        "outputs": ["feature_implementation", "test_suite"],
                     },
                     {
                         "name": "Design & UI",
                         "skills": ["frontend-design", "theme-factory", "web-artifacts-builder"],
                         "inputs": ["feature_implementation"],
-                        "outputs": ["ui_components", "design_system"]
+                        "outputs": ["ui_components", "design_system"],
                     },
                     {
                         "name": "Quality Assurance",
                         "skills": ["testing-anti-patterns", "defense-in-depth"],
                         "inputs": ["feature_implementation", "test_suite"],
-                        "outputs": ["quality_report", "security_validation"]
+                        "outputs": ["quality_report", "security_validation"],
                     },
                     {
                         "name": "Deployment & Orchestration",
                         "skills": ["vercel-deploy", "subagent-driven-development", "dispatching-parallel-agents"],
                         "inputs": ["ui_components", "quality_report"],
-                        "outputs": ["deployed_application", "monitoring_setup"]
+                        "outputs": ["deployed_application", "monitoring_setup"],
                     },
                     {
                         "name": "Review & Documentation",
                         "skills": ["requesting-code-review"],
                         "inputs": ["deployed_application"],
-                        "outputs": ["code_review", "documentation"]
-                    }
-                ]
+                        "outputs": ["code_review", "documentation"],
+                    },
+                ],
             }
 
             # Validate workflow
             phase_validations = []
             for phase in workflow["phases"]:
-                phase_validation = {
-                    "name": phase["name"],
-                    "skills": phase["skills"],
-                    "skills_exist": []
-                }
+                phase_validation = {"name": phase["name"], "skills": phase["skills"], "skills_exist": []}
 
                 for skill_name in phase["skills"]:
                     skill_exists = False
@@ -578,18 +555,14 @@ class SkillsIntegrationTester:
                                     skill_exists = True
                                     break
 
-                    phase_validation["skills_exist"].append({
-                        "skill": skill_name,
-                        "exists": skill_exists
-                    })
+                    phase_validation["skills_exist"].append({"skill": skill_name, "exists": skill_exists})
 
                 phase_validations.append(phase_validation)
 
             # Calculate success metrics
             total_skills = sum(len(phase["skills"]) for phase in workflow["phases"])
             existing_skills = sum(
-                sum(1 for skill in phase_val["skills_exist"] if skill["exists"])
-                for phase_val in phase_validations
+                sum(1 for skill in phase_val["skills_exist"] if skill["exists"]) for phase_val in phase_validations
             )
 
             success = existing_skills == total_skills
@@ -603,16 +576,13 @@ class SkillsIntegrationTester:
                 details={
                     "workflow": workflow["name"],
                     "phases": phase_validations,
-                    "coverage": f"{existing_skills}/{total_skills}"
-                }
+                    "coverage": f"{existing_skills}/{total_skills}",
+                },
             )
 
         except Exception as e:
             return TestResult(
-                test_name=test_name,
-                success=False,
-                duration=time.time() - start_time,
-                message=f"Test failed: {str(e)}"
+                test_name=test_name, success=False, duration=time.time() - start_time, message=f"Test failed: {str(e)}"
             )
 
     async def test_performance_characteristics(self) -> TestResult:
@@ -633,17 +603,15 @@ class SkillsIntegrationTester:
                                 file_start = time.time()
 
                                 # Simulate skill loading
-                                with open(skill_md, 'r') as f:
+                                with open(skill_md, "r") as f:
                                     content = f.read()
                                     # Simulate processing
                                     content_length = len(content)
 
                                 load_time = time.time() - file_start
-                                load_times.append({
-                                    "skill": skill_dir.name,
-                                    "load_time": load_time,
-                                    "content_size": content_length
-                                })
+                                load_times.append(
+                                    {"skill": skill_dir.name, "load_time": load_time, "content_size": content_length}
+                                )
 
             # Performance metrics
             total_load_time = sum(lt["load_time"] for lt in load_times)
@@ -653,18 +621,20 @@ class SkillsIntegrationTester:
 
             # Performance thresholds
             acceptable_total_load_time = 1.0  # 1 second for all skills
-            acceptable_avg_load_time = 0.1   # 100ms per skill
-            acceptable_max_load_time = 0.2   # 200ms max for any single skill
+            acceptable_avg_load_time = 0.1  # 100ms per skill
+            acceptable_max_load_time = 0.2  # 200ms max for any single skill
 
             performance_ok = (
-                total_load_time <= acceptable_total_load_time and
-                avg_load_time <= acceptable_avg_load_time and
-                max_load_time <= acceptable_max_load_time
+                total_load_time <= acceptable_total_load_time
+                and avg_load_time <= acceptable_avg_load_time
+                and max_load_time <= acceptable_max_load_time
             )
 
-            message = (f"Performance: total={total_load_time:.3f}s, "
-                      f"avg={avg_load_time:.3f}s, max={max_load_time:.3f}s, "
-                      f"content={total_content_size} bytes")
+            message = (
+                f"Performance: total={total_load_time:.3f}s, "
+                f"avg={avg_load_time:.3f}s, max={max_load_time:.3f}s, "
+                f"content={total_content_size} bytes"
+            )
 
             return TestResult(
                 test_name=test_name,
@@ -677,16 +647,13 @@ class SkillsIntegrationTester:
                     "avg_load_time": avg_load_time,
                     "max_load_time": max_load_time,
                     "total_content_size": total_content_size,
-                    "skills_tested": len(load_times)
-                }
+                    "skills_tested": len(load_times),
+                },
             )
 
         except Exception as e:
             return TestResult(
-                test_name=test_name,
-                success=False,
-                duration=time.time() - start_time,
-                message=f"Test failed: {str(e)}"
+                test_name=test_name, success=False, duration=time.time() - start_time, message=f"Test failed: {str(e)}"
             )
 
     def generate_report(self) -> str:
@@ -705,7 +672,7 @@ class SkillsIntegrationTester:
 - **Total Tests**: {total_tests}
 - **Passed**: {passed_tests}
 - **Failed**: {total_tests - passed_tests}
-- **Success Rate**: {passed_tests/total_tests*100:.1f}%
+- **Success Rate**: {passed_tests / total_tests * 100:.1f}%
 - **Total Duration**: {total_duration:.3f}s
 
 ## Test Results
@@ -750,12 +717,12 @@ async def main():
 
     # Generate and display report
     report = tester.generate_report()
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print(report)
 
     # Save detailed report
     report_path = current_dir / f"integration_test_report_{int(time.time())}.md"
-    with open(report_path, 'w') as f:
+    with open(report_path, "w") as f:
         f.write(report)
 
     print(f"📊 Detailed report saved to: {report_path}")

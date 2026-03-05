@@ -35,26 +35,26 @@ import pytest
 
 # ── Service config ─────────────────────────────────────────────────────────────
 
-BASE_URL     = "https://jorge-realty-ai-xxdf.onrender.com"
-HMAC_SECRET  = "ffb42fb9b69801686e04edbcb2f54f4f123eb3389bb1dedf9317930a0518bd10"
-LOCATION_ID  = "3xt4qayAh35BlDLaUv7P"
-SELLER_TAG   = "Needs Qualifying"
-TURN_TIMEOUT = 90   # seconds — warm instance LLM calls take 40-60 s
+BASE_URL = "https://jorge-realty-ai-xxdf.onrender.com"
+HMAC_SECRET = "ffb42fb9b69801686e04edbcb2f54f4f123eb3389bb1dedf9317930a0518bd10"
+LOCATION_ID = "3xt4qayAh35BlDLaUv7P"
+SELLER_TAG = "Needs Qualifying"
+TURN_TIMEOUT = 90  # seconds — warm instance LLM calls take 40-60 s
 
 # ── Seller conversation script ─────────────────────────────────────────────────
 # T1 primes the bot; T2-T5 answer Jorge's 4 core questions in order;
 # T6-T9 supply post-qualification details; T10 confirms scheduling.
 
 SELLER_SCRIPT: List[Tuple[str, str]] = [
-    ("T1-opener",    "Hi I want to sell my house"),
-    ("T2-motivation","Relocating for work to Seattle, need to sell within 3 months"),
-    ("T3-timeline",  "3 months ideally, sooner is better if price is right"),
+    ("T1-opener", "Hi I want to sell my house"),
+    ("T2-motivation", "Relocating for work to Seattle, need to sell within 3 months"),
+    ("T3-timeline", "3 months ideally, sooner is better if price is right"),
     ("T4-condition", "Good condition — updated kitchen 2022, new HVAC, needs carpet"),
-    ("T5-price",     "Hoping for around $650,000"),
-    ("T6-liens",     "One mortgage, $380k remaining, no other liens"),
-    ("T7-repairs",   "Cosmetic only — carpet and exterior paint, about $5k"),
-    ("T8-history",   "Never listed before, first time selling"),
-    ("T9-decision",  "I am the sole decision maker, wife on title and fully agrees"),
+    ("T5-price", "Hoping for around $650,000"),
+    ("T6-liens", "One mortgage, $380k remaining, no other liens"),
+    ("T7-repairs", "Cosmetic only — carpet and exterior paint, about $5k"),
+    ("T8-history", "Never listed before, first time selling"),
+    ("T9-decision", "I am the sole decision maker, wife on title and fully agrees"),
     ("T10-schedule", "Afternoon works for me, around 2pm"),
 ]
 
@@ -99,9 +99,16 @@ Q4_KEYWORDS = ["price", "feel good", "number", "looking for", "expecting", "what
 
 # Keywords that confirm post-qualification handoff (expected after T5)
 HANDOFF_KEYWORDS = [
-    "morning", "afternoon", "schedule", "call", "team",
-    "based on your answers", "exactly who we help", "next step",
-    "get you scheduled", "discuss your options",
+    "morning",
+    "afternoon",
+    "schedule",
+    "call",
+    "team",
+    "based on your answers",
+    "exactly who we help",
+    "next step",
+    "get you scheduled",
+    "discuss your options",
 ]
 
 # Q keywords that should NOT appear after all 4 questions are answered
@@ -111,13 +118,14 @@ SMS_MAX_CHARS = 320  # Jorge's hard limit per the system prompt
 
 # ── TurnResult dataclass ───────────────────────────────────────────────────────
 
+
 @dataclass
 class TurnResult:
-    label:     str
-    user_msg:  str
+    label: str
+    user_msg: str
     bot_reply: Optional[str]
-    latency:   float
-    error:     Optional[str] = None
+    latency: float
+    error: Optional[str] = None
 
     @property
     def ok(self) -> bool:
@@ -125,6 +133,7 @@ class TurnResult:
 
 
 # ── Session helper ─────────────────────────────────────────────────────────────
+
 
 class SellerSession:
     """
@@ -137,17 +146,19 @@ class SellerSession:
 
     def send(self, user_message: str, timeout: int = TURN_TIMEOUT) -> Tuple[Optional[str], Optional[str]]:
         """POST one inbound SMS. Returns (bot_reply, error_string)."""
-        payload = json.dumps({
-            "type": "InboundMessage",
-            "locationId": LOCATION_ID,
-            "contactId": self.contact_id,
-            "tags": [SELLER_TAG],
-            "message": {
-                "body": user_message,
-                "type": "SMS",
-                "direction": "inbound",
-            },
-        }).encode()
+        payload = json.dumps(
+            {
+                "type": "InboundMessage",
+                "locationId": LOCATION_ID,
+                "contactId": self.contact_id,
+                "tags": [SELLER_TAG],
+                "message": {
+                    "body": user_message,
+                    "type": "SMS",
+                    "direction": "inbound",
+                },
+            }
+        ).encode()
 
         sig = hmac.new(HMAC_SECRET.encode(), payload, hashlib.sha256).hexdigest()
         req = urllib.request.Request(
@@ -174,6 +185,7 @@ class SellerSession:
 
 # ── Module-scoped transcript fixture ──────────────────────────────────────────
 
+
 @pytest.fixture(scope="module")
 def seller_transcript() -> List[TurnResult]:
     """
@@ -184,12 +196,12 @@ def seller_transcript() -> List[TurnResult]:
     production test contact's conversation history.
     """
     contact_id = f"e2e-seller-{int(time.time())}"
-    session    = SellerSession(contact_id)
+    session = SellerSession(contact_id)
     results: List[TurnResult] = []
 
-    print(f"\n{'='*62}")
+    print(f"\n{'=' * 62}")
     print(f"  SELLER BOT E2E  contact_id={contact_id}")
-    print(f"{'='*62}")
+    print(f"{'=' * 62}")
 
     for label, user_msg in SELLER_SCRIPT:
         print(f"\n── YOU [{label}]: {user_msg}")
@@ -197,23 +209,29 @@ def seller_transcript() -> List[TurnResult]:
         reply, error = session.send(user_msg)
         latency = time.time() - t0
 
-        results.append(TurnResult(
-            label=label, user_msg=user_msg,
-            bot_reply=reply, latency=latency, error=error,
-        ))
+        results.append(
+            TurnResult(
+                label=label,
+                user_msg=user_msg,
+                bot_reply=reply,
+                latency=latency,
+                error=error,
+            )
+        )
 
         if error:
             print(f"   BOT: !! ERROR — {error}")
         else:
             print(f"   BOT ({latency:.1f}s): {reply}")
 
-    print(f"\n{'='*62}")
+    print(f"\n{'=' * 62}")
     print(f"  TRANSCRIPT COMPLETE — {len(results)} turns")
-    print(f"{'='*62}\n")
+    print(f"{'=' * 62}\n")
     return results
 
 
 # ── Helper ─────────────────────────────────────────────────────────────────────
+
 
 def _turn(transcript: List[TurnResult], label: str) -> TurnResult:
     """Return the named turn, or skip the test if that turn errored."""
@@ -226,6 +244,7 @@ def _turn(transcript: List[TurnResult], label: str) -> TurnResult:
 
 
 # ── Group 1: Service reachability ─────────────────────────────────────────────
+
 
 @pytest.mark.e2e
 def test_service_health():
@@ -243,6 +262,7 @@ def test_service_health():
 
 # ── Group 2: AI disclosure (hard requirement, all turns) ──────────────────────
 
+
 @pytest.mark.e2e
 def test_no_ai_disclosure(seller_transcript):
     """
@@ -259,12 +279,11 @@ def test_no_ai_disclosure(seller_transcript):
             if phrase.lower() in reply_lower:
                 failures.append(f"[{t.label}] found {phrase!r}  →  {t.bot_reply!r}")
 
-    assert not failures, (
-        f"AI disclosure detected in {len(failures)} turn(s):\n" + "\n".join(failures)
-    )
+    assert not failures, f"AI disclosure detected in {len(failures)} turn(s):\n" + "\n".join(failures)
 
 
 # ── Group 3: Question progression ─────────────────────────────────────────────
+
 
 @pytest.mark.e2e
 def test_t1_opener_elicits_motivation_question(seller_transcript):
@@ -275,9 +294,7 @@ def test_t1_opener_elicits_motivation_question(seller_transcript):
     t = _turn(seller_transcript, "T1-opener")
     reply_lower = t.bot_reply.lower()
     assert any(kw in reply_lower for kw in Q1_KEYWORDS), (
-        f"T1 reply should ask motivation (Q1).\n"
-        f"Got: {t.bot_reply!r}\n"
-        f"Expected at least one of: {Q1_KEYWORDS}"
+        f"T1 reply should ask motivation (Q1).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q1_KEYWORDS}"
     )
 
 
@@ -289,9 +306,7 @@ def test_t2_motivation_answer_elicits_timeline_question(seller_transcript):
     t = _turn(seller_transcript, "T2-motivation")
     reply_lower = t.bot_reply.lower()
     assert any(kw in reply_lower for kw in Q2_KEYWORDS), (
-        f"T2 reply should ask 30-45 day timeline (Q2).\n"
-        f"Got: {t.bot_reply!r}\n"
-        f"Expected at least one of: {Q2_KEYWORDS}"
+        f"T2 reply should ask 30-45 day timeline (Q2).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q2_KEYWORDS}"
     )
 
 
@@ -303,9 +318,7 @@ def test_t3_timeline_answer_elicits_condition_question(seller_transcript):
     t = _turn(seller_transcript, "T3-timeline")
     reply_lower = t.bot_reply.lower()
     assert any(kw in reply_lower for kw in Q3_KEYWORDS), (
-        f"T3 reply should ask property condition (Q3).\n"
-        f"Got: {t.bot_reply!r}\n"
-        f"Expected at least one of: {Q3_KEYWORDS}"
+        f"T3 reply should ask property condition (Q3).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q3_KEYWORDS}"
     )
 
 
@@ -317,9 +330,7 @@ def test_t4_condition_answer_elicits_price_question(seller_transcript):
     t = _turn(seller_transcript, "T4-condition")
     reply_lower = t.bot_reply.lower()
     assert any(kw in reply_lower for kw in Q4_KEYWORDS), (
-        f"T4 reply should ask price expectations (Q4).\n"
-        f"Got: {t.bot_reply!r}\n"
-        f"Expected at least one of: {Q4_KEYWORDS}"
+        f"T4 reply should ask price expectations (Q4).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q4_KEYWORDS}"
     )
 
 
@@ -334,8 +345,7 @@ def test_t5_after_all_questions_moves_to_handoff(seller_transcript):
 
     still_qualifying = any(kw in reply_lower for kw in LINGERING_Q_KEYWORDS)
     assert not still_qualifying, (
-        f"T5 reply loops back into qualification after all 4 Qs answered.\n"
-        f"Got: {t.bot_reply!r}"
+        f"T5 reply loops back into qualification after all 4 Qs answered.\nGot: {t.bot_reply!r}"
     )
 
     assert any(kw in reply_lower for kw in HANDOFF_KEYWORDS), (
@@ -347,6 +357,7 @@ def test_t5_after_all_questions_moves_to_handoff(seller_transcript):
 
 # ── Group 4: Format ────────────────────────────────────────────────────────────
 
+
 @pytest.mark.e2e
 def test_all_replies_within_sms_limit(seller_transcript):
     """Every reply must be ≤320 characters (Jorge's hard SMS limit)."""
@@ -357,9 +368,7 @@ def test_all_replies_within_sms_limit(seller_transcript):
         if len(t.bot_reply) > SMS_MAX_CHARS:
             failures.append(f"[{t.label}] {len(t.bot_reply)} chars: {t.bot_reply!r}")
 
-    assert not failures, (
-        f"Replies exceeded {SMS_MAX_CHARS}-char limit:\n" + "\n".join(failures)
-    )
+    assert not failures, f"Replies exceeded {SMS_MAX_CHARS}-char limit:\n" + "\n".join(failures)
 
 
 @pytest.mark.e2e
@@ -377,6 +386,7 @@ def test_no_emojis_in_replies(seller_transcript):
 
 
 # ── Group 5: Persona / tone ───────────────────────────────────────────────────
+
 
 @pytest.mark.e2e
 def test_no_robotic_boilerplate(seller_transcript):
@@ -415,14 +425,12 @@ def test_replies_are_terse(seller_transcript):
 
 # ── Group 6: Reliability ──────────────────────────────────────────────────────
 
+
 @pytest.mark.e2e
 def test_no_failed_turns(seller_transcript):
     """All 10 turns must have received a bot reply (no timeouts or HTTP errors)."""
     failed = [(t.label, t.error) for t in seller_transcript if not t.ok]
-    assert not failed, (
-        "These turns got no reply:\n"
-        + "\n".join(f"  {label}: {err}" for label, err in failed)
-    )
+    assert not failed, "These turns got no reply:\n" + "\n".join(f"  {label}: {err}" for label, err in failed)
 
 
 @pytest.mark.e2e
@@ -440,6 +448,7 @@ def test_turn_latency_within_acceptable_range(seller_transcript):
 
 # ── Group 7: Human-readable summary ───────────────────────────────────────────
 
+
 @pytest.mark.e2e
 def test_print_graded_transcript(seller_transcript):
     """
@@ -449,7 +458,7 @@ def test_print_graded_transcript(seller_transcript):
       ✓ clean  — no flags
       ⚠ flags  — AI_DISCLOSURE / ROBOTIC / TOO_LONG / EMOJI listed inline
     """
-    lines = [f"\n{'='*62}", "  GRADED TRANSCRIPT", f"{'='*62}"]
+    lines = [f"\n{'=' * 62}", "  GRADED TRANSCRIPT", f"{'=' * 62}"]
 
     for t in seller_transcript:
         status = "OK  " if t.ok else "FAIL"
@@ -481,5 +490,5 @@ def test_print_graded_transcript(seller_transcript):
         lines.append(f"  BOT: {t.bot_reply}")
         lines.append(f"  {'⚠  ' + ', '.join(flags) if flags else '✓  clean'}")
 
-    lines.append(f"\n{'='*62}\n")
+    lines.append(f"\n{'=' * 62}\n")
     print("\n".join(lines))

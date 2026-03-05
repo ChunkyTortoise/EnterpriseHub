@@ -679,8 +679,8 @@ class CalendarScheduler:
         Returns:
             Formatted appointment title
         """
-        first = contact_info.get('first_name') or ''
-        last = contact_info.get('last_name') or ''
+        first = contact_info.get("first_name") or ""
+        last = contact_info.get("last_name") or ""
         name = f"{first} {last}".strip()
         if not name:
             name = "Lead"

@@ -24,6 +24,7 @@ from ghl_real_estate_ai.api.routes.inbound_compliance import (
 # Skip gracefully in a minimal sandbox environment.
 try:
     from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
+
     _ENGINE_AVAILABLE = True
 except ImportError:
     _ENGINE_AVAILABLE = False
@@ -40,9 +41,23 @@ _needs_engine = pytest.mark.skipif(
 
 @pytest.mark.parametrize(
     "word",
-    ["STOP", "stop", "Stop", "UNSUBSCRIBE", "unsubscribe", "cancel", "CANCEL",
-     "remove me", "opt out", "no more messages", "don't contact me",
-     "dont contact me", "not interested", "parar", "cancelar"],
+    [
+        "STOP",
+        "stop",
+        "Stop",
+        "UNSUBSCRIBE",
+        "unsubscribe",
+        "cancel",
+        "CANCEL",
+        "remove me",
+        "opt out",
+        "no more messages",
+        "don't contact me",
+        "dont contact me",
+        "not interested",
+        "parar",
+        "cancelar",
+    ],
 )
 def test_tcpa_stop_keywords_intercepted(word: str) -> None:
     """Every TCPA opt-out keyword must be intercepted before the engine runs."""
@@ -167,9 +182,7 @@ def _run_extraction_sync(msg: str) -> dict:
 @_needs_engine
 def test_estate_in_legal_context_not_extracted_as_motivation() -> None:
     """'counsel for the estate' must NOT phantom-extract motivation=inherited."""
-    result = _run_extraction_sync(
-        "As counsel for the estate, I require the AI to disclose all data collected"
-    )
+    result = _run_extraction_sync("As counsel for the estate, I require the AI to disclose all data collected")
     assert result.get("motivation") is None, (
         f"'estate' in legal context must not extract motivation, got: {result.get('motivation')}"
     )
@@ -209,17 +222,40 @@ def test_probate_still_extracts_inherited() -> None:
         # Only price answered, no response_quality → cold
         ({"price_expectation": "650k", "questions_answered": 1}, "cold"),
         # 3 questions + timeline=True + quality>=0.5 → warm (not hot — missing 4th field)
-        ({"motivation": "relocation", "timeline_acceptable": True,
-          "property_condition": "Move-in Ready", "questions_answered": 3,
-          "response_quality": 0.6}, "warm"),
+        (
+            {
+                "motivation": "relocation",
+                "timeline_acceptable": True,
+                "property_condition": "Move-in Ready",
+                "questions_answered": 3,
+                "response_quality": 0.6,
+            },
+            "warm",
+        ),
         # All 4 questions + timeline=True + quality>=0.7 → hot
-        ({"motivation": "relocation", "timeline_acceptable": True,
-          "property_condition": "Move-in Ready", "price_expectation": "650k",
-          "questions_answered": 4, "response_quality": 0.8}, "hot"),
+        (
+            {
+                "motivation": "relocation",
+                "timeline_acceptable": True,
+                "property_condition": "Move-in Ready",
+                "price_expectation": "650k",
+                "questions_answered": 4,
+                "response_quality": 0.8,
+            },
+            "hot",
+        ),
         # All 4 fields but timeline=False + quality>=0.5 → warm (timeline blocks hot)
-        ({"motivation": "relocation", "timeline_acceptable": False,
-          "property_condition": "Move-in Ready", "price_expectation": "650k",
-          "questions_answered": 4, "response_quality": 0.6}, "warm"),
+        (
+            {
+                "motivation": "relocation",
+                "timeline_acceptable": False,
+                "property_condition": "Move-in Ready",
+                "price_expectation": "650k",
+                "questions_answered": 4,
+                "response_quality": 0.6,
+            },
+            "warm",
+        ),
         # Phantom: qa=4 forced but no quality → cold (quality=0.0 < warm threshold)
         ({"questions_answered": 4, "timeline_acceptable": None}, "cold"),
     ],
@@ -298,9 +334,7 @@ async def test_post_confirm_actions_include_ai_off_tag() -> None:
         seller_data=seller_data,
     )
     tag_names = [a.get("tag") for a in actions if a.get("type") == "add_tag"]
-    assert "Human-Follow-Up-Needed" in tag_names, (
-        f"Expected Human-Follow-Up-Needed tag, got: {tag_names}"
-    )
+    assert "Human-Follow-Up-Needed" in tag_names, f"Expected Human-Follow-Up-Needed tag, got: {tag_names}"
     assert "AI-Off" in tag_names, f"Expected AI-Off tag, got: {tag_names}"
 
 
@@ -362,6 +396,7 @@ async def test_concurrent_requests_serialised_by_contact_lock() -> None:
         class _MS:
             async def save_context(self, *a, **kw):
                 pass
+
         memory_service = _MS()
 
     engine = JorgeSellerEngine(
@@ -389,7 +424,7 @@ async def test_concurrent_requests_serialised_by_contact_lock() -> None:
         event, nxt = gets_and_updates[i], gets_and_updates[i + 1]
         assert event.startswith("get:"), f"Expected get at position {i}, got {event!r}"
         assert nxt.startswith("update:"), (
-            f"Expected update at position {i+1}, got {nxt!r} — "
+            f"Expected update at position {i + 1}, got {nxt!r} — "
             "two consecutive get_context calls indicate the race condition is NOT fixed"
         )
 
@@ -400,30 +435,29 @@ async def test_concurrent_requests_serialised_by_contact_lock() -> None:
 
 
 @_needs_engine
-@pytest.mark.parametrize("msg,expected_contains", [
-    # $Xk format — the main regression case
-    ("I'd want around $580k", "580"),
-    ("Price around $620k for the house", "620"),
-    # $X,XXX,XXX format
-    ("I'm thinking $650,000 minimum", "650"),
-    # bare Xk (no $)
-    ("Looking for about 700k", "700"),
-    # $X.Xm — million shorthand
-    ("Would need at least $1.2m", "1.2"),
-    # multi-number message where timeline comes before price
-    ("I could close in 30-60 days and want around $580k", "580"),
-    ("Happy to close in 45 days, price around $620,000", "620"),
-])
+@pytest.mark.parametrize(
+    "msg,expected_contains",
+    [
+        # $Xk format — the main regression case
+        ("I'd want around $580k", "580"),
+        ("Price around $620k for the house", "620"),
+        # $X,XXX,XXX format
+        ("I'm thinking $650,000 minimum", "650"),
+        # bare Xk (no $)
+        ("Looking for about 700k", "700"),
+        # $X.Xm — million shorthand
+        ("Would need at least $1.2m", "1.2"),
+        # multi-number message where timeline comes before price
+        ("I could close in 30-60 days and want around $580k", "580"),
+        ("Happy to close in 45 days, price around $620,000", "620"),
+    ],
+)
 def test_price_extraction_from_text(msg: str, expected_contains: str) -> None:
     """_extract_price_from_text must correctly extract prices even when
     timeline numbers (e.g. '30-60 days') appear earlier in the message."""
     result = JorgeSellerEngine._extract_price_from_text(msg)
-    assert result is not None, (
-        f"Expected price containing {expected_contains!r} from {msg!r}, got None"
-    )
-    assert expected_contains in result, (
-        f"Expected {expected_contains!r} in extracted price {result!r} from {msg!r}"
-    )
+    assert result is not None, f"Expected price containing {expected_contains!r} from {msg!r}, got None"
+    assert expected_contains in result, f"Expected {expected_contains!r} in extracted price {result!r} from {msg!r}"
 
 
 @_needs_engine
@@ -435,9 +469,7 @@ def test_price_extraction_ignores_timeline_numbers() -> None:
         "About 90 days is my target",
     ]:
         result = JorgeSellerEngine._extract_price_from_text(msg)
-        assert result is None, (
-            f"Expected None (no price) for {msg!r}, got {result!r}"
-        )
+        assert result is None, f"Expected None (no price) for {msg!r}, got {result!r}"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -465,9 +497,7 @@ async def test_objection_exhaustion_returns_handoff_response() -> None:
     )
     # Must not continue qualification or objection loop
     msg_lower = result["message"].lower()
-    assert "what" not in msg_lower or "help" in msg_lower, (
-        "Exhaustion handoff must not ask another question"
-    )
+    assert "what" not in msg_lower or "help" in msg_lower, "Exhaustion handoff must not ask another question"
 
 
 @_needs_engine
@@ -519,6 +549,7 @@ async def test_objection_exhaustion_actions_emit_ai_off_and_human_follow_up() ->
 def _make_pipeline_context(user_message: str, detected_language: str = "en", confidence: float = 0.95):
     """Helper: build a minimal ProcessingContext for translation stage tests."""
     from ghl_real_estate_ai.services.jorge.response_pipeline.models import ProcessingContext
+
     ctx = ProcessingContext(
         contact_id="test-f13",
         user_message=user_message,
@@ -542,9 +573,7 @@ async def test_spanish_q1_translated() -> None:
     resp = ProcessedResponse(message=_msg, original_message=_msg)
     ctx = _make_pipeline_context("Quiero vender mi casa", detected_language="es")
     result = await stage.process(resp, ctx)
-    assert "vender" in result.message.lower() or "¿" in result.message, (
-        f"Expected Spanish Q1, got: {result.message!r}"
-    )
+    assert "vender" in result.message.lower() or "¿" in result.message, f"Expected Spanish Q1, got: {result.message!r}"
     assert "What" not in result.message, f"English still present: {result.message!r}"
 
 
@@ -593,9 +622,7 @@ async def test_low_confidence_detection_not_translated() -> None:
     resp = ProcessedResponse(message=original, original_message=original)
     ctx = _make_pipeline_context("ok", detected_language="es", confidence=0.40)
     result = await stage.process(resp, ctx)
-    assert result.message == original, (
-        f"Low-confidence detection must not translate: {result.message!r}"
-    )
+    assert result.message == original, f"Low-confidence detection must not translate: {result.message!r}"
 
 
 @pytest.mark.asyncio
@@ -605,9 +632,7 @@ async def test_response_translation_stage_in_default_pipeline() -> None:
 
     pipeline = create_default_pipeline()
     stage_names = [s.name for s in pipeline.stages]
-    assert "response_translation" in stage_names, (
-        f"response_translation stage missing from pipeline: {stage_names}"
-    )
+    assert "response_translation" in stage_names, f"response_translation stage missing from pipeline: {stage_names}"
     # Must come after language_mirror (which sets detected_language)
     assert stage_names.index("language_mirror") < stage_names.index("response_translation"), (
         "language_mirror must run before response_translation"

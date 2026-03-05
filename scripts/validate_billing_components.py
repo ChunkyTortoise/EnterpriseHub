@@ -26,12 +26,7 @@ class BillingComponentValidator:
 
     def __init__(self):
         """Initialize validator"""
-        self.results = {
-            "tests_run": 0,
-            "tests_passed": 0,
-            "tests_failed": 0,
-            "errors": []
-        }
+        self.results = {"tests_run": 0, "tests_passed": 0, "tests_failed": 0, "errors": []}
 
     def log_test(self, test_name: str, success: bool, message: str = ""):
         """Log test result"""
@@ -55,18 +50,14 @@ class BillingComponentValidator:
             "ghl_real_estate_ai/services/billing_service.py",
             "ghl_real_estate_ai/services/subscription_manager.py",
             "ghl_real_estate_ai/streamlit_demo/components/billing_dashboard.py",
-            "tests/integration/test_billing_integration_e2e.py"
+            "tests/integration/test_billing_integration_e2e.py",
         ]
 
         for file_path in expected_files:
             full_path = project_root / file_path
             exists = full_path.exists()
 
-            self.log_test(
-                f"File: {file_path}",
-                exists,
-                "EXISTS" if exists else "MISSING"
-            )
+            self.log_test(f"File: {file_path}", exists, "EXISTS" if exists else "MISSING")
 
     def test_billing_schemas_import(self):
         """Test billing schemas can be imported"""
@@ -74,15 +65,13 @@ class BillingComponentValidator:
 
         try:
             from ghl_real_estate_ai.api.schemas.billing import (
-                SubscriptionTier, SubscriptionStatus, CreateSubscriptionRequest,
-                SUBSCRIPTION_TIERS
+                SubscriptionTier,
+                SubscriptionStatus,
+                CreateSubscriptionRequest,
+                SUBSCRIPTION_TIERS,
             )
 
-            self.log_test(
-                "Schema Import",
-                True,
-                "All billing schemas imported successfully"
-            )
+            self.log_test("Schema Import", True, "All billing schemas imported successfully")
 
             # Test enum values
             tiers = list(SubscriptionTier)
@@ -90,11 +79,7 @@ class BillingComponentValidator:
 
             tier_values_correct = all(tier.value in expected_tiers for tier in tiers)
 
-            self.log_test(
-                "Subscription Tiers",
-                tier_values_correct,
-                f"Tiers: {[tier.value for tier in tiers]}"
-            )
+            self.log_test("Subscription Tiers", tier_values_correct, f"Tiers: {[tier.value for tier in tiers]}")
 
             # Test tier configuration
             professional = SUBSCRIPTION_TIERS[SubscriptionTier.PROFESSIONAL]
@@ -102,15 +87,11 @@ class BillingComponentValidator:
             self.log_test(
                 "Tier Configuration",
                 professional.price_monthly == 249.00,
-                f"Professional: ${professional.price_monthly}/mo, {professional.usage_allowance} leads"
+                f"Professional: ${professional.price_monthly}/mo, {professional.usage_allowance} leads",
             )
 
         except ImportError as e:
-            self.log_test(
-                "Schema Import",
-                False,
-                f"Import failed: {str(e)}"
-            )
+            self.log_test("Schema Import", False, f"Import failed: {str(e)}")
 
     def test_api_routes_structure(self):
         """Test API routes file structure"""
@@ -132,7 +113,7 @@ class BillingComponentValidator:
                     "GET /billing/usage/",
                     "POST /billing/invoices/",
                     "GET /billing/invoices",
-                    "GET /billing/billing-history/"
+                    "GET /billing/billing-history/",
                 ]
 
                 endpoint_count = 0
@@ -140,11 +121,7 @@ class BillingComponentValidator:
                     if endpoint.split()[1].replace("/", "") in content:
                         endpoint_count += 1
 
-                self.log_test(
-                    "API Endpoints",
-                    endpoint_count >= 8,
-                    f"Found {endpoint_count}/9 expected endpoints"
-                )
+                self.log_test("API Endpoints", endpoint_count >= 8, f"Found {endpoint_count}/9 expected endpoints")
 
                 # Check for Stripe webhook handler
                 has_webhook = "handle_stripe_webhook" in content
@@ -152,22 +129,14 @@ class BillingComponentValidator:
                 self.log_test(
                     "Stripe Webhook Handler",
                     has_webhook,
-                    "Webhook handler implemented" if has_webhook else "Missing webhook handler"
+                    "Webhook handler implemented" if has_webhook else "Missing webhook handler",
                 )
 
             else:
-                self.log_test(
-                    "API Routes File",
-                    False,
-                    "billing.py not found"
-                )
+                self.log_test("API Routes File", False, "billing.py not found")
 
         except Exception as e:
-            self.log_test(
-                "API Routes Structure",
-                False,
-                f"Error: {str(e)}"
-            )
+            self.log_test("API Routes Structure", False, f"Error: {str(e)}")
 
     def test_service_classes_structure(self):
         """Test service classes structure"""
@@ -184,23 +153,15 @@ class BillingComponentValidator:
                 "create_subscription",
                 "add_usage_record",
                 "verify_webhook_signature",
-                "process_webhook_event"
+                "process_webhook_event",
             ]
 
             method_count = sum(1 for method in required_methods if f"def {method}" in content)
 
-            self.log_test(
-                "BillingService Methods",
-                method_count >= 4,
-                f"Found {method_count}/5 required methods"
-            )
+            self.log_test("BillingService Methods", method_count >= 4, f"Found {method_count}/5 required methods")
 
         else:
-            self.log_test(
-                "BillingService File",
-                False,
-                "billing_service.py not found"
-            )
+            self.log_test("BillingService File", False, "billing_service.py not found")
 
         # Test subscription manager structure
         subscription_manager_file = project_root / "ghl_real_estate_ai/services/subscription_manager.py"
@@ -213,23 +174,15 @@ class BillingComponentValidator:
                 "get_active_subscription",
                 "handle_tier_change",
                 "bill_usage_overage",
-                "handle_usage_threshold"
+                "handle_usage_threshold",
             ]
 
             method_count = sum(1 for method in required_methods if f"def {method}" in content)
 
-            self.log_test(
-                "SubscriptionManager Methods",
-                method_count >= 4,
-                f"Found {method_count}/5 required methods"
-            )
+            self.log_test("SubscriptionManager Methods", method_count >= 4, f"Found {method_count}/5 required methods")
 
         else:
-            self.log_test(
-                "SubscriptionManager File",
-                False,
-                "subscription_manager.py not found"
-            )
+            self.log_test("SubscriptionManager File", False, "subscription_manager.py not found")
 
     def test_dashboard_component_structure(self):
         """Test dashboard component structure"""
@@ -241,19 +194,11 @@ class BillingComponentValidator:
             content = dashboard_file.read_text()
 
             # Check for required functions
-            required_functions = [
-                "render_billing_dashboard",
-                "show",
-                "MockBillingDataGenerator"
-            ]
+            required_functions = ["render_billing_dashboard", "show", "MockBillingDataGenerator"]
 
             function_count = sum(1 for func in required_functions if func in content)
 
-            self.log_test(
-                "Dashboard Functions",
-                function_count >= 2,
-                f"Found {function_count}/3 expected functions"
-            )
+            self.log_test("Dashboard Functions", function_count >= 2, f"Found {function_count}/3 expected functions")
 
             # Check for revenue analytics
             has_revenue_analytics = "revenue_analytics" in content.lower()
@@ -261,15 +206,11 @@ class BillingComponentValidator:
             self.log_test(
                 "Revenue Analytics",
                 has_revenue_analytics,
-                "Revenue analytics implemented" if has_revenue_analytics else "Missing revenue analytics"
+                "Revenue analytics implemented" if has_revenue_analytics else "Missing revenue analytics",
             )
 
         else:
-            self.log_test(
-                "Dashboard Component",
-                False,
-                "billing_dashboard.py not found"
-            )
+            self.log_test("Dashboard Component", False, "billing_dashboard.py not found")
 
     def test_webhook_integration(self):
         """Test webhook integration"""
@@ -288,27 +229,23 @@ class BillingComponentValidator:
             self.log_test(
                 "Webhook Billing Import",
                 has_billing_import,
-                "SubscriptionManager imported" if has_billing_import else "Missing billing import"
+                "SubscriptionManager imported" if has_billing_import else "Missing billing import",
             )
 
             self.log_test(
                 "Billing Handler Function",
                 has_billing_handler,
-                "Billing handler implemented" if has_billing_handler else "Missing billing handler"
+                "Billing handler implemented" if has_billing_handler else "Missing billing handler",
             )
 
             self.log_test(
                 "Billing Integration Call",
                 has_billing_call,
-                "Billing tracking called in webhook" if has_billing_call else "Missing billing integration"
+                "Billing tracking called in webhook" if has_billing_call else "Missing billing integration",
             )
 
         else:
-            self.log_test(
-                "Webhook File",
-                False,
-                "webhook.py not found"
-            )
+            self.log_test("Webhook File", False, "webhook.py not found")
 
     def test_streamlit_app_integration(self):
         """Test Streamlit app integration"""
@@ -325,7 +262,7 @@ class BillingComponentValidator:
             self.log_test(
                 "Navigation Integration",
                 has_billing_nav,
-                "Billing Analytics in navigation" if has_billing_nav else "Missing from navigation"
+                "Billing Analytics in navigation" if has_billing_nav else "Missing from navigation",
             )
 
             # Check for billing dashboard import
@@ -334,7 +271,7 @@ class BillingComponentValidator:
             self.log_test(
                 "Dashboard Import",
                 has_billing_import,
-                "Billing dashboard imported" if has_billing_import else "Missing dashboard import"
+                "Billing dashboard imported" if has_billing_import else "Missing dashboard import",
             )
 
             # Check for billing hub rendering
@@ -343,15 +280,11 @@ class BillingComponentValidator:
             self.log_test(
                 "Hub Rendering",
                 has_billing_render,
-                "Billing hub rendering implemented" if has_billing_render else "Missing hub rendering"
+                "Billing hub rendering implemented" if has_billing_render else "Missing hub rendering",
             )
 
         else:
-            self.log_test(
-                "Streamlit App File",
-                False,
-                "app.py not found"
-            )
+            self.log_test("Streamlit App File", False, "app.py not found")
 
     def test_requirements_dependencies(self):
         """Test requirements include necessary dependencies"""
@@ -369,18 +302,10 @@ class BillingComponentValidator:
                 if dep in content.lower():
                     found_deps.append(dep)
 
-            self.log_test(
-                "Required Dependencies",
-                len(found_deps) >= 4,
-                f"Found: {', '.join(found_deps)}"
-            )
+            self.log_test("Required Dependencies", len(found_deps) >= 4, f"Found: {', '.join(found_deps)}")
 
         else:
-            self.log_test(
-                "Requirements File",
-                False,
-                "requirements.txt not found"
-            )
+            self.log_test("Requirements File", False, "requirements.txt not found")
 
     def calculate_arr_projection(self):
         """Calculate ARR projection"""
@@ -391,9 +316,9 @@ class BillingComponentValidator:
 
             # Sample distribution to achieve $240K ARR target
             sample_distribution = {
-                SubscriptionTier.STARTER: 25,      # $99/month
-                SubscriptionTier.PROFESSIONAL: 45, # $249/month
-                SubscriptionTier.ENTERPRISE: 20   # $499/month
+                SubscriptionTier.STARTER: 25,  # $99/month
+                SubscriptionTier.PROFESSIONAL: 45,  # $249/month
+                SubscriptionTier.ENTERPRISE: 20,  # $499/month
             }
 
             # Calculate base ARR
@@ -405,12 +330,11 @@ class BillingComponentValidator:
 
             # Add usage revenue (33% additional)
             from decimal import Decimal
+
             total_arr = base_arr * Decimal("1.33")
 
             self.log_test(
-                "ARR Target Achievement",
-                total_arr >= 240000,
-                f"Projected ARR: ${total_arr:,.2f} (Target: $240K)"
+                "ARR Target Achievement", total_arr >= 240000, f"Projected ARR: ${total_arr:,.2f} (Target: $240K)"
             )
 
             # Calculate total customers and ARPU
@@ -420,15 +344,11 @@ class BillingComponentValidator:
             self.log_test(
                 "ARPU Calculation",
                 monthly_arpu >= 400,
-                f"Monthly ARPU: ${monthly_arpu:.2f} with {total_customers} customers"
+                f"Monthly ARPU: ${monthly_arpu:.2f} with {total_customers} customers",
             )
 
         except ImportError:
-            self.log_test(
-                "ARR Calculation",
-                False,
-                "Could not import billing schemas for calculation"
-            )
+            self.log_test("ARR Calculation", False, "Could not import billing schemas for calculation")
 
     def run_all_tests(self):
         """Run all validation tests"""

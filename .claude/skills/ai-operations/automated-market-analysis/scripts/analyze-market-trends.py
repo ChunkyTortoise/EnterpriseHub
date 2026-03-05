@@ -23,6 +23,7 @@ from collections import defaultdict
 @dataclass
 class PriceTrend:
     """Price trend data."""
+
     current_median: int
     previous_median: int
     mom_change: float
@@ -34,6 +35,7 @@ class PriceTrend:
 @dataclass
 class InventoryMetrics:
     """Inventory and supply metrics."""
+
     active_listings: int
     new_listings_month: int
     sold_month: int
@@ -44,6 +46,7 @@ class InventoryMetrics:
 @dataclass
 class VelocityMetrics:
     """Sales velocity metrics."""
+
     avg_dom: int
     median_dom: int
     dom_trend: str
@@ -53,6 +56,7 @@ class VelocityMetrics:
 @dataclass
 class MarketHealth:
     """Overall market health assessment."""
+
     score: float
     classification: str
     buyer_seller_index: float
@@ -62,6 +66,7 @@ class MarketHealth:
 @dataclass
 class Forecast:
     """Price forecast."""
+
     months_ahead: int
     projected_median: int
     confidence_low: int
@@ -72,6 +77,7 @@ class Forecast:
 @dataclass
 class MarketTrendReport:
     """Complete market trend report."""
+
     area: str
     report_date: str
     period_months: int
@@ -86,8 +92,18 @@ class MarketTrendReport:
 
 # Seasonal factors (Rancho Cucamonga Metro)
 SEASONAL_FACTORS = {
-    1: 0.97, 2: 0.98, 3: 1.00, 4: 1.02, 5: 1.03, 6: 1.03,
-    7: 1.02, 8: 1.01, 9: 1.00, 10: 0.99, 11: 0.98, 12: 0.97
+    1: 0.97,
+    2: 0.98,
+    3: 1.00,
+    4: 1.02,
+    5: 1.03,
+    6: 1.03,
+    7: 1.02,
+    8: 1.01,
+    9: 1.00,
+    10: 0.99,
+    11: 0.98,
+    12: 0.97,
 }
 
 
@@ -114,13 +130,15 @@ def generate_mock_sales_data(area: str, months: int) -> List[Dict]:
 
             dom = max(5, 30 + ((i * 7) % 40) - (20 if month in [4, 5, 6] else 0))
 
-            sales.append({
-                "sale_date": sale_date.strftime("%Y-%m-%d"),
-                "sale_price": price,
-                "list_price": int(price * (1.01 + (i % 3) * 0.01)),
-                "dom": dom,
-                "sqft": 2200 + (i * 100) % 1500
-            })
+            sales.append(
+                {
+                    "sale_date": sale_date.strftime("%Y-%m-%d"),
+                    "sale_price": price,
+                    "list_price": int(price * (1.01 + (i % 3) * 0.01)),
+                    "dom": dom,
+                    "sqft": 2200 + (i * 100) % 1500,
+                }
+            )
 
     return sales
 
@@ -134,7 +152,7 @@ def generate_mock_inventory(area: str) -> Dict:
         "pending": 38,
         "price_reduced_30d": 28,
         "avg_list_price": 659000,
-        "median_list_price": 625000
+        "median_list_price": 625000,
     }
 
 
@@ -155,7 +173,7 @@ def calculate_price_trends(sales: List[Dict]) -> PriceTrend:
             mom_change=0,
             yoy_change=0,
             trend_direction="unknown",
-            momentum="unknown"
+            momentum="unknown",
         )
 
     # Current and previous month medians
@@ -182,8 +200,7 @@ def calculate_price_trends(sales: List[Dict]) -> PriceTrend:
     if len(months) >= 3:
         recent_medians = [statistics.median(monthly[m]) for m in months[-3:]]
         recent_changes = [
-            (recent_medians[i] - recent_medians[i-1]) / recent_medians[i-1]
-            for i in range(1, len(recent_medians))
+            (recent_medians[i] - recent_medians[i - 1]) / recent_medians[i - 1] for i in range(1, len(recent_medians))
         ]
         avg_change = sum(recent_changes) / len(recent_changes)
 
@@ -206,7 +223,7 @@ def calculate_price_trends(sales: List[Dict]) -> PriceTrend:
         mom_change=round(mom_change, 4),
         yoy_change=round(yoy_change, 4),
         trend_direction=trend,
-        momentum=momentum
+        momentum=momentum,
     )
 
 
@@ -227,19 +244,14 @@ def calculate_inventory_metrics(inventory: Dict, sales: List[Dict]) -> Inventory
         new_listings_month=new_listings,
         sold_month=sold,
         months_supply=round(months_supply, 2),
-        absorption_rate=round(absorption, 2)
+        absorption_rate=round(absorption, 2),
     )
 
 
 def calculate_velocity_metrics(sales: List[Dict]) -> VelocityMetrics:
     """Calculate sales velocity metrics."""
     if not sales:
-        return VelocityMetrics(
-            avg_dom=0,
-            median_dom=0,
-            dom_trend="unknown",
-            list_to_sale_ratio=1.0
-        )
+        return VelocityMetrics(avg_dom=0, median_dom=0, dom_trend="unknown", list_to_sale_ratio=1.0)
 
     # Recent sales only (last 90 days)
     recent_cutoff = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
@@ -272,17 +284,12 @@ def calculate_velocity_metrics(sales: List[Dict]) -> VelocityMetrics:
     lsp_ratio = sum(ratios) / len(ratios)
 
     return VelocityMetrics(
-        avg_dom=avg_dom,
-        median_dom=median_dom,
-        dom_trend=dom_trend,
-        list_to_sale_ratio=round(lsp_ratio, 3)
+        avg_dom=avg_dom, median_dom=median_dom, dom_trend=dom_trend, list_to_sale_ratio=round(lsp_ratio, 3)
     )
 
 
 def calculate_market_health(
-    price_trends: PriceTrend,
-    inventory: InventoryMetrics,
-    velocity: VelocityMetrics
+    price_trends: PriceTrend, inventory: InventoryMetrics, velocity: VelocityMetrics
 ) -> MarketHealth:
     """Calculate overall market health score."""
     scores = {}
@@ -342,12 +349,7 @@ def calculate_market_health(
     scores["lsp"] = lsp_score
 
     # Calculate total
-    total = (
-        scores["supply"] * 0.30 +
-        scores["price"] * 0.25 +
-        scores["velocity"] * 0.25 +
-        scores["lsp"] * 0.20
-    )
+    total = scores["supply"] * 0.30 + scores["price"] * 0.25 + scores["velocity"] * 0.25 + scores["lsp"] * 0.20
 
     # Classification
     if total >= 80:
@@ -384,20 +386,17 @@ def calculate_market_health(
         score=round(total, 1),
         classification=classification,
         buyer_seller_index=round(bs_index, 3),
-        market_type=market_type
+        market_type=market_type,
     )
 
 
-def generate_forecasts(
-    price_trends: PriceTrend,
-    months_ahead: List[int] = [3, 6, 12]
-) -> List[Forecast]:
+def generate_forecasts(price_trends: PriceTrend, months_ahead: List[int] = [3, 6, 12]) -> List[Forecast]:
     """Generate price forecasts."""
     forecasts = []
     current = price_trends.current_median
 
     # Monthly growth rate from YoY
-    monthly_growth = (1 + price_trends.yoy_change) ** (1/12) - 1
+    monthly_growth = (1 + price_trends.yoy_change) ** (1 / 12) - 1
 
     # Blend with recent momentum
     blended = price_trends.mom_change * 0.3 + monthly_growth * 0.7
@@ -412,21 +411,21 @@ def generate_forecasts(
         confidence = max(0.5, 0.85 - months * 0.03)
         margin = 1 - confidence
 
-        forecasts.append(Forecast(
-            months_ahead=months,
-            projected_median=int(round(projected, -3)),
-            confidence_low=int(round(projected * (1 - margin), -3)),
-            confidence_high=int(round(projected * (1 + margin), -3)),
-            confidence_level=round(confidence, 2)
-        ))
+        forecasts.append(
+            Forecast(
+                months_ahead=months,
+                projected_median=int(round(projected, -3)),
+                confidence_low=int(round(projected * (1 - margin), -3)),
+                confidence_high=int(round(projected * (1 + margin), -3)),
+                confidence_level=round(confidence, 2),
+            )
+        )
 
     return forecasts
 
 
 def generate_recommendations(
-    market_health: MarketHealth,
-    price_trends: PriceTrend,
-    inventory: InventoryMetrics
+    market_health: MarketHealth, price_trends: PriceTrend, inventory: InventoryMetrics
 ) -> Dict[str, str]:
     """Generate market-specific recommendations."""
     recommendations = {}
@@ -514,7 +513,7 @@ def analyze_market(area: str, period_months: int) -> MarketTrendReport:
         market_health=health,
         forecasts=forecasts,
         seasonal_factor=seasonal,
-        recommendations=recommendations
+        recommendations=recommendations,
     )
 
 
@@ -530,26 +529,26 @@ def report_to_dict(report: MarketTrendReport) -> Dict:
             "mom_change": report.price_trends.mom_change,
             "yoy_change": report.price_trends.yoy_change,
             "trend_direction": report.price_trends.trend_direction,
-            "momentum": report.price_trends.momentum
+            "momentum": report.price_trends.momentum,
         },
         "inventory": {
             "active_listings": report.inventory.active_listings,
             "new_listings_month": report.inventory.new_listings_month,
             "sold_month": report.inventory.sold_month,
             "months_supply": report.inventory.months_supply,
-            "absorption_rate": report.inventory.absorption_rate
+            "absorption_rate": report.inventory.absorption_rate,
         },
         "velocity": {
             "avg_dom": report.velocity.avg_dom,
             "median_dom": report.velocity.median_dom,
             "dom_trend": report.velocity.dom_trend,
-            "list_to_sale_ratio": report.velocity.list_to_sale_ratio
+            "list_to_sale_ratio": report.velocity.list_to_sale_ratio,
         },
         "market_health": {
             "score": report.market_health.score,
             "classification": report.market_health.classification,
             "buyer_seller_index": report.market_health.buyer_seller_index,
-            "market_type": report.market_health.market_type
+            "market_type": report.market_health.market_type,
         },
         "forecasts": [
             {
@@ -557,36 +556,20 @@ def report_to_dict(report: MarketTrendReport) -> Dict:
                 "projected_median": f.projected_median,
                 "confidence_low": f.confidence_low,
                 "confidence_high": f.confidence_high,
-                "confidence_level": f.confidence_level
+                "confidence_level": f.confidence_level,
             }
             for f in report.forecasts
         ],
         "seasonal_factor": report.seasonal_factor,
-        "recommendations": report.recommendations
+        "recommendations": report.recommendations,
     }
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Analyze Market Trends"
-    )
-    parser.add_argument(
-        "--area",
-        default="Round Rock",
-        help="Market area to analyze"
-    )
-    parser.add_argument(
-        "--period",
-        type=int,
-        default=12,
-        help="Analysis period in months"
-    )
-    parser.add_argument(
-        "--output",
-        choices=["json", "text"],
-        default="text",
-        help="Output format"
-    )
+    parser = argparse.ArgumentParser(description="Analyze Market Trends")
+    parser.add_argument("--area", default="Round Rock", help="Market area to analyze")
+    parser.add_argument("--period", type=int, default=12, help="Analysis period in months")
+    parser.add_argument("--output", choices=["json", "text"], default="text", help="Output format")
 
     args = parser.parse_args()
 

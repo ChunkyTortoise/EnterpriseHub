@@ -1,8 +1,8 @@
 """
-SDR ProspectSourcer — pulls prospects from GHL pipeline and stale lead sources.
+SDR ProspectSourcer — pulls prospects from GHL pipeline, stale leads, and MLS feeds.
 
-Phase 1: GHL_PIPELINE + STALE_LEAD sources only.
-Phase 2 will add: EXPIRED_MLS, FSBO via SimulatedMLSFeed.
+Phase 1: GHL_PIPELINE + STALE_LEAD sources.
+Phase 2: EXPIRED_MLS + FSBO via SimulatedMLSFeed.
 """
 
 from __future__ import annotations
@@ -15,6 +15,8 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+
+from ghl_real_estate_ai.services.sdr.mls_feed import SimulatedMLSFeed
 
 if TYPE_CHECKING:
     from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
@@ -58,8 +60,10 @@ class ProspectSourcer:
     def __init__(
         self,
         ghl_client: "EnhancedGHLClient",
+        mls_feed: Optional[SimulatedMLSFeed] = None,
     ) -> None:
         self._ghl = ghl_client
+        self._mls_feed = mls_feed or SimulatedMLSFeed()
         self._pipeline_stage_ids: List[str] = [
             s.strip() for s in os.getenv("SDR_PIPELINE_STAGE_IDS", "").split(",") if s.strip()
         ]
@@ -90,8 +94,10 @@ class ProspectSourcer:
                 tasks.append(self._fetch_ghl_pipeline_leads(location_id, max_per_source))
             elif source == ProspectSource.STALE_LEAD:
                 tasks.append(self._fetch_stale_leads(location_id, max_per_source))
-            else:
-                logger.warning(f"[SDR] Source {source.value} not yet implemented (Phase 2)")
+            elif source == ProspectSource.EXPIRED_MLS:
+                tasks.append(self._fetch_expired_mls(location_id, max_per_source))
+            elif source == ProspectSource.FSBO:
+                tasks.append(self._fetch_fsbo(location_id, max_per_source))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -165,6 +171,75 @@ class ProspectSourcer:
                 custom_fields=c.custom_fields,
             )
             for c in contacts
+        ]
+
+
+    async def _fetch_expired_mls(self, location_id: str, limit: int) -> List[ProspectProfile]:
+        """Pull expired MLS listings and convert to ProspectProfiles."""
+        try:
+            listings = await self._mls_feed.fetch_expired_listings(location_id, limit)
+        except Exception as exc:
+            logger.error(f"[SDR] Expired MLS fetch failed: {exc}")
+            return []
+
+        return [
+            ProspectProfile(
+                contact_id=f"mls-{listing.mls_number}",
+                location_id=location_id,
+                source=ProspectSource.EXPIRED_MLS,
+                lead_type="seller",
+                property_address=f"{listing.address}, {listing.city}, {listing.state} {listing.zip_code}",
+                days_in_stage=listing.dom,
+                last_activity=listing.expired_at,
+                custom_fields={},
+                mls_data={
+                    "mls_number": listing.mls_number,
+                    "price": listing.price,
+                    "dom": listing.dom,
+                    "bedrooms": listing.bedrooms,
+                    "bathrooms": listing.bathrooms,
+                    "sqft": listing.sqft,
+                    "year_built": listing.year_built,
+                    "owner_name": listing.owner_name,
+                    "owner_phone": listing.owner_phone,
+                    "property_type": listing.property_type,
+                },
+            )
+            for listing in listings
+        ]
+
+    async def _fetch_fsbo(self, location_id: str, limit: int) -> List[ProspectProfile]:
+        """Pull FSBO listings and convert to ProspectProfiles."""
+        try:
+            listings = await self._mls_feed.fetch_fsbo_listings(location_id, limit)
+        except Exception as exc:
+            logger.error(f"[SDR] FSBO fetch failed: {exc}")
+            return []
+
+        return [
+            ProspectProfile(
+                contact_id=f"mls-{listing.mls_number}",
+                location_id=location_id,
+                source=ProspectSource.FSBO,
+                lead_type="seller",
+                property_address=f"{listing.address}, {listing.city}, {listing.state} {listing.zip_code}",
+                days_in_stage=listing.dom,
+                last_activity=listing.last_list_date,
+                custom_fields={},
+                mls_data={
+                    "mls_number": listing.mls_number,
+                    "price": listing.price,
+                    "dom": listing.dom,
+                    "bedrooms": listing.bedrooms,
+                    "bathrooms": listing.bathrooms,
+                    "sqft": listing.sqft,
+                    "year_built": listing.year_built,
+                    "owner_name": listing.owner_name,
+                    "owner_phone": listing.owner_phone,
+                    "property_type": listing.property_type,
+                },
+            )
+            for listing in listings
         ]
 
 

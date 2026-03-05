@@ -311,8 +311,7 @@ class Settings(BaseSettings):
         environment = info.data.get("environment", "development")
         if environment == "production" and not v:
             logging.warning(
-                "GHL_WEBHOOK_SECRET not set — webhook requests will be rejected. "
-                "Set via: openssl rand -hex 32"
+                "GHL_WEBHOOK_SECRET not set — webhook requests will be rejected. Set via: openssl rand -hex 32"
             )
         elif v and len(v) < 32:
             logging.warning("Webhook secret should be at least 32 characters")
@@ -326,9 +325,7 @@ class Settings(BaseSettings):
         if not v and not redis_url:
             environment = info.data.get("environment", "development")
             if environment == "production":
-                logging.warning(
-                    "Neither REDIS_PASSWORD nor REDIS_URL is set — Redis cache will use in-memory fallback"
-                )
+                logging.warning("Neither REDIS_PASSWORD nor REDIS_URL is set — Redis cache will use in-memory fallback")
         elif v and len(v) < 32:
             logging.warning("Redis password should be at least 32 characters")
         return v

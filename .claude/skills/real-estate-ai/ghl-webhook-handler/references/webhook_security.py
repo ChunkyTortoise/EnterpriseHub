@@ -42,11 +42,7 @@ class WebhookSecurityManager:
             return False
 
         # Compute expected signature
-        computed = hmac.new(
-            self.webhook_secret.encode(),
-            body,
-            hashlib.sha256
-        ).hexdigest()
+        computed = hmac.new(self.webhook_secret.encode(), body, hashlib.sha256).hexdigest()
 
         # Use constant-time comparison to prevent timing attacks
         return hmac.compare_digest(signature, computed)
@@ -63,8 +59,7 @@ class WebhookSecurityManager:
         # Clean old requests
         if client_ip in self.request_counts:
             self.request_counts[client_ip] = [
-                req_time for req_time in self.request_counts[client_ip]
-                if req_time > cutoff
+                req_time for req_time in self.request_counts[client_ip] if req_time > cutoff
             ]
         else:
             self.request_counts[client_ip] = []
@@ -107,15 +102,15 @@ class WebhookSecurityManager:
         """
         # Remove HTML/script tags from string fields
         import re
-        html_pattern = re.compile(r'<[^>]+>')
+
+        html_pattern = re.compile(r"<[^>]+>")
 
         def clean_string(value):
             if isinstance(value, str):
                 # Remove HTML tags
-                cleaned = html_pattern.sub('', value)
+                cleaned = html_pattern.sub("", value)
                 # Remove control characters except newlines/tabs
-                cleaned = ''.join(char for char in cleaned
-                                if ord(char) >= 32 or char in '\n\t')
+                cleaned = "".join(char for char in cleaned if ord(char) >= 32 or char in "\n\t")
                 return cleaned.strip()
             return value
 
@@ -140,37 +135,21 @@ class WebhookErrorHandler:
     def handle_security_error(error_type: str) -> HTTPException:
         """Return appropriate error for security violations."""
         error_responses = {
-            "invalid_signature": HTTPException(
-                status_code=401,
-                detail="Invalid webhook signature"
-            ),
-            "rate_limit": HTTPException(
-                status_code=429,
-                detail="Rate limit exceeded"
-            ),
-            "invalid_payload": HTTPException(
-                status_code=400,
-                detail="Invalid payload structure"
-            ),
-            "missing_secret": HTTPException(
-                status_code=500,
-                detail="Webhook configuration error"
-            )
+            "invalid_signature": HTTPException(status_code=401, detail="Invalid webhook signature"),
+            "rate_limit": HTTPException(status_code=429, detail="Rate limit exceeded"),
+            "invalid_payload": HTTPException(status_code=400, detail="Invalid payload structure"),
+            "missing_secret": HTTPException(status_code=500, detail="Webhook configuration error"),
         }
 
-        return error_responses.get(error_type, HTTPException(
-            status_code=400,
-            detail="Webhook processing error"
-        ))
+        return error_responses.get(error_type, HTTPException(status_code=400, detail="Webhook processing error"))
 
     @staticmethod
     def log_security_event(event_type: str, details: Dict):
         """Log security events for monitoring and compliance."""
-        logger.warning(f"Security event: {event_type}", extra={
-            "event_type": event_type,
-            "timestamp": datetime.utcnow().isoformat(),
-            "details": details
-        })
+        logger.warning(
+            f"Security event: {event_type}",
+            extra={"event_type": event_type, "timestamp": datetime.utcnow().isoformat(), "details": details},
+        )
 
 
 # Usage patterns from production system
