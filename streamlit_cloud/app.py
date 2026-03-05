@@ -657,7 +657,7 @@ st.markdown(
     "EnterpriseHub — Portfolio Demo &bull; "
     "<a href='https://github.com/ChunkyTortoise/EnterpriseHub' style='color:#6366f1'>Source Code</a> &bull; "
     "<a href='https://chunkytortoise.github.io' style='color:#6366f1'>Portfolio</a> &bull; "
-    "4,467 tests &bull; FastAPI + Streamlit + PostgreSQL + Redis + Claude AI"
+    "8,600+ test functions &bull; FastAPI + Streamlit + PostgreSQL + Redis + Claude AI"
     "</div>",
     unsafe_allow_html=True,
 )
