@@ -168,9 +168,10 @@ EnterpriseHub delivers quantified outcomes based on production deployment (Case 
 
 ### Proof Artifacts
 
-- **Live Demo**: [https://ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app) — Interactive BI dashboard
-- **Source Code**: [GitHub Repository](https://github.com/ChunkyTortoise/EnterpriseHub) — 8,600+ test functions, CI/CD, comprehensive docs
-- **Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md) — Detailed system design with diagrams
+- **Live Demo**: [ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app) — Interactive BI dashboard (circuit breaker, cache perf, handoff Sankey)
+- **API Docs**: [/docs](https://enterprisehub-api.onrender.com/docs) — Swagger UI with zero-auth demo endpoints (`/demo/leads`, `/demo/pipeline`, `/demo/health`)
+- **Source Code**: [GitHub](https://github.com/ChunkyTortoise/EnterpriseHub) — 8,600+ test functions, CI/CD, comprehensive docs
+- **Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md) — Monorepo layout, test organization, AI orchestration diagrams
 - **System Diagram**: [assets/diagrams/arete_architecture.svg](assets/diagrams/arete_architecture.svg) — Visual architecture
 
 <details>

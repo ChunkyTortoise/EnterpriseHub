@@ -14,7 +14,7 @@ Critical path: CalendarBookingService, jorge_seller_engine HOT actions,
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -195,8 +195,9 @@ class TestSellerFlow:
         This tests the GHL state that would be set after Q5 (price given) with
         scheduling_step=confirmed.
         """
-        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
         from types import SimpleNamespace
+
+        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
         cm = _StubConversationManager()
         ghl = _make_mock_ghl_client()
@@ -257,8 +258,9 @@ class TestSellerFlow:
         HOT_SELLER_WORKFLOW_ID must only trigger when scheduling_step == 'confirmed'.
         Before booking, no workflow trigger should appear in actions.
         """
-        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
         from types import SimpleNamespace
+
+        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
         cm = _StubConversationManager()
         ghl = _make_mock_ghl_client()
@@ -320,8 +322,9 @@ class TestSellerFlow:
         price expectation, and PCS score must all appear in the actions dict
         when a seller is HOT.
         """
-        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
         from types import SimpleNamespace
+
+        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
         cm = _StubConversationManager()
         ghl = _make_mock_ghl_client()
@@ -405,8 +408,9 @@ class TestSellerFlow:
         ai_valuation_price field must use the seller's stated price_expectation (650000),
         not the lead-pricing model value.
         """
-        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
         from types import SimpleNamespace
+
+        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
         cm = _StubConversationManager()
         ghl = _make_mock_ghl_client()
@@ -841,6 +845,7 @@ class TestWebhookSmoke:
         must be '/api' to get the canonical path /api/ghl/webhook.
         """
         from fastapi import FastAPI
+
         from ghl_real_estate_ai.api.routes import webhook as wh_module
 
         test_app = FastAPI()

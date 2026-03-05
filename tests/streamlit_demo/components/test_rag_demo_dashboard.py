@@ -7,9 +7,9 @@ We test the data processing functions directly.
 import pytest
 
 from ghl_real_estate_ai.streamlit_demo.components.rag_demo_dashboard import (
+    DEMO_DOCUMENTS,
     BM25Index,
     DenseIndex,
-    DEMO_DOCUMENTS,
     SearchResult,
     _bm25_only_search,
     _build_corpus,
@@ -20,7 +20,6 @@ from ghl_real_estate_ai.streamlit_demo.components.rag_demo_dashboard import (
     _rrf_fusion,
     _tokenize,
 )
-
 
 # -- Tokenizer tests -----------------------------------------------------------
 

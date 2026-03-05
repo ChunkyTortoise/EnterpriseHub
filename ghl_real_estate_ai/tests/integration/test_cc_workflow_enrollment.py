@@ -9,10 +9,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ghl_real_estate_ai.api.routes.webhook import _build_cc_workflow_actions, _detect_negative_sentiment, _detect_rejected_offer, handle_ghl_tag_webhook
+from ghl_real_estate_ai.api.routes.webhook import (
+    _build_cc_workflow_actions,
+    _detect_negative_sentiment,
+    _detect_rejected_offer,
+    handle_ghl_tag_webhook,
+)
 from ghl_real_estate_ai.api.schemas.ghl import ActionType, GHLContact, GHLTagWebhookEvent
 from ghl_real_estate_ai.services.ghost_followup_engine import GhostFollowUpEngine, GhostState
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

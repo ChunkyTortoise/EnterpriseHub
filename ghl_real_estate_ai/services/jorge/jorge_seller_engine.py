@@ -15,7 +15,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, ClassVar
+from typing import Any, ClassVar, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 from ghl_real_estate_ai.services.compliance_escalation import ComplianceEscalationService
@@ -436,7 +436,10 @@ class JorgeSellerEngine:
 
                     if temperature == "hot" and not context.get("pending_appointment"):
                         try:
-                            from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, get_smart_scheduler
+                            from ghl_real_estate_ai.services.calendar_scheduler import (
+                                AppointmentType,
+                                get_smart_scheduler,
+                            )
 
                             scheduler = get_smart_scheduler(self.ghl_client)
 
