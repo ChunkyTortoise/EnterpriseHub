@@ -9,8 +9,8 @@ from fastapi.responses import JSONResponse
 
 from .dependencies import DemoAuthError
 from .models import ApiErrorDetail, ApiErrorResponse, HealthResponse
-from .routers import admin as admin_router
 from .routers import accelerator_v2 as accelerator_v2_router
+from .routers import admin as admin_router
 from .routers import ghl as ghl_router
 from .routers import portal as portal_router
 from .routers import root as root_router

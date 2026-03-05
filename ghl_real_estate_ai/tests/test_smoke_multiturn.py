@@ -8,10 +8,10 @@ from __future__ import annotations
 
 import asyncio
 import os
-import pytest
 from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
 # ── Seller smoke test via _StubConversationManager ─────────────────────────
 
@@ -74,6 +74,7 @@ async def test_seller_valuation_field_uses_price_expectation_not_lead_pricing() 
     Tests the exact change made to jorge_seller_engine._create_seller_actions.
     """
     from types import SimpleNamespace
+
     from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
     cm = _StubConversationManager()
@@ -122,6 +123,7 @@ async def test_seller_valuation_field_uses_price_expectation_not_lead_pricing() 
 async def test_seller_valuation_field_omitted_when_no_price_expectation() -> None:
     """When seller hasn't given a price yet, ai_valuation_price should not be written."""
     from types import SimpleNamespace
+
     from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
     cm = _StubConversationManager()

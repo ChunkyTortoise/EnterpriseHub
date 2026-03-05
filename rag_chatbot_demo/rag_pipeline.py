@@ -8,9 +8,8 @@ from __future__ import annotations
 import re
 import time
 from dataclasses import dataclass, field
-from uuid import uuid4
-
 from typing import Any
+from uuid import uuid4
 
 import anthropic
 import httpx

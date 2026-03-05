@@ -44,15 +44,15 @@ import asyncio
 import hashlib
 import hmac
 import json
+
+# ─── Infrastructure constants ────────────────────────────────────────────────
+import os
 import sys
 import time
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
 import httpx
-
-# ─── Infrastructure constants ────────────────────────────────────────────────
-import os
 
 BASE        = os.getenv("BASE_URL",    "https://jorge-realty-ai.onrender.com/api/ghl/webhook")
 SECRET      = os.getenv("HMAC_SECRET")

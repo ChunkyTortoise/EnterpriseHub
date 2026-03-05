@@ -132,7 +132,9 @@ class ClaudeOrchestrator:
             from ghl_real_estate_ai.core.mcp_servers.domain.analytics_intelligence_server import mcp as analytics_mcp
             from ghl_real_estate_ai.core.mcp_servers.domain.lead_intelligence_server import mcp as lead_mcp
             from ghl_real_estate_ai.core.mcp_servers.domain.market_intelligence_server import mcp as market_mcp
-            from ghl_real_estate_ai.core.mcp_servers.domain.negotiation_intelligence_server import mcp as negotiation_mcp
+            from ghl_real_estate_ai.core.mcp_servers.domain.negotiation_intelligence_server import (
+                mcp as negotiation_mcp,
+            )
             from ghl_real_estate_ai.core.mcp_servers.domain.property_intelligence_server import mcp as property_mcp
             from ghl_real_estate_ai.core.mcp_servers.domain.research_intelligence_server import mcp as research_mcp
 

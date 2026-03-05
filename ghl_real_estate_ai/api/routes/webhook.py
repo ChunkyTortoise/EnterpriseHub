@@ -41,10 +41,19 @@ from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
 from ghl_real_estate_ai.ghl_utils.jorge_rancho_config import rancho_config
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.lead_scoring import (
+    ConditionRealism,
+    FinancialReadinessScore,
+    LeadIntentProfile,
+    MotivationSignals,
+    PriceResponsiveness,
+    PsychologicalCommitmentScore,
+    TimelineCommitment,
+)
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics
-from ghl_real_estate_ai.services.calendar_scheduler import CalendarScheduler
 from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.calendar_scheduler import CalendarScheduler
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus, compliance_guard
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer
 from ghl_real_estate_ai.services.ghl_client import GHLClient
@@ -55,15 +64,6 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import Processin
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
 from ghl_real_estate_ai.services.mls_client import MLSClient
-from ghl_real_estate_ai.models.lead_scoring import (
-    ConditionRealism,
-    FinancialReadinessScore,
-    LeadIntentProfile,
-    MotivationSignals,
-    PriceResponsiveness,
-    PsychologicalCommitmentScore,
-    TimelineCommitment,
-)
 from ghl_real_estate_ai.services.security_framework import verify_webhook
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
 from ghl_real_estate_ai.services.tenant_service import TenantService

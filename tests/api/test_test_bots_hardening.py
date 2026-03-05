@@ -15,6 +15,8 @@ import pytest
 
 from ghl_real_estate_ai.api.routes.inbound_compliance import (
     check_inbound_compliance as _check_inbound_compliance,
+)
+from ghl_real_estate_ai.api.routes.inbound_compliance import (
     sanitise_message as _sanitise_message,
 )
 
