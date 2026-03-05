@@ -115,6 +115,7 @@ async def health_alias():
     """Backward-compat alias — Render may poll /health if configured before switch."""
     return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
 
+
 # GHL webhook: POST /api/ghl/webhook → bot logic
 app.include_router(webhook.router, prefix="/api")
 

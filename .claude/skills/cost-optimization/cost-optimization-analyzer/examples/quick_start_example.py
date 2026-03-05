@@ -12,6 +12,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent.parent.parent
 sys.path.append(str(project_root))
 
+
 def demonstrate_cost_optimization():
     """Demonstrate the key cost optimization features"""
 
@@ -24,11 +25,11 @@ def demonstrate_cost_optimization():
 
     # Simulated current costs
     current_costs = {
-        'railway_compute': 45.00,
-        'database_storage': 25.00,
-        'api_calls_anthropic': 120.00,
-        'api_calls_openai': 85.00,
-        'bandwidth': 15.00
+        "railway_compute": 45.00,
+        "database_storage": 25.00,
+        "api_calls_anthropic": 120.00,
+        "api_calls_openai": 85.00,
+        "bandwidth": 15.00,
     }
 
     # Calculate total
@@ -44,29 +45,29 @@ def demonstrate_cost_optimization():
     print("-" * 40)
 
     optimizations = {
-        'api_calls_anthropic': {
-            'current': 120.00,
-            'optimized': 75.00,
-            'method': 'Intelligent caching and request batching',
-            'savings_percent': 37.5
+        "api_calls_anthropic": {
+            "current": 120.00,
+            "optimized": 75.00,
+            "method": "Intelligent caching and request batching",
+            "savings_percent": 37.5,
         },
-        'railway_compute': {
-            'current': 45.00,
-            'optimized': 35.00,
-            'method': 'Right-sizing based on actual usage patterns',
-            'savings_percent': 22.2
+        "railway_compute": {
+            "current": 45.00,
+            "optimized": 35.00,
+            "method": "Right-sizing based on actual usage patterns",
+            "savings_percent": 22.2,
         },
-        'api_calls_openai': {
-            'current': 85.00,
-            'optimized': 60.00,
-            'method': 'Use cheaper models for non-critical operations',
-            'savings_percent': 29.4
-        }
+        "api_calls_openai": {
+            "current": 85.00,
+            "optimized": 60.00,
+            "method": "Use cheaper models for non-critical operations",
+            "savings_percent": 29.4,
+        },
     }
 
     total_savings = 0
     for service, opt in optimizations.items():
-        savings = opt['current'] - opt['optimized']
+        savings = opt["current"] - opt["optimized"]
         total_savings += savings
         print(f"  🎯 {service.replace('_', ' ').title()}:")
         print(f"     Current: ${opt['current']:.2f} → Optimized: ${opt['optimized']:.2f}")
@@ -96,28 +97,13 @@ def demonstrate_cost_optimization():
 
     # Sort by ROI (savings / implementation effort)
     implementation_priorities = [
-        {
-            'optimization': 'API Request Caching',
-            'savings': 45.00,
-            'effort_hours': 8,
-            'roi_score': 45.00 / 8
-        },
-        {
-            'optimization': 'Infrastructure Right-sizing',
-            'savings': 10.00,
-            'effort_hours': 4,
-            'roi_score': 10.00 / 4
-        },
-        {
-            'optimization': 'API Model Optimization',
-            'savings': 25.00,
-            'effort_hours': 12,
-            'roi_score': 25.00 / 12
-        }
+        {"optimization": "API Request Caching", "savings": 45.00, "effort_hours": 8, "roi_score": 45.00 / 8},
+        {"optimization": "Infrastructure Right-sizing", "savings": 10.00, "effort_hours": 4, "roi_score": 10.00 / 4},
+        {"optimization": "API Model Optimization", "savings": 25.00, "effort_hours": 12, "roi_score": 25.00 / 12},
     ]
 
     # Sort by ROI score
-    implementation_priorities.sort(key=lambda x: x['roi_score'], reverse=True)
+    implementation_priorities.sort(key=lambda x: x["roi_score"], reverse=True)
 
     for i, priority in enumerate(implementation_priorities, 1):
         print(f"  {i}. {priority['optimization']}")
@@ -135,7 +121,7 @@ def demonstrate_cost_optimization():
         "2. Implement API response caching (4 hours)",
         "3. Configure infrastructure monitoring (30 minutes)",
         "4. Optimize database queries (2 hours)",
-        "5. Set up automated cost alerts (20 minutes)"
+        "5. Set up automated cost alerts (20 minutes)",
     ]
 
     for step in steps:
@@ -145,6 +131,7 @@ def demonstrate_cost_optimization():
     print(f"\nTotal Implementation Time: {total_implementation_time} hours")
     print(f"Expected Monthly Savings: ${total_savings:.2f}")
     print(f"Time to Value: Immediate cost visibility, {payback_months:.1f} months full ROI")
+
 
 if __name__ == "__main__":
     demonstrate_cost_optimization()

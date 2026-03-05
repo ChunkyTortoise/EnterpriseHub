@@ -17,7 +17,7 @@ class FlakytRedisTest:
         # Bad: Fixed delay doesn't guarantee Redis is ready
         await asyncio.sleep(2)
 
-        client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+        client = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
         # This might fail if Redis isn't ready yet
         await client.set("test_key", "test_value")
@@ -34,7 +34,7 @@ class RobustRedisTest:
         condition: Callable[[], bool],
         timeout: float = 10.0,
         poll_interval: float = 0.1,
-        error_message: str = "Condition not met"
+        error_message: str = "Condition not met",
     ) -> None:
         """Wait for a condition to become true within timeout."""
         start_time = asyncio.get_event_loop().time()
@@ -62,13 +62,13 @@ class RobustRedisTest:
     @pytest.fixture
     async def redis_client(self):
         """Redis client with proper readiness waiting."""
-        client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+        client = redis.Redis(host="localhost", port=6379, decode_responses=True)
 
         # Wait for Redis to be ready
         await self.wait_for_condition(
             condition=lambda: self.ping_redis(client),
             timeout=30.0,
-            error_message="Redis not available within 30 seconds"
+            error_message="Redis not available within 30 seconds",
         )
 
         yield client
@@ -94,7 +94,7 @@ class RobustRedisTest:
         await self.wait_for_condition(
             condition=lambda: self._check_subscription_active(pubsub),
             timeout=5.0,
-            error_message="Subscription not active"
+            error_message="Subscription not active",
         )
 
         # Publish message
@@ -102,22 +102,19 @@ class RobustRedisTest:
 
         # Wait for message to arrive
         message_received = False
+
         async def check_message():
             nonlocal message_received
             try:
                 message = await pubsub.get_message(timeout=0.1)
-                if message and message['type'] == 'message':
+                if message and message["type"] == "message":
                     message_received = True
                     return True
             except Exception:
                 pass
             return False
 
-        await self.wait_for_condition(
-            condition=check_message,
-            timeout=5.0,
-            error_message="Message not received"
-        )
+        await self.wait_for_condition(condition=check_message, timeout=5.0, error_message="Message not received")
 
         assert message_received
         await pubsub.close()
@@ -127,7 +124,7 @@ class RobustRedisTest:
         try:
             # Check if we get subscription confirmation
             message = await pubsub.get_message(timeout=0.1)
-            return message is not None and message['type'] == 'subscribe'
+            return message is not None and message["type"] == "subscribe"
         except Exception:
             return False
 
@@ -136,12 +133,9 @@ class RobustRedisTest:
 class RedisHighAvailabilityTest:
     """Example of testing Redis in HA configurations."""
 
-    async def wait_for_redis_cluster_ready(
-        self,
-        nodes: list,
-        timeout: float = 30.0
-    ) -> None:
+    async def wait_for_redis_cluster_ready(self, nodes: list, timeout: float = 30.0) -> None:
         """Wait for Redis cluster to be ready."""
+
         async def check_cluster():
             try:
                 # Check if at least majority of nodes are responsive
@@ -161,19 +155,15 @@ class RedisHighAvailabilityTest:
             except Exception:
                 return False
 
-        await self.wait_for_condition(
-            condition=check_cluster,
-            timeout=timeout,
-            error_message="Redis cluster not ready"
-        )
+        await self.wait_for_condition(condition=check_cluster, timeout=timeout, error_message="Redis cluster not ready")
 
     @pytest.mark.asyncio
     async def test_redis_failover(self):
         """Test Redis failover scenarios."""
         nodes = [
-            {'host': 'localhost', 'port': 6379},
-            {'host': 'localhost', 'port': 6380},
-            {'host': 'localhost', 'port': 6381}
+            {"host": "localhost", "port": 6379},
+            {"host": "localhost", "port": 6380},
+            {"host": "localhost", "port": 6381},
         ]
 
         await self.wait_for_redis_cluster_ready(nodes, timeout=60.0)
@@ -187,22 +177,18 @@ class RedisHighAvailabilityTest:
 class RedisDockerTest:
     """Example of testing Redis in Docker containers."""
 
-    async def wait_for_docker_redis(
-        self,
-        container_name: str,
-        port: int = 6379,
-        timeout: float = 30.0
-    ) -> redis.Redis:
+    async def wait_for_docker_redis(self, container_name: str, port: int = 6379, timeout: float = 30.0) -> redis.Redis:
         """Wait for Redis container to be ready and return client."""
-        client = redis.Redis(host='localhost', port=port, decode_responses=True)
+        client = redis.Redis(host="localhost", port=port, decode_responses=True)
 
         async def check_docker_redis():
             try:
                 # Also check that container is actually running
                 import docker
+
                 docker_client = docker.from_env()
                 container = docker_client.containers.get(container_name)
-                if container.status != 'running':
+                if container.status != "running":
                     return False
 
                 # Check Redis responsiveness
@@ -212,9 +198,7 @@ class RedisDockerTest:
                 return False
 
         await self.wait_for_condition(
-            condition=check_docker_redis,
-            timeout=timeout,
-            error_message=f"Redis container {container_name} not ready"
+            condition=check_docker_redis, timeout=timeout, error_message=f"Redis container {container_name} not ready"
         )
 
         return client
@@ -222,10 +206,7 @@ class RedisDockerTest:
     @pytest.mark.asyncio
     async def test_with_docker_redis(self):
         """Test with Redis running in Docker."""
-        client = await self.wait_for_docker_redis(
-            container_name='test-redis',
-            timeout=60.0
-        )
+        client = await self.wait_for_docker_redis(container_name="test-redis", timeout=60.0)
 
         try:
             await client.set("docker_test", "works")

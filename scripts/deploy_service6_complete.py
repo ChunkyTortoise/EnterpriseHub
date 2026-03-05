@@ -33,7 +33,7 @@ class Service6Deployer:
             "services": {"status": "pending", "details": {}},
             "integration_tests": {"status": "pending", "details": {}},
             "performance_tests": {"status": "pending", "details": {}},
-            "production_readiness": {"status": "pending", "details": {}}
+            "production_readiness": {"status": "pending", "details": {}},
         }
 
     async def deploy_complete_service6(self) -> bool:
@@ -49,7 +49,7 @@ class Service6Deployer:
             ("Service Configuration", self.configure_services),
             ("Integration Testing", self.run_integration_tests),
             ("Performance Testing", self.run_performance_tests),
-            ("Production Readiness", self.validate_production_readiness)
+            ("Production Readiness", self.validate_production_readiness),
         ]
 
         all_successful = True
@@ -73,13 +73,7 @@ class Service6Deployer:
         """Prepare the deployment environment."""
         try:
             # Ensure all required directories exist
-            required_dirs = [
-                "data",
-                "logs",
-                "database/migrations",
-                "scripts",
-                "ghl_real_estate_ai/services"
-            ]
+            required_dirs = ["data", "logs", "database/migrations", "scripts", "ghl_real_estate_ai/services"]
 
             created_dirs = []
             for dir_path in required_dirs:
@@ -92,7 +86,7 @@ class Service6Deployer:
             service6_files = {
                 "tiered_cache_service.py": "Tiered Cache Service",
                 "template_library_service.py": "Template Library Service",
-                "realtime_behavioral_network.py": "Behavioral Intelligence Network"
+                "realtime_behavioral_network.py": "Behavioral Intelligence Network",
             }
 
             missing_files = []
@@ -106,10 +100,7 @@ class Service6Deployer:
                     missing_files.append(f"{description} ({filename})")
 
             # Check migration files
-            migration_files = [
-                "006_performance_critical_indexes.sql",
-                "007_create_message_templates.sql"
-            ]
+            migration_files = ["006_performance_critical_indexes.sql", "007_create_message_templates.sql"]
 
             existing_migrations = []
             for migration in migration_files:
@@ -124,8 +115,8 @@ class Service6Deployer:
                     "service_files_found": len(existing_files),
                     "service_files_missing": len(missing_files),
                     "migrations_available": len(existing_migrations),
-                    "existing_services": existing_files
-                }
+                    "existing_services": existing_files,
+                },
             }
 
             print(f"   📁 Directories prepared: {len(created_dirs)} created")
@@ -141,14 +132,7 @@ class Service6Deployer:
     async def verify_dependencies(self) -> bool:
         """Verify all required dependencies are installed."""
         try:
-            required_packages = [
-                "asyncpg",
-                "psycopg2-binary",
-                "alembic",
-                "redis",
-                "jinja2",
-                "scipy"
-            ]
+            required_packages = ["asyncpg", "psycopg2-binary", "alembic", "redis", "jinja2", "scipy"]
 
             installed_packages = []
             missing_packages = []
@@ -165,7 +149,7 @@ class Service6Deployer:
             python_ok = python_version.major == 3 and python_version.minor >= 8
 
             # Check virtual environment
-            in_venv = hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix)
+            in_venv = hasattr(sys, "real_prefix") or (hasattr(sys, "base_prefix") and sys.base_prefix != sys.prefix)
 
             self.deployment_results["dependencies"] = {
                 "status": "passed" if len(missing_packages) == 0 and python_ok else "failed",
@@ -175,8 +159,8 @@ class Service6Deployer:
                     "virtual_environment": in_venv,
                     "packages_installed": len(installed_packages),
                     "packages_missing": len(missing_packages),
-                    "missing_list": missing_packages
-                }
+                    "missing_list": missing_packages,
+                },
             }
 
             print(f"   🐍 Python: {python_version.major}.{python_version.minor}.{python_version.micro}")
@@ -199,7 +183,7 @@ class Service6Deployer:
             services = {
                 "Cache Service": "ghl_real_estate_ai.services.tiered_cache_service",
                 "Template Service": "ghl_real_estate_ai.services.template_library_service",
-                "Behavioral Network": "ghl_real_estate_ai.services.realtime_behavioral_network"
+                "Behavioral Network": "ghl_real_estate_ai.services.realtime_behavioral_network",
             }
 
             importable_services = []
@@ -209,6 +193,7 @@ class Service6Deployer:
                 try:
                     # Attempt to import the module
                     import importlib
+
                     importlib.import_module(module_path)
                     importable_services.append(service_name)
                 except Exception as e:
@@ -218,6 +203,7 @@ class Service6Deployer:
             database_ok = False
             try:
                 import sqlite3
+
                 conn = sqlite3.connect("./test.db")
                 cursor = conn.cursor()
                 cursor.execute("SELECT COUNT(*) FROM message_templates")
@@ -233,8 +219,8 @@ class Service6Deployer:
                     "total_services": len(services),
                     "database_accessible": database_ok,
                     "import_errors": import_errors,
-                    "working_services": importable_services
-                }
+                    "working_services": importable_services,
+                },
             }
 
             print(f"   🔧 Services: {len(importable_services)}/{len(services)} importable")
@@ -276,8 +262,8 @@ class Service6Deployer:
                     "database_schema": schema_test,
                     "service_instantiation": instantiation_test,
                     "cross_service_communication": communication_test,
-                    "configuration": config_test
-                }
+                    "configuration": config_test,
+                },
             }
 
             print(f"   🧪 Integration tests: {tests_passed}/{total_tests} passed")
@@ -293,6 +279,7 @@ class Service6Deployer:
         """Test database schema is properly set up."""
         try:
             import sqlite3
+
             conn = sqlite3.connect("./test.db")
             cursor = conn.cursor()
 
@@ -331,7 +318,8 @@ class Service6Deployer:
         """Test configuration loading."""
         try:
             from ghl_real_estate_ai.ghl_utils.config import settings
-            return settings is not None and hasattr(settings, 'database_url')
+
+            return settings is not None and hasattr(settings, "database_url")
 
         except Exception:
             return False
@@ -362,8 +350,8 @@ class Service6Deployer:
                     "template_performance": template_performance,
                     "memory_usage": memory_test,
                     "average_score": round(avg_performance, 1),
-                    "target_threshold": 75
-                }
+                    "target_threshold": 75,
+                },
             }
 
             print(f"   🏃 Database performance: {db_performance:.1f}%")
@@ -459,7 +447,7 @@ class Service6Deployer:
                 "security_configuration": self._check_security_readiness(),
                 "monitoring_ready": self._check_monitoring_readiness(),
                 "backup_procedures": self._check_backup_readiness(),
-                "documentation": self._check_documentation_readiness()
+                "documentation": self._check_documentation_readiness(),
             }
 
             readiness_results = {}
@@ -479,8 +467,8 @@ class Service6Deployer:
                     "checks_passed": passed_checks,
                     "total_checks": total_checks,
                     "readiness_score": round(passed_checks / total_checks * 100, 1),
-                    "check_results": readiness_results
-                }
+                    "check_results": readiness_results,
+                },
             }
 
             print(f"   ✅ Readiness checks: {passed_checks}/{total_checks} passed")
@@ -568,14 +556,18 @@ class Service6Deployer:
 
         # Save deployment report
         report_file = project_root / "service6_deployment_report.json"
-        with open(report_file, 'w') as f:
-            json.dump({
-                "deployment_time": self.deployment_start.isoformat(),
-                "duration_seconds": duration.total_seconds(),
-                "phases_passed": passed_phases,
-                "total_phases": total_phases,
-                "results": self.deployment_results
-            }, f, indent=2)
+        with open(report_file, "w") as f:
+            json.dump(
+                {
+                    "deployment_time": self.deployment_start.isoformat(),
+                    "duration_seconds": duration.total_seconds(),
+                    "phases_passed": passed_phases,
+                    "total_phases": total_phases,
+                    "results": self.deployment_results,
+                },
+                f,
+                indent=2,
+            )
 
         print(f"\n📄 Deployment report saved: {report_file}")
 

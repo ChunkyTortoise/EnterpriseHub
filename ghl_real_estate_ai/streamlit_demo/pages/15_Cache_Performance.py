@@ -20,14 +20,11 @@ st.set_page_config(
 inject_elite_css()
 
 st.title("CACHE PERFORMANCE")
-st.markdown(
-    "### L1 Memory | L2 Redis | L3 PostgreSQL -- 3-Tier Cache Intelligence"
-)
+st.markdown("### L1 Memory | L2 Redis | L3 PostgreSQL -- 3-Tier Cache Intelligence")
 
 render_cache_performance_dashboard()
 
 st.markdown("---")
 st.caption(
-    "EnterpriseHub Cache Intelligence v2026.1 | "
-    "Canonical metrics: L1 59.1% + L2 20.5% + L3 8.5% = 88.1% total hit rate"
+    "EnterpriseHub Cache Intelligence v2026.1 | Canonical metrics: L1 59.1% + L2 20.5% + L3 8.5% = 88.1% total hit rate"
 )

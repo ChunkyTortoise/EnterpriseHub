@@ -153,6 +153,7 @@ class AcceptancePredictorService:
         feature_extractor=None,  # SellerAcceptanceFeatureExtractor from Task #11
         enable_caching: bool = True,
         force_rule_based: bool = False,
+        mode: Optional["PredictionMode"] = None,
     ):
         """
         Initialize acceptance predictor service.
@@ -162,11 +163,18 @@ class AcceptancePredictorService:
             feature_extractor: Feature extraction service (Task #11)
             enable_caching: Enable 1-hour prediction caching
             force_rule_based: Force rule-based mode (for testing)
+            mode: Explicit PredictionMode override (takes precedence over force_rule_based)
         """
         self.model_path = model_path or Path("models/acceptance_predictor.pkl")
         self.feature_extractor = feature_extractor
         self.enable_caching = enable_caching
-        self.force_rule_based = force_rule_based
+        # mode= param takes precedence; PredictionMode.RULE_BASED implies force_rule_based
+        if mode is not None:
+            self.mode = mode
+            self.force_rule_based = mode == PredictionMode.RULE_BASED
+        else:
+            self.force_rule_based = force_rule_based
+            self.mode = PredictionMode.RULE_BASED if force_rule_based else None
 
         self.cache_service = get_cache_service() if enable_caching else None
         self.model = None
@@ -809,3 +817,7 @@ def get_acceptance_predictor(
         enable_caching=enable_caching,
         force_rule_based=force_rule_based,
     )
+
+
+# Alias for backward compatibility with tests
+AcceptancePredictor = AcceptancePredictorService

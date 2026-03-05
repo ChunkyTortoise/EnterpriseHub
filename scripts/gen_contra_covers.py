@@ -24,7 +24,9 @@ def get_font(size, bold=False):
         "/System/Library/Fonts/Supplemental/Arial Bold.ttf" if bold else "/System/Library/Fonts/Supplemental/Arial.ttf",
         "/System/Library/Fonts/Helvetica.ttc",
         "/Library/Fonts/Arial.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+        if bold
+        else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     ]
     for path in candidates:
         if os.path.exists(path):
@@ -75,7 +77,12 @@ def make_service1():
     draw.text((80, 120), "Custom Python", fill=(255, 255, 255), font=font_xl)
     draw.text((80, 210), "Data Dashboard", fill=(64, 130, 255), font=font_xl)
 
-    draw.text((80, 320), "Turn your CSV/Excel into an interactive\nbusiness intelligence dashboard.", fill=(180, 200, 240), font=font_lg)
+    draw.text(
+        (80, 320),
+        "Turn your CSV/Excel into an interactive\nbusiness intelligence dashboard.",
+        fill=(180, 200, 240),
+        font=font_lg,
+    )
 
     # Metrics row
     metrics = ["313 Automated Tests", "100K rows in <500ms", "Full Source Code"]
@@ -106,8 +113,7 @@ def make_service2():
     for i in range(5):
         lx = doc_x + 24
         ly = doc_y + 50 + i * 42
-        draw.rounded_rectangle([lx, ly, lx + 172, ly + 12], radius=6,
-                                fill=(130, 80, 220) if i == 0 else (80, 50, 140))
+        draw.rounded_rectangle([lx, ly, lx + 172, ly + 12], radius=6, fill=(130, 80, 220) if i == 0 else (80, 50, 140))
     # Magnifier
     cx, cy, cr = doc_x + 200, doc_y + 240, 44
     draw.ellipse([cx - cr, cy - cr, cx + cr, cy + cr], fill=(130, 80, 220))
@@ -122,7 +128,12 @@ def make_service2():
     draw.text((80, 120), "AI Document Search", fill=(255, 255, 255), font=font_xl)
     draw.text((80, 210), "& Q&A with Citations", fill=(160, 100, 255), font=font_xl)
 
-    draw.text((80, 320), "Ask questions in plain English — get precise\nanswers with exact source citations.", fill=(190, 170, 230), font=font_lg)
+    draw.text(
+        (80, 320),
+        "Ask questions in plain English — get precise\nanswers with exact source citations.",
+        fill=(190, 170, 230),
+        font=font_lg,
+    )
 
     metrics = ["94% Retrieval Precision", "RAGAS Score: 0.89", "322 Tests"]
     x = 80
@@ -165,7 +176,12 @@ def make_service3():
     draw.text((80, 210), "Lead Qualification", fill=(40, 200, 180), font=font_xl)
     draw.text((80, 295), "& CRM Integration", fill=(40, 200, 180), font=font_xl)
 
-    draw.text((80, 400), "24/7 lead qualification with instant CRM sync\nto GoHighLevel, HubSpot, or Salesforce.", fill=(160, 210, 205), font=font_lg)
+    draw.text(
+        (80, 400),
+        "24/7 lead qualification with instant CRM sync\nto GoHighLevel, HubSpot, or Salesforce.",
+        fill=(160, 210, 205),
+        font=font_lg,
+    )
 
     metrics = ["4,937 Tests", "94% Handoff Rate", "<200ms Response"]
     x = 80
@@ -173,7 +189,9 @@ def make_service3():
         x = draw_pill(draw, x, 530, m, (15, 80, 80), (100, 230, 220), get_font(22))
 
     draw.text((80, 630), "Starting at $150 · 5-Day Delivery", fill=(60, 160, 150), font=font_sm)
-    draw.text((80, H - 80), "Python  ·  FastAPI  ·  Claude AI  ·  GoHighLevel  ·  Redis", fill=(50, 120, 115), font=font_tag)
+    draw.text(
+        (80, H - 80), "Python  ·  FastAPI  ·  Claude AI  ·  GoHighLevel  ·  Redis", fill=(50, 120, 115), font=font_tag
+    )
     draw_accent_bar(draw, (40, 200, 180))
 
     img.save(os.path.join(OUTPUT_DIR, "service3-chatbot.jpg"), "JPEG", quality=95)

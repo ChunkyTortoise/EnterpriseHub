@@ -114,9 +114,7 @@ class AcceleratorService:
         if request.event_count <= 0:
             raise AcceleratorValidationError("event_count must be greater than zero for proof-pack generation.")
         if request.missing_sources:
-            raise AcceleratorValidationError(
-                f"Missing KPI source(s): {', '.join(sorted(request.missing_sources))}"
-            )
+            raise AcceleratorValidationError(f"Missing KPI source(s): {', '.join(sorted(request.missing_sources))}")
         vertical_profile = request.vertical_profile or existing["vertical_profile"]
         adapter = self._adapter_for(vertical_profile)
 

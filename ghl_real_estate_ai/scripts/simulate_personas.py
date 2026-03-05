@@ -183,6 +183,7 @@ PERSONAS: List[Dict[str, Any]] = [
 # Mock-building helpers
 # ---------------------------------------------------------------------------
 
+
 def _build_seller_mocks(persona: Dict) -> Dict[str, Any]:
     """Build seller bot mocks tuned per persona expectations."""
     expected = persona["expected"]
@@ -208,15 +209,9 @@ def _build_seller_mocks(persona: Dict) -> Dict[str, Any]:
     mock_ml.predict_optimal_touchpoints = AsyncMock(return_value={})
 
     patches = {
-        "LeadIntentDecoder": patch(
-            "ghl_real_estate_ai.agents.jorge_seller_bot.LeadIntentDecoder"
-        ),
-        "SellerIntentDecoder": patch(
-            "ghl_real_estate_ai.agents.jorge_seller_bot.SellerIntentDecoder"
-        ),
-        "ClaudeAssistant": patch(
-            "ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant"
-        ),
+        "LeadIntentDecoder": patch("ghl_real_estate_ai.agents.jorge_seller_bot.LeadIntentDecoder"),
+        "SellerIntentDecoder": patch("ghl_real_estate_ai.agents.jorge_seller_bot.SellerIntentDecoder"),
+        "ClaudeAssistant": patch("ghl_real_estate_ai.agents.jorge_seller_bot.ClaudeAssistant"),
         "get_event_publisher": patch(
             "ghl_real_estate_ai.agents.jorge_seller_bot.get_event_publisher",
             return_value=mock_event_pub,
@@ -225,9 +220,7 @@ def _build_seller_mocks(persona: Dict) -> Dict[str, Any]:
             "ghl_real_estate_ai.agents.jorge_seller_bot.get_ml_analytics_engine",
             return_value=mock_ml,
         ),
-        "GHLWorkflowService": patch(
-            "ghl_real_estate_ai.agents.jorge_seller_bot.GHLWorkflowService"
-        ),
+        "GHLWorkflowService": patch("ghl_real_estate_ai.agents.jorge_seller_bot.GHLWorkflowService"),
     }
 
     return {
@@ -276,36 +269,16 @@ def _build_buyer_mocks(persona: Dict) -> Dict[str, Any]:
         next_step = "preferences"
 
     patches = {
-        "BuyerIntentDecoder": patch(
-            "ghl_real_estate_ai.agents.jorge_buyer_bot.BuyerIntentDecoder"
-        ),
-        "ClaudeAssistant": patch(
-            "ghl_real_estate_ai.agents.jorge_buyer_bot.ClaudeAssistant"
-        ),
-        "get_event_publisher": patch(
-            "ghl_real_estate_ai.agents.jorge_buyer_bot.get_event_publisher"
-        ),
-        "PropertyMatcher": patch(
-            "ghl_real_estate_ai.agents.jorge_buyer_bot.PropertyMatcher"
-        ),
-        "GHLClient": patch(
-            "ghl_real_estate_ai.agents.jorge_buyer_bot.GHLClient"
-        ),
-        "GHLWorkflowService": patch(
-            "ghl_real_estate_ai.agents.jorge_buyer_bot.GHLWorkflowService"
-        ),
-        "ChurnDetectionService": patch(
-            "ghl_real_estate_ai.agents.jorge_buyer_bot.ChurnDetectionService"
-        ),
-        "LeadScoringIntegration": patch(
-            "ghl_real_estate_ai.agents.jorge_buyer_bot.LeadScoringIntegration"
-        ),
-        "SentimentAnalysisService": patch(
-            "ghl_real_estate_ai.agents.jorge_buyer_bot.SentimentAnalysisService"
-        ),
-        "BuyerPersonaService": patch(
-            "ghl_real_estate_ai.agents.jorge_buyer_bot.BuyerPersonaService"
-        ),
+        "BuyerIntentDecoder": patch("ghl_real_estate_ai.agents.jorge_buyer_bot.BuyerIntentDecoder"),
+        "ClaudeAssistant": patch("ghl_real_estate_ai.agents.jorge_buyer_bot.ClaudeAssistant"),
+        "get_event_publisher": patch("ghl_real_estate_ai.agents.jorge_buyer_bot.get_event_publisher"),
+        "PropertyMatcher": patch("ghl_real_estate_ai.agents.jorge_buyer_bot.PropertyMatcher"),
+        "GHLClient": patch("ghl_real_estate_ai.agents.jorge_buyer_bot.GHLClient"),
+        "GHLWorkflowService": patch("ghl_real_estate_ai.agents.jorge_buyer_bot.GHLWorkflowService"),
+        "ChurnDetectionService": patch("ghl_real_estate_ai.agents.jorge_buyer_bot.ChurnDetectionService"),
+        "LeadScoringIntegration": patch("ghl_real_estate_ai.agents.jorge_buyer_bot.LeadScoringIntegration"),
+        "SentimentAnalysisService": patch("ghl_real_estate_ai.agents.jorge_buyer_bot.SentimentAnalysisService"),
+        "BuyerPersonaService": patch("ghl_real_estate_ai.agents.jorge_buyer_bot.BuyerPersonaService"),
         "get_buyer_conversation_memory": patch(
             "ghl_real_estate_ai.agents.jorge_buyer_bot.get_buyer_conversation_memory"
         ),
@@ -325,6 +298,7 @@ def _build_buyer_mocks(persona: Dict) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Conversation runners
 # ---------------------------------------------------------------------------
+
 
 async def run_seller_persona(persona: Dict) -> Dict[str, Any]:
     """Run a 5-turn seller conversation and return aggregated result."""
@@ -393,9 +367,7 @@ async def run_seller_persona(persona: Dict) -> Dict[str, Any]:
             )
             # Append bot response to history for next turn
             if last_result.get("response_content"):
-                history.append(
-                    {"role": "assistant", "content": last_result["response_content"]}
-                )
+                history.append({"role": "assistant", "content": last_result["response_content"]})
 
         # Derive stall_detected from the StallDetector keyword logic on ALL messages
         from ghl_real_estate_ai.agents.seller.stall_detector import StallDetector
@@ -528,9 +500,7 @@ async def run_buyer_persona(persona: Dict) -> Dict[str, Any]:
             )
         )
         persona_svc_instance.get_persona_insights = AsyncMock(
-            return_value=SimpleNamespace(
-                model_dump=lambda: {"tone": "friendly", "content_focus": "general"}
-            )
+            return_value=SimpleNamespace(model_dump=lambda: {"tone": "friendly", "content_focus": "general"})
         )
 
         # Configure GHLClient
@@ -561,9 +531,7 @@ async def run_buyer_persona(persona: Dict) -> Dict[str, Any]:
                 conversation_history=list(history),
             )
             if last_result.get("response_content"):
-                history.append(
-                    {"role": "assistant", "content": last_result["response_content"]}
-                )
+                history.append({"role": "assistant", "content": last_result["response_content"]})
 
         return {
             "response_content": last_result.get("response_content", ""),
@@ -586,6 +554,7 @@ async def run_buyer_persona(persona: Dict) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Assertion checker
 # ---------------------------------------------------------------------------
+
 
 def check_expected(result: Dict, expected: Dict, persona_name: str) -> bool:
     """Check if result meets expected outcomes. Print detail on failure."""
@@ -653,6 +622,7 @@ def check_expected(result: Dict, expected: Dict, persona_name: str) -> bool:
 # Main driver
 # ---------------------------------------------------------------------------
 
+
 async def simulate_all_personas() -> bool:
     """Run all 10 personas and return True if all pass."""
     all_passed = True
@@ -681,6 +651,7 @@ async def simulate_all_personas() -> bool:
         except Exception as e:
             print(f"[ERROR] {persona['id']} -- {persona['name']}: {e}")
             import traceback
+
             traceback.print_exc()
             all_passed = False
 

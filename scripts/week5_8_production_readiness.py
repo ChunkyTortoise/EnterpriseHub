@@ -27,14 +27,22 @@ if _project_root not in sys.path:
 
 WEEK5_8_SERVICES = [
     ("langgraph_orchestrator", "ghl_real_estate_ai.services.langgraph_orchestrator", "get_orchestrator"),
-    ("behavioral_trigger_detector", "ghl_real_estate_ai.services.behavioral_trigger_detector", "get_behavioral_detector"),
+    (
+        "behavioral_trigger_detector",
+        "ghl_real_estate_ai.services.behavioral_trigger_detector",
+        "get_behavioral_detector",
+    ),
     ("compliance_middleware", "ghl_real_estate_ai.services.compliance_middleware", "get_compliance_middleware"),
     ("vapi_voice_integration", "ghl_real_estate_ai.services.vapi_voice_integration", "get_voice_intelligence"),
     ("xgboost_propensity_engine", "ghl_real_estate_ai.services.xgboost_propensity_engine", "get_propensity_engine"),
     ("heygen_video_service", "ghl_real_estate_ai.services.heygen_video_service", "get_heygen_service"),
     ("sentiment_analysis_engine", "ghl_real_estate_ai.services.sentiment_analysis_engine", "get_sentiment_engine"),
     ("unified_channel_router", "ghl_real_estate_ai.services.unified_channel_router", "get_channel_router"),
-    ("real_time_market_intelligence", "ghl_real_estate_ai.services.real_time_market_intelligence", "get_market_intelligence"),
+    (
+        "real_time_market_intelligence",
+        "ghl_real_estate_ai.services.real_time_market_intelligence",
+        "get_market_intelligence",
+    ),
     ("professional_export_engine", "ghl_real_estate_ai.services.professional_export_engine", "get_export_engine"),
     ("commission_forecast_engine", "ghl_real_estate_ai.services.commission_forecast_engine", "get_forecast_engine"),
 ]
@@ -72,6 +80,7 @@ TEST_FILES = [
 # ---------------------------------------------------------------------------
 # Check functions
 # ---------------------------------------------------------------------------
+
 
 def check_service_imports() -> Tuple[int, int, List[str]]:
     """Verify all 11 service modules import and expose their singleton factory."""
@@ -144,6 +153,7 @@ def check_health_endpoints() -> Tuple[int, int, List[str]]:
 def check_main_registration() -> Tuple[bool, str]:
     """Verify all 11 routes are registered in main.py."""
     import pathlib
+
     main_content = pathlib.Path("ghl_real_estate_ai/api/main.py").read_text()
     missing = []
     for name, module_path, _ in WEEK5_8_ROUTES:
@@ -171,41 +181,92 @@ def check_performance_benchmarks() -> Tuple[int, int, List[str]]:
     errors: List[str] = []
 
     benchmarks = [
-        ("Lead Qualification", "POST", "/api/v1/orchestration/qualify", {
-            "contact_id": "bench_001", "location_id": "loc_001",
-            "message": "I want to sell my house in Victoria",
-            "contact_tags": ["Needs Qualifying"], "contact_info": {},
-        }, 200),
-        ("Behavioral Analysis", "POST", "/api/v1/behavioral/analyze", {
-            "message": "Maybe if the price is right...",
-            "contact_id": "bench_002",
-        }, 200),
-        ("Compliance Check", "POST", "/api/v1/compliance-enforcement/enforce", {
-            "message": "Great property that matches your budget!",
-            "contact_id": "bench_003", "mode": "buyer",
-        }, 200),
-        ("Propensity Score", "POST", "/api/v1/propensity/score", {
-            "contact_id": "bench_004",
-            "conversation_context": {"message_count": 10, "urgency_score": 0.5},
-            "behavioral_signals": {"composite_score": 0.6},
-        }, 200),
-        ("SHAP Explanation", "POST", "/api/v1/propensity/explain", {
-            "contact_id": "bench_005",
-            "conversation_context": {"engagement_score": 0.7},
-            "behavioral_signals": {"composite_score": 0.6},
-        }, 100),
-        ("Sentiment Analysis", "POST", "/api/v1/sentiment/analyze", {
-            "contact_id": "bench_006", "message": "I love this house!",
-            "channel": "sms",
-        }, 200),
+        (
+            "Lead Qualification",
+            "POST",
+            "/api/v1/orchestration/qualify",
+            {
+                "contact_id": "bench_001",
+                "location_id": "loc_001",
+                "message": "I want to sell my house in Victoria",
+                "contact_tags": ["Needs Qualifying"],
+                "contact_info": {},
+            },
+            200,
+        ),
+        (
+            "Behavioral Analysis",
+            "POST",
+            "/api/v1/behavioral/analyze",
+            {
+                "message": "Maybe if the price is right...",
+                "contact_id": "bench_002",
+            },
+            200,
+        ),
+        (
+            "Compliance Check",
+            "POST",
+            "/api/v1/compliance-enforcement/enforce",
+            {
+                "message": "Great property that matches your budget!",
+                "contact_id": "bench_003",
+                "mode": "buyer",
+            },
+            200,
+        ),
+        (
+            "Propensity Score",
+            "POST",
+            "/api/v1/propensity/score",
+            {
+                "contact_id": "bench_004",
+                "conversation_context": {"message_count": 10, "urgency_score": 0.5},
+                "behavioral_signals": {"composite_score": 0.6},
+            },
+            200,
+        ),
+        (
+            "SHAP Explanation",
+            "POST",
+            "/api/v1/propensity/explain",
+            {
+                "contact_id": "bench_005",
+                "conversation_context": {"engagement_score": 0.7},
+                "behavioral_signals": {"composite_score": 0.6},
+            },
+            100,
+        ),
+        (
+            "Sentiment Analysis",
+            "POST",
+            "/api/v1/sentiment/analyze",
+            {
+                "contact_id": "bench_006",
+                "message": "I love this house!",
+                "channel": "sms",
+            },
+            200,
+        ),
         ("Market Snapshot", "GET", "/api/v1/rc-market/snapshot/victoria", None, 200),
-        ("Commission Forecast", "POST", "/api/v1/commission-forecast/forecast", {
-            "pipeline": [
-                {"deal_id": "d1", "contact_name": "Alice", "property_value": 750000,
-                 "stage": "showing", "expected_close_month": 3},
-            ],
-            "horizon_months": 3,
-        }, 200),
+        (
+            "Commission Forecast",
+            "POST",
+            "/api/v1/commission-forecast/forecast",
+            {
+                "pipeline": [
+                    {
+                        "deal_id": "d1",
+                        "contact_name": "Alice",
+                        "property_value": 750000,
+                        "stage": "showing",
+                        "expected_close_month": 3,
+                    },
+                ],
+                "horizon_months": 3,
+            },
+            200,
+        ),
     ]
 
     for name, method, path, payload, target_ms in benchmarks:
@@ -234,6 +295,7 @@ def check_performance_benchmarks() -> Tuple[int, int, List[str]]:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main():
     print("=" * 70)

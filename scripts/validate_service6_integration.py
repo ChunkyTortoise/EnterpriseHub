@@ -34,13 +34,13 @@ class Service6Validator:
             "template_library": {"status": "pending", "details": {}},
             "behavioral_network": {"status": "pending", "details": {}},
             "integration": {"status": "pending", "details": {}},
-            "performance": {"status": "pending", "details": {}}
+            "performance": {"status": "pending", "details": {}},
         }
         self.performance_targets = {
             "cache_latency_reduction": 70,  # 70% improvement target
-            "template_efficiency": 93,      # 93% faster updates
-            "query_improvement": 90,        # 90% database optimization
-            "ml_scoring_improvement": 90    # 200ms → 20ms (90% improvement)
+            "template_efficiency": 93,  # 93% faster updates
+            "query_improvement": 90,  # 90% database optimization
+            "ml_scoring_improvement": 90,  # 200ms → 20ms (90% improvement)
         }
 
     async def validate_all(self) -> bool:
@@ -59,7 +59,7 @@ class Service6Validator:
             ("Template Library Service", self.validate_template_library),
             ("Behavioral Intelligence", self.validate_behavioral_network),
             ("Component Integration", self.validate_integration),
-            ("Performance Targets", self.validate_performance)
+            ("Performance Targets", self.validate_performance),
         ]
 
         all_passed = True
@@ -120,8 +120,8 @@ class Service6Validator:
                     "migrations_applied": migration_count,
                     "required_tables": len(required_tables),
                     "existing_tables": len(existing_tables),
-                    "table_list": existing_tables
-                }
+                    "table_list": existing_tables,
+                },
             }
 
             print(f"   📋 Migrations applied: {migration_count}")
@@ -145,7 +145,7 @@ class Service6Validator:
                 return False
 
             # Read the file and validate implementation
-            with open(cache_file, 'r') as f:
+            with open(cache_file, "r") as f:
                 content = f.read()
 
             # Check for key implementation elements
@@ -156,7 +156,7 @@ class Service6Validator:
                 "async def get",
                 "async def set",
                 "def _evict_lru",
-                "_calculate_hit_ratio"
+                "_calculate_hit_ratio",
             ]
 
             implemented = []
@@ -176,12 +176,12 @@ class Service6Validator:
             self.results["tiered_cache"] = {
                 "status": "passed" if implementation_score >= 80 else "failed",
                 "details": {
-                    "file_size_lines": len(content.split('\n')),
+                    "file_size_lines": len(content.split("\n")),
                     "implementation_score": round(implementation_score, 1),
                     "required_elements": len(required_elements),
                     "implemented_elements": len(implemented),
-                    "imports_found": len(imports_found)
-                }
+                    "imports_found": len(imports_found),
+                },
             }
 
             print(f"   📄 File size: {len(content.split('\n'))} lines")
@@ -203,7 +203,7 @@ class Service6Validator:
                 self.results["template_library"]["details"]["error"] = "Template library service file not found"
                 return False
 
-            with open(template_file, 'r') as f:
+            with open(template_file, "r") as f:
                 content = f.read()
 
             # Check for A/B testing framework implementation
@@ -212,7 +212,7 @@ class Service6Validator:
                 "calculate_statistical_significance",
                 "confidence_interval",
                 "chi_square_test",
-                "effect_size_calculation"
+                "effect_size_calculation",
             ]
 
             ab_implemented = []
@@ -226,7 +226,7 @@ class Service6Validator:
                 "read_template",
                 "update_template",
                 "delete_template",
-                "list_templates"
+                "list_templates",
             ]
 
             crud_implemented = []
@@ -241,13 +241,13 @@ class Service6Validator:
             self.results["template_library"] = {
                 "status": "passed" if overall_score >= 80 else "failed",
                 "details": {
-                    "file_size_lines": len(content.split('\n')),
+                    "file_size_lines": len(content.split("\n")),
                     "ab_testing_score": round(ab_score, 1),
                     "crud_operations_score": round(crud_score, 1),
                     "overall_implementation": round(overall_score, 1),
                     "ab_elements": len(ab_implemented),
-                    "crud_elements": len(crud_implemented)
-                }
+                    "crud_elements": len(crud_implemented),
+                },
             }
 
             print(f"   📄 File size: {len(content.split('\n'))} lines")
@@ -270,7 +270,7 @@ class Service6Validator:
                 self.results["behavioral_network"]["details"]["error"] = "Behavioral network file not found"
                 return False
 
-            with open(behavioral_file, 'r') as f:
+            with open(behavioral_file, "r") as f:
                 content = f.read()
 
             # Check for the 5 TODO methods that were implemented
@@ -279,7 +279,7 @@ class Service6Validator:
                 "_notify_agent",
                 "_set_priority_flag",
                 "_send_automated_response",
-                "_deliver_personalized_content"
+                "_deliver_personalized_content",
             ]
 
             implemented_methods = []
@@ -291,8 +291,8 @@ class Service6Validator:
                     # Count lines in method implementation
                     method_start = content.find(f"def {method}")
                     if method_start > -1:
-                        method_content = content[method_start:method_start+2000]  # Sample
-                        method_lines = len([line for line in method_content.split('\n')[:50] if line.strip()])
+                        method_content = content[method_start : method_start + 2000]  # Sample
+                        method_lines = len([line for line in method_content.split("\n")[:50] if line.strip()])
                         method_implementations[method] = method_lines
 
             # Check for multi-channel alert system
@@ -307,13 +307,13 @@ class Service6Validator:
             self.results["behavioral_network"] = {
                 "status": "passed" if implementation_score >= 80 else "failed",
                 "details": {
-                    "file_size_lines": len(content.split('\n')),
+                    "file_size_lines": len(content.split("\n")),
                     "todo_methods_implemented": len(implemented_methods),
                     "total_todo_methods": len(todo_methods),
                     "implementation_score": round(implementation_score, 1),
                     "alert_channels": len(channels_found),
-                    "method_details": method_implementations
-                }
+                    "method_details": method_implementations,
+                },
             }
 
             print(f"   📄 File size: {len(content.split('\n'))} lines")
@@ -331,11 +331,7 @@ class Service6Validator:
         """Validate integration between Service 6 components."""
         try:
             # Check if all major service files exist and can be imported
-            service_files = [
-                "tiered_cache_service.py",
-                "template_library_service.py",
-                "realtime_behavioral_network.py"
-            ]
+            service_files = ["tiered_cache_service.py", "template_library_service.py", "realtime_behavioral_network.py"]
 
             services_path = project_root / "ghl_real_estate_ai" / "services"
             existing_services = []
@@ -351,7 +347,7 @@ class Service6Validator:
             # Check if services import each other or shared dependencies
             for service_file in existing_services:
                 service_path = services_path / service_file
-                with open(service_path, 'r') as f:
+                with open(service_path, "r") as f:
                     content = f.read()
 
                 # Look for cross-service imports
@@ -371,8 +367,8 @@ class Service6Validator:
                     "existing_services": len(existing_services),
                     "integration_patterns": len(integration_patterns),
                     "integration_score": round(integration_score, 1),
-                    "services_list": existing_services
-                }
+                    "services_list": existing_services,
+                },
             }
 
             print(f"   🔧 Services found: {len(existing_services)}/{len(service_files)}")
@@ -427,8 +423,8 @@ class Service6Validator:
                     "targets_met": targets_met,
                     "total_targets": total_targets,
                     "overall_score": round(overall_score, 1),
-                    "metrics": performance_metrics
-                }
+                    "metrics": performance_metrics,
+                },
             }
 
             print(f"   🎯 Targets met: {targets_met}/{total_targets}")
@@ -460,7 +456,7 @@ class Service6Validator:
         """Simulate template update performance."""
         # Simulate template update times
         old_update_time = 1800  # 30 minutes
-        new_update_time = 120   # 2 minutes
+        new_update_time = 120  # 2 minutes
 
         improvement = (old_update_time - new_update_time) / old_update_time * 100
         return improvement
@@ -494,7 +490,7 @@ class Service6Validator:
         """Simulate ML scoring performance improvement."""
         # Simulate the improvement from 200ms to 20ms
         old_scoring_time = 200  # ms
-        new_scoring_time = 20   # ms
+        new_scoring_time = 20  # ms
 
         improvement = (old_scoring_time - new_scoring_time) / old_scoring_time * 100
         return improvement

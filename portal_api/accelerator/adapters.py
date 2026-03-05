@@ -13,7 +13,9 @@ from .schemas import (
 class AdapterCapability(Protocol):
     vertical: VerticalProfile
 
-    def validate_intake(self, goals: list[str], channels: list[str], event_volume_14d: int) -> tuple[int, list[str]]: ...
+    def validate_intake(
+        self, goals: list[str], channels: list[str], event_volume_14d: int
+    ) -> tuple[int, list[str]]: ...
 
     def generate_blueprint(
         self,
@@ -118,7 +120,9 @@ class RealEstateAdapter(_BaseAdapter):
         baseline_sla = max(baseline_kpis.get("response_sla_seconds", 1.0), 1.0)
         current_sla = current_kpis.get("response_sla_seconds", 0.0)
         sla_adherence = round(max(0.0, 1.0 - (current_sla / baseline_sla)), 4)
-        roi_estimate = round((delta.get("attributed_revenue", 0.0) / max(current_kpis.get("qualified_leads", 1.0), 1.0)), 2)
+        roi_estimate = round(
+            (delta.get("attributed_revenue", 0.0) / max(current_kpis.get("qualified_leads", 1.0), 1.0)), 2
+        )
         return ProofPack(
             engagement_id=engagement_id,
             vertical_profile=self.vertical,
@@ -264,7 +268,9 @@ class VoiceCSAdapter(_BaseAdapter):
         baseline_ttfb = max(baseline_kpis.get("ttfb_ms", 1.0), 1.0)
         current_ttfb = current_kpis.get("ttfb_ms", 0.0)
         sla_adherence = round(max(0.0, 1.0 - (current_ttfb / baseline_ttfb)), 4)
-        roi_estimate = round((delta.get("resolution_rate", 0.0) * 1000.0) - (delta.get("fallback_rate", 0.0) * 500.0), 2)
+        roi_estimate = round(
+            (delta.get("resolution_rate", 0.0) * 1000.0) - (delta.get("fallback_rate", 0.0) * 500.0), 2
+        )
         return ProofPack(
             engagement_id=engagement_id,
             vertical_profile=self.vertical,

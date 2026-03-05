@@ -51,7 +51,9 @@ else:
 
             st.info("Variables like `{{property_data}}` will be replaced if found in context.")
             context_json = st.text_area(
-                "Input Context (JSON)", '{"property_data": {"address": "123 Rancho Cucamonga Way", "price": 450000}}', height=100
+                "Input Context (JSON)",
+                '{"property_data": {"address": "123 Rancho Cucamonga Way", "price": 450000}}',
+                height=100,
             )
 
         with col2:

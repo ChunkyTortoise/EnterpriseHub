@@ -42,15 +42,15 @@ from typing import Any
 
 BASE_URL_DEFAULT = "http://localhost:8000"
 SELLER_ENDPOINT = "/test/seller"
-BUYER_ENDPOINT  = "/test/buyer"
+BUYER_ENDPOINT = "/test/buyer"
 
-COL_RESET  = "\033[0m"
-COL_CYAN   = "\033[96m"
-COL_GREEN  = "\033[92m"
+COL_RESET = "\033[0m"
+COL_CYAN = "\033[96m"
+COL_GREEN = "\033[92m"
 COL_YELLOW = "\033[93m"
-COL_RED    = "\033[91m"
-COL_GREY   = "\033[90m"
-COL_BOLD   = "\033[1m"
+COL_RED = "\033[91m"
+COL_GREY = "\033[90m"
+COL_BOLD = "\033[1m"
 
 
 def _c(color: str, text: str, use_color: bool = True) -> str:
@@ -91,11 +91,7 @@ def _print_turn(
 ) -> None:
     sep = "─" * 72
     print(_c(COL_GREY, sep, use_color))
-    print(
-        _c(COL_BOLD, f"TURN {turn_num}", use_color)
-        + f"  [{_c(COL_CYAN, 'user', use_color)}]  "
-        + user_msg
-    )
+    print(_c(COL_BOLD, f"TURN {turn_num}", use_color) + f"  [{_c(COL_CYAN, 'user', use_color)}]  " + user_msg)
 
     response = result.get("response", "")
     wrapped = textwrap.fill(response, width=72, initial_indent="        ", subsequent_indent="        ")
@@ -129,15 +125,15 @@ def replay(
     use_color: bool,
 ) -> None:
     turns = _load_turns(turns_path)
-    endpoint = (SELLER_ENDPOINT if bot == "seller" else BUYER_ENDPOINT)
+    endpoint = SELLER_ENDPOINT if bot == "seller" else BUYER_ENDPOINT
     url = base_url.rstrip("/") + endpoint
 
-    print(_c(COL_BOLD, f"\n{'═'*72}", use_color))
+    print(_c(COL_BOLD, f"\n{'═' * 72}", use_color))
     print(_c(COL_BOLD, f"  Jorge {bot.capitalize()} Bot — Replay", use_color))
     print(f"  Turns file : {turns_path}")
     print(f"  Endpoint   : {url}")
     print(f"  Contact ID : {contact_id}")
-    print(_c(COL_BOLD, f"{'═'*72}\n", use_color))
+    print(_c(COL_BOLD, f"{'═' * 72}\n", use_color))
 
     # Reset session first if requested
     if reset:
@@ -194,22 +190,18 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
-    parser.add_argument("--bot", choices=["seller", "buyer"], required=True,
-                        help="Which bot to test")
-    parser.add_argument("--turns", required=True,
-                        help="Path to turns JSON file")
-    parser.add_argument("--base-url", default=BASE_URL_DEFAULT,
-                        help=f"Base URL of the running server (default: {BASE_URL_DEFAULT})")
-    parser.add_argument("--contact-id", default="replay-test",
-                        help="contact_id to use for the session (default: replay-test)")
-    parser.add_argument("--buyer-name", default="Test Buyer",
-                        help="Buyer name for buyer bot (default: 'Test Buyer')")
-    parser.add_argument("--reset", action="store_true",
-                        help="Clear the session before replaying")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                        help="Print extracted_data and actions for each turn")
-    parser.add_argument("--no-color", action="store_true",
-                        help="Disable ANSI color output")
+    parser.add_argument("--bot", choices=["seller", "buyer"], required=True, help="Which bot to test")
+    parser.add_argument("--turns", required=True, help="Path to turns JSON file")
+    parser.add_argument(
+        "--base-url", default=BASE_URL_DEFAULT, help=f"Base URL of the running server (default: {BASE_URL_DEFAULT})"
+    )
+    parser.add_argument(
+        "--contact-id", default="replay-test", help="contact_id to use for the session (default: replay-test)"
+    )
+    parser.add_argument("--buyer-name", default="Test Buyer", help="Buyer name for buyer bot (default: 'Test Buyer')")
+    parser.add_argument("--reset", action="store_true", help="Clear the session before replaying")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Print extracted_data and actions for each turn")
+    parser.add_argument("--no-color", action="store_true", help="Disable ANSI color output")
     args = parser.parse_args()
 
     replay(

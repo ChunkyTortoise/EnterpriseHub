@@ -33,16 +33,18 @@ from dataclasses import dataclass
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
+    format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(f'disaster-recovery-{datetime.now().strftime("%Y%m%d")}.log'),
-        logging.StreamHandler()
-    ]
+        logging.FileHandler(f"disaster-recovery-{datetime.now().strftime('%Y%m%d')}.log"),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger(__name__)
 
+
 class DisasterType(str, Enum):
     """Types of disasters that can occur."""
+
     DATABASE_FAILURE = "database_failure"
     APPLICATION_FAILURE = "application_failure"
     INFRASTRUCTURE_FAILURE = "infrastructure_failure"
@@ -51,8 +53,10 @@ class DisasterType(str, Enum):
     DATA_CORRUPTION = "data_corruption"
     NETWORK_FAILURE = "network_failure"
 
+
 class RecoveryPhase(str, Enum):
     """Phases of disaster recovery."""
+
     DETECTION = "detection"
     ASSESSMENT = "assessment"
     ACTIVATION = "activation"
@@ -61,20 +65,24 @@ class RecoveryPhase(str, Enum):
     FAILBACK = "failback"
     POST_INCIDENT = "post_incident"
 
+
 @dataclass
 class RecoveryMetrics:
     """Recovery time and point objectives tracking."""
-    rto_target_minutes: int = 15   # Recovery Time Objective
-    rpo_target_minutes: int = 5    # Recovery Point Objective
+
+    rto_target_minutes: int = 15  # Recovery Time Objective
+    rpo_target_minutes: int = 5  # Recovery Point Objective
     actual_rto_minutes: Optional[float] = None
     actual_rpo_minutes: Optional[float] = None
     availability_target: float = 99.99
     start_time: Optional[datetime] = None
     end_time: Optional[datetime] = None
 
+
 @dataclass
 class DisasterRecoveryEvent:
     """Disaster recovery event tracking."""
+
     event_id: str
     disaster_type: DisasterType
     start_time: datetime
@@ -85,6 +93,7 @@ class DisasterRecoveryEvent:
     metrics: RecoveryMetrics
     actions_taken: List[str]
     status: str
+
 
 class DisasterRecoveryOrchestrator:
     """
@@ -112,21 +121,17 @@ class DisasterRecoveryOrchestrator:
             "rto_minutes": 15,
             "rpo_minutes": 5,
             "backup_s3_bucket": "jorge-platform-backups",
-            "monitoring": {
-                "health_check_interval": 30,
-                "failure_threshold": 3,
-                "recovery_verification_timeout": 600
-            },
+            "monitoring": {"health_check_interval": 30, "failure_threshold": 3, "recovery_verification_timeout": 600},
             "notifications": {
                 "slack_webhook": os.getenv("DISASTER_RECOVERY_SLACK_WEBHOOK"),
                 "pagerduty_key": os.getenv("PAGERDUTY_INTEGRATION_KEY"),
-                "email_list": ["operations@jorge-revenue.com"]
+                "email_list": ["operations@jorge-revenue.com"],
             },
             "automation": {
                 "auto_failover": True,
                 "auto_failback": False,  # Requires manual approval
-                "backup_verification": True
-            }
+                "backup_verification": True,
+            },
         }
 
         config_path = Path(config_file)
@@ -137,8 +142,9 @@ class DisasterRecoveryOrchestrator:
 
         return default_config
 
-    async def handle_disaster(self, disaster_type: DisasterType, description: str,
-                            affected_components: List[str]) -> DisasterRecoveryEvent:
+    async def handle_disaster(
+        self, disaster_type: DisasterType, description: str, affected_components: List[str]
+    ) -> DisasterRecoveryEvent:
         """Main disaster recovery handler - orchestrates complete recovery process."""
         event_id = f"DR-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
@@ -159,10 +165,10 @@ class DisasterRecoveryOrchestrator:
             metrics=RecoveryMetrics(
                 rto_target_minutes=self.config["rto_minutes"],
                 rpo_target_minutes=self.config["rpo_minutes"],
-                start_time=datetime.utcnow()
+                start_time=datetime.utcnow(),
             ),
             actions_taken=[],
-            status="active"
+            status="active",
         )
 
         # Send immediate notifications
@@ -186,8 +192,9 @@ class DisasterRecoveryOrchestrator:
             self.recovery_event.metrics.end_time = datetime.utcnow()
 
             # Calculate actual RTO
-            total_time = (self.recovery_event.metrics.end_time -
-                         self.recovery_event.metrics.start_time).total_seconds() / 60
+            total_time = (
+                self.recovery_event.metrics.end_time - self.recovery_event.metrics.start_time
+            ).total_seconds() / 60
             self.recovery_event.metrics.actual_rto_minutes = total_time
 
             logger.info(f"✅ Disaster recovery completed successfully")
@@ -318,7 +325,7 @@ class DisasterRecoveryOrchestrator:
             "--clean",
             "--if-exists",
             "--verbose",
-            backup_file
+            backup_file,
         ]
 
         result = subprocess.run(restore_command, capture_output=True, text=True, timeout=1800)
@@ -411,7 +418,7 @@ class DisasterRecoveryOrchestrator:
             test_lead = {
                 "message": "I want to sell my house quickly",
                 "phone": "+1234567890",
-                "email": "test@example.com"
+                "email": "test@example.com",
             }
 
             # This would call the actual Jorge Seller Bot API
@@ -459,18 +466,20 @@ class DisasterRecoveryOrchestrator:
         """Send emergency notification to all channels."""
         message = {
             "text": f"🚨 DISASTER RECOVERY INITIATED",
-            "attachments": [{
-                "color": "danger",
-                "title": f"Disaster Type: {event.disaster_type.value}",
-                "fields": [
-                    {"title": "Event ID", "value": event.event_id, "short": True},
-                    {"title": "Start Time", "value": event.start_time.isoformat(), "short": True},
-                    {"title": "Affected Components", "value": ", ".join(event.affected_components), "short": False},
-                    {"title": "Description", "value": event.description, "short": False}
-                ],
-                "footer": "Jorge Platform Disaster Recovery",
-                "ts": int(event.start_time.timestamp())
-            }]
+            "attachments": [
+                {
+                    "color": "danger",
+                    "title": f"Disaster Type: {event.disaster_type.value}",
+                    "fields": [
+                        {"title": "Event ID", "value": event.event_id, "short": True},
+                        {"title": "Start Time", "value": event.start_time.isoformat(), "short": True},
+                        {"title": "Affected Components", "value": ", ".join(event.affected_components), "short": False},
+                        {"title": "Description", "value": event.description, "short": False},
+                    ],
+                    "footer": "Jorge Platform Disaster Recovery",
+                    "ts": int(event.start_time.timestamp()),
+                }
+            ],
         }
 
         # Send to Slack
@@ -495,32 +504,38 @@ class DisasterRecoveryOrchestrator:
                     "event_id": self.recovery_event.event_id,
                     "disaster_type": self.recovery_event.disaster_type,
                     "start_time": self.recovery_event.start_time.isoformat(),
-                    "end_time": self.recovery_event.metrics.end_time.isoformat() if self.recovery_event.metrics.end_time else None,
+                    "end_time": self.recovery_event.metrics.end_time.isoformat()
+                    if self.recovery_event.metrics.end_time
+                    else None,
                     "total_duration_minutes": self.recovery_event.metrics.actual_rto_minutes,
-                    "status": self.recovery_event.status
+                    "status": self.recovery_event.status,
                 },
                 "sla_compliance": {
                     "rto_target_minutes": self.recovery_event.metrics.rto_target_minutes,
                     "rto_actual_minutes": self.recovery_event.metrics.actual_rto_minutes,
-                    "rto_met": self.recovery_event.metrics.actual_rto_minutes <= self.recovery_event.metrics.rto_target_minutes if self.recovery_event.metrics.actual_rto_minutes else False,
+                    "rto_met": self.recovery_event.metrics.actual_rto_minutes
+                    <= self.recovery_event.metrics.rto_target_minutes
+                    if self.recovery_event.metrics.actual_rto_minutes
+                    else False,
                     "rpo_target_minutes": self.recovery_event.metrics.rpo_target_minutes,
                     "rpo_actual_minutes": self.recovery_event.metrics.actual_rpo_minutes,
-                    "rpo_met": self.recovery_event.metrics.actual_rpo_minutes <= self.recovery_event.metrics.rpo_target_minutes if self.recovery_event.metrics.actual_rpo_minutes else False
+                    "rpo_met": self.recovery_event.metrics.actual_rpo_minutes
+                    <= self.recovery_event.metrics.rpo_target_minutes
+                    if self.recovery_event.metrics.actual_rpo_minutes
+                    else False,
                 },
                 "affected_components": self.recovery_event.affected_components,
-                "recovery_phases": [
-                    "Detection", "Assessment", "Activation", "Recovery", "Verification"
-                ],
+                "recovery_phases": ["Detection", "Assessment", "Activation", "Recovery", "Verification"],
                 "actions_taken": self.recovery_event.actions_taken,
                 "lessons_learned": await self._generate_lessons_learned(),
-                "improvement_recommendations": await self._generate_improvement_recommendations()
+                "improvement_recommendations": await self._generate_improvement_recommendations(),
             }
         }
 
         report_json = json.dumps(report, indent=2)
         report_file = f"disaster-recovery-report-{self.recovery_event.event_id}.json"
 
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             f.write(report_json)
 
         logger.info(f"✅ Disaster recovery report generated: {report_file}")
@@ -545,7 +560,7 @@ class DisasterRecoveryOrchestrator:
             "Monitoring alerts detected the issue within expected timeframe",
             "Automated backup restoration worked as designed",
             "Recovery procedures were followed successfully",
-            "All Jorge bot functionality restored to operational status"
+            "All Jorge bot functionality restored to operational status",
         ]
 
     async def _generate_improvement_recommendations(self) -> List[str]:
@@ -554,21 +569,30 @@ class DisasterRecoveryOrchestrator:
             "Consider reducing backup frequency for critical data to 3 minutes",
             "Implement additional automated health checks for Jorge bot ecosystem",
             "Review and update notification escalation procedures",
-            "Schedule quarterly disaster recovery drills"
+            "Schedule quarterly disaster recovery drills",
         ]
+
 
 async def main():
     """Main entry point for disaster recovery system."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Jorge Platform Disaster Recovery System")
-    parser.add_argument("--disaster-type", required=True,
-                       choices=["database_failure", "application_failure", "infrastructure_failure",
-                               "datacenter_outage", "security_incident", "data_corruption"],
-                       help="Type of disaster to handle")
+    parser.add_argument(
+        "--disaster-type",
+        required=True,
+        choices=[
+            "database_failure",
+            "application_failure",
+            "infrastructure_failure",
+            "datacenter_outage",
+            "security_incident",
+            "data_corruption",
+        ],
+        help="Type of disaster to handle",
+    )
     parser.add_argument("--description", required=True, help="Description of the disaster")
-    parser.add_argument("--affected-components", nargs="+", required=True,
-                       help="List of affected components")
+    parser.add_argument("--affected-components", nargs="+", required=True, help="List of affected components")
     parser.add_argument("--config", help="Path to disaster recovery configuration file")
 
     args = parser.parse_args()
@@ -579,9 +603,7 @@ async def main():
     try:
         # Execute disaster recovery
         recovery_event = await dr_orchestrator.handle_disaster(
-            DisasterType(args.disaster_type),
-            args.description,
-            args.affected_components
+            DisasterType(args.disaster_type), args.description, args.affected_components
         )
 
         # Generate report
@@ -600,6 +622,7 @@ async def main():
     except Exception as e:
         logger.error(f"❌ Disaster recovery failed: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

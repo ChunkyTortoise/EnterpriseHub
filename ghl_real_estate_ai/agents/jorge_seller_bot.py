@@ -147,7 +147,7 @@ class JorgeSellerBot(BaseBotWorkflow):
     Inherits from BaseBotWorkflow to share common monitoring and service patterns.
 
     This class now delegates to specialized service classes for specific responsibilities
-    
+
 
     CORE FEATURES (always enabled):
     - LangGraph friendly qualification workflow
@@ -448,7 +448,6 @@ class JorgeSellerBot(BaseBotWorkflow):
 
     # DELEGATED NODE METHODS (NEW)
 
-
     async def _generate_cma_node(self, state: JorgeSellerState) -> Dict:
         """Delegate CMA generation to CMAService."""
         return await self.cma_service.generate_cma(state)
@@ -589,7 +588,6 @@ class JorgeSellerBot(BaseBotWorkflow):
 
     # ROUTING METHODS
 
-
     def _route_seller_action(self, state: JorgeSellerState) -> Literal["respond", "follow_up", "listing_prep", "end"]:
         """Determine if we should respond immediately or queue a follow-up."""
         return self.strategy_selector.route_seller_action(state)
@@ -619,7 +617,6 @@ class JorgeSellerBot(BaseBotWorkflow):
         return "adaptive_strategy"
 
     # EXISTING METHODS (maintained for compatibility)
-
 
     async def generate_executive_brief(self, state: JorgeSellerState) -> Dict:
         """Legacy method - delegates to ExecutiveService."""
@@ -980,7 +977,6 @@ class JorgeSellerBot(BaseBotWorkflow):
 
     # ADAPTIVE INTELLIGENCE METHODS
 
-
     async def adaptive_strategy_selection(self, state: JorgeSellerState) -> Dict:
         """Legacy adaptive strategy method."""
         return await self._adaptive_strategy_node(state)
@@ -994,7 +990,6 @@ class JorgeSellerBot(BaseBotWorkflow):
         return await self._update_conversation_memory_node(state)
 
     # PROGRESSIVE SKILLS METHODS
-
 
     async def _execute_progressive_qualification(self, lead_data: Dict[str, Any]) -> Dict[str, Any]:
         """Progressive skills-based qualification (68% token reduction)"""
@@ -1193,7 +1188,6 @@ class JorgeSellerBot(BaseBotWorkflow):
 
     # AGENT MESH INTEGRATION METHODS
 
-
     async def _create_mesh_qualification_task(self, lead_data: Dict[str, Any]) -> Optional[str]:
         """Create mesh task for Jorge qualification"""
         if not self.mesh_coordinator:
@@ -1253,7 +1247,6 @@ class JorgeSellerBot(BaseBotWorkflow):
             return orchestrated_tasks
 
     # MCP INTEGRATION METHODS
-
 
     async def _enrich_with_mcp_data(self, lead_data: Dict[str, Any], qualification: Dict[str, Any]) -> Dict[str, Any]:
         """Enrich qualification with MCP data sources"""
@@ -1330,7 +1323,6 @@ class JorgeSellerBot(BaseBotWorkflow):
 
     # UTILITY METHODS
 
-
     @staticmethod
     def _detect_slot_selection(message: str) -> Optional[int]:
         """Detect if the user message is selecting a calendar slot.
@@ -1371,7 +1363,6 @@ class JorgeSellerBot(BaseBotWorkflow):
         return parts[-2].strip() if len(parts) > 2 else "Phoenix"
 
     # PUBLIC API (process_seller_message)
-
 
     async def process_seller_message(
         self,
@@ -1631,7 +1622,6 @@ class JorgeSellerBot(BaseBotWorkflow):
 
     # UNIFIED PROCESSING METHODS
 
-
     async def process_seller_with_enhancements(self, lead_data: Dict[str, Any]) -> QualificationResult:
         """
         Process seller through unified workflow with all enabled enhancements.
@@ -1779,7 +1769,6 @@ class JorgeSellerBot(BaseBotWorkflow):
         return actions
 
     # FACTORY METHODS AND UTILITIES
-
 
     @classmethod
     def create_standard_jorge(cls, tenant_id: str = "jorge_seller") -> "JorgeSellerBot":
@@ -1965,7 +1954,6 @@ class JorgeSellerBot(BaseBotWorkflow):
 
 
 # FACTORY FUNCTIONS FOR EASY USE
-
 
 
 def get_jorge_seller_bot(enhancement_level: str = "standard", tenant_id: str = "jorge_seller") -> JorgeSellerBot:

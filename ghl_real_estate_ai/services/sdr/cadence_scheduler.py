@@ -9,18 +9,26 @@ Phase 2: Claude-driven compute_next_touch_time().
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 if TYPE_CHECKING:
+    from ghl_real_estate_ai.repositories.sdr_repository import SDRRepository
     from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import (
         OutreachRecord,
         OutreachSequenceEngine,
     )
 
 logger = get_logger(__name__)
+
+# Business-hours constraints for touch scheduling
+_BIZ_HOUR_START = 9   # 9 AM
+_BIZ_HOUR_END = 19    # 7 PM
+_BLOCKED_WEEKDAY = 6  # Sunday (Monday=0)
+_MIN_TOUCH_GAP_HOURS = 4
+_MAX_TOUCH_GAP_HOURS = 72
 
 
 class CadenceScheduler:
@@ -33,8 +41,10 @@ class CadenceScheduler:
     def __init__(
         self,
         sequence_engine: "OutreachSequenceEngine",
+        repository: Optional["SDRRepository"] = None,
     ) -> None:
         self._engine = sequence_engine
+        self._repo = repository
 
     async def process_webhook_trigger(
         self,
@@ -102,17 +112,116 @@ class CadenceScheduler:
             "errors": errors,
         }
 
+    async def fetch_and_process_due_touches(
+        self,
+        batch_size: int = 50,
+    ) -> Dict[str, Any]:
+        """
+        Query the DB for sequences where next_touch_at <= now, build
+        OutreachRecord objects, and delegate to process_due_touches.
+
+        Returns stats dict from process_due_touches.
+        """
+        if self._repo is None:
+            logger.warning("[SDR] CadenceScheduler.fetch_and_process_due_touches called without repository")
+            return {"processed": 0, "dispatched": 0, "skipped": 0, "errors": 0}
+
+        from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import (
+            OutreachRecord,
+            SequenceStep,
+        )
+
+        now = datetime.now(timezone.utc)
+        due_sequences = await self._repo.get_due_sequences(cutoff=now, limit=batch_size)
+
+        records: List["OutreachRecord"] = []
+        for seq in due_sequences:
+            try:
+                step = SequenceStep(seq.current_step)
+            except ValueError:
+                step = SequenceStep.ENROLLED
+            records.append(
+                OutreachRecord(
+                    contact_id=seq.contact_id,
+                    location_id=seq.location_id,
+                    current_step=step,
+                    enrolled_at=seq.enrolled_at,
+                    next_touch_at=seq.next_touch_at,
+                    reply_count=seq.reply_count,
+                    lead_type="unknown",
+                    ab_variant=seq.ab_variant,
+                    sequence_id=seq.id,
+                )
+            )
+
+        return await self.process_due_touches(records=records, batch_size=batch_size)
+
+    @staticmethod
+    def compute_next_touch_time(
+        base_delay_hours: float,
+        reply_count: int = 0,
+        last_reply_latency_minutes: Optional[float] = None,
+        now: Optional[datetime] = None,
+    ) -> datetime:
+        """
+        Heuristic next-touch scheduler.
+
+        Rules:
+        - Start from base_delay_hours (from step config)
+        - Fast replier (latency < 30 min): reduce delay by 25%
+        - Engaged prospect (reply_count >= 2): reduce delay by 15%
+        - Clamp to [_MIN_TOUCH_GAP_HOURS, _MAX_TOUCH_GAP_HOURS]
+        - Snap to business hours (9 AM - 7 PM, avoid Sunday)
+        """
+        now = now or datetime.now(timezone.utc)
+        delay = base_delay_hours
+
+        # Fast replier discount
+        if last_reply_latency_minutes is not None and last_reply_latency_minutes < 30:
+            delay *= 0.75
+
+        # Engagement discount
+        if reply_count >= 2:
+            delay *= 0.85
+
+        # Clamp
+        delay = max(_MIN_TOUCH_GAP_HOURS, min(delay, _MAX_TOUCH_GAP_HOURS))
+
+        candidate = now + timedelta(hours=delay)
+
+        # Snap to business hours
+        candidate = _snap_to_business_hours(candidate)
+        return candidate
+
     async def get_statistics(
         self,
         location_id: Optional[str] = None,
         days: int = 30,
+        repository: Optional["SDRRepository"] = None,
     ) -> Dict[str, Any]:
-        """
-        Return basic scheduler statistics.
-        Phase 3 will wire this into SDRPerformanceTracker rolling windows.
-        """
+        """Return SDR performance statistics via SDRPerformanceTracker when repo is available."""
+        if repository is not None:
+            from ghl_real_estate_ai.services.sdr.performance_tracker import SDRPerformanceTracker
+
+            tracker = SDRPerformanceTracker(repository)
+            stats = await tracker.get_stats(location_id=location_id, days=days)
+            return stats.model_dump()
         return {
             "location_id": location_id,
             "days": days,
-            "note": "Full metrics available in Phase 3 (SDRPerformanceTracker)",
+            "note": "Pass repository= for live DB metrics",
         }
+
+
+def _snap_to_business_hours(dt: datetime) -> datetime:
+    """Move *dt* to the next valid business-hour slot (9 AM-7 PM, no Sunday)."""
+    # If before business hours, move to start
+    if dt.hour < _BIZ_HOUR_START:
+        dt = dt.replace(hour=_BIZ_HOUR_START, minute=0, second=0, microsecond=0)
+    # If after business hours, move to next day start
+    elif dt.hour >= _BIZ_HOUR_END:
+        dt = (dt + timedelta(days=1)).replace(hour=_BIZ_HOUR_START, minute=0, second=0, microsecond=0)
+    # Skip Sunday
+    while dt.weekday() == _BLOCKED_WEEKDAY:
+        dt = (dt + timedelta(days=1)).replace(hour=_BIZ_HOUR_START, minute=0, second=0, microsecond=0)
+    return dt

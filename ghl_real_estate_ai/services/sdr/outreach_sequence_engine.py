@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 if TYPE_CHECKING:
+    from ghl_real_estate_ai.repositories.sdr_repository import SDRRepository
     from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
 
 logger = get_logger(__name__)
@@ -150,8 +151,13 @@ class OutreachSequenceEngine:
 
     SMS_MAX_LENGTH = 160  # TCPA-compliant SMS truncation
 
-    def __init__(self, ghl_client: "EnhancedGHLClient") -> None:
+    def __init__(
+        self,
+        ghl_client: "EnhancedGHLClient",
+        repository: Optional["SDRRepository"] = None,
+    ) -> None:
         self._ghl = ghl_client
+        self._repo = repository
         self._sdr_workflow_sms = os.getenv("SDR_WORKFLOW_SMS_1", "")
         self._sdr_workflow_email = os.getenv("SDR_WORKFLOW_EMAIL_1", "")
         self._sdr_workflow_voicemail = os.getenv("SDR_WORKFLOW_VOICEMAIL_DROP", "")
@@ -222,6 +228,20 @@ class OutreachSequenceEngine:
         if dispatched:
             record.current_step = next_step
             record.next_touch_at = self._compute_next_touch_at(next_step)
+            # Record the touch in DB
+            if self._repo is not None and record.sequence_id is not None:
+                channel = _STEP_CHANNEL.get(next_step.value, "sms")
+                await self._repo.record_touch(
+                    sequence_id=record.sequence_id,
+                    contact_id=record.contact_id,
+                    step=next_step.value,
+                    channel=channel,
+                )
+                await self._repo.update_sequence_step(
+                    sequence_id=record.sequence_id,
+                    step=next_step.value,
+                    next_touch_at=record.next_touch_at,
+                )
 
         return record
 

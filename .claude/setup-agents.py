@@ -19,28 +19,33 @@ import yaml
 from datetime import datetime
 from pathlib import Path
 
+
 def ensure_directory(path: Path) -> None:
     """Ensure directory exists, create if necessary."""
     path.mkdir(parents=True, exist_ok=True)
     print(f"✅ Directory ensured: {path}")
 
+
 def create_json_file(path: Path, content: dict) -> None:
     """Create JSON file with pretty formatting."""
-    with open(path, 'w') as f:
+    with open(path, "w") as f:
         json.dump(content, f, indent=2, default=str)
     print(f"✅ Created: {path}")
 
+
 def create_yaml_file(path: Path, content: dict) -> None:
     """Create YAML file with pretty formatting."""
-    with open(path, 'w') as f:
+    with open(path, "w") as f:
         yaml.dump(content, f, default_flow_style=False, indent=2)
     print(f"✅ Created: {path}")
 
+
 def create_text_file(path: Path, content: str) -> None:
     """Create text file."""
-    with open(path, 'w') as f:
+    with open(path, "w") as f:
         f.write(content)
     print(f"✅ Created: {path}")
+
 
 def setup_agent_system():
     """Initialize the complete agent system."""
@@ -64,7 +69,7 @@ def setup_agent_system():
         memory_dir / "relationships",
         comm_dir / "message_queue",
         comm_dir / "shared_state",
-        comm_dir / "coordination"
+        comm_dir / "coordination",
     ]
 
     for directory in directories:
@@ -84,8 +89,8 @@ def setup_agent_system():
                 "Improve development velocity",
                 "Maintain architectural consistency",
                 "Ensure TDD compliance",
-                "Capture institutional knowledge"
-            ]
+                "Capture institutional knowledge",
+            ],
         },
         "decision": "Implement specialized agent system with Architecture Sentinel, TDD Guardian, and Context Memory",
         "rationale": "Agents provide specialized expertise while maintaining human control and decision authority",
@@ -94,32 +99,19 @@ def setup_agent_system():
                 "Faster development cycles",
                 "Higher code quality",
                 "Better architectural consistency",
-                "Persistent project knowledge"
+                "Persistent project knowledge",
             ],
-            "negative": [
-                "Initial setup complexity",
-                "Agent coordination overhead",
-                "Additional system maintenance"
-            ]
+            "negative": ["Initial setup complexity", "Agent coordination overhead", "Additional system maintenance"],
         },
         "alternatives_considered": [
-            {
-                "option": "Manual process improvements",
-                "rejected_because": "Doesn't scale with project complexity"
-            },
-            {
-                "option": "Single general-purpose agent",
-                "rejected_because": "Lacks specialized expertise"
-            }
+            {"option": "Manual process improvements", "rejected_because": "Doesn't scale with project complexity"},
+            {"option": "Single general-purpose agent", "rejected_because": "Lacks specialized expertise"},
         ],
         "review_date": "2026-04-09",
-        "tags": ["architecture", "agents", "workflow", "productivity"]
+        "tags": ["architecture", "agents", "workflow", "productivity"],
     }
 
-    create_json_file(
-        memory_dir / "decisions" / "architectural_decisions.jsonl",
-        adr_001
-    )
+    create_json_file(memory_dir / "decisions" / "architectural_decisions.jsonl", adr_001)
 
     # Success patterns for real estate AI
     success_patterns = {
@@ -132,31 +124,23 @@ def setup_agent_system():
                 "occurrences": 3,
                 "context": {
                     "problem": "Multiple algorithms for property matching/lead scoring",
-                    "solution": "Strategy pattern with dependency injection"
+                    "solution": "Strategy pattern with dependency injection",
                 },
                 "implementation_template": {
                     "structure": "Service -> Strategy Interface -> Concrete Strategies",
                     "testing": "Mock strategies for isolated unit testing",
-                    "extension": "New algorithms as new strategy implementations"
+                    "extension": "New algorithms as new strategy implementations",
                 },
-                "metrics": {
-                    "code_quality": 9.0,
-                    "maintainability": 9.5,
-                    "test_coverage": 92,
-                    "performance": 8.5
-                },
+                "metrics": {"code_quality": 9.0, "maintainability": 9.5, "test_coverage": 92, "performance": 8.5},
                 "real_estate_context": {
                     "use_cases": ["property_matching", "lead_scoring", "price_prediction"],
-                    "business_value": "Flexibility to adapt algorithms based on market conditions"
-                }
+                    "business_value": "Flexibility to adapt algorithms based on market conditions",
+                },
             }
         ]
     }
 
-    create_json_file(
-        memory_dir / "patterns" / "learned_patterns.json",
-        success_patterns
-    )
+    create_json_file(memory_dir / "patterns" / "learned_patterns.json", success_patterns)
 
     # Coding preferences for real estate AI
     coding_preferences = {
@@ -165,51 +149,40 @@ def setup_agent_system():
                 "line_length": 88,
                 "type_hints": "required",
                 "docstring_style": "google",
-                "async_style": "preferred_for_io"
+                "async_style": "preferred_for_io",
             },
             "typescript": {
                 "strict_mode": True,
                 "explicit_any": False,
                 "function_style": "arrow_functions",
-                "import_style": "named_imports"
-            }
+                "import_style": "named_imports",
+            },
         },
         "testing_preferences": {
             "framework": "pytest",  # Python primary
             "structure": "arrange_act_assert",
             "naming": "should_action_when_condition",
             "coverage_threshold": 85,
-            "mock_strategy": "dependency_injection"
+            "mock_strategy": "dependency_injection",
         },
         "architecture_preferences": {
             "patterns": {
                 "preferred": ["strategy", "repository", "factory", "observer"],
-                "avoid": ["singleton", "god_object"]
+                "avoid": ["singleton", "god_object"],
             },
-            "principles": {
-                "solid_compliance": "strict",
-                "dry_threshold": 3,
-                "kiss_preference": "simple_over_clever"
-            }
+            "principles": {"solid_compliance": "strict", "dry_threshold": 3, "kiss_preference": "simple_over_clever"},
         },
         "real_estate_domain": {
             "response_time_requirements": {
                 "lead_response": "under_2_minutes",
                 "property_search": "under_5_seconds",
-                "analytics_refresh": "under_30_seconds"
+                "analytics_refresh": "under_30_seconds",
             },
-            "data_accuracy_requirements": {
-                "property_matching": 85,
-                "lead_scoring": 80,
-                "price_prediction": 75
-            }
-        }
+            "data_accuracy_requirements": {"property_matching": 85, "lead_scoring": 80, "price_prediction": 75},
+        },
     }
 
-    create_yaml_file(
-        memory_dir / "preferences" / "coding_standards.yaml",
-        coding_preferences
-    )
+    create_yaml_file(memory_dir / "preferences" / "coding_standards.yaml", coding_preferences)
 
     # Current objectives
     current_objectives = """# Current Project Objectives
@@ -266,10 +239,7 @@ def setup_agent_system():
 **Next Review**: Daily standup or major milestone completion
 """
 
-    create_text_file(
-        memory_dir / "context" / "current_objectives.md",
-        current_objectives
-    )
+    create_text_file(memory_dir / "context" / "current_objectives.md", current_objectives)
 
     # Agent registry
     agent_registry = {
@@ -282,7 +252,7 @@ def setup_agent_system():
                 "specialization": "SOLID principles, design patterns, technical debt assessment",
                 "priority": 8,
                 "created": datetime.now().isoformat(),
-                "last_active": datetime.now().isoformat()
+                "last_active": datetime.now().isoformat(),
             },
             "tdd-guardian": {
                 "id": "tdd-001",
@@ -292,7 +262,7 @@ def setup_agent_system():
                 "specialization": "Test-driven development, coverage analysis, quality gates",
                 "priority": 9,
                 "created": datetime.now().isoformat(),
-                "last_active": datetime.now().isoformat()
+                "last_active": datetime.now().isoformat(),
             },
             "context-memory": {
                 "id": "mem-001",
@@ -302,21 +272,18 @@ def setup_agent_system():
                 "specialization": "Persistent memory, pattern learning, decision tracking",
                 "priority": 7,
                 "created": datetime.now().isoformat(),
-                "last_active": datetime.now().isoformat()
-            }
+                "last_active": datetime.now().isoformat(),
+            },
         },
         "system_metadata": {
             "version": "1.0.0",
             "initialized": datetime.now().isoformat(),
             "total_agents": 3,
-            "communication_protocol": "v1.0.0"
-        }
+            "communication_protocol": "v1.0.0",
+        },
     }
 
-    create_json_file(
-        comm_dir / "coordination" / "agent_registry.json",
-        agent_registry
-    )
+    create_json_file(comm_dir / "coordination" / "agent_registry.json", agent_registry)
 
     # Workflow definitions
     workflow_definitions = {
@@ -331,7 +298,7 @@ def setup_agent_system():
                         "agent": "architecture-sentinel",
                         "action": "analyze_requirements_and_recommend_patterns",
                         "deliverables": ["architecture_plan", "pattern_recommendations"],
-                        "timeout": "15m"
+                        "timeout": "15m",
                     },
                     {
                         "step": 2,
@@ -339,7 +306,7 @@ def setup_agent_system():
                         "action": "create_failing_test_suite",
                         "dependencies": ["step_1_complete"],
                         "deliverables": ["test_suite", "coverage_baseline"],
-                        "timeout": "20m"
+                        "timeout": "20m",
                     },
                     {
                         "step": 3,
@@ -347,7 +314,7 @@ def setup_agent_system():
                         "action": "implement_minimal_solution",
                         "dependencies": ["step_2_complete"],
                         "deliverables": ["implementation", "green_tests"],
-                        "timeout": "30m"
+                        "timeout": "30m",
                     },
                     {
                         "step": 4,
@@ -355,9 +322,9 @@ def setup_agent_system():
                         "action": "capture_learnings_and_patterns",
                         "dependencies": ["step_3_complete"],
                         "deliverables": ["stored_knowledge", "pattern_updates"],
-                        "timeout": "5m"
-                    }
-                ]
+                        "timeout": "5m",
+                    },
+                ],
             },
             "code_review": {
                 "id": "workflow-002",
@@ -368,34 +335,28 @@ def setup_agent_system():
                         "branch": "architecture",
                         "agent": "architecture-sentinel",
                         "action": "architecture_quality_review",
-                        "timeout": "10m"
+                        "timeout": "10m",
                     },
                     {
                         "branch": "testing",
                         "agent": "tdd-guardian",
                         "action": "test_coverage_validation",
-                        "timeout": "15m"
-                    }
+                        "timeout": "15m",
+                    },
                 ],
                 "consolidation": {
                     "agent": "context-memory",
                     "action": "aggregate_review_results",
-                    "wait_for": "all_branches"
-                }
-            }
+                    "wait_for": "all_branches",
+                },
+            },
         }
     }
 
-    create_json_file(
-        comm_dir / "coordination" / "workflow_definitions.json",
-        workflow_definitions
-    )
+    create_json_file(comm_dir / "coordination" / "workflow_definitions.json", workflow_definitions)
 
     # Initialize empty message queue
-    create_json_file(
-        comm_dir / "message_queue" / "pending_messages.jsonl",
-        {"messages": []}
-    )
+    create_json_file(comm_dir / "message_queue" / "pending_messages.jsonl", {"messages": []})
 
     # Real estate domain relationships
     domain_relationships = {
@@ -403,13 +364,13 @@ def setup_agent_system():
             "property_matcher_ai": {
                 "depends_on": ["lead_scorer", "property_repository", "ml_models"],
                 "used_by": ["chat_interface", "executive_dashboard"],
-                "data_flow": "leads -> scoring -> property_matching -> recommendations"
+                "data_flow": "leads -> scoring -> property_matching -> recommendations",
             },
             "lead_dashboard": {
                 "depends_on": ["ghl_integration", "analytics_engine", "notification_system"],
                 "used_by": ["agents", "team_managers"],
-                "data_flow": "ghl_webhooks -> lead_processing -> dashboard_updates"
-            }
+                "data_flow": "ghl_webhooks -> lead_processing -> dashboard_updates",
+            },
         },
         "business_relationships": {
             "lead_to_property_flow": [
@@ -418,21 +379,18 @@ def setup_agent_system():
                 "property_matching",
                 "recommendation_delivery",
                 "showing_coordination",
-                "offer_support"
+                "offer_support",
             ],
             "analytics_dependencies": [
                 "lead_sources",
                 "agent_performance",
                 "conversion_metrics",
-                "revenue_attribution"
-            ]
-        }
+                "revenue_attribution",
+            ],
+        },
     }
 
-    create_json_file(
-        memory_dir / "relationships" / "component_dependencies.json",
-        domain_relationships
-    )
+    create_json_file(memory_dir / "relationships" / "component_dependencies.json", domain_relationships)
 
     print("\n🎉 Agent System Setup Complete!")
     print("=" * 60)
@@ -447,6 +405,7 @@ def setup_agent_system():
     print("   3. Observe agent coordination and knowledge accumulation")
     print()
     print("💡 Pro Tip: Agents will now automatically coordinate during development!")
+
 
 if __name__ == "__main__":
     setup_agent_system()

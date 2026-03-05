@@ -24,6 +24,7 @@ from collections import defaultdict
 @dataclass
 class MetricsSummary:
     """Summary of all collected metrics."""
+
     timestamp: str
     skills: Dict
     tools: Dict
@@ -50,29 +51,18 @@ class MetricsCollector:
                 data = json.load(f)
         else:
             # Generate sample data
-            data = {
-                "total_invocations": 0,
-                "skills": {},
-                "last_updated": datetime.now().isoformat()
-            }
+            data = {"total_invocations": 0, "skills": {}, "last_updated": datetime.now().isoformat()}
 
         # Calculate summary
         total = data.get("total_invocations", 0)
         skills = data.get("skills", {})
 
-        top_skills = sorted(
-            skills.items(),
-            key=lambda x: x[1].get("count", 0),
-            reverse=True
-        )[:5]
+        top_skills = sorted(skills.items(), key=lambda x: x[1].get("count", 0), reverse=True)[:5]
 
         return {
             "total_invocations": total,
             "unique_skills_used": len(skills),
-            "top_skills": [
-                {"name": name, "count": info.get("count", 0)}
-                for name, info in top_skills
-            ],
+            "top_skills": [{"name": name, "count": info.get("count", 0)} for name, info in top_skills],
             "success_rate": self._calculate_success_rate(skills),
         }
 
@@ -97,10 +87,7 @@ class MetricsCollector:
         return {
             "total_tool_calls": sum(tools.values()),
             "unique_tools": len(tools),
-            "top_tools": [
-                {"name": name, "count": count}
-                for name, count in top_tools
-            ]
+            "top_tools": [{"name": name, "count": count} for name, count in top_tools],
         }
 
     def collect_hook_metrics(self) -> Dict:
@@ -117,14 +104,14 @@ class MetricsCollector:
                         "avg_latency_ms": 1.2,
                         "max_latency_ms": 5.8,
                         "p95_latency_ms": 2.5,
-                        "executions": 0
+                        "executions": 0,
                     },
                     "PostToolUse": {
                         "avg_latency_ms": 1.5,
                         "max_latency_ms": 6.2,
                         "p95_latency_ms": 3.1,
-                        "executions": 0
-                    }
+                        "executions": 0,
+                    },
                 }
             }
 
@@ -138,11 +125,7 @@ class MetricsCollector:
             with open(rate_limits_file) as f:
                 data = json.load(f)
         else:
-            data = {
-                "daily_tokens": 0,
-                "monthly_tokens": 0,
-                "estimated_cost_usd": 0
-            }
+            data = {"daily_tokens": 0, "monthly_tokens": 0, "estimated_cost_usd": 0}
 
         # Calculate efficiency
         daily_budget = 1_500_000  # From quality-gates.yaml
@@ -156,7 +139,7 @@ class MetricsCollector:
             "monthly_tokens": monthly_usage,
             "daily_budget_pct": (daily_usage / daily_budget * 100) if daily_budget > 0 else 0,
             "monthly_budget_pct": (monthly_usage / monthly_budget * 100) if monthly_budget > 0 else 0,
-            "estimated_monthly_cost_usd": data.get("estimated_cost_usd", 0)
+            "estimated_monthly_cost_usd": data.get("estimated_cost_usd", 0),
         }
 
     def collect_session_metrics(self) -> Dict:
@@ -167,17 +150,13 @@ class MetricsCollector:
             "avg_context_usage_pct": 42.5,
             "sessions_per_day": 8,
             "auto_compact_triggers": 12,
-            "peak_context_usage_pct": 72.5
+            "peak_context_usage_pct": 72.5,
         }
 
     def _calculate_success_rate(self, skills: Dict) -> float:
         """Calculate overall skill success rate."""
-        total_success = sum(
-            s.get("successes", 0) for s in skills.values()
-        )
-        total_failures = sum(
-            s.get("failures", 0) for s in skills.values()
-        )
+        total_success = sum(s.get("successes", 0) for s in skills.values())
+        total_failures = sum(s.get("failures", 0) for s in skills.values())
 
         total = total_success + total_failures
         return (total_success / total * 100) if total > 0 else 100.0
@@ -257,24 +236,23 @@ Generated: {self.metrics.timestamp}
         return f"""
 ### Key Metrics
 
-- **Skills Used**: {skills['unique_skills_used']} unique skills
-- **Total Invocations**: {skills['total_invocations']:,}
-- **Success Rate**: {skills['success_rate']:.1f}%
-- **Monthly Cost**: ${costs['estimated_monthly_cost_usd']:.2f}
-- **Budget Usage**: {costs['monthly_budget_pct']:.1f}%
+- **Skills Used**: {skills["unique_skills_used"]} unique skills
+- **Total Invocations**: {skills["total_invocations"]:,}
+- **Success Rate**: {skills["success_rate"]:.1f}%
+- **Monthly Cost**: ${costs["estimated_monthly_cost_usd"]:.2f}
+- **Budget Usage**: {costs["monthly_budget_pct"]:.1f}%
 
 ### Status
-{"✅ All systems operating within targets" if costs['monthly_budget_pct'] < 80 else "⚠️  Approaching budget limits"}
+{"✅ All systems operating within targets" if costs["monthly_budget_pct"] < 80 else "⚠️  Approaching budget limits"}
 """
 
     def _generate_skills_section(self) -> str:
         """Generate skills metrics section."""
         skills = self.metrics.skills
 
-        top_skills_md = "\n".join([
-            f"{i+1}. **{skill['name']}**: {skill['count']} uses"
-            for i, skill in enumerate(skills['top_skills'])
-        ])
+        top_skills_md = "\n".join(
+            [f"{i + 1}. **{skill['name']}**: {skill['count']} uses" for i, skill in enumerate(skills["top_skills"])]
+        )
 
         return f"""
 ### Top Skills (by usage)
@@ -282,24 +260,21 @@ Generated: {self.metrics.timestamp}
 {top_skills_md}
 
 ### Success Rate
-{skills['success_rate']:.1f}% overall success rate
+{skills["success_rate"]:.1f}% overall success rate
 """
 
     def _generate_tools_section(self) -> str:
         """Generate tools metrics section."""
         tools = self.metrics.tools
 
-        top_tools_md = "\n".join([
-            f"- **{tool['name']}**: {tool['count']:,} calls"
-            for tool in tools['top_tools'][:5]
-        ])
+        top_tools_md = "\n".join([f"- **{tool['name']}**: {tool['count']:,} calls" for tool in tools["top_tools"][:5]])
 
         return f"""
 ### Most Used Tools
 
 {top_tools_md}
 
-**Total tool calls**: {tools['total_tool_calls']:,}
+**Total tool calls**: {tools["total_tool_calls"]:,}
 """
 
     def _generate_hooks_section(self) -> str:
@@ -308,13 +283,13 @@ Generated: {self.metrics.timestamp}
 
         hooks_md = ""
         for hook_name, metrics in hooks.items():
-            status = "✅" if metrics.get('avg_latency_ms', 0) < 100 else "⚠️"
+            status = "✅" if metrics.get("avg_latency_ms", 0) < 100 else "⚠️"
             hooks_md += f"""
 #### {hook_name} {status}
-- Average: {metrics.get('avg_latency_ms', 0):.2f}ms
-- P95: {metrics.get('p95_latency_ms', 0):.2f}ms
-- Max: {metrics.get('max_latency_ms', 0):.2f}ms
-- Executions: {metrics.get('executions', 0):,}
+- Average: {metrics.get("avg_latency_ms", 0):.2f}ms
+- P95: {metrics.get("p95_latency_ms", 0):.2f}ms
+- Max: {metrics.get("max_latency_ms", 0):.2f}ms
+- Executions: {metrics.get("executions", 0):,}
 """
 
         return hooks_md
@@ -323,19 +298,19 @@ Generated: {self.metrics.timestamp}
         """Generate costs and efficiency section."""
         costs = self.metrics.costs
 
-        daily_status = "✅" if costs['daily_budget_pct'] < 80 else "⚠️"
-        monthly_status = "✅" if costs['monthly_budget_pct'] < 80 else "⚠️"
+        daily_status = "✅" if costs["daily_budget_pct"] < 80 else "⚠️"
+        monthly_status = "✅" if costs["monthly_budget_pct"] < 80 else "⚠️"
 
         return f"""
 ### Token Usage
 
-{daily_status} **Daily**: {costs['daily_tokens']:,} tokens ({costs['daily_budget_pct']:.1f}% of budget)
+{daily_status} **Daily**: {costs["daily_tokens"]:,} tokens ({costs["daily_budget_pct"]:.1f}% of budget)
 
-{monthly_status} **Monthly**: {costs['monthly_tokens']:,} tokens ({costs['monthly_budget_pct']:.1f}% of budget)
+{monthly_status} **Monthly**: {costs["monthly_tokens"]:,} tokens ({costs["monthly_budget_pct"]:.1f}% of budget)
 
 ### Estimated Costs
 
-**Monthly**: ${costs['estimated_monthly_cost_usd']:.2f}
+**Monthly**: ${costs["estimated_monthly_cost_usd"]:.2f}
 """
 
     def _generate_sessions_section(self) -> str:
@@ -345,11 +320,11 @@ Generated: {self.metrics.timestamp}
         return f"""
 ### Session Statistics
 
-- **Average Length**: {sessions['avg_session_length_min']} minutes
-- **Context Usage**: {sessions['avg_context_usage_pct']:.1f}% average
-- **Peak Usage**: {sessions['peak_context_usage_pct']:.1f}%
-- **Sessions/Day**: {sessions['sessions_per_day']}
-- **Auto-compact Triggers**: {sessions['auto_compact_triggers']}
+- **Average Length**: {sessions["avg_session_length_min"]} minutes
+- **Context Usage**: {sessions["avg_context_usage_pct"]:.1f}% average
+- **Peak Usage**: {sessions["peak_context_usage_pct"]:.1f}%
+- **Sessions/Day**: {sessions["sessions_per_day"]}
+- **Auto-compact Triggers**: {sessions["auto_compact_triggers"]}
 """
 
     def _generate_recommendations(self) -> str:
@@ -360,10 +335,10 @@ Generated: {self.metrics.timestamp}
             recs = [
                 "Continue current optimization practices",
                 "Monitor cost trends for next quarter",
-                "Review skill usage patterns monthly"
+                "Review skill usage patterns monthly",
             ]
 
-        return "\n".join([f"{i+1}. {rec}" for i, rec in enumerate(recs)])
+        return "\n".join([f"{i + 1}. {rec}" for i, rec in enumerate(recs)])
 
     def _generate_next_steps(self) -> str:
         """Generate next steps section."""
@@ -381,34 +356,24 @@ def generate_recommendations(summary: MetricsSummary) -> List[str]:
     recommendations = []
 
     # Cost recommendations
-    if summary.costs['monthly_budget_pct'] > 80:
-        recommendations.append(
-            "⚠️  Cost Alert: Review MCP server overhead and disable unused servers"
-        )
+    if summary.costs["monthly_budget_pct"] > 80:
+        recommendations.append("⚠️  Cost Alert: Review MCP server overhead and disable unused servers")
 
-    if summary.costs['monthly_budget_pct'] > 50:
-        recommendations.append(
-            "💡 Consider implementing progressive skill loading to reduce token usage"
-        )
+    if summary.costs["monthly_budget_pct"] > 50:
+        recommendations.append("💡 Consider implementing progressive skill loading to reduce token usage")
 
     # Performance recommendations
     for hook_name, metrics in summary.hooks.items():
-        if metrics.get('avg_latency_ms', 0) > 100:
-            recommendations.append(
-                f"⚡ Optimize {hook_name} hook - average latency above target"
-            )
+        if metrics.get("avg_latency_ms", 0) > 100:
+            recommendations.append(f"⚡ Optimize {hook_name} hook - average latency above target")
 
     # Session recommendations
-    if summary.sessions['auto_compact_triggers'] > 10:
-        recommendations.append(
-            "📊 High auto-compact triggers - consider smaller, focused sessions"
-        )
+    if summary.sessions["auto_compact_triggers"] > 10:
+        recommendations.append("📊 High auto-compact triggers - consider smaller, focused sessions")
 
     # Skills recommendations
-    if summary.skills['success_rate'] < 90:
-        recommendations.append(
-            "🎯 Skill success rate below 90% - review failure patterns"
-        )
+    if summary.skills["success_rate"] < 90:
+        recommendations.append("🎯 Skill success rate below 90% - review failure patterns")
 
     return recommendations
 
@@ -428,7 +393,7 @@ def main():
         hooks=collector.collect_hook_metrics(),
         costs=collector.collect_cost_metrics(),
         sessions=collector.collect_session_metrics(),
-        recommendations=[]
+        recommendations=[],
     )
 
     # Generate recommendations

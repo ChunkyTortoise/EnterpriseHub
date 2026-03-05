@@ -42,11 +42,11 @@ class Service6PerformanceValidator:
 
     def __init__(self):
         self.results = {
-            'validation_time': datetime.now().isoformat(),
-            'database_performance': {},
-            'service_performance': {},
-            'load_test_results': {},
-            'recommendations': []
+            "validation_time": datetime.now().isoformat(),
+            "database_performance": {},
+            "service_performance": {},
+            "load_test_results": {},
+            "recommendations": [],
         }
 
     async def run_validation(self, include_load_test: bool = False, benchmark_mode: bool = False):
@@ -82,14 +82,14 @@ class Service6PerformanceValidator:
             end_time = time.perf_counter()
             times.append((end_time - start_time) * 1000)  # Convert to ms
 
-        performance_results['high_intent_leads'] = {
-            'avg_time_ms': statistics.mean(times),
-            'min_time_ms': min(times),
-            'max_time_ms': max(times),
-            'p95_time_ms': statistics.quantiles(times, n=20)[18],  # 95th percentile
-            'leads_returned': len(leads) if leads else 0,
-            'target_time_ms': 50,  # Performance target
-            'meets_target': statistics.mean(times) < 50
+        performance_results["high_intent_leads"] = {
+            "avg_time_ms": statistics.mean(times),
+            "min_time_ms": min(times),
+            "max_time_ms": max(times),
+            "p95_time_ms": statistics.quantiles(times, n=20)[18],  # 95th percentile
+            "leads_returned": len(leads) if leads else 0,
+            "target_time_ms": 50,  # Performance target
+            "meets_target": statistics.mean(times) < 50,
         }
 
         # Test 2: Lead profile retrieval
@@ -103,13 +103,13 @@ class Service6PerformanceValidator:
                 end_time = time.perf_counter()
                 times.append((end_time - start_time) * 1000)
 
-            performance_results['lead_profile'] = {
-                'avg_time_ms': statistics.mean(times),
-                'min_time_ms': min(times),
-                'max_time_ms': max(times),
-                'p95_time_ms': statistics.quantiles(times, n=20)[18],
-                'target_time_ms': 30,
-                'meets_target': statistics.mean(times) < 30
+            performance_results["lead_profile"] = {
+                "avg_time_ms": statistics.mean(times),
+                "min_time_ms": min(times),
+                "max_time_ms": max(times),
+                "p95_time_ms": statistics.quantiles(times, n=20)[18],
+                "target_time_ms": 30,
+                "meets_target": statistics.mean(times) < 30,
             }
 
             # Test 3: Follow-up history queries
@@ -121,13 +121,13 @@ class Service6PerformanceValidator:
                 end_time = time.perf_counter()
                 times.append((end_time - start_time) * 1000)
 
-            performance_results['followup_history'] = {
-                'avg_time_ms': statistics.mean(times),
-                'min_time_ms': min(times),
-                'max_time_ms': max(times),
-                'p95_time_ms': statistics.quantiles(times, n=20)[18],
-                'target_time_ms': 60,
-                'meets_target': statistics.mean(times) < 60
+            performance_results["followup_history"] = {
+                "avg_time_ms": statistics.mean(times),
+                "min_time_ms": min(times),
+                "max_time_ms": max(times),
+                "p95_time_ms": statistics.quantiles(times, n=20)[18],
+                "target_time_ms": 60,
+                "meets_target": statistics.mean(times) < 60,
             }
 
             # Test 4: Response data queries
@@ -139,13 +139,13 @@ class Service6PerformanceValidator:
                 end_time = time.perf_counter()
                 times.append((end_time - start_time) * 1000)
 
-            performance_results['response_data'] = {
-                'avg_time_ms': statistics.mean(times),
-                'min_time_ms': min(times),
-                'max_time_ms': max(times),
-                'p95_time_ms': statistics.quantiles(times, n=20)[18],
-                'target_time_ms': 40,
-                'meets_target': statistics.mean(times) < 40
+            performance_results["response_data"] = {
+                "avg_time_ms": statistics.mean(times),
+                "min_time_ms": min(times),
+                "max_time_ms": max(times),
+                "p95_time_ms": statistics.quantiles(times, n=20)[18],
+                "target_time_ms": 40,
+                "meets_target": statistics.mean(times) < 40,
             }
 
         # Test 5: Available agents query
@@ -157,21 +157,21 @@ class Service6PerformanceValidator:
             end_time = time.perf_counter()
             times.append((end_time - start_time) * 1000)
 
-        performance_results['available_agents'] = {
-            'avg_time_ms': statistics.mean(times),
-            'min_time_ms': min(times),
-            'max_time_ms': max(times),
-            'p95_time_ms': statistics.quantiles(times, n=20)[18],
-            'agents_returned': len(agents) if agents else 0,
-            'target_time_ms': 40,
-            'meets_target': statistics.mean(times) < 40
+        performance_results["available_agents"] = {
+            "avg_time_ms": statistics.mean(times),
+            "min_time_ms": min(times),
+            "max_time_ms": max(times),
+            "p95_time_ms": statistics.quantiles(times, n=20)[18],
+            "agents_returned": len(agents) if agents else 0,
+            "target_time_ms": 40,
+            "meets_target": statistics.mean(times) < 40,
         }
 
-        self.results['database_performance'] = performance_results
+        self.results["database_performance"] = performance_results
 
         # Calculate overall database performance score
         total_tests = len(performance_results)
-        passed_tests = sum(1 for test in performance_results.values() if test.get('meets_target', False))
+        passed_tests = sum(1 for test in performance_results.values() if test.get("meets_target", False))
 
         logger.info(f"✅ Database Performance: {passed_tests}/{total_tests} tests passed targets")
 
@@ -191,15 +191,15 @@ class Service6PerformanceValidator:
             high_intent_leads = await behavior_engine.get_high_intent_leads(min_likelihood=50.0, limit=20)
             end_time = time.perf_counter()
 
-            service_results['followup_engine'] = {
-                'high_intent_retrieval_ms': (end_time - start_time) * 1000,
-                'leads_identified': len(high_intent_leads),
-                'target_time_ms': 100,
-                'meets_target': (end_time - start_time) * 1000 < 100
+            service_results["followup_engine"] = {
+                "high_intent_retrieval_ms": (end_time - start_time) * 1000,
+                "leads_identified": len(high_intent_leads),
+                "target_time_ms": 100,
+                "meets_target": (end_time - start_time) * 1000 < 100,
             }
         except Exception as e:
             logger.warning(f"Follow-up engine test failed: {e}")
-            service_results['followup_engine'] = {'error': str(e)}
+            service_results["followup_engine"] = {"error": str(e)}
 
         # Test predictive lead routing
         try:
@@ -210,16 +210,16 @@ class Service6PerformanceValidator:
             # routing_decision = await router.route_lead("test_lead_123")
             end_time = time.perf_counter()
 
-            service_results['lead_routing'] = {
-                'routing_time_ms': (end_time - start_time) * 1000,
-                'target_time_ms': 150,
-                'meets_target': (end_time - start_time) * 1000 < 150
+            service_results["lead_routing"] = {
+                "routing_time_ms": (end_time - start_time) * 1000,
+                "target_time_ms": 150,
+                "meets_target": (end_time - start_time) * 1000 < 150,
             }
         except Exception as e:
             logger.warning(f"Lead routing test failed: {e}")
-            service_results['lead_routing'] = {'error': str(e)}
+            service_results["lead_routing"] = {"error": str(e)}
 
-        self.results['service_performance'] = service_results
+        self.results["service_performance"] = service_results
 
     async def _run_load_tests(self):
         """Run concurrent load testing to validate scalability."""
@@ -249,99 +249,110 @@ class Service6PerformanceValidator:
         if successful_results:
             times = [r[0] for r in successful_results]
             load_test_results = {
-                'concurrent_queries': 50,
-                'successful_queries': len(successful_results),
-                'failed_queries': failed_count,
-                'total_time_seconds': total_time,
-                'avg_query_time_ms': statistics.mean(times),
-                'max_query_time_ms': max(times),
-                'min_query_time_ms': min(times),
-                'queries_per_second': len(successful_results) / total_time,
-                'target_qps': 20,  # Target: 20 queries per second
-                'meets_target': (len(successful_results) / total_time) >= 20
+                "concurrent_queries": 50,
+                "successful_queries": len(successful_results),
+                "failed_queries": failed_count,
+                "total_time_seconds": total_time,
+                "avg_query_time_ms": statistics.mean(times),
+                "max_query_time_ms": max(times),
+                "min_query_time_ms": min(times),
+                "queries_per_second": len(successful_results) / total_time,
+                "target_qps": 20,  # Target: 20 queries per second
+                "meets_target": (len(successful_results) / total_time) >= 20,
             }
         else:
-            load_test_results = {
-                'error': 'All queries failed',
-                'failed_queries': failed_count
-            }
+            load_test_results = {"error": "All queries failed", "failed_queries": failed_count}
 
-        self.results['load_test_results'] = load_test_results
+        self.results["load_test_results"] = load_test_results
 
     async def _generate_performance_report(self, benchmark_mode: bool = False):
         """Generate comprehensive performance report."""
         logger.info("📋 Generating performance report...")
 
         # Calculate overall performance score
-        db_performance = self.results.get('database_performance', {})
-        service_performance = self.results.get('service_performance', {})
-        load_performance = self.results.get('load_test_results', {})
+        db_performance = self.results.get("database_performance", {})
+        service_performance = self.results.get("service_performance", {})
+        load_performance = self.results.get("load_test_results", {})
 
         # Database performance summary
-        db_tests_passed = sum(1 for test in db_performance.values() if test.get('meets_target', False))
+        db_tests_passed = sum(1 for test in db_performance.values() if test.get("meets_target", False))
         db_total_tests = len(db_performance)
 
         # Performance improvements achieved
         improvements = []
 
         for test_name, test_results in db_performance.items():
-            if 'avg_time_ms' in test_results and 'target_time_ms' in test_results:
-                actual = test_results['avg_time_ms']
-                target = test_results['target_time_ms']
+            if "avg_time_ms" in test_results and "target_time_ms" in test_results:
+                actual = test_results["avg_time_ms"]
+                target = test_results["target_time_ms"]
                 if actual < target:
                     improvement_pct = ((target - actual) / target) * 100
-                    improvements.append({
-                        'test': test_name,
-                        'target_ms': target,
-                        'actual_ms': actual,
-                        'improvement_percent': improvement_pct,
-                        'status': '✅ PASSED'
-                    })
+                    improvements.append(
+                        {
+                            "test": test_name,
+                            "target_ms": target,
+                            "actual_ms": actual,
+                            "improvement_percent": improvement_pct,
+                            "status": "✅ PASSED",
+                        }
+                    )
                 else:
-                    improvements.append({
-                        'test': test_name,
-                        'target_ms': target,
-                        'actual_ms': actual,
-                        'improvement_percent': 0,
-                        'status': '❌ NEEDS OPTIMIZATION'
-                    })
+                    improvements.append(
+                        {
+                            "test": test_name,
+                            "target_ms": target,
+                            "actual_ms": actual,
+                            "improvement_percent": 0,
+                            "status": "❌ NEEDS OPTIMIZATION",
+                        }
+                    )
 
         # Generate recommendations
         recommendations = []
 
         for test_name, test_results in db_performance.items():
-            if not test_results.get('meets_target', False):
-                if test_name == 'high_intent_leads':
-                    recommendations.append("Consider additional indexing on leads(score, status, created_at) for high-intent queries")
-                elif test_name == 'followup_history':
+            if not test_results.get("meets_target", False):
+                if test_name == "high_intent_leads":
+                    recommendations.append(
+                        "Consider additional indexing on leads(score, status, created_at) for high-intent queries"
+                    )
+                elif test_name == "followup_history":
                     recommendations.append("Optimize communications table with covering index for follow-up queries")
-                elif test_name == 'available_agents':
+                elif test_name == "available_agents":
                     recommendations.append("Add composite index on agents(is_available, current_load, capacity)")
 
         # Performance summary
         summary = {
-            'overall_status': '✅ EXCELLENT' if db_tests_passed == db_total_tests else '⚠️ NEEDS OPTIMIZATION' if db_tests_passed > 0 else '❌ PERFORMANCE ISSUES',
-            'database_tests_passed': f"{db_tests_passed}/{db_total_tests}",
-            'performance_improvements': improvements,
-            'recommendations': recommendations,
-            'service6_production_ready': db_tests_passed >= (db_total_tests * 0.8),  # 80% threshold
-            'expected_concurrent_capacity': load_performance.get('queries_per_second', 0) * 60 if load_performance.get('queries_per_second') else 'Unknown'
+            "overall_status": "✅ EXCELLENT"
+            if db_tests_passed == db_total_tests
+            else "⚠️ NEEDS OPTIMIZATION"
+            if db_tests_passed > 0
+            else "❌ PERFORMANCE ISSUES",
+            "database_tests_passed": f"{db_tests_passed}/{db_total_tests}",
+            "performance_improvements": improvements,
+            "recommendations": recommendations,
+            "service6_production_ready": db_tests_passed >= (db_total_tests * 0.8),  # 80% threshold
+            "expected_concurrent_capacity": load_performance.get("queries_per_second", 0) * 60
+            if load_performance.get("queries_per_second")
+            else "Unknown",
         }
 
-        self.results['summary'] = summary
+        self.results["summary"] = summary
 
         # Print results
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("🚀 SERVICE 6 PERFORMANCE VALIDATION RESULTS")
-        print("="*80)
+        print("=" * 80)
         print(f"Status: {summary['overall_status']}")
         print(f"Database Tests: {summary['database_tests_passed']}")
         print(f"Production Ready: {'YES' if summary['service6_production_ready'] else 'NO'}")
 
         print("\n📊 PERFORMANCE IMPROVEMENTS:")
         for improvement in improvements:
-            print(f"  {improvement['status']} {improvement['test']}: {improvement['actual_ms']:.1f}ms (target: {improvement['target_ms']}ms)")
-            if improvement['improvement_percent'] > 0:
+            print(
+                f"  {improvement['status']} {improvement['test']}: {improvement['actual_ms']:.1f}ms (target: {improvement['target_ms']}ms)"
+            )
+            if improvement["improvement_percent"] > 0:
                 print(f"     → {improvement['improvement_percent']:.1f}% better than target")
 
         if load_performance:
@@ -359,32 +370,29 @@ class Service6PerformanceValidator:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         report_file = f"service6_performance_validation_{timestamp}.json"
 
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(self.results, f, indent=2)
 
         print(f"\n📄 Detailed results saved to: {report_file}")
-        print("="*80)
+        print("=" * 80)
 
         return self.results
 
 
 async def main():
     """Main validation entry point."""
-    parser = argparse.ArgumentParser(description='Service 6 Performance Validation')
-    parser.add_argument('--load-test', action='store_true', help='Include load testing')
-    parser.add_argument('--benchmark', action='store_true', help='Run in benchmark mode')
+    parser = argparse.ArgumentParser(description="Service 6 Performance Validation")
+    parser.add_argument("--load-test", action="store_true", help="Include load testing")
+    parser.add_argument("--benchmark", action="store_true", help="Run in benchmark mode")
 
     args = parser.parse_args()
 
     validator = Service6PerformanceValidator()
-    results = await validator.run_validation(
-        include_load_test=args.load_test,
-        benchmark_mode=args.benchmark
-    )
+    results = await validator.run_validation(include_load_test=args.load_test, benchmark_mode=args.benchmark)
 
     # Exit code based on results
-    summary = results.get('summary', {})
-    if summary.get('service6_production_ready', False):
+    summary = results.get("summary", {})
+    if summary.get("service6_production_ready", False):
         print("🎉 Service 6 is PRODUCTION READY for $130K MRR deployment!")
         exit(0)
     else:

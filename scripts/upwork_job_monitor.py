@@ -113,10 +113,24 @@ KEYWORD_TIERS: Dict[str, List[Tuple[str, float]]] = {
 }
 
 NEGATIVE_KEYWORDS = [
-    "wordpress", "shopify", "wix", "squarespace", "$5/hr", "$10/hr",
-    "write articles", "data entry", "virtual assistant", "copy paste",
-    "blog writing", "seo content", "social media posts", "logo design",
-    "php developer", "ruby on rails", "ionic", "flutter",
+    "wordpress",
+    "shopify",
+    "wix",
+    "squarespace",
+    "$5/hr",
+    "$10/hr",
+    "write articles",
+    "data entry",
+    "virtual assistant",
+    "copy paste",
+    "blog writing",
+    "seo content",
+    "social media posts",
+    "logo design",
+    "php developer",
+    "ruby on rails",
+    "ionic",
+    "flutter",
 ]
 
 SLACK_WEBHOOK_URL = os.getenv("UPWORK_SLACK_WEBHOOK_URL", "")
@@ -126,12 +140,13 @@ OUTPUT_FILE = Path(__file__).parent.parent / "jobs" / "new-jobs.md"
 # Score thresholds
 P1_THRESHOLD = 8.0  # Immediate alert
 P2_THRESHOLD = 5.0  # Batched / lower priority
-MIN_SCORE = 3.0     # Below this = skip entirely
+MIN_SCORE = 3.0  # Below this = skip entirely
 
 
 # ---------------------------------------------------------------------------
 # Persistence
 # ---------------------------------------------------------------------------
+
 
 def load_seen_jobs() -> Set[str]:
     """Load previously seen job IDs from storage."""
@@ -154,6 +169,7 @@ def save_seen_jobs(seen_jobs: Set[str]) -> None:
 # ---------------------------------------------------------------------------
 # Scoring
 # ---------------------------------------------------------------------------
+
 
 def extract_job_id(link: str) -> str:
     """Extract job ID from Upwork link."""
@@ -245,13 +261,14 @@ def extract_budget(description: str) -> str:
 # Notifications
 # ---------------------------------------------------------------------------
 
+
 def _score_color(score: float) -> str:
     """Return Slack color hex for score."""
     if score >= P1_THRESHOLD:
         return "#2eb886"  # green
     if score >= P2_THRESHOLD:
         return "#daa038"  # orange
-    return "#a0a0a0"      # gray
+    return "#a0a0a0"  # gray
 
 
 def send_slack_alert(jobs: List[Dict]) -> bool:
@@ -276,48 +293,50 @@ def send_slack_alert(jobs: List[Dict]) -> bool:
             if kws:
                 tier_text += f"*{tier.title()}*: {', '.join(kws)}\n"
 
-        attachments.append({
-            "color": _score_color(job["score"]),
-            "blocks": [
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": (
-                            f"*:fire: P1 — {job['title']}*\n"
-                            f"Score: *{job['score']}/10* | Budget: {job['budget']}\n"
-                            f"{tier_text}"
-                        ),
+        attachments.append(
+            {
+                "color": _score_color(job["score"]),
+                "blocks": [
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": (
+                                f"*:fire: P1 — {job['title']}*\n"
+                                f"Score: *{job['score']}/10* | Budget: {job['budget']}\n"
+                                f"{tier_text}"
+                            ),
+                        },
+                        "accessory": {
+                            "type": "button",
+                            "text": {"type": "plain_text", "text": "View Job"},
+                            "url": job["link"],
+                            "action_id": f"view_job_{job['job_id'][:8]}",
+                        },
                     },
-                    "accessory": {
-                        "type": "button",
-                        "text": {"type": "plain_text", "text": "View Job"},
-                        "url": job["link"],
-                        "action_id": f"view_job_{job['job_id'][:8]}",
-                    },
-                },
-            ],
-        })
+                ],
+            }
+        )
 
     # P2 jobs: compact summary
     if p2_jobs:
         lines = []
         for job in p2_jobs[:10]:  # cap at 10
-            lines.append(
-                f"- <{job['link']}|{job['title']}> (score: {job['score']}, {job['budget']})"
-            )
-        attachments.append({
-            "color": _score_color(5.0),
-            "blocks": [
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": f"*P2 Jobs ({len(p2_jobs)})*\n" + "\n".join(lines),
+            lines.append(f"- <{job['link']}|{job['title']}> (score: {job['score']}, {job['budget']})")
+        attachments.append(
+            {
+                "color": _score_color(5.0),
+                "blocks": [
+                    {
+                        "type": "section",
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": f"*P2 Jobs ({len(p2_jobs)})*\n" + "\n".join(lines),
+                        },
                     },
-                },
-            ],
-        })
+                ],
+            }
+        )
 
     if not attachments:
         return False
@@ -355,6 +374,7 @@ def send_notification(title: str, message: str) -> None:
 # Logging
 # ---------------------------------------------------------------------------
 
+
 def append_to_log(job_data: Dict) -> None:
     """Append new job to jobs/new-jobs.md."""
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
@@ -369,18 +389,18 @@ def append_to_log(job_data: Dict) -> None:
         if kws:
             tier_info += f"  - {tier.title()}: {', '.join(kws)}\n"
 
-    entry = f"""## [{job_data['priority']}] {job_data['title']}
+    entry = f"""## [{job_data["priority"]}] {job_data["title"]}
 
 **Posted:** {timestamp}
-**Score:** {job_data['score']}/10 ({job_data['priority']})
-**Budget:** {job_data['budget']}
-**Link:** {job_data['link']}
+**Score:** {job_data["score"]}/10 ({job_data["priority"]})
+**Budget:** {job_data["budget"]}
+**Link:** {job_data["link"]}
 
 **Matched Keywords:**
 {tier_info}
 **Description:**
 ```
-{job_data['description'][:500]}{'...' if len(job_data['description']) > 500 else ''}
+{job_data["description"][:500]}{"..." if len(job_data["description"]) > 500 else ""}
 ```
 
 ---
@@ -393,6 +413,7 @@ def append_to_log(job_data: Dict) -> None:
 # ---------------------------------------------------------------------------
 # Core pipeline
 # ---------------------------------------------------------------------------
+
 
 def fetch_and_process_jobs() -> List[Dict]:
     """Fetch jobs from RSS feeds, score, deduplicate, and return new matches."""

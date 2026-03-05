@@ -726,8 +726,9 @@ async def get_weekly_proof_pack_v2(
     try:
         db = await get_database()
         async with db.get_connection() as conn:
-            db_row = await conn.fetchrow(
-                """
+            db_row = (
+                await conn.fetchrow(
+                    """
                 SELECT tenant_id, week_start, leads_received, qualified_leads, response_sla_pct,
                        appointments_booked, cost_per_qualified_lead, updated_at
                 FROM pilot_kpi_records
@@ -735,17 +736,20 @@ async def get_weekly_proof_pack_v2(
                 ORDER BY week_start DESC
                 LIMIT 1
                 """,
-                tenant_id,
-            ) if week_start is None else await conn.fetchrow(
-                """
+                    tenant_id,
+                )
+                if week_start is None
+                else await conn.fetchrow(
+                    """
                 SELECT tenant_id, week_start, leads_received, qualified_leads, response_sla_pct,
                        appointments_booked, cost_per_qualified_lead, updated_at
                 FROM pilot_kpi_records
                 WHERE tenant_id = $1 AND week_start = $2::date
                 LIMIT 1
                 """,
-                tenant_id,
-                week_start,
+                    tenant_id,
+                    week_start,
+                )
             )
 
             if not db_row and week_start and allow_latest_fallback:
@@ -798,10 +802,20 @@ async def get_weekly_proof_pack_v2(
     except Exception as exc:
         # Explicit fallback branch for DB connection/table issues.
         try:
-            kpi_row = _load_weekly_kpi_row(tenant_id=tenant_id, week_start=week_start if not allow_latest_fallback else None)
+            kpi_row = _load_weekly_kpi_row(
+                tenant_id=tenant_id, week_start=week_start if not allow_latest_fallback else None
+            )
             proof_pack_path = Path("reports/weekly_executive_proof_pack.md")
-            markdown = proof_pack_path.read_text(encoding="utf-8") if proof_pack_path.exists() else _render_proof_pack_markdown(tenant_id, kpi_row)
-            freshness = _age_seconds(datetime.fromtimestamp(proof_pack_path.stat().st_mtime, tz=timezone.utc)) if proof_pack_path.exists() else 0
+            markdown = (
+                proof_pack_path.read_text(encoding="utf-8")
+                if proof_pack_path.exists()
+                else _render_proof_pack_markdown(tenant_id, kpi_row)
+            )
+            freshness = (
+                _age_seconds(datetime.fromtimestamp(proof_pack_path.stat().st_mtime, tz=timezone.utc))
+                if proof_pack_path.exists()
+                else 0
+            )
 
             envelope = _success(
                 source=ResponseSource.LIVE_PROVIDER,

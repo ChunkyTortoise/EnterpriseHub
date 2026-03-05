@@ -52,8 +52,10 @@ from ghl_real_estate_ai.models.api_analytics_types import (
 # Enums
 # ===================================================================
 
+
 class PartnershipStatus(str, Enum):
     """Partnership status options."""
+
     PENDING_APPROVAL = "pending_approval"
     ACTIVE = "active"
     SUSPENDED = "suspended"
@@ -63,6 +65,7 @@ class PartnershipStatus(str, Enum):
 
 class PartnershipTier(str, Enum):
     """Partnership tier levels for Fortune 500 companies."""
+
     SILVER = "silver"
     GOLD = "gold"
     PLATINUM = "platinum"
@@ -70,6 +73,7 @@ class PartnershipTier(str, Enum):
 
 class RelocationStatus(str, Enum):
     """Employee relocation status tracking."""
+
     INITIATED = "initiated"
     IN_PROGRESS = "in_progress"
     PROPERTY_SEARCH = "property_search"
@@ -82,6 +86,7 @@ class RelocationStatus(str, Enum):
 
 class ContractStatus(str, Enum):
     """Enterprise contract status."""
+
     DRAFT = "draft"
     PENDING_APPROVAL = "pending_approval"
     ACTIVE = "active"
@@ -92,6 +97,7 @@ class ContractStatus(str, Enum):
 
 class BillingFrequency(str, Enum):
     """Billing frequency options."""
+
     MONTHLY = "monthly"
     QUARTERLY = "quarterly"
     ANNUALLY = "annually"
@@ -99,6 +105,7 @@ class BillingFrequency(str, Enum):
 
 class PaymentTerms(str, Enum):
     """Payment terms for enterprise contracts."""
+
     NET15 = "NET15"
     NET30 = "NET30"
     NET60 = "NET60"
@@ -109,41 +116,43 @@ class PaymentTerms(str, Enum):
 # Base Models
 # ===================================================================
 
+
 class TimestampedModel(BaseModel):
     """Base model with timestamp fields."""
+
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = None
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 # ===================================================================
 # Authentication & Tenant Models
 # ===================================================================
 
+
 class TenantConfigurationRequest(BaseModel):
     """Request to create or update tenant configuration."""
+
     company_name: str = Field(..., min_length=2, max_length=100)
-    ontario_mills: str = Field(..., pattern=r'^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$')
+    ontario_mills: str = Field(..., pattern=r"^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$")
     sso_provider: SSOProvider
     sso_config: Dict[str, Any] = Field(default_factory=dict)
     partnership_id: Optional[str] = None
-    admin_email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    admin_email: Optional[str] = Field(None, pattern=r"^[^@]+@[^@]+\.[^@]+$")
     allowed_ontario_millss: Optional[List[str]] = Field(default_factory=list)
     max_users: int = Field(1000, ge=1, le=10000)
     session_timeout_hours: int = Field(8, ge=1, le=24)
     require_mfa: bool = True
     auto_provision_users: bool = True
 
-    @field_validator('allowed_ontario_millss', mode='before')
+    @field_validator("allowed_ontario_millss", mode="before")
     @classmethod
     def ensure_ontario_mills_in_allowed(cls, v, info: ValidationInfo):
         """Ensure primary ontario_mills is in allowed ontario_millss list."""
         if v is None:
             v = []
-        ontario_mills = info.data.get('ontario_mills')
+        ontario_mills = info.data.get("ontario_mills")
         if ontario_mills and ontario_mills not in v:
             v.append(ontario_mills)
         return v
@@ -151,6 +160,7 @@ class TenantConfigurationRequest(BaseModel):
 
 class TenantResponse(BaseModel):
     """Response model for tenant information."""
+
     tenant_id: str
     company_name: str
     ontario_mills: str
@@ -169,7 +179,8 @@ class TenantResponse(BaseModel):
 
 class UserProvisioningRequest(BaseModel):
     """Request to provision enterprise user."""
-    email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
+
+    email: str = Field(..., pattern=r"^[^@]+@[^@]+\.[^@]+$")
     name: str = Field(..., min_length=1, max_length=100)
     first_name: Optional[str] = Field(None, max_length=50)
     last_name: Optional[str] = Field(None, max_length=50)
@@ -181,6 +192,7 @@ class UserProvisioningRequest(BaseModel):
 
 class EnterpriseUserResponse(BaseModel):
     """Response model for enterprise user."""
+
     user_id: str
     tenant_id: str
     email: str
@@ -201,18 +213,21 @@ class EnterpriseUserResponse(BaseModel):
 
 class SSOLoginRequest(BaseModel):
     """Request to initiate SSO login."""
+
     ontario_mills: str = Field(..., description="Company ontario_mills for tenant lookup")
     redirect_uri: str = Field(..., description="Post-authentication redirect URI")
 
 
 class SSOCallbackRequest(BaseModel):
     """Request to handle SSO callback."""
+
     code: str = Field(..., description="Authorization code from SSO provider")
     state: str = Field(..., description="State parameter for security")
 
 
 class AuthenticationResponse(BaseModel):
     """Response for successful authentication."""
+
     access_token: str
     token_type: str = "bearer"
     expires_in: int
@@ -224,10 +239,12 @@ class AuthenticationResponse(BaseModel):
 # Partnership Models
 # ===================================================================
 
+
 class PartnershipCreationRequest(BaseModel):
     """Request to create corporate partnership."""
+
     company_name: str = Field(..., min_length=2, max_length=200)
-    contact_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    contact_email: str = Field(..., pattern=r"^[^@]+@[^@]+\.[^@]+$")
     contact_name: Optional[str] = Field(None, max_length=100)
     company_size: Optional[str] = Field(None, description="Small, Medium, Large, Enterprise")
     industry: Optional[str] = Field(None, max_length=100)
@@ -235,17 +252,18 @@ class PartnershipCreationRequest(BaseModel):
     expected_volume: int = Field(..., ge=10, le=10000, description="Expected annual relocation volume")
     preferred_tier: Optional[PartnershipTier] = None
 
-    @field_validator('company_size')
+    @field_validator("company_size")
     @classmethod
     def validate_company_size(cls, v):
-        if v and v not in ['Small', 'Medium', 'Large', 'Enterprise']:
-            raise ValueError('Company size must be Small, Medium, Large, or Enterprise')
+        if v and v not in ["Small", "Medium", "Large", "Enterprise"]:
+            raise ValueError("Company size must be Small, Medium, Large, or Enterprise")
         return v
 
 
 class PartnershipUpdateRequest(BaseModel):
     """Request to update partnership configuration."""
-    contact_email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
+
+    contact_email: Optional[str] = Field(None, pattern=r"^[^@]+@[^@]+\.[^@]+$")
     contact_name: Optional[str] = Field(None, max_length=100)
     expected_volume: Optional[int] = Field(None, ge=10, le=10000)
     tier: Optional[PartnershipTier] = None
@@ -254,24 +272,24 @@ class PartnershipUpdateRequest(BaseModel):
 
 class PartnershipSummary(BaseModel):
     """Summary model for partnership listing."""
+
     partnership_id: str
     company_name: str
     tier: PartnershipTier
     status: PartnershipStatus
     expected_annual_volume: int
     actual_volume_ytd: int = 0
-    total_revenue: Decimal = Field(default=Decimal('0.00'))
+    total_revenue: Decimal = Field(default=Decimal("0.00"))
     health_score: Optional[float] = None
     created_at: datetime
     last_activity: Optional[datetime] = None
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 class PartnershipDetail(PartnershipSummary):
     """Detailed partnership model."""
+
     contact_email: str
     contact_name: Optional[str]
     company_size: Optional[str]
@@ -289,9 +307,11 @@ class PartnershipDetail(PartnershipSummary):
 # Relocation Models
 # ===================================================================
 
+
 class RelocationRequest(BaseModel):
     """Individual relocation request."""
-    employee_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
+
+    employee_email: str = Field(..., pattern=r"^[^@]+@[^@]+\.[^@]+$")
     employee_name: Optional[str] = Field(None, max_length=100)
     destination_city: str = Field(..., min_length=2, max_length=100)
     destination_state: Optional[str] = Field(None, max_length=50)
@@ -300,23 +320,25 @@ class RelocationRequest(BaseModel):
     start_date: datetime = Field(..., description="Desired relocation start date")
     special_requirements: Optional[str] = Field(None, max_length=500)
 
-    @field_validator('housing_budget')
+    @field_validator("housing_budget")
     @classmethod
     def validate_housing_budget(cls, v):
-        if v <= 0 or v > Decimal('50000'):
-            raise ValueError('Housing budget must be between $1 and $50,000')
+        if v <= 0 or v > Decimal("50000"):
+            raise ValueError("Housing budget must be between $1 and $50,000")
         return v
 
 
 class BulkRelocationRequest(BaseModel):
     """Request for bulk employee relocations."""
+
     relocations: List[RelocationRequest] = Field(..., min_length=1, max_length=100)
     batch_priority: Optional[str] = Field("normal", description="normal, high, urgent")
-    notification_email: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    notification_email: Optional[str] = Field(None, pattern=r"^[^@]+@[^@]+\.[^@]+$")
 
 
 class RelocationResponse(BaseModel):
     """Response for relocation processing."""
+
     relocation_id: str
     batch_id: Optional[str] = None
     employee_email: str
@@ -327,13 +349,12 @@ class RelocationResponse(BaseModel):
     created_at: datetime
     last_updated: datetime
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 class RelocationTracking(BaseModel):
     """Detailed relocation tracking information."""
+
     relocation_id: str
     partnership_id: str
     employee_email: str
@@ -347,42 +368,43 @@ class RelocationTracking(BaseModel):
     real_time_status: StatusIndicators
     last_updated: datetime
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 # ===================================================================
 # Contract & Billing Models
 # ===================================================================
 
+
 class ContractCreationRequest(BaseModel):
     """Request to create enterprise contract."""
+
     partnership_id: str
     expected_monthly_volume: int = Field(..., ge=10, le=5000)
     contract_term_months: int = Field(..., ge=6, le=60)
-    billing_contact_email: str = Field(..., pattern=r'^[^@]+@[^@]+\.[^@]+$')
-    secondary_billing_contact: Optional[str] = Field(None, pattern=r'^[^@]+@[^@]+\.[^@]+$')
+    billing_contact_email: str = Field(..., pattern=r"^[^@]+@[^@]+\.[^@]+$")
+    secondary_billing_contact: Optional[str] = Field(None, pattern=r"^[^@]+@[^@]+\.[^@]+$")
     payment_terms: PaymentTerms
     billing_frequency: BillingFrequency = BillingFrequency.MONTHLY
     currency: str = Field("USD", max_length=3)
     auto_renewal: bool = True
     custom_rate_per_transaction: Optional[Decimal] = Field(None, gt=0)
-    volume_shortfall_penalty: Optional[Decimal] = Field(Decimal('0.00'), ge=0)
-    revenue_share_percentage: Optional[Decimal] = Field(Decimal('0.30'), ge=0, le=1)
-    minimum_revenue_guarantee: Optional[Decimal] = Field(Decimal('0.00'), ge=0)
+    volume_shortfall_penalty: Optional[Decimal] = Field(Decimal("0.00"), ge=0)
+    revenue_share_percentage: Optional[Decimal] = Field(Decimal("0.30"), ge=0, le=1)
+    minimum_revenue_guarantee: Optional[Decimal] = Field(Decimal("0.00"), ge=0)
 
-    @field_validator('currency')
+    @field_validator("currency")
     @classmethod
     def validate_currency(cls, v):
-        valid_currencies = ['USD', 'EUR', 'GBP', 'CAD']
+        valid_currencies = ["USD", "EUR", "GBP", "CAD"]
         if v not in valid_currencies:
-            raise ValueError(f'Currency must be one of: {", ".join(valid_currencies)}')
+            raise ValueError(f"Currency must be one of: {', '.join(valid_currencies)}")
         return v
 
 
 class ContractResponse(BaseModel):
     """Response model for enterprise contract."""
+
     contract_id: str
     partnership_id: str
     volume_tier: str
@@ -392,18 +414,17 @@ class ContractResponse(BaseModel):
     volume_commitments: VolumeCommitmentData
     revenue_sharing: RevenueMetrics
     status: ContractStatus
-    total_billed: Decimal = Field(default=Decimal('0.00'))
+    total_billed: Decimal = Field(default=Decimal("0.00"))
     total_volume: int = 0
     last_billing_date: Optional[datetime] = None
     created_at: datetime
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 class VolumeDiscountTierInfo(BaseModel):
     """Information about volume discount tiers."""
+
     tier_name: str
     min_monthly_volume: int
     max_monthly_volume: Optional[int]
@@ -411,12 +432,12 @@ class VolumeDiscountTierInfo(BaseModel):
     base_rate: Decimal
     setup_fee: Decimal
 
-    model_config = ConfigDict(json_encoders={
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={Decimal: lambda v: float(v)})
 
 
 class BillingPeriodRequest(BaseModel):
     """Request to process billing for a period."""
+
     billing_period_start: datetime
     billing_period_end: datetime
     include_adjustments: bool = True
@@ -425,6 +446,7 @@ class BillingPeriodRequest(BaseModel):
 
 class VolumeBillingResponse(BaseModel):
     """Response for volume billing processing."""
+
     contract_id: str
     billing_period: str
     volume_summary: VolumeSummary
@@ -433,13 +455,12 @@ class VolumeBillingResponse(BaseModel):
     payment_result: PaymentResult
     processed_at: datetime
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 class RevenueShareCalculation(BaseModel):
     """Revenue sharing calculation result."""
+
     contract_id: str
     period_start: datetime
     period_end: datetime
@@ -453,17 +474,17 @@ class RevenueShareCalculation(BaseModel):
     payout_status: str
     calculated_at: datetime
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 # ===================================================================
 # Analytics Models
 # ===================================================================
 
+
 class AnalyticsPeriodRequest(BaseModel):
     """Request for analytics within a specific period."""
+
     analysis_period_days: int = Field(90, ge=7, le=365)
     include_predictions: bool = True
     include_benchmarks: bool = True
@@ -471,17 +492,18 @@ class AnalyticsPeriodRequest(BaseModel):
 
 class PerformanceMetrics(BaseModel):
     """Core performance metrics."""
+
     relocation_metrics: RelocationMetrics
     financial_metrics: RevenueMetrics
     efficiency_metrics: EfficiencyMetrics
     quality_metrics: QualityMetrics
 
-    model_config = ConfigDict(json_encoders={
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={Decimal: lambda v: float(v)})
 
 
 class TrendAnalysis(BaseModel):
     """Performance trend analysis."""
+
     volume_trend: MarketTrendData
     revenue_trend: MarketTrendData
     satisfaction_trend: MarketTrendData
@@ -489,12 +511,14 @@ class TrendAnalysis(BaseModel):
 
 class BenchmarkComparison(BaseModel):
     """Performance benchmark comparison."""
+
     tier_benchmark: BenchmarkData
     performance_vs_benchmark: BenchmarkData
 
 
 class HealthScoreDetails(BaseModel):
     """Partnership health score breakdown."""
+
     overall_score: float = Field(..., ge=0, le=100)
     component_scores: Dict[str, float]
     health_status: str
@@ -503,6 +527,7 @@ class HealthScoreDetails(BaseModel):
 
 class PartnershipAnalyticsResponse(BaseModel):
     """Comprehensive partnership analytics response."""
+
     partnership_id: str
     analysis_period: Dict[str, datetime]
     core_metrics: PerformanceMetrics
@@ -514,13 +539,12 @@ class PartnershipAnalyticsResponse(BaseModel):
     analysis_confidence: float
     generated_at: datetime
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 class RevenueAttributionResponse(BaseModel):
     """Revenue attribution analysis response."""
+
     partnership_id: str
     attribution_period: Dict[str, datetime]
     direct_revenue_attribution: RevenueAttribution
@@ -532,13 +556,12 @@ class RevenueAttributionResponse(BaseModel):
     attribution_confidence: RevenueAttribution
     calculated_at: datetime
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 class ForecastRequest(BaseModel):
     """Request for partnership forecast."""
+
     forecast_months: int = Field(12, ge=3, le=24)
     include_scenarios: bool = True
     confidence_level: float = Field(0.85, ge=0.5, le=0.99)
@@ -546,6 +569,7 @@ class ForecastRequest(BaseModel):
 
 class PartnershipForecast(BaseModel):
     """Partnership forecast response."""
+
     partnership_id: str
     forecast_horizon_months: int
     historical_data_summary: ForecastData
@@ -558,13 +582,12 @@ class PartnershipForecast(BaseModel):
     forecast_assumptions: List[str]
     generated_at: datetime
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 class CompetitiveAnalysisResponse(BaseModel):
     """Competitive analysis response."""
+
     partnership_id: str
     company_name: str
     industry: str
@@ -577,13 +600,12 @@ class CompetitiveAnalysisResponse(BaseModel):
     competitive_score: float
     analysis_date: datetime
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 class ExecutiveDashboardResponse(BaseModel):
     """Executive dashboard response."""
+
     dashboard_period: str
     period_range: Dict[str, datetime]
     portfolio_summary: PortfolioSummaryData
@@ -598,17 +620,17 @@ class ExecutiveDashboardResponse(BaseModel):
     kpi_trends: Dict[str, MarketTrendData]
     generated_at: datetime
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat(),
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat(), Decimal: lambda v: float(v)})
 
 
 # ===================================================================
 # Error Response Models
 # ===================================================================
 
+
 class EnterpriseError(BaseModel):
     """Standardized enterprise error response."""
+
     error_code: str
     error_message: str
     error_type: str
@@ -617,16 +639,17 @@ class EnterpriseError(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     correlation_id: Optional[str] = None
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat()})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ===================================================================
 # Validation Response Models
 # ===================================================================
 
+
 class ValidationResult(BaseModel):
     """Result of data validation."""
+
     is_valid: bool
     errors: List[str] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
@@ -634,29 +657,30 @@ class ValidationResult(BaseModel):
 
 class HealthCheckResponse(BaseModel):
     """Health check response for enterprise services."""
+
     status: str
     timestamp: datetime
     services: Dict[str, str]
     version_info: Optional[Dict[str, str]] = None
 
-    model_config = ConfigDict(json_encoders={
-            datetime: lambda v: v.isoformat()})
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ===================================================================
 # Configuration Models
 # ===================================================================
 
+
 class EnterpriseConfiguration(BaseModel):
     """Enterprise platform configuration."""
+
     max_partnerships_per_tenant: int = 50
     max_relocations_per_batch: int = 100
     default_session_timeout_hours: int = 8
     volume_tier_thresholds: Dict[str, int] = Field(default_factory=dict)
     supported_sso_providers: List[SSOProvider] = Field(default_factory=list)
     available_payment_terms: List[PaymentTerms] = Field(default_factory=list)
-    default_revenue_share_percentage: Decimal = Decimal('0.30')
+    default_revenue_share_percentage: Decimal = Decimal("0.30")
     analytics_retention_days: int = 730
 
-    model_config = ConfigDict(json_encoders={
-            Decimal: lambda v: float(v)})
+    model_config = ConfigDict(json_encoders={Decimal: lambda v: float(v)})

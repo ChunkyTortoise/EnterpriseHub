@@ -1,4 +1,5 @@
 import pytest
+
 """
 Test Repository Pattern + Strategy Pattern Integration
 

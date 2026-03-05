@@ -22,12 +22,13 @@ from typing import List, Dict, Tuple, Optional
 @dataclass
 class ShowingLocation:
     """Property showing location with metadata."""
+
     property_id: str
     address: str
     coordinates: Tuple[float, float]  # (lat, lng)
     availability_start: str  # HH:MM
-    availability_end: str    # HH:MM
-    priority: float          # 0-1, higher = show first
+    availability_end: str  # HH:MM
+    priority: float  # 0-1, higher = show first
     estimated_duration_minutes: int = 30
     match_score: float = 0.0
 
@@ -35,6 +36,7 @@ class ShowingLocation:
 @dataclass
 class ScheduledShowing:
     """A single scheduled showing."""
+
     sequence: int
     property_id: str
     address: str
@@ -49,6 +51,7 @@ class ScheduledShowing:
 @dataclass
 class OptimizedSchedule:
     """Complete optimized schedule result."""
+
     date: str
     start_time: str
     end_time: str
@@ -118,11 +121,7 @@ def format_time(dt: datetime) -> str:
     return dt.strftime("%H:%M")
 
 
-def is_within_availability(
-    time: datetime,
-    availability_start: str,
-    availability_end: str
-) -> bool:
+def is_within_availability(time: datetime, availability_start: str, availability_end: str) -> bool:
     """Check if time is within availability window."""
     start = parse_time(availability_start)
     end = parse_time(availability_end)
@@ -132,9 +131,7 @@ def is_within_availability(
 
 
 def priority_nearest_neighbor(
-    properties: List[ShowingLocation],
-    time_matrix: List[List[int]],
-    start_time: datetime
+    properties: List[ShowingLocation], time_matrix: List[List[int]], start_time: datetime
 ) -> List[int]:
     """
     Modified nearest neighbor algorithm with priority weighting.
@@ -160,9 +157,7 @@ def priority_nearest_neighbor(
 
             # Check if we can arrive within availability
             arrival = current_time + timedelta(minutes=drive_time)
-            if not is_within_availability(
-                arrival, prop.availability_start, prop.availability_end
-            ):
+            if not is_within_availability(arrival, prop.availability_start, prop.availability_end):
                 continue
 
             # Score: balance distance and priority
@@ -178,19 +173,13 @@ def priority_nearest_neighbor(
             visited[best_idx] = True
             route.append(best_idx)
             drive_time = time_matrix[current_idx][best_idx + 1]
-            current_time += timedelta(
-                minutes=drive_time + properties[best_idx].estimated_duration_minutes + 5
-            )
+            current_time += timedelta(minutes=drive_time + properties[best_idx].estimated_duration_minutes + 5)
             current_idx = best_idx + 1
 
     return route
 
 
-def route_total_time(
-    route: List[int],
-    time_matrix: List[List[int]],
-    properties: List[ShowingLocation]
-) -> int:
+def route_total_time(route: List[int], time_matrix: List[List[int]], properties: List[ShowingLocation]) -> int:
     """Calculate total time for a route including drive and showing time."""
     if not route:
         return 0
@@ -210,11 +199,7 @@ def route_total_time(
     return total
 
 
-def two_opt_improve(
-    route: List[int],
-    time_matrix: List[List[int]],
-    properties: List[ShowingLocation]
-) -> List[int]:
+def two_opt_improve(route: List[int], time_matrix: List[List[int]], properties: List[ShowingLocation]) -> List[int]:
     """Improve route using 2-opt swaps."""
     improved = True
     best_route = route.copy()
@@ -230,11 +215,7 @@ def two_opt_improve(
         for i in range(len(best_route) - 1):
             for j in range(i + 2, len(best_route)):
                 # Create new route with reversed segment
-                new_route = (
-                    best_route[:i] +
-                    best_route[i:j][::-1] +
-                    best_route[j:]
-                )
+                new_route = best_route[:i] + best_route[i:j][::-1] + best_route[j:]
 
                 new_time = route_total_time(new_route, time_matrix, properties)
 
@@ -246,10 +227,7 @@ def two_opt_improve(
     return best_route
 
 
-def calculate_naive_time(
-    properties: List[ShowingLocation],
-    time_matrix: List[List[int]]
-) -> int:
+def calculate_naive_time(properties: List[ShowingLocation], time_matrix: List[List[int]]) -> int:
     """Calculate time for naive (original order) route."""
     total = 0
     prev_idx = 0
@@ -267,7 +245,7 @@ def build_schedule(
     properties: List[ShowingLocation],
     time_matrix: List[List[int]],
     distance_matrix: List[List[float]],
-    start_time: str
+    start_time: str,
 ) -> OptimizedSchedule:
     """Build complete schedule from optimized route."""
     showings = []
@@ -301,7 +279,7 @@ def build_schedule(
             showing_duration=prop.estimated_duration_minutes,
             drive_time_to=drive_time,
             match_score=prop.match_score,
-            priority=prop.priority
+            priority=prop.priority,
         )
         showings.append(showing)
 
@@ -328,14 +306,14 @@ def build_schedule(
         total_properties=len(showings),
         showings=showings,
         miles_total=round(total_distance, 1),
-        optimization_savings_minutes=max(0, optimization_savings)
+        optimization_savings_minutes=max(0, optimization_savings),
     )
 
 
 def load_properties(properties_file: str) -> List[ShowingLocation]:
     """Load properties from JSON file or generate mock data."""
     try:
-        with open(properties_file, 'r') as f:
+        with open(properties_file, "r") as f:
             data = json.load(f)
 
         return [
@@ -347,7 +325,7 @@ def load_properties(properties_file: str) -> List[ShowingLocation]:
                 availability_end=p.get("availability_end", "18:00"),
                 priority=p.get("priority", 0.5),
                 estimated_duration_minutes=p.get("duration", 30),
-                match_score=p.get("match_score", 0.0)
+                match_score=p.get("match_score", 0.0),
             )
             for p in data
         ]
@@ -376,7 +354,7 @@ def generate_mock_properties() -> List[ShowingLocation]:
             availability_end="18:00",
             priority=priority,
             estimated_duration_minutes=30,
-            match_score=score
+            match_score=score,
         )
         for pid, addr, coords, priority, score in mock_data
     ]
@@ -387,7 +365,7 @@ def optimize_schedule(
     start_location: Tuple[float, float],
     start_time: str,
     date: str,
-    max_duration_hours: float = 4
+    max_duration_hours: float = 4,
 ) -> OptimizedSchedule:
     """
     Main optimization function.
@@ -404,7 +382,7 @@ def optimize_schedule(
             total_properties=0,
             showings=[],
             miles_total=0.0,
-            optimization_savings_minutes=0
+            optimization_savings_minutes=0,
         )
 
     # Build location list (start + properties)
@@ -422,9 +400,7 @@ def optimize_schedule(
     optimized_route = two_opt_improve(initial_route, time_matrix, properties)
 
     # Build schedule
-    schedule = build_schedule(
-        optimized_route, properties, time_matrix, distance_matrix, start_time
-    )
+    schedule = build_schedule(optimized_route, properties, time_matrix, distance_matrix, start_time)
     schedule.date = date
 
     # Check max duration constraint
@@ -434,56 +410,22 @@ def optimize_schedule(
         reduced = properties_sorted[:-1]
 
         if reduced:
-            return optimize_schedule(
-                reduced, start_location, start_time, date, max_duration_hours
-            )
+            return optimize_schedule(reduced, start_location, start_time, date, max_duration_hours)
 
     return schedule
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Optimize property showing schedule"
-    )
+    parser = argparse.ArgumentParser(description="Optimize property showing schedule")
     parser.add_argument(
-        "--properties",
-        required=True,
-        help="JSON file with property IDs and coordinates, or 'mock' for demo"
+        "--properties", required=True, help="JSON file with property IDs and coordinates, or 'mock' for demo"
     )
-    parser.add_argument(
-        "--date",
-        required=True,
-        help="Date for showings (YYYY-MM-DD)"
-    )
-    parser.add_argument(
-        "--start-time",
-        default="10:00",
-        help="Start time (HH:MM, default: 10:00)"
-    )
-    parser.add_argument(
-        "--start-lat",
-        type=float,
-        default=30.508,
-        help="Starting latitude (default: Round Rock)"
-    )
-    parser.add_argument(
-        "--start-lng",
-        type=float,
-        default=-97.678,
-        help="Starting longitude (default: Round Rock)"
-    )
-    parser.add_argument(
-        "--max-hours",
-        type=float,
-        default=4,
-        help="Maximum duration in hours (default: 4)"
-    )
-    parser.add_argument(
-        "--output",
-        choices=["json", "text"],
-        default="text",
-        help="Output format"
-    )
+    parser.add_argument("--date", required=True, help="Date for showings (YYYY-MM-DD)")
+    parser.add_argument("--start-time", default="10:00", help="Start time (HH:MM, default: 10:00)")
+    parser.add_argument("--start-lat", type=float, default=30.508, help="Starting latitude (default: Round Rock)")
+    parser.add_argument("--start-lng", type=float, default=-97.678, help="Starting longitude (default: Round Rock)")
+    parser.add_argument("--max-hours", type=float, default=4, help="Maximum duration in hours (default: 4)")
+    parser.add_argument("--output", choices=["json", "text"], default="text", help="Output format")
 
     args = parser.parse_args()
 
@@ -499,13 +441,7 @@ def main():
 
     # Optimize schedule
     start_location = (args.start_lat, args.start_lng)
-    schedule = optimize_schedule(
-        properties,
-        start_location,
-        args.start_time,
-        args.date,
-        args.max_hours
-    )
+    schedule = optimize_schedule(properties, start_location, args.start_time, args.date, args.max_hours)
 
     # Output results
     if args.output == "json":
@@ -519,7 +455,7 @@ def main():
             "total_properties": schedule.total_properties,
             "miles_total": schedule.miles_total,
             "optimization_savings_minutes": schedule.optimization_savings_minutes,
-            "showings": [asdict(s) for s in schedule.showings]
+            "showings": [asdict(s) for s in schedule.showings],
         }
         print(json.dumps(result, indent=2))
     else:

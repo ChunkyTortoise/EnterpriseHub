@@ -14,9 +14,10 @@ from pydantic import BaseModel
 
 class LeadStatus(Enum):
     """Lead classification based on qualification level."""
-    HOT = "hot"      # 3+ questions answered - ready for human handoff
-    WARM = "warm"    # 2 questions answered - continue nurturing
-    COLD = "cold"    # 1 or less - needs more engagement
+
+    HOT = "hot"  # 3+ questions answered - ready for human handoff
+    WARM = "warm"  # 2 questions answered - continue nurturing
+    COLD = "cold"  # 1 or less - needs more engagement
 
 
 # Jorge's Proven Qualification Questions (from CLIENT CLARIFICATION)
@@ -35,33 +36,33 @@ QUESTION_VARIATIONS = {
     "budget": [
         "Quick question - what's your budget range looking like?",
         "What price range are you comfortable with?",
-        "What's your budget for this move?"
+        "What's your budget for this move?",
     ],
     "location": [
         "Got it. Which neighborhoods are you eyeing?",
         "Any specific areas you're focused on?",
-        "Where are you hoping to land?"
+        "Where are you hoping to land?",
     ],
     "bedrooms": [
         "How many bedrooms do you need?",
         "What size home are you looking for?",
-        "How many bedrooms would work?"
+        "How many bedrooms would work?",
     ],
     "timeline": [
         "When are you hoping to make a move?",
         "What's your timeline looking like?",
-        "When do you want to be in your new place?"
+        "When do you want to be in your new place?",
     ],
     "preapproval": [
         "Are you pre-approved or do you need a lender recommendation?",
         "Have you talked to a lender yet?",
-        "Do you have financing lined up?"
+        "Do you have financing lined up?",
     ],
     "motivation": [
         "Just curious - what's driving the decision right now?",
         "What's prompting the move?",
-        "What's got you thinking about buying/selling?"
-    ]
+        "What's got you thinking about buying/selling?",
+    ],
 }
 
 
@@ -72,6 +73,7 @@ class LeadQualificationState:
 
     Based on production system handling 1000+ leads/month.
     """
+
     contact_id: str
     current_question: str = "budget"
     answers: Dict[str, Any] = field(default_factory=dict)
@@ -92,9 +94,8 @@ class LeadQualificationState:
         if self.last_interaction:
             time_diff = (now - self.last_interaction).total_seconds()
             # Update rolling average response time
-            self.response_time_avg = (
-                (self.response_time_avg * self.message_count + time_diff) /
-                (self.message_count + 1)
+            self.response_time_avg = (self.response_time_avg * self.message_count + time_diff) / (
+                self.message_count + 1
             )
 
         self.last_interaction = now
@@ -107,10 +108,7 @@ class LeadQualificationState:
 
         # Update engagement based on answer quality
         engagement = calculate_answer_engagement(answer)
-        self.engagement_level = (
-            (self.engagement_level * (self.message_count - 1) + engagement) /
-            self.message_count
-        )
+        self.engagement_level = (self.engagement_level * (self.message_count - 1) + engagement) / self.message_count
 
     def get_next_question(self) -> Optional[str]:
         """Get next question in sequence."""
@@ -138,11 +136,9 @@ class LeadQualificationState:
             "message_count": self.message_count,
             "engagement_level": round(self.engagement_level, 2),
             "avg_response_time_sec": round(self.response_time_avg, 1),
-            "session_duration_min": (
-                (self.last_interaction - self.created_at).total_seconds() / 60
-            ),
+            "session_duration_min": ((self.last_interaction - self.created_at).total_seconds() / 60),
             "questions_answered": list(self.answers.keys()),
-            "conversion_probability": estimate_conversion_probability(self)
+            "conversion_probability": estimate_conversion_probability(self),
         }
 
 
@@ -187,8 +183,18 @@ def is_meaningful_answer(answer: Any) -> bool:
 
     # Common non-answers
     generic_responses = {
-        'yes', 'no', 'ok', 'maybe', 'sure', 'idk', 'dunno',
-        'not sure', 'tbd', 'flexible', 'open', 'anything'
+        "yes",
+        "no",
+        "ok",
+        "maybe",
+        "sure",
+        "idk",
+        "dunno",
+        "not sure",
+        "tbd",
+        "flexible",
+        "open",
+        "anything",
     }
 
     if answer in generic_responses:
@@ -197,16 +203,47 @@ def is_meaningful_answer(answer: Any) -> bool:
     # Look for specific information
     specific_indicators = [
         # Budget indicators
-        '$', 'k', 'thousand', 'million', 'budget', 'afford',
+        "$",
+        "k",
+        "thousand",
+        "million",
+        "budget",
+        "afford",
         # Location indicators
-        'rancho_cucamonga', 'dallas', 'houston', 'neighborhood', 'area', 'district',
+        "rancho_cucamonga",
+        "dallas",
+        "houston",
+        "neighborhood",
+        "area",
+        "district",
         # Timeline indicators
-        'month', 'week', 'year', 'spring', 'summer', 'fall', 'winter',
-        'january', 'february', 'march', 'april', 'may', 'june',
+        "month",
+        "week",
+        "year",
+        "spring",
+        "summer",
+        "fall",
+        "winter",
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
         # Size indicators
-        'bedroom', 'bath', 'sqft', 'square', 'feet',
+        "bedroom",
+        "bath",
+        "sqft",
+        "square",
+        "feet",
         # Motivation indicators
-        'job', 'work', 'family', 'school', 'divorce', 'marriage', 'baby'
+        "job",
+        "work",
+        "family",
+        "school",
+        "divorce",
+        "marriage",
+        "baby",
     ]
 
     # Check if answer contains specific information
@@ -234,11 +271,11 @@ def calculate_answer_engagement(answer: str) -> float:
 
     # Bonus for specific details
     detail_bonus = 0.0
-    detail_indicators = ['$', 'bedroom', 'month', 'year', 'area', 'job', 'family']
+    detail_indicators = ["$", "bedroom", "month", "year", "area", "job", "family"]
     detail_bonus = min(0.3, sum(0.05 for indicator in detail_indicators if indicator in answer.lower()))
 
     # Bonus for questions (shows engagement)
-    question_bonus = 0.1 if '?' in answer else 0.0
+    question_bonus = 0.1 if "?" in answer else 0.0
 
     return min(1.0, length_score + detail_bonus + question_bonus)
 
@@ -250,11 +287,7 @@ def estimate_conversion_probability(state: LeadQualificationState) -> float:
     Uses machine learning-like scoring based on production data patterns.
     """
     # Base probability by status
-    base_probs = {
-        LeadStatus.HOT: 0.45,
-        LeadStatus.WARM: 0.22,
-        LeadStatus.COLD: 0.08
-    }
+    base_probs = {LeadStatus.HOT: 0.45, LeadStatus.WARM: 0.22, LeadStatus.COLD: 0.08}
 
     base_prob = base_probs.get(state.status, 0.05)
 

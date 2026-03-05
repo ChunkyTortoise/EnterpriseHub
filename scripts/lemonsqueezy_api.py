@@ -46,8 +46,7 @@ class LemonSqueezyClient:
         self.api_key = api_key or os.environ.get("LEMONSQUEEZY_API_KEY", "")
         if not self.api_key:
             raise ValueError(
-                "LEMONSQUEEZY_API_KEY required. "
-                "Set it as an environment variable or pass it to the constructor."
+                "LEMONSQUEEZY_API_KEY required. Set it as an environment variable or pass it to the constructor."
             )
 
     def _request(self, method: str, path: str, data: dict[str, Any] | None = None) -> dict:

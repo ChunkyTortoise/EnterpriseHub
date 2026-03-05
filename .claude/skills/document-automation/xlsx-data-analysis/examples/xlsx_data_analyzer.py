@@ -32,21 +32,13 @@ import statistics
 
 # Excel generation
 import openpyxl
-from openpyxl.styles import (
-    Font, Fill, Border, Side, Alignment, PatternFill,
-    NamedStyle, Protection
-)
-from openpyxl.chart import (
-    LineChart, BarChart, PieChart, ScatterChart, AreaChart,
-    Reference, Series
-)
+from openpyxl.styles import Font, Fill, Border, Side, Alignment, PatternFill, NamedStyle, Protection
+from openpyxl.chart import LineChart, BarChart, PieChart, ScatterChart, AreaChart, Reference, Series
 from openpyxl.chart.axis import DateAxis, ValuesAxis
 from openpyxl.chart.data_source import NumData, NumVal
 from openpyxl.chart.series import DataPoint
 from openpyxl.worksheet.datavalidation import DataValidation
-from openpyxl.formatting.rule import (
-    ColorScaleRule, DataBarRule, CellIsRule, FormulaRule
-)
+from openpyxl.formatting.rule import ColorScaleRule, DataBarRule, CellIsRule, FormulaRule
 from openpyxl.utils import get_column_letter
 from openpyxl.utils.dataframe import dataframe_to_rows
 
@@ -58,6 +50,7 @@ import numpy as np
 @dataclass
 class WorkbookMetadata:
     """Metadata for generated workbooks"""
+
     workbook_type: str
     generated_at: datetime
     data_sources: List[str]
@@ -71,6 +64,7 @@ class WorkbookMetadata:
 @dataclass
 class PropertyAnalysisData:
     """Structured data for property analysis workbooks"""
+
     properties: List[Dict[str, Any]]
     market_comparisons: List[Dict[str, Any]]
     financial_assumptions: Dict[str, Any]
@@ -80,6 +74,7 @@ class PropertyAnalysisData:
 @dataclass
 class LeadAnalyticsData:
     """Structured data for lead analytics workbooks"""
+
     leads: List[Dict[str, Any]]
     conversion_metrics: Dict[str, Any]
     performance_trends: Dict[str, Any]
@@ -109,10 +104,7 @@ class XLSXDataAnalyzer:
         self._create_custom_styles()
 
         # Chart settings
-        self.chart_colors = [
-            "4472C4", "E70000", "FFC000", "70AD47",
-            "9B59B6", "FF6600", "00B0F0", "FF69B4"
-        ]
+        self.chart_colors = ["4472C4", "E70000", "FFC000", "70AD47", "9B59B6", "FF6600", "00B0F0", "FF69B4"]
 
     def generate_property_comparison_workbook(
         self,
@@ -120,7 +112,7 @@ class XLSXDataAnalyzer:
         market_data: Dict[str, Any] = None,
         analysis_type: str = "investment_analysis",
         include_charts: bool = True,
-        include_scenarios: bool = True
+        include_scenarios: bool = True,
     ) -> Tuple[Path, WorkbookMetadata]:
         """
         Generate comprehensive property comparison workbook with financial analysis.
@@ -165,8 +157,7 @@ class XLSXDataAnalyzer:
 
         # Save workbook
         output_path = self._save_workbook(
-            wb,
-            f"property_analysis_{analysis_type}_{datetime.now().strftime('%Y%m%d_%H%M')}"
+            wb, f"property_analysis_{analysis_type}_{datetime.now().strftime('%Y%m%d_%H%M')}"
         )
 
         # Create metadata
@@ -177,7 +168,7 @@ class XLSXDataAnalyzer:
             worksheet_count=len(wb.worksheets),
             chart_count=sum(1 for ws in wb.worksheets for chart in ws._charts),
             formula_count=self._count_formulas(wb),
-            generation_time_seconds=(datetime.now() - start_time).total_seconds()
+            generation_time_seconds=(datetime.now() - start_time).total_seconds(),
         )
 
         # Add file size
@@ -193,7 +184,7 @@ class XLSXDataAnalyzer:
         time_period: str = "last_quarter",
         breakdown_by: List[str] = None,
         include_pivot_tables: bool = True,
-        include_forecasting: bool = True
+        include_forecasting: bool = True,
     ) -> Tuple[Path, WorkbookMetadata]:
         """
         Generate lead scoring analytics workbook with performance dashboards.
@@ -211,7 +202,7 @@ class XLSXDataAnalyzer:
         start_time = datetime.now()
 
         if breakdown_by is None:
-            breakdown_by = ['source', 'score_range', 'segment']
+            breakdown_by = ["source", "score_range", "segment"]
 
         # Create workbook
         wb = openpyxl.Workbook()
@@ -239,10 +230,7 @@ class XLSXDataAnalyzer:
         wb.active = dashboard_ws
 
         # Save workbook
-        output_path = self._save_workbook(
-            wb,
-            f"lead_analytics_{time_period}_{datetime.now().strftime('%Y%m%d_%H%M')}"
-        )
+        output_path = self._save_workbook(wb, f"lead_analytics_{time_period}_{datetime.now().strftime('%Y%m%d_%H%M')}")
 
         # Create metadata
         metadata = WorkbookMetadata(
@@ -252,7 +240,7 @@ class XLSXDataAnalyzer:
             worksheet_count=len(wb.worksheets),
             chart_count=sum(1 for ws in wb.worksheets for chart in ws._charts),
             formula_count=self._count_formulas(wb),
-            generation_time_seconds=(datetime.now() - start_time).total_seconds()
+            generation_time_seconds=(datetime.now() - start_time).total_seconds(),
         )
 
         if output_path.exists():
@@ -267,7 +255,7 @@ class XLSXDataAnalyzer:
         comparison_areas: List[str] = None,
         time_range: str = "12_months",
         metrics: List[str] = None,
-        include_forecasting: bool = True
+        include_forecasting: bool = True,
     ) -> Tuple[Path, WorkbookMetadata]:
         """
         Generate market analysis workbook with trend analysis and forecasting.
@@ -288,7 +276,7 @@ class XLSXDataAnalyzer:
             comparison_areas = []
 
         if metrics is None:
-            metrics = ['price_trends', 'inventory_levels', 'days_on_market', 'appreciation']
+            metrics = ["price_trends", "inventory_levels", "days_on_market", "appreciation"]
 
         # Generate market data (in real implementation, would fetch actual data)
         market_data = self._generate_market_data(market_area, comparison_areas, time_range)
@@ -314,8 +302,7 @@ class XLSXDataAnalyzer:
 
         # Save workbook
         output_path = self._save_workbook(
-            wb,
-            f"market_analysis_{market_area.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}"
+            wb, f"market_analysis_{market_area.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}"
         )
 
         # Create metadata
@@ -326,7 +313,7 @@ class XLSXDataAnalyzer:
             worksheet_count=len(wb.worksheets),
             chart_count=sum(1 for ws in wb.worksheets for chart in ws._charts),
             formula_count=self._count_formulas(wb),
-            generation_time_seconds=(datetime.now() - start_time).total_seconds()
+            generation_time_seconds=(datetime.now() - start_time).total_seconds(),
         )
 
         if output_path.exists():
@@ -340,7 +327,7 @@ class XLSXDataAnalyzer:
         property_data: Dict[str, Any],
         investment_parameters: Dict[str, Any],
         scenario_count: int = 3,
-        projection_years: int = 10
+        projection_years: int = 10,
     ) -> Tuple[Path, WorkbookMetadata]:
         """
         Generate comprehensive financial modeling workbook for investment properties.
@@ -371,11 +358,8 @@ class XLSXDataAnalyzer:
         wb.active = summary_ws
 
         # Save workbook
-        property_id = property_data.get('id', 'unknown')
-        output_path = self._save_workbook(
-            wb,
-            f"financial_model_{property_id}_{datetime.now().strftime('%Y%m%d_%H%M')}"
-        )
+        property_id = property_data.get("id", "unknown")
+        output_path = self._save_workbook(wb, f"financial_model_{property_id}_{datetime.now().strftime('%Y%m%d_%H%M')}")
 
         # Create metadata
         metadata = WorkbookMetadata(
@@ -385,7 +369,7 @@ class XLSXDataAnalyzer:
             worksheet_count=len(wb.worksheets),
             chart_count=sum(1 for ws in wb.worksheets for chart in ws._charts),
             formula_count=self._count_formulas(wb),
-            generation_time_seconds=(datetime.now() - start_time).total_seconds()
+            generation_time_seconds=(datetime.now() - start_time).total_seconds(),
         )
 
         if output_path.exists():
@@ -402,15 +386,15 @@ class XLSXDataAnalyzer:
         ws = wb.create_sheet("Property Overview")
 
         # Title
-        ws['A1'] = "Property Analysis Overview"
-        ws['A1'].style = self.header_style
+        ws["A1"] = "Property Analysis Overview"
+        ws["A1"].style = self.header_style
 
         # Property summary table
         row = 3
-        ws[f'A{row}'] = "Property Details"
-        ws[f'A{row}'].style = self.subheader_style
+        ws[f"A{row}"] = "Property Details"
+        ws[f"A{row}"].style = self.subheader_style
 
-        headers = ['Property ID', 'Address', 'Price', 'Type', 'Bedrooms', 'Bathrooms', 'Sqft', 'Year Built']
+        headers = ["Property ID", "Address", "Price", "Type", "Bedrooms", "Bathrooms", "Sqft", "Year Built"]
         for col, header in enumerate(headers, 1):
             ws.cell(row + 1, col, header).style = self.table_header_style
 
@@ -420,14 +404,14 @@ class XLSXDataAnalyzer:
 
             # Property details
             property_details = [
-                property_data.get('id', f'PROP_{prop_idx+1:03d}'),
+                property_data.get("id", f"PROP_{prop_idx + 1:03d}"),
                 f"{property_data.get('address', {}).get('street', 'N/A')}, {property_data.get('address', {}).get('city', 'N/A')}",
-                property_data.get('price', 0),
-                property_data.get('property_type', 'N/A'),
-                property_data.get('bedrooms', 0),
-                property_data.get('bathrooms', 0),
-                property_data.get('sqft', 0),
-                property_data.get('year_built', 'N/A')
+                property_data.get("price", 0),
+                property_data.get("property_type", "N/A"),
+                property_data.get("bedrooms", 0),
+                property_data.get("bathrooms", 0),
+                property_data.get("sqft", 0),
+                property_data.get("year_built", "N/A"),
             ]
 
             for col, value in enumerate(property_details, 1):
@@ -439,7 +423,7 @@ class XLSXDataAnalyzer:
         # Format price column
         price_column = get_column_letter(3)
         for row_num in range(row + 2, row + 2 + len(analysis_data.properties)):
-            ws[f'{price_column}{row_num}'].number_format = '"$"#,##0'
+            ws[f"{price_column}{row_num}"].number_format = '"$"#,##0'
 
         # Auto-adjust column widths
         for column in ws.columns:
@@ -462,39 +446,48 @@ class XLSXDataAnalyzer:
         ws = wb.create_sheet("Financial Analysis")
 
         # Title
-        ws['A1'] = "Financial Analysis & ROI Calculations"
-        ws['A1'].style = self.header_style
+        ws["A1"] = "Financial Analysis & ROI Calculations"
+        ws["A1"].style = self.header_style
 
         # Financial assumptions
         row = 3
-        ws[f'A{row}'] = "Investment Assumptions"
-        ws[f'A{row}'].style = self.subheader_style
+        ws[f"A{row}"] = "Investment Assumptions"
+        ws[f"A{row}"].style = self.subheader_style
 
         assumptions = [
-            ('Down Payment %', '20%'),
-            ('Interest Rate', '6.75%'),
-            ('Loan Term (Years)', '30'),
-            ('Property Tax Rate', '1.25%'),
-            ('Insurance Rate', '0.35%'),
-            ('Vacancy Rate', '5%'),
-            ('Property Mgmt Fee', '8%'),
-            ('Annual Appreciation', '3%')
+            ("Down Payment %", "20%"),
+            ("Interest Rate", "6.75%"),
+            ("Loan Term (Years)", "30"),
+            ("Property Tax Rate", "1.25%"),
+            ("Insurance Rate", "0.35%"),
+            ("Vacancy Rate", "5%"),
+            ("Property Mgmt Fee", "8%"),
+            ("Annual Appreciation", "3%"),
         ]
 
         for i, (label, value) in enumerate(assumptions):
-            ws[f'A{row + 2 + i}'] = label
-            ws[f'B{row + 2 + i}'] = value
-            ws[f'A{row + 2 + i}'].style = self.label_style
-            ws[f'B{row + 2 + i}'].style = self.data_style
+            ws[f"A{row + 2 + i}"] = label
+            ws[f"B{row + 2 + i}"] = value
+            ws[f"A{row + 2 + i}"].style = self.label_style
+            ws[f"B{row + 2 + i}"].style = self.data_style
 
         # Financial calculations for each property
         calc_start_row = row + 12
-        ws[f'A{calc_start_row}'] = "Financial Calculations"
-        ws[f'A{calc_start_row}'].style = self.subheader_style
+        ws[f"A{calc_start_row}"] = "Financial Calculations"
+        ws[f"A{calc_start_row}"].style = self.subheader_style
 
         # Headers
-        headers = ['Property', 'Purchase Price', 'Down Payment', 'Loan Amount', 'Monthly Payment',
-                  'Monthly Rent', 'Monthly Cash Flow', 'Cash-on-Cash ROI', 'Cap Rate']
+        headers = [
+            "Property",
+            "Purchase Price",
+            "Down Payment",
+            "Loan Amount",
+            "Monthly Payment",
+            "Monthly Rent",
+            "Monthly Cash Flow",
+            "Cash-on-Cash ROI",
+            "Cap Rate",
+        ]
 
         for col, header in enumerate(headers, 1):
             ws.cell(calc_start_row + 2, col, header).style = self.table_header_style
@@ -504,7 +497,7 @@ class XLSXDataAnalyzer:
             calc_row = calc_start_row + 3 + prop_idx
 
             # Basic property data
-            price = property_data.get('price', 0)
+            price = property_data.get("price", 0)
             monthly_rent = self._estimate_rent(property_data)
 
             # Financial calculations
@@ -520,7 +513,7 @@ class XLSXDataAnalyzer:
 
             # Fill in calculated values
             calculations = [
-                property_data.get('id', f'PROP_{prop_idx+1}'),
+                property_data.get("id", f"PROP_{prop_idx + 1}"),
                 price,
                 down_payment,
                 loan_amount,
@@ -528,7 +521,7 @@ class XLSXDataAnalyzer:
                 monthly_rent,
                 monthly_cash_flow,
                 cash_on_cash_roi,
-                cap_rate
+                cap_rate,
             ]
 
             for col, value in enumerate(calculations, 1):
@@ -538,7 +531,7 @@ class XLSXDataAnalyzer:
                 if col in [2, 3, 4, 5, 6, 7]:  # Currency columns
                     cell.number_format = '"$"#,##0'
                 elif col in [8, 9]:  # Percentage columns
-                    cell.number_format = '0.0%'
+                    cell.number_format = "0.0%"
 
                 cell.style = self.data_style
 
@@ -563,8 +556,8 @@ class XLSXDataAnalyzer:
         ws = wb.create_sheet("Property Comparison")
 
         # Title
-        ws['A1'] = "Side-by-Side Property Comparison"
-        ws['A1'].style = self.header_style
+        ws["A1"] = "Side-by-Side Property Comparison"
+        ws["A1"].style = self.header_style
 
         # Comparison matrix
         properties = analysis_data.properties
@@ -572,24 +565,24 @@ class XLSXDataAnalyzer:
             return ws
 
         # Headers: Property names across columns
-        headers = ['Comparison Factor'] + [prop.get('id', f'PROP_{i+1}') for i, prop in enumerate(properties)]
+        headers = ["Comparison Factor"] + [prop.get("id", f"PROP_{i + 1}") for i, prop in enumerate(properties)]
 
         for col, header in enumerate(headers, 1):
             ws.cell(3, col, header).style = self.table_header_style
 
         # Comparison factors
         comparison_factors = [
-            ('Purchase Price', lambda p: p.get('price', 0)),
-            ('Price per Sq Ft', lambda p: p.get('price', 0) / max(p.get('sqft', 1), 1)),
-            ('Bedrooms', lambda p: p.get('bedrooms', 0)),
-            ('Bathrooms', lambda p: p.get('bathrooms', 0)),
-            ('Square Feet', lambda p: p.get('sqft', 0)),
-            ('Year Built', lambda p: p.get('year_built', 'N/A')),
-            ('Lot Size', lambda p: p.get('lot_size_sqft', 'N/A')),
-            ('Estimated Rent', lambda p: self._estimate_rent(p)),
-            ('Gross Yield', lambda p: (self._estimate_rent(p) * 12) / max(p.get('price', 1), 1)),
-            ('Property Taxes', lambda p: p.get('price', 0) * 0.0125),
-            ('Cash Flow (Est.)', lambda p: self._estimate_cash_flow(p))
+            ("Purchase Price", lambda p: p.get("price", 0)),
+            ("Price per Sq Ft", lambda p: p.get("price", 0) / max(p.get("sqft", 1), 1)),
+            ("Bedrooms", lambda p: p.get("bedrooms", 0)),
+            ("Bathrooms", lambda p: p.get("bathrooms", 0)),
+            ("Square Feet", lambda p: p.get("sqft", 0)),
+            ("Year Built", lambda p: p.get("year_built", "N/A")),
+            ("Lot Size", lambda p: p.get("lot_size_sqft", "N/A")),
+            ("Estimated Rent", lambda p: self._estimate_rent(p)),
+            ("Gross Yield", lambda p: (self._estimate_rent(p) * 12) / max(p.get("price", 1), 1)),
+            ("Property Taxes", lambda p: p.get("price", 0) * 0.0125),
+            ("Cash Flow (Est.)", lambda p: self._estimate_cash_flow(p)),
         ]
 
         for row_idx, (factor_name, calc_func) in enumerate(comparison_factors):
@@ -606,25 +599,25 @@ class XLSXDataAnalyzer:
                     cell = ws.cell(row, col, value)
 
                     # Format based on factor type
-                    if factor_name in ['Purchase Price', 'Property Taxes', 'Cash Flow (Est.)', 'Estimated Rent']:
+                    if factor_name in ["Purchase Price", "Property Taxes", "Cash Flow (Est.)", "Estimated Rent"]:
                         cell.number_format = '"$"#,##0'
-                    elif factor_name in ['Price per Sq Ft']:
+                    elif factor_name in ["Price per Sq Ft"]:
                         cell.number_format = '"$"#,##0.00'
-                    elif factor_name in ['Gross Yield']:
-                        cell.number_format = '0.0%'
+                    elif factor_name in ["Gross Yield"]:
+                        cell.number_format = "0.0%"
 
                     cell.style = self.data_style
 
                 except Exception as e:
-                    ws.cell(row, col, 'N/A').style = self.data_style
+                    ws.cell(row, col, "N/A").style = self.data_style
 
         # Add scoring section
         scoring_start_row = 4 + len(comparison_factors) + 2
-        ws[f'A{scoring_start_row}'] = "Overall Scoring"
-        ws[f'A{scoring_start_row}'].style = self.subheader_style
+        ws[f"A{scoring_start_row}"] = "Overall Scoring"
+        ws[f"A{scoring_start_row}"].style = self.subheader_style
 
         # Scoring factors
-        scoring_factors = ['Financial Performance', 'Property Quality', 'Market Position', 'Overall Score']
+        scoring_factors = ["Financial Performance", "Property Quality", "Market Position", "Overall Score"]
 
         for row_idx, factor in enumerate(scoring_factors):
             row = scoring_start_row + 2 + row_idx
@@ -634,13 +627,13 @@ class XLSXDataAnalyzer:
             for prop_idx, property_data in enumerate(properties):
                 col = 2 + prop_idx
                 # Mock scoring based on property characteristics
-                if factor == 'Overall Score':
+                if factor == "Overall Score":
                     score = min(100, max(60, 75 + (prop_idx * 5) + np.random.randint(-10, 10)))
                 else:
                     score = min(100, max(50, 70 + np.random.randint(-15, 20)))
 
                 cell = ws.cell(row, col, score)
-                cell.number_format = '0'
+                cell.number_format = "0"
                 cell.style = self.data_style
 
                 # Add conditional formatting for scores
@@ -672,68 +665,71 @@ class XLSXDataAnalyzer:
         ws = wb.create_sheet("Dashboard")
 
         # Title
-        ws['A1'] = "Property Analysis Dashboard"
-        ws['A1'].style = self.header_style
+        ws["A1"] = "Property Analysis Dashboard"
+        ws["A1"].style = self.header_style
 
         # Key metrics summary
         row = 3
-        ws[f'A{row}'] = "Key Metrics Summary"
-        ws[f'A{row}'].style = self.subheader_style
+        ws[f"A{row}"] = "Key Metrics Summary"
+        ws[f"A{row}"].style = self.subheader_style
 
         # Calculate summary statistics
         properties = analysis_data.properties
         if properties:
-            prices = [p.get('price', 0) for p in properties if p.get('price')]
-            sqfts = [p.get('sqft', 0) for p in properties if p.get('sqft')]
+            prices = [p.get("price", 0) for p in properties if p.get("price")]
+            sqfts = [p.get("sqft", 0) for p in properties if p.get("sqft")]
             estimated_rents = [self._estimate_rent(p) for p in properties]
 
             summary_metrics = [
-                ('Total Properties Analyzed', len(properties)),
-                ('Average Property Price', statistics.mean(prices) if prices else 0),
-                ('Price Range', f"${min(prices):,} - ${max(prices):,}" if prices else 'N/A'),
-                ('Average Square Feet', statistics.mean(sqfts) if sqfts else 0),
-                ('Average Est. Monthly Rent', statistics.mean(estimated_rents) if estimated_rents else 0),
-                ('Avg Price per Sq Ft', statistics.mean([p / max(s, 1) for p, s in zip(prices, sqfts)]) if prices and sqfts else 0)
+                ("Total Properties Analyzed", len(properties)),
+                ("Average Property Price", statistics.mean(prices) if prices else 0),
+                ("Price Range", f"${min(prices):,} - ${max(prices):,}" if prices else "N/A"),
+                ("Average Square Feet", statistics.mean(sqfts) if sqfts else 0),
+                ("Average Est. Monthly Rent", statistics.mean(estimated_rents) if estimated_rents else 0),
+                (
+                    "Avg Price per Sq Ft",
+                    statistics.mean([p / max(s, 1) for p, s in zip(prices, sqfts)]) if prices and sqfts else 0,
+                ),
             ]
 
             for i, (metric, value) in enumerate(summary_metrics):
                 metric_row = row + 2 + i
-                ws[f'A{metric_row}'] = metric
-                ws[f'A{metric_row}'].style = self.label_style
+                ws[f"A{metric_row}"] = metric
+                ws[f"A{metric_row}"].style = self.label_style
 
-                if isinstance(value, (int, float)) and metric != 'Total Properties Analyzed':
-                    if 'Price' in metric or 'Rent' in metric:
-                        ws[f'B{metric_row}'] = value
-                        ws[f'B{metric_row}'].number_format = '"$"#,##0'
-                    elif 'Sq Ft' in metric:
-                        ws[f'B{metric_row}'] = value
-                        ws[f'B{metric_row}'].number_format = '#,##0'
+                if isinstance(value, (int, float)) and metric != "Total Properties Analyzed":
+                    if "Price" in metric or "Rent" in metric:
+                        ws[f"B{metric_row}"] = value
+                        ws[f"B{metric_row}"].number_format = '"$"#,##0'
+                    elif "Sq Ft" in metric:
+                        ws[f"B{metric_row}"] = value
+                        ws[f"B{metric_row}"].number_format = "#,##0"
                     else:
-                        ws[f'B{metric_row}'] = value
+                        ws[f"B{metric_row}"] = value
                 else:
-                    ws[f'B{metric_row}'] = value
+                    ws[f"B{metric_row}"] = value
 
-                ws[f'B{metric_row}'].style = self.data_style
+                ws[f"B{metric_row}"].style = self.data_style
 
         # Recommendations section
         rec_start_row = row + 10
-        ws[f'A{rec_start_row}'] = "Investment Recommendations"
-        ws[f'A{rec_start_row}'].style = self.subheader_style
+        ws[f"A{rec_start_row}"] = "Investment Recommendations"
+        ws[f"A{rec_start_row}"].style = self.subheader_style
 
         recommendations = [
             "• Highest ROI property: Property with best cash-on-cash return",
             "• Best value: Property with lowest price per square foot",
             "• Growth potential: Newest construction in appreciating area",
-            "• Risk assessment: Consider market conditions and financing terms"
+            "• Risk assessment: Consider market conditions and financing terms",
         ]
 
         for i, rec in enumerate(recommendations):
-            ws[f'A{rec_start_row + 2 + i}'] = rec
-            ws[f'A{rec_start_row + 2 + i}'].style = self.data_style
+            ws[f"A{rec_start_row + 2 + i}"] = rec
+            ws[f"A{rec_start_row + 2 + i}"].style = self.data_style
 
         # Auto-adjust columns
-        ws.column_dimensions['A'].width = 30
-        ws.column_dimensions['B'].width = 20
+        ws.column_dimensions["A"].width = 30
+        ws.column_dimensions["B"].width = 20
 
         return ws
 
@@ -745,48 +741,48 @@ class XLSXDataAnalyzer:
         ws = wb.create_sheet("Lead Summary")
 
         # Title
-        ws['A1'] = "Lead Analytics Summary"
-        ws['A1'].style = self.header_style
+        ws["A1"] = "Lead Analytics Summary"
+        ws["A1"].style = self.header_style
 
         # Key performance metrics
         row = 3
-        ws[f'A{row}'] = "Key Performance Indicators"
-        ws[f'A{row}'].style = self.subheader_style
+        ws[f"A{row}"] = "Key Performance Indicators"
+        ws[f"A{row}"].style = self.subheader_style
 
         # Calculate metrics from lead data
         leads = analytics_data.leads
         total_leads = len(leads)
-        converted_leads = len([lead for lead in leads if lead.get('converted', False)])
-        avg_score = statistics.mean([lead.get('score', 0) for lead in leads]) if leads else 0
+        converted_leads = len([lead for lead in leads if lead.get("converted", False)])
+        avg_score = statistics.mean([lead.get("score", 0) for lead in leads]) if leads else 0
 
         # Score distribution
-        hot_leads = len([lead for lead in leads if lead.get('score', 0) >= 80])
-        warm_leads = len([lead for lead in leads if 60 <= lead.get('score', 0) < 80])
-        cold_leads = len([lead for lead in leads if lead.get('score', 0) < 60])
+        hot_leads = len([lead for lead in leads if lead.get("score", 0) >= 80])
+        warm_leads = len([lead for lead in leads if 60 <= lead.get("score", 0) < 80])
+        cold_leads = len([lead for lead in leads if lead.get("score", 0) < 60])
 
         kpis = [
-            ('Total Leads', total_leads),
-            ('Converted Leads', converted_leads),
-            ('Conversion Rate', converted_leads / max(total_leads, 1)),
-            ('Average Lead Score', avg_score),
-            ('Hot Leads (80+)', hot_leads),
-            ('Warm Leads (60-79)', warm_leads),
-            ('Cold Leads (<60)', cold_leads),
-            ('Hot Lead %', hot_leads / max(total_leads, 1))
+            ("Total Leads", total_leads),
+            ("Converted Leads", converted_leads),
+            ("Conversion Rate", converted_leads / max(total_leads, 1)),
+            ("Average Lead Score", avg_score),
+            ("Hot Leads (80+)", hot_leads),
+            ("Warm Leads (60-79)", warm_leads),
+            ("Cold Leads (<60)", cold_leads),
+            ("Hot Lead %", hot_leads / max(total_leads, 1)),
         ]
 
         for i, (kpi, value) in enumerate(kpis):
             kpi_row = row + 2 + i
-            ws[f'A{kpi_row}'] = kpi
-            ws[f'A{kpi_row}'].style = self.label_style
+            ws[f"A{kpi_row}"] = kpi
+            ws[f"A{kpi_row}"].style = self.label_style
 
-            cell = ws[f'B{kpi_row}']
-            if kpi in ['Conversion Rate', 'Hot Lead %']:
+            cell = ws[f"B{kpi_row}"]
+            if kpi in ["Conversion Rate", "Hot Lead %"]:
                 cell.value = value
-                cell.number_format = '0.0%'
-            elif kpi == 'Average Lead Score':
+                cell.number_format = "0.0%"
+            elif kpi == "Average Lead Score":
                 cell.value = value
-                cell.number_format = '0.0'
+                cell.number_format = "0.0"
             else:
                 cell.value = int(value)
 
@@ -794,22 +790,22 @@ class XLSXDataAnalyzer:
 
         # Source breakdown
         source_start_row = row + 12
-        ws[f'A{source_start_row}'] = "Lead Source Breakdown"
-        ws[f'A{source_start_row}'].style = self.subheader_style
+        ws[f"A{source_start_row}"] = "Lead Source Breakdown"
+        ws[f"A{source_start_row}"].style = self.subheader_style
 
         # Count by source
         source_counts = {}
         source_conversions = {}
 
         for lead in leads:
-            source = lead.get('source', 'Unknown')
+            source = lead.get("source", "Unknown")
             source_counts[source] = source_counts.get(source, 0) + 1
 
-            if lead.get('converted', False):
+            if lead.get("converted", False):
                 source_conversions[source] = source_conversions.get(source, 0) + 1
 
         # Headers
-        headers = ['Source', 'Total Leads', 'Conversions', 'Conversion Rate']
+        headers = ["Source", "Total Leads", "Conversions", "Conversion Rate"]
         for col, header in enumerate(headers, 1):
             ws.cell(source_start_row + 2, col, header).style = self.table_header_style
 
@@ -819,17 +815,17 @@ class XLSXDataAnalyzer:
             conversions = source_conversions.get(source, 0)
             conv_rate = conversions / max(count, 1)
 
-            ws[f'A{data_row}'] = source
-            ws[f'B{data_row}'] = count
-            ws[f'C{data_row}'] = conversions
-            ws[f'D{data_row}'] = conv_rate
+            ws[f"A{data_row}"] = source
+            ws[f"B{data_row}"] = count
+            ws[f"C{data_row}"] = conversions
+            ws[f"D{data_row}"] = conv_rate
 
             # Style cells
-            for col in ['A', 'B', 'C']:
-                ws[f'{col}{data_row}'].style = self.data_style
+            for col in ["A", "B", "C"]:
+                ws[f"{col}{data_row}"].style = self.data_style
 
-            ws[f'D{data_row}'].style = self.data_style
-            ws[f'D{data_row}'].number_format = '0.0%'
+            ws[f"D{data_row}"].style = self.data_style
+            ws[f"D{data_row}"].number_format = "0.0%"
 
         # Auto-adjust columns
         for column in ws.columns:
@@ -849,65 +845,59 @@ class XLSXDataAnalyzer:
     # Utility and Helper Methods
 
     def _structure_property_analysis_data(
-        self,
-        properties: List[Dict[str, Any]],
-        market_data: Dict[str, Any] = None
+        self, properties: List[Dict[str, Any]], market_data: Dict[str, Any] = None
     ) -> PropertyAnalysisData:
         """Structure raw property data for analysis."""
 
         return PropertyAnalysisData(
             properties=properties,
-            market_comparisons=market_data.get('comparables', []) if market_data else [],
+            market_comparisons=market_data.get("comparables", []) if market_data else [],
             financial_assumptions={
-                'down_payment_percent': 0.20,
-                'interest_rate': 0.0675,
-                'property_tax_rate': 0.0125,
-                'insurance_rate': 0.0035,
-                'vacancy_rate': 0.05,
-                'management_fee_rate': 0.08,
-                'appreciation_rate': 0.03
+                "down_payment_percent": 0.20,
+                "interest_rate": 0.0675,
+                "property_tax_rate": 0.0125,
+                "insurance_rate": 0.0035,
+                "vacancy_rate": 0.05,
+                "management_fee_rate": 0.08,
+                "appreciation_rate": 0.03,
             },
             analysis_parameters={
-                'analysis_date': datetime.now(),
-                'market_area': market_data.get('area', 'Unknown') if market_data else 'Unknown'
-            }
+                "analysis_date": datetime.now(),
+                "market_area": market_data.get("area", "Unknown") if market_data else "Unknown",
+            },
         )
 
-    def _structure_lead_analytics_data(
-        self,
-        lead_data: List[Dict[str, Any]],
-        time_period: str
-    ) -> LeadAnalyticsData:
+    def _structure_lead_analytics_data(self, lead_data: List[Dict[str, Any]], time_period: str) -> LeadAnalyticsData:
         """Structure raw lead data for analytics."""
 
         # Calculate conversion metrics
         total_leads = len(lead_data)
-        converted = len([lead for lead in lead_data if lead.get('converted', False)])
+        converted = len([lead for lead in lead_data if lead.get("converted", False)])
 
         conversion_metrics = {
-            'total_leads': total_leads,
-            'converted_leads': converted,
-            'conversion_rate': converted / max(total_leads, 1),
-            'period': time_period
+            "total_leads": total_leads,
+            "converted_leads": converted,
+            "conversion_rate": converted / max(total_leads, 1),
+            "period": time_period,
         }
 
         # Calculate performance trends (mock data for demo)
         performance_trends = {
-            'lead_volume_trend': 'increasing',
-            'score_trend': 'stable',
-            'conversion_trend': 'improving'
+            "lead_volume_trend": "increasing",
+            "score_trend": "stable",
+            "conversion_trend": "improving",
         }
 
         # Segmentation analysis
         segments = {}
         for lead in lead_data:
-            segment = lead.get('segment', 'unknown')
+            segment = lead.get("segment", "unknown")
             if segment not in segments:
-                segments[segment] = {'count': 0, 'conversions': 0}
+                segments[segment] = {"count": 0, "conversions": 0}
 
-            segments[segment]['count'] += 1
-            if lead.get('converted', False):
-                segments[segment]['conversions'] += 1
+            segments[segment]["count"] += 1
+            if lead.get("converted", False):
+                segments[segment]["conversions"] += 1
 
         segmentation_analysis = segments
 
@@ -915,25 +905,25 @@ class XLSXDataAnalyzer:
             leads=lead_data,
             conversion_metrics=conversion_metrics,
             performance_trends=performance_trends,
-            segmentation_analysis=segmentation_analysis
+            segmentation_analysis=segmentation_analysis,
         )
 
     def _estimate_rent(self, property_data: Dict[str, Any]) -> float:
         """Estimate monthly rental income for a property."""
 
-        bedrooms = property_data.get('bedrooms', 2)
-        sqft = property_data.get('sqft', 1500)
-        property_type = property_data.get('property_type', '').lower()
+        bedrooms = property_data.get("bedrooms", 2)
+        sqft = property_data.get("sqft", 1500)
+        property_type = property_data.get("property_type", "").lower()
 
         # Basic rent estimation formula
         base_rent = bedrooms * 400 + (sqft / 1000) * 200
 
         # Adjust for property type
-        if 'luxury' in property_type:
+        if "luxury" in property_type:
             base_rent *= 1.3
-        elif 'condo' in property_type:
+        elif "condo" in property_type:
             base_rent *= 0.9
-        elif 'single family' in property_type:
+        elif "single family" in property_type:
             base_rent *= 1.1
 
         return round(base_rent, 0)
@@ -941,7 +931,7 @@ class XLSXDataAnalyzer:
     def _estimate_cash_flow(self, property_data: Dict[str, Any]) -> float:
         """Estimate monthly cash flow for a property."""
 
-        price = property_data.get('price', 0)
+        price = property_data.get("price", 0)
         monthly_rent = self._estimate_rent(property_data)
 
         # Basic expenses calculation
@@ -962,40 +952,36 @@ class XLSXDataAnalyzer:
         num_payments = years * 12
 
         # PMT formula
-        payment = loan_amount * (monthly_rate * (1 + monthly_rate) ** num_payments) / \
-                 ((1 + monthly_rate) ** num_payments - 1)
+        payment = (
+            loan_amount * (monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)
+        )
 
         return round(payment, 2)
 
-    def _generate_market_data(
-        self,
-        market_area: str,
-        comparison_areas: List[str],
-        time_range: str
-    ) -> Dict[str, Any]:
+    def _generate_market_data(self, market_area: str, comparison_areas: List[str], time_range: str) -> Dict[str, Any]:
         """Generate market data for analysis (mock implementation)."""
 
         # In real implementation, would fetch actual market data
         return {
-            'primary_market': {
-                'area': market_area,
-                'median_price': 580000,
-                'price_change_ytd': 0.042,
-                'days_on_market': 28,
-                'inventory_months': 3.1
+            "primary_market": {
+                "area": market_area,
+                "median_price": 580000,
+                "price_change_ytd": 0.042,
+                "days_on_market": 28,
+                "inventory_months": 3.1,
             },
-            'comparison_markets': [
+            "comparison_markets": [
                 {
-                    'area': area,
-                    'median_price': 580000 * (0.9 + np.random.random() * 0.3),
-                    'price_change_ytd': 0.02 + np.random.random() * 0.04,
-                    'days_on_market': 25 + np.random.randint(-10, 15),
-                    'inventory_months': 2.5 + np.random.random() * 2
+                    "area": area,
+                    "median_price": 580000 * (0.9 + np.random.random() * 0.3),
+                    "price_change_ytd": 0.02 + np.random.random() * 0.04,
+                    "days_on_market": 25 + np.random.randint(-10, 15),
+                    "inventory_months": 2.5 + np.random.random() * 2,
                 }
                 for area in comparison_areas
             ],
-            'time_range': time_range,
-            'data_points': 1000 + np.random.randint(0, 500)
+            "time_range": time_range,
+            "data_points": 1000 + np.random.randint(0, 500),
         }
 
     def _create_custom_styles(self):
@@ -1021,7 +1007,7 @@ class XLSXDataAnalyzer:
             left=Side(border_style="thin"),
             right=Side(border_style="thin"),
             top=Side(border_style="thin"),
-            bottom=Side(border_style="thin")
+            bottom=Side(border_style="thin"),
         )
 
         # Data style
@@ -1032,7 +1018,7 @@ class XLSXDataAnalyzer:
             left=Side(border_style="thin"),
             right=Side(border_style="thin"),
             top=Side(border_style="thin"),
-            bottom=Side(border_style="thin")
+            bottom=Side(border_style="thin"),
         )
 
         # Label style
@@ -1047,7 +1033,7 @@ class XLSXDataAnalyzer:
         for ws in wb.worksheets:
             for row in ws.iter_rows():
                 for cell in row:
-                    if cell.value and isinstance(cell.value, str) and cell.value.startswith('='):
+                    if cell.value and isinstance(cell.value, str) and cell.value.startswith("="):
                         formula_count += 1
         return formula_count
 
@@ -1083,14 +1069,14 @@ class XLSXDataAnalyzer:
             workbook_types[wb_type] = workbook_types.get(wb_type, 0) + 1
 
         return {
-            'total_workbooks': total_workbooks,
-            'total_worksheets': total_worksheets,
-            'total_formulas': total_formulas,
-            'total_generation_time_seconds': total_generation_time,
-            'average_generation_time_seconds': total_generation_time / total_workbooks if total_workbooks > 0 else 0,
-            'workbook_types': workbook_types,
-            'estimated_time_saved_hours': total_workbooks * 3,  # Average 3 hours saved per workbook
-            'estimated_cost_saved': total_workbooks * 400  # Estimated $400 saved per workbook
+            "total_workbooks": total_workbooks,
+            "total_worksheets": total_worksheets,
+            "total_formulas": total_formulas,
+            "total_generation_time_seconds": total_generation_time,
+            "average_generation_time_seconds": total_generation_time / total_workbooks if total_workbooks > 0 else 0,
+            "workbook_types": workbook_types,
+            "estimated_time_saved_hours": total_workbooks * 3,  # Average 3 hours saved per workbook
+            "estimated_cost_saved": total_workbooks * 400,  # Estimated $400 saved per workbook
         }
 
 
@@ -1122,62 +1108,62 @@ def demo_xlsx_generation():
     # Sample property data
     sample_properties = [
         {
-            'id': 'PROP_001',
-            'price': 625000,
-            'address': {'street': '123 Oak Hill Dr', 'city': 'Rancho Cucamonga', 'state': 'TX'},
-            'bedrooms': 3,
-            'bathrooms': 2.5,
-            'sqft': 2100,
-            'year_built': 2018,
-            'property_type': 'Single Family'
+            "id": "PROP_001",
+            "price": 625000,
+            "address": {"street": "123 Oak Hill Dr", "city": "Rancho Cucamonga", "state": "TX"},
+            "bedrooms": 3,
+            "bathrooms": 2.5,
+            "sqft": 2100,
+            "year_built": 2018,
+            "property_type": "Single Family",
         },
         {
-            'id': 'PROP_002',
-            'price': 580000,
-            'address': {'street': '456 Pine Ridge', 'city': 'Rancho Cucamonga', 'state': 'TX'},
-            'bedrooms': 4,
-            'bathrooms': 3,
-            'sqft': 2250,
-            'year_built': 2020,
-            'property_type': 'Single Family'
+            "id": "PROP_002",
+            "price": 580000,
+            "address": {"street": "456 Pine Ridge", "city": "Rancho Cucamonga", "state": "TX"},
+            "bedrooms": 4,
+            "bathrooms": 3,
+            "sqft": 2250,
+            "year_built": 2020,
+            "property_type": "Single Family",
         },
         {
-            'id': 'PROP_003',
-            'price': 450000,
-            'address': {'street': '789 Cedar Ave', 'city': 'Rancho Cucamonga', 'state': 'TX'},
-            'bedrooms': 2,
-            'bathrooms': 2,
-            'sqft': 1650,
-            'year_built': 2015,
-            'property_type': 'Townhome'
-        }
+            "id": "PROP_003",
+            "price": 450000,
+            "address": {"street": "789 Cedar Ave", "city": "Rancho Cucamonga", "state": "TX"},
+            "bedrooms": 2,
+            "bathrooms": 2,
+            "sqft": 1650,
+            "year_built": 2015,
+            "property_type": "Townhome",
+        },
     ]
 
     # Sample market data
     sample_market_data = {
-        'area': 'Rancho Cucamonga, CA',
-        'median_price': 580000,
-        'comparables': [
-            {'address': '111 Maple St', 'price': 595000, 'sqft': 2000},
-            {'address': '222 Elm Dr', 'price': 615000, 'sqft': 2150}
-        ]
+        "area": "Rancho Cucamonga, CA",
+        "median_price": 580000,
+        "comparables": [
+            {"address": "111 Maple St", "price": 595000, "sqft": 2000},
+            {"address": "222 Elm Dr", "price": 615000, "sqft": 2150},
+        ],
     }
 
     # Sample lead data
     sample_leads = []
-    sources = ['Website', 'Referral', 'Social Media', 'Email', 'Cold Call']
-    segments = ['first_time_buyer', 'luxury_buyer', 'investor', 'family_with_kids']
+    sources = ["Website", "Referral", "Social Media", "Email", "Cold Call"]
+    segments = ["first_time_buyer", "luxury_buyer", "investor", "family_with_kids"]
 
     for i in range(150):
         lead = {
-            'id': f'LEAD_{i:03d}',
-            'score': max(0, min(100, 70 + np.random.normal(0, 20))),  # Normal distribution around 70
-            'source': np.random.choice(sources),
-            'segment': np.random.choice(segments),
-            'converted': np.random.random() < 0.18,  # 18% conversion rate
-            'created_date': datetime.now() - timedelta(days=np.random.randint(0, 90)),
-            'budget': np.random.randint(300000, 800000),
-            'location_preference': np.random.choice(['Rancho Cucamonga', 'Dallas', 'Houston'])
+            "id": f"LEAD_{i:03d}",
+            "score": max(0, min(100, 70 + np.random.normal(0, 20))),  # Normal distribution around 70
+            "source": np.random.choice(sources),
+            "segment": np.random.choice(segments),
+            "converted": np.random.random() < 0.18,  # 18% conversion rate
+            "created_date": datetime.now() - timedelta(days=np.random.randint(0, 90)),
+            "budget": np.random.randint(300000, 800000),
+            "location_preference": np.random.choice(["Rancho Cucamonga", "Dallas", "Houston"]),
         }
         sample_leads.append(lead)
 
@@ -1187,7 +1173,7 @@ def demo_xlsx_generation():
             properties=sample_properties,
             market_data=sample_market_data,
             analysis_type="investment_analysis",
-            include_charts=True
+            include_charts=True,
         )
 
         print(f"✅ Property comparison workbook generated: {property_workbook_path}")
@@ -1200,8 +1186,8 @@ def demo_xlsx_generation():
         lead_workbook_path, lead_metadata = analyzer.generate_lead_analytics_workbook(
             lead_data=sample_leads,
             time_period="last_quarter",
-            breakdown_by=['source', 'segment'],
-            include_pivot_tables=True
+            breakdown_by=["source", "segment"],
+            include_pivot_tables=True,
         )
 
         print(f"✅ Lead analytics workbook generated: {lead_workbook_path}")
@@ -1214,7 +1200,7 @@ def demo_xlsx_generation():
             market_area="Rancho Cucamonga, CA",
             comparison_areas=["Dallas, TX", "San Antonio, TX"],
             time_range="12_months",
-            include_forecasting=True
+            include_forecasting=True,
         )
 
         print(f"✅ Market analysis workbook generated: {market_workbook_path}")
@@ -1235,6 +1221,7 @@ def demo_xlsx_generation():
     except Exception as e:
         print(f"❌ Error in demo: {e}")
         import traceback
+
         traceback.print_exc()
 
 

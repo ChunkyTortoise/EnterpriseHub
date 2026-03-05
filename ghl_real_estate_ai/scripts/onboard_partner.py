@@ -15,6 +15,7 @@ Features:
     - Optional calendar integration
     - Clear success/error messaging
 """
+
 import asyncio
 import json
 import os
@@ -33,25 +34,27 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+
 # ANSI Color Codes for terminal output
 class Colors:
     """Terminal color codes for better UX."""
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
 
 def print_header():
     """Print welcome header."""
-    print(f"\n{Colors.BOLD}{Colors.HEADER}{'='*70}{Colors.ENDC}")
+    print(f"\n{Colors.BOLD}{Colors.HEADER}{'=' * 70}{Colors.ENDC}")
     print(f"{Colors.BOLD}{Colors.HEADER}  GHL Real Estate AI - Partner Onboarding System{Colors.ENDC}")
-    print(f"{Colors.BOLD}{Colors.HEADER}{'='*70}{Colors.ENDC}\n")
+    print(f"{Colors.BOLD}{Colors.HEADER}{'=' * 70}{Colors.ENDC}\n")
     print(f"{Colors.OKCYAN}This tool will register a new real estate partner/tenant.{Colors.ENDC}")
     print(f"{Colors.OKCYAN}Each partner gets their own API credentials and isolated system.{Colors.ENDC}\n")
 
@@ -160,12 +163,7 @@ def check_duplicate_tenant(location_id: str, tenants_dir: Path) -> bool:
     return tenant_file.exists()
 
 
-def get_input_with_validation(
-    prompt: str,
-    validator_func,
-    error_message: str,
-    allow_empty: bool = False
-) -> str:
+def get_input_with_validation(prompt: str, validator_func, error_message: str, allow_empty: bool = False) -> str:
     """
     Get user input with validation and retry logic.
 
@@ -217,7 +215,7 @@ async def interactive_onboard() -> bool:
     partner_name = get_input_with_validation(
         "Enter Partner/Tenant Name (e.g., 'Acme Real Estate'): ",
         validate_partner_name,
-        "Partner name must be at least 3 characters long."
+        "Partner name must be at least 3 characters long.",
     )
     print_success(f"Partner Name: {partner_name}")
 
@@ -225,9 +223,7 @@ async def interactive_onboard() -> bool:
     print(f"{Colors.BOLD}Step 2: GHL Configuration{Colors.ENDC}")
     while True:
         location_id = get_input_with_validation(
-            "Enter GHL Location ID: ",
-            validate_location_id,
-            "Location ID must be at least 5 characters long."
+            "Enter GHL Location ID: ", validate_location_id, "Location ID must be at least 5 characters long."
         )
 
         # Check for duplicates
@@ -235,7 +231,7 @@ async def interactive_onboard() -> bool:
             print_error(f"A tenant with Location ID '{location_id}' already exists!")
             print_warning("Please use a different Location ID or update the existing tenant manually.")
             retry = input(f"{Colors.OKBLUE}Try a different Location ID? (y/n): {Colors.ENDC}").lower()
-            if retry != 'y':
+            if retry != "y":
                 raise ValueError(f"Tenant with location_id '{location_id}' already exists")
         else:
             break
@@ -248,7 +244,7 @@ async def interactive_onboard() -> bool:
     anthropic_key = get_input_with_validation(
         "Enter Anthropic API Key (starts with 'sk-ant-'): ",
         lambda k: validate_api_key(k, "anthropic"),
-        "Invalid Anthropic API key. Must start with 'sk-ant-' and be at least 20 characters."
+        "Invalid Anthropic API key. Must start with 'sk-ant-' and be at least 20 characters.",
     )
     print_success("Anthropic API Key validated")
 
@@ -258,7 +254,7 @@ async def interactive_onboard() -> bool:
     ghl_key = get_input_with_validation(
         "Enter GHL API Key or OAuth Token: ",
         lambda k: validate_api_key(k, "ghl"),
-        "Invalid GHL API key. Must be at least 10 characters."
+        "Invalid GHL API key. Must be at least 10 characters.",
     )
     print_success("GHL API Key validated")
 
@@ -283,7 +279,7 @@ async def interactive_onboard() -> bool:
 
     confirmation = input(f"\n{Colors.OKBLUE}Confirm registration? (y/n): {Colors.ENDC}").lower()
 
-    if confirmation != 'y':
+    if confirmation != "y":
         print_warning("Registration cancelled by user.")
         return False
 
@@ -292,10 +288,7 @@ async def interactive_onboard() -> bool:
 
     try:
         await tenant_service.save_tenant_config(
-            location_id=location_id,
-            anthropic_api_key=anthropic_key,
-            ghl_api_key=ghl_key,
-            ghl_calendar_id=calendar_id
+            location_id=location_id, anthropic_api_key=anthropic_key, ghl_api_key=ghl_key, ghl_calendar_id=calendar_id
         )
 
         tenant_file = tenants_dir / f"{location_id}.json"
@@ -307,7 +300,7 @@ async def interactive_onboard() -> bool:
         print(f"  1. Share the Location ID with the partner: {Colors.BOLD}{location_id}{Colors.ENDC}")
         print(f"  2. Configure their GHL webhook to point to your bot")
         print(f"  3. Test the integration with a sample message")
-        print(f"\n{Colors.BOLD}{'='*70}{Colors.ENDC}\n")
+        print(f"\n{Colors.BOLD}{'=' * 70}{Colors.ENDC}\n")
 
         return True
 

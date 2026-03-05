@@ -486,31 +486,37 @@ elif hub == "Bot Orchestration":
     st.caption("30-day handoff volume with confidence-gated routing (threshold: 0.70)")
 
     # Nodes: 0=Lead Bot, 1=Buyer Bot, 2=Seller Bot, 3=Lead Bot (returned)
-    sankey_fig = go.Figure(go.Sankey(
-        arrangement="snap",
-        node=dict(
-            pad=20,
-            thickness=24,
-            line=dict(color="#0f172a", width=0.5),
-            label=["Lead Bot", "Buyer Bot", "Seller Bot", "Lead Bot\n(return)"],
-            color=["#6366f1", "#10b981", "#f59e0b", "#6366f180"],
-            x=[0.05, 0.9, 0.9, 0.05],
-            y=[0.5, 0.2, 0.8, 0.05],
-        ),
-        link=dict(
-            source=[0, 0, 1, 2],
-            target=[1, 2, 3, 3],
-            value=[129, 83, 22, 11],
-            color=["rgba(16,185,129,0.35)", "rgba(245,158,11,0.35)",
-                   "rgba(99,102,241,0.25)", "rgba(99,102,241,0.25)"],
-            label=[
-                "Lead→Buyer: avg conf 0.87",
-                "Lead→Seller: avg conf 0.84",
-                "Buyer→Lead: avg conf 0.73",
-                "Seller→Lead: avg conf 0.71",
-            ],
-        ),
-    ))
+    sankey_fig = go.Figure(
+        go.Sankey(
+            arrangement="snap",
+            node=dict(
+                pad=20,
+                thickness=24,
+                line=dict(color="#0f172a", width=0.5),
+                label=["Lead Bot", "Buyer Bot", "Seller Bot", "Lead Bot\n(return)"],
+                color=["#6366f1", "#10b981", "#f59e0b", "#6366f180"],
+                x=[0.05, 0.9, 0.9, 0.05],
+                y=[0.5, 0.2, 0.8, 0.05],
+            ),
+            link=dict(
+                source=[0, 0, 1, 2],
+                target=[1, 2, 3, 3],
+                value=[129, 83, 22, 11],
+                color=[
+                    "rgba(16,185,129,0.35)",
+                    "rgba(245,158,11,0.35)",
+                    "rgba(99,102,241,0.25)",
+                    "rgba(99,102,241,0.25)",
+                ],
+                label=[
+                    "Lead→Buyer: avg conf 0.87",
+                    "Lead→Seller: avg conf 0.84",
+                    "Buyer→Lead: avg conf 0.73",
+                    "Seller→Lead: avg conf 0.71",
+                ],
+            ),
+        )
+    )
     sankey_fig.update_layout(
         template="plotly_dark",
         height=360,
@@ -568,24 +574,29 @@ elif hub == "Circuit Breaker":
         for i, s in enumerate(states_num):
             state_fig.add_shape(
                 type="rect",
-                x0=i, x1=i + 1,
-                y0=-0.4, y1=0.4,
+                x0=i,
+                x1=i + 1,
+                y0=-0.4,
+                y1=0.4,
                 fillcolor=colors_map[s],
                 opacity=0.7,
                 line_width=0,
             )
-        state_fig.add_trace(go.Scatter(
-            x=hours, y=[0] * 24,
-            mode="markers",
-            marker=dict(
-                size=14,
-                color=[colors_map[s] for s in states_num],
-                symbol="circle",
-                line=dict(color="#0f172a", width=2),
-            ),
-            text=[state_labels[s] for s in states_num],
-            hovertemplate="%{text}<extra></extra>",
-        ))
+        state_fig.add_trace(
+            go.Scatter(
+                x=hours,
+                y=[0] * 24,
+                mode="markers",
+                marker=dict(
+                    size=14,
+                    color=[colors_map[s] for s in states_num],
+                    symbol="circle",
+                    line=dict(color="#0f172a", width=2),
+                ),
+                text=[state_labels[s] for s in states_num],
+                hovertemplate="%{text}<extra></extra>",
+            )
+        )
         state_fig.update_layout(
             template="plotly_dark",
             height=160,
@@ -599,16 +610,18 @@ elif hub == "Circuit Breaker":
         st.plotly_chart(state_fig, width="stretch")
 
         st.subheader("Failover Chain")
-        for i, (svc, latency, status) in enumerate([
-            ("Claude claude-sonnet-4-6 (Primary)", "1.2s avg", "ACTIVE"),
-            ("Gemini 1.5 Pro (Fallback 1)", "1.8s avg", "STANDBY"),
-            ("OpenRouter / GPT-4o (Fallback 2)", "2.4s avg", "STANDBY"),
-        ]):
+        for i, (svc, latency, status) in enumerate(
+            [
+                ("Claude claude-sonnet-4-6 (Primary)", "1.2s avg", "ACTIVE"),
+                ("Gemini 1.5 Pro (Fallback 1)", "1.8s avg", "STANDBY"),
+                ("OpenRouter / GPT-4o (Fallback 2)", "2.4s avg", "STANDBY"),
+            ]
+        ):
             color = "#10b981" if status == "ACTIVE" else "#64748b"
             st.markdown(
                 f"""<div style='background:#1e293b;border-radius:8px;padding:12px 18px;margin-bottom:6px;
                     display:flex;align-items:center;gap:16px;border-left:3px solid {color}'>
-                    <div style='color:#94a3b8;min-width:24px;font-size:0.85rem'>{i+1}</div>
+                    <div style='color:#94a3b8;min-width:24px;font-size:0.85rem'>{i + 1}</div>
                     <div style='flex:1;color:#f8fafc;font-size:0.9rem'>{svc}</div>
                     <div style='color:#94a3b8;font-size:0.8rem'>{latency}</div>
                     <div style='color:{color};font-weight:600;font-size:0.8rem'>{status}</div>
@@ -618,19 +631,21 @@ elif hub == "Circuit Breaker":
 
     with col_right:
         st.subheader("Circuit Metrics (24h)")
-        metrics_df = pd.DataFrame({
-            "Metric": [
-                "Total Requests",
-                "Failures",
-                "OPEN Events",
-                "Recovery Time",
-                "Backoff Base",
-                "Backoff Max",
-                "Failure Threshold",
-                "Half-Open Probes",
-            ],
-            "Value": ["18,420", "6", "1", "4 min 12s", "1s", "60s", "5 failures", "3"],
-        })
+        metrics_df = pd.DataFrame(
+            {
+                "Metric": [
+                    "Total Requests",
+                    "Failures",
+                    "OPEN Events",
+                    "Recovery Time",
+                    "Backoff Base",
+                    "Backoff Max",
+                    "Failure Threshold",
+                    "Half-Open Probes",
+                ],
+                "Value": ["18,420", "6", "1", "4 min 12s", "1s", "60s", "5 failures", "3"],
+            }
+        )
         st.dataframe(metrics_df, hide_index=True, width="stretch")
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -639,11 +654,13 @@ elif hub == "Circuit Breaker":
         failure_counts = [0] * 24
         for h in failure_hours:
             failure_counts[h] = 3 if h == 18 else 2
-        fail_fig = go.Figure(go.Bar(
-            x=list(range(24)),
-            y=failure_counts,
-            marker_color=["#ef4444" if c > 0 else "#1e293b" for c in failure_counts],
-        ))
+        fail_fig = go.Figure(
+            go.Bar(
+                x=list(range(24)),
+                y=failure_counts,
+                marker_color=["#ef4444" if c > 0 else "#1e293b" for c in failure_counts],
+            )
+        )
         fail_fig.update_layout(
             template="plotly_dark",
             height=200,
@@ -692,24 +709,39 @@ elif hub == "Cache Performance":
         l3_cumulative = np.cumsum(np.random.binomial(1, 0.085, len(ops))) / np.maximum(np.arange(1, len(ops) + 1), 1)
 
         cache_fig = go.Figure()
-        cache_fig.add_trace(go.Scatter(
-            x=ops, y=l1_cumulative * 100,
-            name="L1 Memory", mode="lines",
-            line=dict(color="#6366f1", width=2),
-            fill="tozeroy", fillcolor="rgba(99,102,241,0.15)",
-        ))
-        cache_fig.add_trace(go.Scatter(
-            x=ops, y=(l1_cumulative + l2_cumulative) * 100,
-            name="L1+L2", mode="lines",
-            line=dict(color="#10b981", width=2),
-            fill="tonexty", fillcolor="rgba(16,185,129,0.15)",
-        ))
-        cache_fig.add_trace(go.Scatter(
-            x=ops, y=(l1_cumulative + l2_cumulative + l3_cumulative) * 100,
-            name="L1+L2+L3", mode="lines",
-            line=dict(color="#f59e0b", width=2),
-            fill="tonexty", fillcolor="rgba(245,158,11,0.10)",
-        ))
+        cache_fig.add_trace(
+            go.Scatter(
+                x=ops,
+                y=l1_cumulative * 100,
+                name="L1 Memory",
+                mode="lines",
+                line=dict(color="#6366f1", width=2),
+                fill="tozeroy",
+                fillcolor="rgba(99,102,241,0.15)",
+            )
+        )
+        cache_fig.add_trace(
+            go.Scatter(
+                x=ops,
+                y=(l1_cumulative + l2_cumulative) * 100,
+                name="L1+L2",
+                mode="lines",
+                line=dict(color="#10b981", width=2),
+                fill="tonexty",
+                fillcolor="rgba(16,185,129,0.15)",
+            )
+        )
+        cache_fig.add_trace(
+            go.Scatter(
+                x=ops,
+                y=(l1_cumulative + l2_cumulative + l3_cumulative) * 100,
+                name="L1+L2+L3",
+                mode="lines",
+                line=dict(color="#f59e0b", width=2),
+                fill="tonexty",
+                fillcolor="rgba(245,158,11,0.10)",
+            )
+        )
         cache_fig.update_layout(
             template="plotly_dark",
             height=380,
@@ -724,12 +756,14 @@ elif hub == "Cache Performance":
 
     with col_right:
         st.subheader("Latency by Tier")
-        latency_df = pd.DataFrame({
-            "Tier": ["L1 Memory", "L2 Redis", "L3 PostgreSQL", "LLM (miss)"],
-            "P50 (ms)": [0.2, 1.8, 8.4, 1200],
-            "P95 (ms)": [0.8, 4.2, 22.1, 1970],
-            "P99 (ms)": [1.4, 7.6, 38.5, 2800],
-        })
+        latency_df = pd.DataFrame(
+            {
+                "Tier": ["L1 Memory", "L2 Redis", "L3 PostgreSQL", "LLM (miss)"],
+                "P50 (ms)": [0.2, 1.8, 8.4, 1200],
+                "P95 (ms)": [0.8, 4.2, 22.1, 1970],
+                "P99 (ms)": [1.4, 7.6, 38.5, 2800],
+            }
+        )
         st.dataframe(latency_df, hide_index=True, width="stretch")
 
         st.markdown("<br>", unsafe_allow_html=True)

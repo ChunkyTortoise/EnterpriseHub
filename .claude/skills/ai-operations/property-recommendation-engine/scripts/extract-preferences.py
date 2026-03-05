@@ -23,6 +23,7 @@ from collections import defaultdict
 @dataclass
 class BudgetPreference:
     """Extracted budget preferences."""
+
     min_price: Optional[int] = None
     target_price: Optional[int] = None
     max_price: Optional[int] = None
@@ -34,6 +35,7 @@ class BudgetPreference:
 @dataclass
 class LocationPreference:
     """Extracted location preference."""
+
     area: str
     priority: int  # 1-5, 1 being highest
     confidence: float
@@ -43,6 +45,7 @@ class LocationPreference:
 @dataclass
 class FeaturePreferences:
     """Extracted feature preferences."""
+
     bedrooms_min: Optional[int] = None
     bedrooms_ideal: Optional[int] = None
     bathrooms_min: Optional[int] = None
@@ -57,6 +60,7 @@ class FeaturePreferences:
 @dataclass
 class LifestylePreferences:
     """Extracted lifestyle preferences."""
+
     school_importance: float = 0.5
     commute_sensitivity: float = 0.5
     investment_focus: float = 0.0
@@ -68,6 +72,7 @@ class LifestylePreferences:
 @dataclass
 class ExtractedPreferences:
     """Complete extracted preferences."""
+
     lead_id: str
     budget: BudgetPreference
     locations: List[LocationPreference]
@@ -100,7 +105,7 @@ BUDGET_PATTERNS = {
         r"(?:firm|strict)\s*budget",
         r"(?:can't|cannot|won't)\s*go\s*(?:over|above)",
         r"absolute\s*max",
-    ]
+    ],
 }
 
 LOCATION_PATTERNS = {
@@ -112,7 +117,7 @@ LOCATION_PATTERNS = {
     "negative": [
         r"(?:not|don't want)\s+([A-Z][a-zA-Z\s]+)",
         r"(?:avoid|stay away from)\s+([A-Z][a-zA-Z\s]+)",
-    ]
+    ],
 }
 
 FEATURE_PATTERNS = {
@@ -139,7 +144,7 @@ FEATURE_PATTERNS = {
     "avoided": [
         r"(?:no|don't want|avoid)\s+([a-zA-Z\s]+)",
         r"(?:hate|dislike)\s+([a-zA-Z\s]+)",
-    ]
+    ],
 }
 
 LIFESTYLE_PATTERNS = {
@@ -157,17 +162,17 @@ LIFESTYLE_PATTERNS = {
         r"(?:investment|rental|income)\s*property",
         r"(?:appreciation|equity|value)",
         r"(?:rent|lease)\s*(?:out|it)",
-    ]
+    ],
 }
 
 
 def parse_price(price_str: str) -> int:
     """Parse price string to integer."""
     # Remove commas and dollar signs
-    cleaned = re.sub(r'[$,]', '', price_str)
+    cleaned = re.sub(r"[$,]", "", price_str)
 
     # Handle 'k' suffix
-    if cleaned.lower().endswith('k'):
+    if cleaned.lower().endswith("k"):
         return int(float(cleaned[:-1]) * 1000)
 
     return int(float(cleaned))
@@ -244,20 +249,15 @@ def extract_locations(messages: List[Dict]) -> List[LocationPreference]:
                 avoided_locations.add(match.strip())
 
     # Sort by mention count and create preferences
-    sorted_locations = sorted(
-        location_counts.items(),
-        key=lambda x: x[1],
-        reverse=True
-    )
+    sorted_locations = sorted(location_counts.items(), key=lambda x: x[1], reverse=True)
 
     for priority, (area, count) in enumerate(sorted_locations[:5], 1):
         confidence = min(0.9, 0.5 + count * 0.1)
-        locations.append(LocationPreference(
-            area=area,
-            priority=priority,
-            confidence=confidence,
-            source="explicit" if count > 1 else "inferred"
-        ))
+        locations.append(
+            LocationPreference(
+                area=area, priority=priority, confidence=confidence, source="explicit" if count > 1 else "inferred"
+            )
+        )
 
     return locations
 
@@ -389,9 +389,7 @@ def infer_property_types(features: FeaturePreferences, lifestyle: LifestylePrefe
 
 
 def calculate_overall_confidence(
-    budget: BudgetPreference,
-    locations: List[LocationPreference],
-    features: FeaturePreferences
+    budget: BudgetPreference, locations: List[LocationPreference], features: FeaturePreferences
 ) -> float:
     """Calculate overall confidence in extracted preferences."""
     scores = []
@@ -427,7 +425,7 @@ def load_messages(lead_id: str, conversations_file: Optional[str] = None) -> Lis
     """Load conversation messages."""
     if conversations_file:
         try:
-            with open(conversations_file, 'r') as f:
+            with open(conversations_file, "r") as f:
                 data = json.load(f)
                 return data.get("messages", data) if isinstance(data, dict) else data
         except FileNotFoundError:
@@ -437,11 +435,20 @@ def load_messages(lead_id: str, conversations_file: Optional[str] = None) -> Lis
     return [
         {"role": "lead", "content": "Hi, we're looking for a home in Round Rock or Cedar Park area."},
         {"role": "agent", "content": "Great! What's your budget range?"},
-        {"role": "lead", "content": "Our budget is around $650,000, but we could stretch to $700k for the right place."},
+        {
+            "role": "lead",
+            "content": "Our budget is around $650,000, but we could stretch to $700k for the right place.",
+        },
         {"role": "agent", "content": "And how many bedrooms do you need?"},
-        {"role": "lead", "content": "We need at least 4 bedrooms and 3 bathrooms. Must have a pool - that's non-negotiable."},
+        {
+            "role": "lead",
+            "content": "We need at least 4 bedrooms and 3 bathrooms. Must have a pool - that's non-negotiable.",
+        },
         {"role": "agent", "content": "Any other must-haves?"},
-        {"role": "lead", "content": "Good schools are really important - we have two kids. I work in downtown Rancho Cucamonga so commute matters too."},
+        {
+            "role": "lead",
+            "content": "Good schools are really important - we have two kids. I work in downtown Rancho Cucamonga so commute matters too.",
+        },
         {"role": "lead", "content": "Also, we'd prefer at least 2500 square feet. No HOA if possible."},
     ]
 
@@ -470,7 +477,7 @@ def extract_preferences(lead_id: str, messages: List[Dict]) -> ExtractedPreferen
         property_types=property_types,
         overall_confidence=confidence,
         extraction_sources=sources,
-        extracted_at=datetime.now().isoformat()
+        extracted_at=datetime.now().isoformat(),
     )
 
 
@@ -484,33 +491,19 @@ def preferences_to_dict(prefs: ExtractedPreferences) -> Dict[str, Any]:
             "max": prefs.budget.max_price,
             "flexibility": prefs.budget.flexibility,
             "confidence": prefs.budget.confidence,
-            "source": prefs.budget.source
+            "source": prefs.budget.source,
         },
         "locations": [
-            {
-                "area": loc.area,
-                "priority": loc.priority,
-                "confidence": loc.confidence,
-                "source": loc.source
-            }
+            {"area": loc.area, "priority": loc.priority, "confidence": loc.confidence, "source": loc.source}
             for loc in prefs.locations
         ],
         "features": {
-            "bedrooms": {
-                "min": prefs.features.bedrooms_min,
-                "ideal": prefs.features.bedrooms_ideal
-            },
-            "bathrooms": {
-                "min": prefs.features.bathrooms_min,
-                "ideal": prefs.features.bathrooms_ideal
-            },
-            "sqft": {
-                "min": prefs.features.sqft_min,
-                "ideal": prefs.features.sqft_ideal
-            },
+            "bedrooms": {"min": prefs.features.bedrooms_min, "ideal": prefs.features.bedrooms_ideal},
+            "bathrooms": {"min": prefs.features.bathrooms_min, "ideal": prefs.features.bathrooms_ideal},
+            "sqft": {"min": prefs.features.sqft_min, "ideal": prefs.features.sqft_ideal},
             "required": prefs.features.required_features,
             "preferred": prefs.features.preferred_features,
-            "avoid": prefs.features.avoided_features
+            "avoid": prefs.features.avoided_features,
         },
         "lifestyle": {
             "school_importance": prefs.lifestyle.school_importance,
@@ -518,34 +511,20 @@ def preferences_to_dict(prefs: ExtractedPreferences) -> Dict[str, Any]:
             "investment_focus": prefs.lifestyle.investment_focus,
             "neighborhood_type": prefs.lifestyle.neighborhood_type,
             "commute_to": prefs.lifestyle.commute_to,
-            "commute_max_minutes": prefs.lifestyle.commute_max_minutes
+            "commute_max_minutes": prefs.lifestyle.commute_max_minutes,
         },
         "property_types": prefs.property_types,
         "overall_confidence": prefs.overall_confidence,
         "extraction_sources": prefs.extraction_sources,
-        "extracted_at": prefs.extracted_at
+        "extracted_at": prefs.extracted_at,
     }
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Extract buyer preferences from conversations"
-    )
-    parser.add_argument(
-        "--lead-id",
-        required=True,
-        help="Lead ID to extract preferences for"
-    )
-    parser.add_argument(
-        "--conversations",
-        help="JSON file with conversation messages"
-    )
-    parser.add_argument(
-        "--output",
-        choices=["json", "text"],
-        default="text",
-        help="Output format"
-    )
+    parser = argparse.ArgumentParser(description="Extract buyer preferences from conversations")
+    parser.add_argument("--lead-id", required=True, help="Lead ID to extract preferences for")
+    parser.add_argument("--conversations", help="JSON file with conversation messages")
+    parser.add_argument("--output", choices=["json", "text"], default="text", help="Output format")
 
     args = parser.parse_args()
 

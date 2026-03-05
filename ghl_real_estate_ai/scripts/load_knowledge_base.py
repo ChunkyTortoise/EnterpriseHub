@@ -7,6 +7,7 @@ for RAG-powered AI responses.
 Usage:
     python scripts/load_knowledge_base.py
 """
+
 import json
 import sys
 import argparse
@@ -32,7 +33,7 @@ def load_json_file(filepath: str) -> list:
     Returns:
         List of data objects
     """
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         return json.load(f)
 
 
@@ -41,13 +42,12 @@ def load_property_listings(location_id: str = "global"):
     logger.info(f"Loading property listings for location: {location_id}...")
 
     # Load property data
-    data = load_json_file('data/knowledge_base/property_listings.json')
-    properties = data.get('listings', [])
+    data = load_json_file("data/knowledge_base/property_listings.json")
+    properties = data.get("listings", [])
 
     # Initialize RAG engine
     rag_engine = RAGEngine(
-        collection_name=settings.chroma_collection_name,
-        persist_directory=settings.chroma_persist_directory
+        collection_name=settings.chroma_collection_name, persist_directory=settings.chroma_persist_directory
     )
 
     # Prepare documents
@@ -57,40 +57,37 @@ def load_property_listings(location_id: str = "global"):
 
     for i, prop in enumerate(properties):
         # Extract address details
-        address_dict = prop.get('address', {})
-        street = address_dict.get('street', 'Unknown')
-        neighborhood = address_dict.get('neighborhood', 'Unknown')
+        address_dict = prop.get("address", {})
+        street = address_dict.get("street", "Unknown")
+        neighborhood = address_dict.get("neighborhood", "Unknown")
         full_address = f"{street}, {address_dict.get('city', 'Rancho Cucamonga')}, {address_dict.get('state', 'CA')} {address_dict.get('zip', '')}"
 
         # Create rich document text
         doc_text = f"""Property: {full_address}
-Price: ${prop['price']:,}
-Bedrooms: {prop['bedrooms']} | Bathrooms: {prop['bathrooms']} | Square Feet: {prop['sqft']}
+Price: ${prop["price"]:,}
+Bedrooms: {prop["bedrooms"]} | Bathrooms: {prop["bathrooms"]} | Square Feet: {prop["sqft"]}
 Neighborhood: {neighborhood}
-Description: {prop['description']}
-Features: {', '.join(prop.get('features', []))}
-Schools: {', '.join([s['name'] for s in prop.get('schools', [])])}
+Description: {prop["description"]}
+Features: {", ".join(prop.get("features", []))}
+Schools: {", ".join([s["name"] for s in prop.get("schools", [])])}
 """
 
         documents.append(doc_text)
-        metadatas.append({
-            "type": "property_listing",
-            "category": "listing",
-            "address": full_address,
-            "price": prop['price'],
-            "bedrooms": prop['bedrooms'],
-            "bathrooms": prop['bathrooms'],
-            "neighborhood": neighborhood
-        })
+        metadatas.append(
+            {
+                "type": "property_listing",
+                "category": "listing",
+                "address": full_address,
+                "price": prop["price"],
+                "bedrooms": prop["bedrooms"],
+                "bathrooms": prop["bathrooms"],
+                "neighborhood": neighborhood,
+            }
+        )
         ids.append(f"property_{location_id}_{i}")
 
     # Add to collection
-    rag_engine.add_documents(
-        documents=documents,
-        metadatas=metadatas,
-        ids=ids,
-        location_id=location_id
-    )
+    rag_engine.add_documents(documents=documents, metadatas=metadatas, ids=ids, location_id=location_id)
 
     logger.info(f"Loaded {len(documents)} property listings")
 
@@ -100,15 +97,11 @@ def load_faq(location_id: str = "global"):
     logger.info(f"Loading FAQ data for location: {location_id}...")
 
     # Files to load
-    faq_files = [
-        'data/knowledge_base/real_estate_faq.json',
-        'data/knowledge_base/seller_faq.json'
-    ]
+    faq_files = ["data/knowledge_base/real_estate_faq.json", "data/knowledge_base/seller_faq.json"]
 
     # Initialize RAG engine
     rag_engine = RAGEngine(
-        collection_name=settings.chroma_collection_name,
-        persist_directory=settings.chroma_persist_directory
+        collection_name=settings.chroma_collection_name, persist_directory=settings.chroma_persist_directory
     )
 
     total_loaded = 0
@@ -118,7 +111,7 @@ def load_faq(location_id: str = "global"):
             continue
 
         data = load_json_file(filepath)
-        faqs = data.get('faq', [])
+        faqs = data.get("faq", [])
 
         # Prepare documents
         documents = []
@@ -127,29 +120,26 @@ def load_faq(location_id: str = "global"):
 
         for i, faq in enumerate(faqs):
             # Create document text
-            doc_text = f"""Question: {faq['question']}
-Answer: {faq['answer']}
+            doc_text = f"""Question: {faq["question"]}
+Answer: {faq["answer"]}
 """
 
             documents.append(doc_text)
-            metadatas.append({
-                "type": "faq",
-                "category": faq.get('category', 'general'),
-                "question": faq['question'],
-                "source_file": filepath
-            })
+            metadatas.append(
+                {
+                    "type": "faq",
+                    "category": faq.get("category", "general"),
+                    "question": faq["question"],
+                    "source_file": filepath,
+                }
+            )
             # Use unique IDs based on location, filename and index
             file_slug = Path(filepath).stem
             ids.append(f"faq_{location_id}_{file_slug}_{i}")
 
         # Add to collection
         if documents:
-            rag_engine.add_documents(
-                documents=documents,
-                metadatas=metadatas,
-                ids=ids,
-                location_id=location_id
-            )
+            rag_engine.add_documents(documents=documents, metadatas=metadatas, ids=ids, location_id=location_id)
             total_loaded += len(documents)
             logger.info(f"Loaded {len(documents)} FAQ entries from {filepath}")
 
@@ -159,7 +149,9 @@ Answer: {faq['answer']}
 def main():
     """Main function to load all knowledge base data."""
     parser = argparse.ArgumentParser(description="Load knowledge base into RAG engine.")
-    parser.add_argument("--location_id", type=str, default="global", help="Location ID for the documents (default: global)")
+    parser.add_argument(
+        "--location_id", type=str, default="global", help="Location ID for the documents (default: global)"
+    )
     parser.add_argument("--clear", action="store_true", help="Clear the collection before loading")
     args = parser.parse_args()
 
@@ -168,8 +160,7 @@ def main():
     try:
         if args.clear:
             rag_engine = RAGEngine(
-                collection_name=settings.chroma_collection_name,
-                persist_directory=settings.chroma_persist_directory
+                collection_name=settings.chroma_collection_name, persist_directory=settings.chroma_persist_directory
             )
             rag_engine.clear()
             logger.info("Cleared existing vector store")
