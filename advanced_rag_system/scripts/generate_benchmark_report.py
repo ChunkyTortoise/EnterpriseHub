@@ -22,6 +22,7 @@ try:
     import matplotlib.pyplot as plt
     import seaborn as sns
     import pandas as pd
+
     HAS_PLOTTING = True
 except ImportError:
     HAS_PLOTTING = False
@@ -31,6 +32,7 @@ except ImportError:
 
 try:
     from jinja2 import Template
+
     HAS_JINJA2 = True
 except ImportError:
     HAS_JINJA2 = False
@@ -73,7 +75,7 @@ class BenchmarkReportGenerator:
                 "requests_per_minute": 1000,
                 "concurrent_users": 100,
                 "cache_hit_rate": 0.90,
-            }
+            },
         }
 
         # Stretch goals (better than targets)
@@ -97,14 +99,11 @@ class BenchmarkReportGenerator:
                 "requests_per_minute": 5000,
                 "concurrent_users": 500,
                 "cache_hit_rate": 0.95,
-            }
+            },
         }
 
     def generate_report(
-        self,
-        results_dir: str,
-        baseline_dir: Optional[str] = None,
-        format_types: List[str] = ["markdown", "html"]
+        self, results_dir: str, baseline_dir: Optional[str] = None, format_types: List[str] = ["markdown", "html"]
     ) -> Dict[str, str]:
         """
         Generate comprehensive benchmark report.
@@ -161,9 +160,12 @@ class BenchmarkReportGenerator:
 
         # Load different result files
         result_files = [
-            ("performance", ["performance_combined.json", "embedding_perf.json", "retrieval_perf.json", "api_perf.json"]),
+            (
+                "performance",
+                ["performance_combined.json", "embedding_perf.json", "retrieval_perf.json", "api_perf.json"],
+            ),
             ("quality", ["quality_combined.json", "retrieval_quality.json", "answer_quality.json"]),
-            ("load", ["locust_results.json", "k6_results.json"])
+            ("load", ["locust_results.json", "k6_results.json"]),
         ]
 
         for category, filenames in result_files:
@@ -173,7 +175,7 @@ class BenchmarkReportGenerator:
                 file_path = results_path / filename
                 if file_path.exists():
                     try:
-                        with file_path.open('r') as f:
+                        with file_path.open("r") as f:
                             data = json.load(f)
                             category_results[filename] = data
                     except json.JSONDecodeError as e:
@@ -195,7 +197,7 @@ class BenchmarkReportGenerator:
             "quality": {},
             "load": {},
             "regression": {},
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Analyze performance results
@@ -224,12 +226,7 @@ class BenchmarkReportGenerator:
 
     def _analyze_performance(self, perf_results: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze performance benchmark results."""
-        performance = {
-            "latency": {},
-            "throughput": {},
-            "status": "unknown",
-            "issues": []
-        }
+        performance = {"latency": {}, "throughput": {}, "status": "unknown", "issues": []}
 
         # Extract latency metrics
         if "api_perf.json" in perf_results:
@@ -282,12 +279,7 @@ class BenchmarkReportGenerator:
 
     def _analyze_quality(self, quality_results: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze quality benchmark results."""
-        quality = {
-            "retrieval": {},
-            "generation": {},
-            "status": "unknown",
-            "issues": []
-        }
+        quality = {"retrieval": {}, "generation": {}, "status": "unknown", "issues": []}
 
         # Extract quality metrics from test results
         if "retrieval_quality.json" in quality_results:
@@ -320,12 +312,7 @@ class BenchmarkReportGenerator:
 
     def _analyze_load_tests(self, load_results: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze load test results."""
-        load = {
-            "throughput": {},
-            "errors": {},
-            "status": "unknown",
-            "issues": []
-        }
+        load = {"throughput": {}, "errors": {}, "status": "unknown", "issues": []}
 
         # Analyze Locust results
         if "locust_results.json" in load_results:
@@ -341,11 +328,7 @@ class BenchmarkReportGenerator:
 
     def _detect_regressions(self, current: Dict[str, Any], baseline: Dict[str, Any]) -> Dict[str, Any]:
         """Detect performance regressions compared to baseline."""
-        regressions = {
-            "detected": [],
-            "improvements": [],
-            "status": "stable"
-        }
+        regressions = {"detected": [], "improvements": [], "status": "stable"}
 
         # Compare performance metrics
         if "performance" in current and "performance" in baseline:
@@ -367,7 +350,7 @@ class BenchmarkReportGenerator:
             "total_targets": 0,
             "critical_issues": 0,
             "performance_score": 0,
-            "quality_score": 0
+            "quality_score": 0,
         }
 
         # Count targets met
@@ -385,7 +368,11 @@ class BenchmarkReportGenerator:
 
         # Determine overall status
         if summary["performance_score"] >= 85 and summary["quality_score"] >= 85:
-            summary["overall_status"] = "excellent" if all(score >= 95 for score in [summary["performance_score"], summary["quality_score"]]) else "good"
+            summary["overall_status"] = (
+                "excellent"
+                if all(score >= 95 for score in [summary["performance_score"], summary["quality_score"]])
+                else "good"
+            )
         elif summary["critical_issues"] == 0:
             summary["overall_status"] = "acceptable"
         else:
@@ -435,7 +422,7 @@ class BenchmarkReportGenerator:
             return
 
         # Set style
-        plt.style.use('seaborn-v0_8')
+        plt.style.use("seaborn-v0_8")
         sns.set_palette("husl")
 
         # Performance latency chart
@@ -464,26 +451,26 @@ class BenchmarkReportGenerator:
         x_pos = range(len(metrics))
 
         # Create bars
-        bars1 = ax.bar([x - 0.2 for x in x_pos], values, 0.4, label='Actual', alpha=0.8)
-        bars2 = ax.bar([x + 0.2 for x in x_pos], targets, 0.4, label='Target', alpha=0.6)
+        bars1 = ax.bar([x - 0.2 for x in x_pos], values, 0.4, label="Actual", alpha=0.8)
+        bars2 = ax.bar([x + 0.2 for x in x_pos], targets, 0.4, label="Target", alpha=0.6)
 
         # Color bars based on target achievement
         for i, (actual, target) in enumerate(zip(values, targets)):
             if target > 0 and actual > target:
-                bars1[i].set_color('red')
+                bars1[i].set_color("red")
             else:
-                bars1[i].set_color('green')
+                bars1[i].set_color("green")
 
-        ax.set_xlabel('Metrics')
-        ax.set_ylabel('Latency (ms)')
-        ax.set_title('Performance Latency Benchmarks')
+        ax.set_xlabel("Metrics")
+        ax.set_ylabel("Latency (ms)")
+        ax.set_title("Performance Latency Benchmarks")
         ax.set_xticks(x_pos)
-        ax.set_xticklabels(metrics, rotation=45, ha='right')
+        ax.set_xticklabels(metrics, rotation=45, ha="right")
         ax.legend()
         ax.grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.savefig(self.output_dir / 'latency_chart.png', dpi=300, bbox_inches='tight')
+        plt.savefig(self.output_dir / "latency_chart.png", dpi=300, bbox_inches="tight")
         plt.close()
 
     def _create_quality_chart(self, analysis: Dict[str, Any]) -> None:
@@ -503,26 +490,26 @@ class BenchmarkReportGenerator:
         x_pos = range(len(metrics))
 
         # Create horizontal bar chart
-        bars1 = ax.barh([y - 0.2 for y in x_pos], values, 0.4, label='Actual', alpha=0.8)
-        bars2 = ax.barh([y + 0.2 for y in x_pos], targets, 0.4, label='Target', alpha=0.6)
+        bars1 = ax.barh([y - 0.2 for y in x_pos], values, 0.4, label="Actual", alpha=0.8)
+        bars2 = ax.barh([y + 0.2 for y in x_pos], targets, 0.4, label="Target", alpha=0.6)
 
         # Color bars based on target achievement
         for i, (actual, target) in enumerate(zip(values, targets)):
             if target > 0 and actual < target:
-                bars1[i].set_color('red')
+                bars1[i].set_color("red")
             else:
-                bars1[i].set_color('green')
+                bars1[i].set_color("green")
 
-        ax.set_ylabel('Metrics')
-        ax.set_xlabel('Score')
-        ax.set_title('Quality Benchmarks')
+        ax.set_ylabel("Metrics")
+        ax.set_xlabel("Score")
+        ax.set_title("Quality Benchmarks")
         ax.set_yticks(x_pos)
         ax.set_yticklabels(metrics)
         ax.legend()
         ax.grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.savefig(self.output_dir / 'quality_chart.png', dpi=300, bbox_inches='tight')
+        plt.savefig(self.output_dir / "quality_chart.png", dpi=300, bbox_inches="tight")
         plt.close()
 
     def _create_trend_chart(self, analysis: Dict[str, Any]) -> None:
@@ -538,26 +525,20 @@ class BenchmarkReportGenerator:
         quality = analysis["quality"]
 
         # Status emoji mapping
-        status_emoji = {
-            "excellent": "🟢",
-            "good": "🟡",
-            "acceptable": "🟠",
-            "needs_improvement": "🔴",
-            "unknown": "⚪"
-        }
+        status_emoji = {"excellent": "🟢", "good": "🟡", "acceptable": "🟠", "needs_improvement": "🔴", "unknown": "⚪"}
 
         report_content = f"""# Benchmark Report
 
 **Generated:** {timestamp}
-**Overall Status:** {status_emoji.get(summary['overall_status'], '⚪')} {summary['overall_status'].replace('_', ' ').title()}
+**Overall Status:** {status_emoji.get(summary["overall_status"], "⚪")} {summary["overall_status"].replace("_", " ").title()}
 
 ## Executive Summary
 
 | Metric | Score | Status |
 |--------|--------|--------|
-| Performance | {summary.get('performance_score', 0)}/100 | {status_emoji.get(performance.get('status'), '⚪')} {performance.get('status', 'unknown').replace('_', ' ').title()} |
-| Quality | {summary.get('quality_score', 0)}/100 | {status_emoji.get(quality.get('status'), '⚪')} {quality.get('status', 'unknown').replace('_', ' ').title()} |
-| Critical Issues | {summary.get('critical_issues', 0)} | {'🔴' if summary.get('critical_issues', 0) > 0 else '🟢'} |
+| Performance | {summary.get("performance_score", 0)}/100 | {status_emoji.get(performance.get("status"), "⚪")} {performance.get("status", "unknown").replace("_", " ").title()} |
+| Quality | {summary.get("quality_score", 0)}/100 | {status_emoji.get(quality.get("status"), "⚪")} {quality.get("status", "unknown").replace("_", " ").title()} |
+| Critical Issues | {summary.get("critical_issues", 0)} | {"🔴" if summary.get("critical_issues", 0) > 0 else "🟢"} |
 
 ## Performance Results
 
@@ -592,7 +573,11 @@ class BenchmarkReportGenerator:
 
         for metric, value in quality.get("retrieval", {}).items():
             target = self.targets["quality"].get(metric, "N/A")
-            status = "🟢" if isinstance(value, (int, float)) and isinstance(target, (int, float)) and value >= target else "🔴"
+            status = (
+                "🟢"
+                if isinstance(value, (int, float)) and isinstance(target, (int, float)) and value >= target
+                else "🔴"
+            )
             report_content += f"- **{metric}**: {value:.3f} (target: {target}) {status}\n"
 
         report_content += f"""
@@ -603,7 +588,11 @@ class BenchmarkReportGenerator:
 
         for metric, value in quality.get("generation", {}).items():
             target = self.targets["quality"].get(metric, "N/A")
-            status = "🟢" if isinstance(value, (int, float)) and isinstance(target, (int, float)) and value >= target else "🔴"
+            status = (
+                "🟢"
+                if isinstance(value, (int, float)) and isinstance(target, (int, float)) and value >= target
+                else "🔴"
+            )
             report_content += f"- **{metric}**: {value:.3f} (target: {target}) {status}\n"
 
         # Add issues and recommendations
@@ -660,7 +649,7 @@ class BenchmarkReportGenerator:
 
         # Save report
         report_file = self.output_dir / "benchmark_report.md"
-        with report_file.open('w') as f:
+        with report_file.open("w") as f:
             f.write(report_content)
 
         return report_file
@@ -736,11 +725,11 @@ class BenchmarkReportGenerator:
             performance=analysis["performance"],
             quality=analysis["quality"],
             recommendations=analysis["recommendations"],
-            targets=self.targets
+            targets=self.targets,
         )
 
         html_file = self.output_dir / "benchmark_report.html"
-        with html_file.open('w') as f:
+        with html_file.open("w") as f:
             f.write(html_content)
 
         return html_file
@@ -760,7 +749,7 @@ QUALITY_STATUS={quality.get("status", "unknown")}
 """
 
         summary_file = self.output_dir / "ci_summary.env"
-        with summary_file.open('w') as f:
+        with summary_file.open("w") as f:
             f.write(ci_summary)
 
         return summary_file
@@ -787,9 +776,7 @@ def main():
 
     try:
         output_files = generator.generate_report(
-            results_dir=args.results_dir,
-            baseline_dir=args.baseline_dir,
-            format_types=formats
+            results_dir=args.results_dir, baseline_dir=args.baseline_dir, format_types=formats
         )
 
         print("✅ Benchmark report generated successfully!")

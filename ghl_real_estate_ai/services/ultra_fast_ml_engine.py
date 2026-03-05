@@ -42,6 +42,7 @@ import pandas as pd
 # Performance Libraries
 try:
     import onnxruntime as ort
+
     ONNX_AVAILABLE = True
 except ImportError:
     ONNX_AVAILABLE = False
@@ -50,6 +51,7 @@ except ImportError:
 try:
     import numba
     from numba import jit, njit
+
     NUMBA_AVAILABLE = True
 except ImportError:
     NUMBA_AVAILABLE = False
@@ -65,24 +67,29 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 
 logger = get_logger(__name__)
 
+
 @dataclass
 class UltraFastPredictionRequest:
     """Optimized prediction request with pre-computed features"""
+
     lead_id: str
     features: np.ndarray  # Pre-computed numpy array
-    feature_hash: str     # Hash for cache lookup
+    feature_hash: str  # Hash for cache lookup
     priority: str = "normal"  # high, normal, low
     batch_id: Optional[str] = None
+
 
 @dataclass
 class UltraFastPredictionResult:
     """Optimized prediction result"""
+
     lead_id: str
     score: float
     confidence: float
     inference_time_ms: float
     model_version: str
     cache_hit: bool = False
+
 
 class FeaturePreprocessor:
     """Ultra-fast feature preprocessing with pre-computation"""
@@ -93,11 +100,7 @@ class FeaturePreprocessor:
         self.is_fitted = False
 
         # Pre-computed lookup tables for categorical encodings
-        self.categorical_mappings = {
-            'lead_source': {},
-            'property_type': {},
-            'market_segment': {}
-        }
+        self.categorical_mappings = {"lead_source": {}, "property_type": {}, "market_segment": {}}
 
     @njit if NUMBA_AVAILABLE else lambda x: x
     def _fast_numeric_transform(features: np.ndarray, scale_params: np.ndarray, mean_params: np.ndarray) -> np.ndarray:
@@ -113,12 +116,10 @@ class FeaturePreprocessor:
         self.scaler.fit(numeric_features)
 
         # Pre-compute categorical mappings
-        for col in ['lead_source', 'property_type', 'market_segment']:
+        for col in ["lead_source", "property_type", "market_segment"]:
             if col in training_data.columns:
                 unique_values = training_data[col].unique()
-                self.categorical_mappings[col] = {
-                    val: idx for idx, val in enumerate(unique_values)
-                }
+                self.categorical_mappings[col] = {val: idx for idx, val in enumerate(unique_values)}
 
         self.is_fitted = True
         logger.info("Feature preprocessor fitted successfully")
@@ -140,16 +141,22 @@ class FeaturePreprocessor:
             # Extract numeric features
             numeric_values = []
             for feature_name in [
-                'contact_score', 'engagement_score', 'response_time_avg',
-                'property_views', 'email_opens', 'call_duration',
-                'days_since_inquiry', 'budget_range', 'urgency_score'
+                "contact_score",
+                "engagement_score",
+                "response_time_avg",
+                "property_views",
+                "email_opens",
+                "call_duration",
+                "days_since_inquiry",
+                "budget_range",
+                "urgency_score",
             ]:
                 numeric_values.append(raw_features.get(feature_name, 0.0))
 
             # Extract categorical features (pre-encoded)
             categorical_values = []
-            for cat_feature in ['lead_source', 'property_type', 'market_segment']:
-                cat_value = raw_features.get(cat_feature, 'unknown')
+            for cat_feature in ["lead_source", "property_type", "market_segment"]:
+                cat_value = raw_features.get(cat_feature, "unknown")
                 mapping = self.categorical_mappings.get(cat_feature, {})
                 categorical_values.append(mapping.get(cat_value, 0))
 
@@ -161,16 +168,14 @@ class FeaturePreprocessor:
                 # Use numba-compiled transformation if available
                 if NUMBA_AVAILABLE:
                     scaled_features = self._fast_numeric_transform(
-                        all_features[:len(numeric_values)],
-                        self.scaler.scale_,
-                        self.scaler.mean_
+                        all_features[: len(numeric_values)], self.scaler.scale_, self.scaler.mean_
                     )
                     # Combine with categorical features
-                    final_features = np.concatenate([scaled_features, all_features[len(numeric_values):]])
+                    final_features = np.concatenate([scaled_features, all_features[len(numeric_values) :]])
                 else:
                     # Standard sklearn transform
-                    scaled_numeric = self.scaler.transform([all_features[:len(numeric_values)]])[0]
-                    final_features = np.concatenate([scaled_numeric, all_features[len(numeric_values):]])
+                    scaled_numeric = self.scaler.transform([all_features[: len(numeric_values)]])[0]
+                    final_features = np.concatenate([scaled_numeric, all_features[len(numeric_values) :]])
             else:
                 final_features = all_features
 
@@ -187,6 +192,7 @@ class FeaturePreprocessor:
             logger.error(f"Error in fast feature transformation: {e}")
             # Return zero vector as fallback
             return np.zeros(12, dtype=np.float32)
+
 
 class UltraFastMLEngine:
     """
@@ -232,7 +238,7 @@ class UltraFastMLEngine:
             self.model.load_model(model_path)
 
             # Try to load ONNX version for even faster inference
-            onnx_path = model_path.replace('.json', '.onnx')
+            onnx_path = model_path.replace(".json", ".onnx")
             if ONNX_AVAILABLE and Path(onnx_path).exists():
                 try:
                     # Configure ONNX runtime for maximum performance
@@ -296,11 +302,11 @@ class UltraFastMLEngine:
             if cached_result:
                 result = UltraFastPredictionResult(
                     lead_id=request.lead_id,
-                    score=cached_result['score'],
-                    confidence=cached_result['confidence'],
+                    score=cached_result["score"],
+                    confidence=cached_result["confidence"],
                     inference_time_ms=(time.perf_counter() - start_time) * 1000,
                     model_version=self.model_version,
-                    cache_hit=True
+                    cache_hit=True,
                 )
                 self.cache_hits += 1
                 self.total_predictions += 1
@@ -319,7 +325,7 @@ class UltraFastMLEngine:
                 self.inference_times = self.inference_times[-500:]
 
             # Cache result for future use
-            cache_data = {'score': score, 'confidence': confidence}
+            cache_data = {"score": score, "confidence": confidence}
             await self.cache.set(cache_key, cache_data, ttl=300)  # 5 min cache
 
             result = UltraFastPredictionResult(
@@ -328,7 +334,7 @@ class UltraFastMLEngine:
                 confidence=confidence,
                 inference_time_ms=inference_time,
                 model_version=self.model_version,
-                cache_hit=False
+                cache_hit=False,
             )
 
             # Log slow predictions for optimization
@@ -345,7 +351,7 @@ class UltraFastMLEngine:
                 score=0.5,  # Neutral score
                 confidence=0.0,  # No confidence
                 inference_time_ms=(time.perf_counter() - start_time) * 1000,
-                model_version=self.model_version
+                model_version=self.model_version,
             )
 
     async def _run_optimized_inference(self, features: np.ndarray) -> Tuple[float, float]:
@@ -384,7 +390,9 @@ class UltraFastMLEngine:
         # Fallback to simple heuristic
         return 0.5, 0.0
 
-    async def predict_batch_ultra_fast(self, requests: List[UltraFastPredictionRequest]) -> List[UltraFastPredictionResult]:
+    async def predict_batch_ultra_fast(
+        self, requests: List[UltraFastPredictionRequest]
+    ) -> List[UltraFastPredictionResult]:
         """
         Batch prediction with optimized throughput
         """
@@ -408,14 +416,16 @@ class UltraFastMLEngine:
 
             # Process cached requests (instant)
             for request, cached_result in cached_requests:
-                results.append(UltraFastPredictionResult(
-                    lead_id=request.lead_id,
-                    score=cached_result['score'],
-                    confidence=cached_result['confidence'],
-                    inference_time_ms=0.1,  # Near-instant cache hit
-                    model_version=self.model_version,
-                    cache_hit=True
-                ))
+                results.append(
+                    UltraFastPredictionResult(
+                        lead_id=request.lead_id,
+                        score=cached_result["score"],
+                        confidence=cached_result["confidence"],
+                        inference_time_ms=0.1,  # Near-instant cache hit
+                        model_version=self.model_version,
+                        cache_hit=True,
+                    )
+                )
 
             # Process inference requests in batch
             if inference_requests:
@@ -425,8 +435,10 @@ class UltraFastMLEngine:
             total_time = (time.perf_counter() - start_time) * 1000
             avg_time_per_prediction = total_time / len(requests) if requests else 0
 
-            logger.info(f"Batch prediction completed: {len(requests)} predictions in {total_time:.2f}ms "
-                       f"(avg: {avg_time_per_prediction:.2f}ms per prediction)")
+            logger.info(
+                f"Batch prediction completed: {len(requests)} predictions in {total_time:.2f}ms "
+                f"(avg: {avg_time_per_prediction:.2f}ms per prediction)"
+            )
 
             return results
 
@@ -459,18 +471,20 @@ class UltraFastMLEngine:
             for i, (request, score) in enumerate(zip(requests, scores)):
                 confidence = min(0.95, max(0.1, abs(score - 0.5) * 2))
 
-                results.append(UltraFastPredictionResult(
-                    lead_id=request.lead_id,
-                    score=float(score),
-                    confidence=confidence,
-                    inference_time_ms=5.0,  # Batch processing time estimate
-                    model_version=self.model_version,
-                    cache_hit=False
-                ))
+                results.append(
+                    UltraFastPredictionResult(
+                        lead_id=request.lead_id,
+                        score=float(score),
+                        confidence=confidence,
+                        inference_time_ms=5.0,  # Batch processing time estimate
+                        model_version=self.model_version,
+                        cache_hit=False,
+                    )
+                )
 
                 # Cache individual results
                 cache_key = f"ultra_pred:{self.tenant_id}:{request.feature_hash}"
-                cache_data = {'score': float(score), 'confidence': confidence}
+                cache_data = {"score": float(score), "confidence": confidence}
                 asyncio.create_task(self.cache.set(cache_key, cache_data, ttl=300))
 
             return results
@@ -497,7 +511,7 @@ class UltraFastMLEngine:
             "target_achievement": np.mean(recent_times) < 25.0,  # <25ms target
             "model_version": self.model_version,
             "onnx_enabled": self.onnx_session is not None,
-            "optimization_status": "ultra_performance"
+            "optimization_status": "ultra_performance",
         }
 
     async def warm_cache_for_leads(self, lead_ids: List[str], lead_features: List[Dict[str, Any]]):
@@ -513,10 +527,7 @@ class UltraFastMLEngine:
                 feature_hash = hashlib.md5(feature_str.encode()).hexdigest()
 
                 request = UltraFastPredictionRequest(
-                    lead_id=lead_id,
-                    features=processed_features,
-                    feature_hash=feature_hash,
-                    priority="low"
+                    lead_id=lead_id, features=processed_features, feature_hash=feature_hash, priority="low"
                 )
                 requests.append(request)
 
@@ -531,6 +542,7 @@ class UltraFastMLEngine:
 
 # Singleton instance
 _ultra_fast_engine = None
+
 
 def get_ultra_fast_ml_engine(tenant_id: str = "jorge_ultra") -> UltraFastMLEngine:
     """Get the ultra-fast ML engine instance"""

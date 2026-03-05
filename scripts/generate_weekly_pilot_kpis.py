@@ -90,9 +90,7 @@ def compute_kpis(events: list[OutcomeEvent]) -> list[PilotKPIRecord]:
             bucket["response_sla_total"] += 1
         elif event.event_type == "qualified_lead_cost":
             if event.event_value is None:
-                raise ValueError(
-                    f"qualified_lead_cost event is missing event_value (event_id={event.event_id})"
-                )
+                raise ValueError(f"qualified_lead_cost event is missing event_value (event_id={event.event_id})")
             bucket["cost_sum"] += float(event.event_value)
             bucket["cost_count"] += 1
 

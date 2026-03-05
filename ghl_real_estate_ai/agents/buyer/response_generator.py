@@ -196,14 +196,22 @@ class ResponseGenerator:
             # State fields like preferred_areas are often None even when the buyer mentioned it.
             # Scanning history ensures the ALREADY KNOWN block matches reality.
             import re as _re
+
             _conv = state.get("conversation_history", [])
-            _user_text = " ".join(
-                m.get("content", "") for m in _conv if m.get("role") == "user"
-            ).lower()
+            _user_text = " ".join(m.get("content", "") for m in _conv if m.get("role") == "user").lower()
             _area_kws = [
-                "etiwanda", "alta loma", "day creek", "victoria groves",
-                "heritage", "caryn", "windrows", "old alta loma",
-                "rancho cucamonga", "rancho", "rc", "inland empire",
+                "etiwanda",
+                "alta loma",
+                "day creek",
+                "victoria groves",
+                "heritage",
+                "caryn",
+                "windrows",
+                "old alta loma",
+                "rancho cucamonga",
+                "rancho",
+                "rc",
+                "inland empire",
             ]
             _found_areas = [a.title() for a in _area_kws if a in _user_text]
             _known_area = (
@@ -217,11 +225,7 @@ class ResponseGenerator:
                 or state.get("budget_max")
                 or (
                     next(
-                        (
-                            m.strip()
-                            for m in _re.findall(r"\$[\d,k]+|\d+\s*(?:k|thousand|million)", _user_text)
-                            if m
-                        ),
+                        (m.strip() for m in _re.findall(r"\$[\d,k]+|\d+\s*(?:k|thousand|million)", _user_text) if m),
                         None,
                     )
                 )
@@ -244,7 +248,14 @@ class ResponseGenerator:
             _known_timeline = (
                 getattr(profile, "move_timeline", None)
                 or state.get("move_timeline")
-                or ("stated" if _re.search(r"\b(?:june|july|august|september|october|spring|summer|fall|winter|months?|weeks?|years?|day|days|asap|soon|quickly|urgent|ready|weekend|now|timeline|moving|relocat)\b", _user_text) else "not stated yet")
+                or (
+                    "stated"
+                    if _re.search(
+                        r"\b(?:june|july|august|september|october|spring|summer|fall|winter|months?|weeks?|years?|day|days|asap|soon|quickly|urgent|ready|weekend|now|timeline|moving|relocat)\b",
+                        _user_text,
+                    )
+                    else "not stated yet"
+                )
             )
 
             # Qualification step guard — use the persisted current_qualification_step as a
@@ -254,9 +265,16 @@ class ResponseGenerator:
             # amounts so _known_budget reverts to "not stated yet" and the bot loops back
             # to asking "What's your price range?" indefinitely.
             _STEP_ORDER = [
-                "budget", "pre-approval", "bedrooms", "timeline",
-                "property_search", "property", "appointment",
-                "property_matching", "objection_handling", "handoff_ready",
+                "budget",
+                "pre-approval",
+                "bedrooms",
+                "timeline",
+                "property_search",
+                "property",
+                "appointment",
+                "property_matching",
+                "objection_handling",
+                "handoff_ready",
             ]
             _STEP_IDX = {s: i for i, s in enumerate(_STEP_ORDER)}
             _saved_step = state.get("current_qualification_step", "budget")
@@ -289,8 +307,7 @@ class ResponseGenerator:
             if _todo:
                 _next_q_instruction = f"NEXT: Ask ONLY about '{_todo[0]}' — nothing else."
                 _already_settled = [
-                    k for k in ["area", "budget", "pre-approval", "bedrooms", "timeline"]
-                    if k not in _todo[0]
+                    k for k in ["area", "budget", "pre-approval", "bedrooms", "timeline"] if k not in _todo[0]
                 ]
             else:
                 _next_q_instruction = "All key info is collected. Warmly move toward scheduling a home tour — do NOT ask any new qualifying questions."
@@ -367,16 +384,21 @@ class ResponseGenerator:
             import random as _random
 
             _fallback_map = {
-                "budget range": _bq.get("1") or "What's your price range? That helps me focus on the right options for you.",
-                "mortgage pre-approval status": _bq.get("2") or "Have you spoken with a lender yet? Getting pre-approved opens up a lot more doors.",
+                "budget range": _bq.get("1")
+                or "What's your price range? That helps me focus on the right options for you.",
+                "mortgage pre-approval status": _bq.get("2")
+                or "Have you spoken with a lender yet? Getting pre-approved opens up a lot more doors.",
                 "move-in timeline": _bq.get("3") or "When are you hoping to be in your new home?",
-                "bedrooms and property size": _bq.get("4") or "How many bedrooms are you looking for, and anything specific about the size or style?",
+                "bedrooms and property size": _bq.get("4")
+                or "How many bedrooms are you looking for, and anything specific about the size or style?",
                 "preferred area or neighborhood in Rancho Cucamonga": "Any specific neighborhoods you have in mind? Etiwanda, Alta Loma, Day Creek?",
             }
 
             if _todo:
                 # Qualification still incomplete — use deterministic response, skip Claude entirely.
-                _q_text = _fallback_map.get(_todo[0], "What matters most to you in your next home? Area, size, or style?")
+                _q_text = _fallback_map.get(
+                    _todo[0], "What matters most to you in your next home? Area, size, or style?"
+                )
                 if _bp:
                     _q_text = f"{_random.choice(_bp)} — {_q_text}"
                 content = _q_text
@@ -388,7 +410,9 @@ class ResponseGenerator:
 
                     _buyer_override = _bss_buyer.get_system_prompt_override("buyer")
                     if _buyer_override:
-                        response_prompt = f"PERSONA INSTRUCTION (apply throughout):\n{_buyer_override}\n\n" + response_prompt
+                        response_prompt = (
+                            f"PERSONA INSTRUCTION (apply throughout):\n{_buyer_override}\n\n" + response_prompt
+                        )
                 except Exception:
                     pass
                 raw_response = await self.claude.generate_response(response_prompt)
@@ -401,7 +425,9 @@ class ResponseGenerator:
                 _last_msg = (_conv[-1].get("content", "") if _conv else "").lower()
                 _bot_msgs = [m.get("content", "").lower() for m in _conv if m.get("role") in ("bot", "ai", "assistant")]
                 _sched_asks = sum(1 for m in _bot_msgs if "morning or afternoon" in m or "morning, afternoon" in m)
-                if _re.search(r"\b(morning|afternoon|evening|monday|tuesday|wednesday|thursday|friday|weekend)\b", _last_msg):
+                if _re.search(
+                    r"\b(morning|afternoon|evening|monday|tuesday|wednesday|thursday|friday|weekend)\b", _last_msg
+                ):
                     fallback = "Works for me. I'll have Jorge's team reach out to lock in a time."
                 elif _sched_asks >= 2:
                     fallback = "Jorge will give you a call tomorrow morning to set up tours."
@@ -442,9 +468,15 @@ class ResponseGenerator:
                     content = lines[0] if lines else fallback
 
                 # Loop-break: if we've already asked morning/afternoon 2+ times and are about to ask again, commit instead
-                _bot_msgs_final = [m.get("content", "").lower() for m in _conv if m.get("role") in ("bot", "ai", "assistant")]
-                _sched_asks_final = sum(1 for m in _bot_msgs_final if "morning or afternoon" in m or "morning, afternoon" in m)
-                if _sched_asks_final >= 2 and ("morning or afternoon" in content.lower() or "morning, afternoon" in content.lower()):
+                _bot_msgs_final = [
+                    m.get("content", "").lower() for m in _conv if m.get("role") in ("bot", "ai", "assistant")
+                ]
+                _sched_asks_final = sum(
+                    1 for m in _bot_msgs_final if "morning or afternoon" in m or "morning, afternoon" in m
+                )
+                if _sched_asks_final >= 2 and (
+                    "morning or afternoon" in content.lower() or "morning, afternoon" in content.lower()
+                ):
                     content = "Jorge will give you a call tomorrow morning to set up tours."
 
             content = content.replace("-", " ")  # Jorge spec: no hyphens in SMS

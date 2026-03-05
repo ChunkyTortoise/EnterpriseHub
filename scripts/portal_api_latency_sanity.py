@@ -80,13 +80,10 @@ def main() -> int:
         avg_ms = statistics.fmean(endpoint_samples)
         p95_ms = _p95(endpoint_samples)
         max_ms = max(endpoint_samples)
-        print(
-            f"| {endpoint.name} | {len(endpoint_samples)} | {avg_ms:.2f} | {p95_ms:.2f} | {max_ms:.2f} |"
-        )
+        print(f"| {endpoint.name} | {len(endpoint_samples)} | {avg_ms:.2f} | {p95_ms:.2f} | {max_ms:.2f} |")
 
     return 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -5,7 +5,7 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-8%2C340_passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-8%2C600%2B_defined-brightgreen)](tests/)
 [![Benchmarks](https://img.shields.io/badge/benchmarks-validated%202026--02--12-blue)](BENCHMARK_VALIDATION_REPORT.md)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
@@ -16,12 +16,12 @@
 | System | Metric | Value |
 |--------|--------|-------|
 | AI Cost Optimization | Cache efficiency | **89% cost reduction** |
-| Test Suite | Across all modules | **8,500+ tests** |
+| Test Suite | Across all modules | **8,600+ test functions defined** (181 unit tests in CI) |
 | API Performance | P95 latency | **< 2 seconds** |
 | Agent Dispatching | AgentForge throughput | **4.3M dispatches/sec** |
 | Lead Qualification | Jorge Bots | **157 tests, 3-bot orchestration** |
 
-[![Tests](https://img.shields.io/badge/tests-8500%2B-brightgreen)](#testing)
+[![Tests](https://img.shields.io/badge/tests-8600%2B_defined%20%7C%20181_in_CI-brightgreen)](#testing)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -31,10 +31,12 @@
 
 | Metric | Value | Source |
 |--------|-------|--------|
-| **Total Test Suite** | 8,500+ tests across all repos | Portfolio-wide `def test_` count |
-| **GHL Real Estate AI Tests** | 1,812 tests (128 files) | `ghl_real_estate_ai/tests/` |
-| **Advanced RAG Tests** | 1,016 tests (42 files) | `advanced_rag_system/tests/` |
-| **RAG-as-a-Service Tests** | 214 tests, 90%+ coverage | `rag-as-a-service/tests/` |
+| **Total Test Functions (this repo)** | 8,600+ defined across 300+ test files | `grep -r "def test_"` count |
+| **CI Test Suite** | 181 unit tests (no external deps) | `ghl_real_estate_ai/tests/unit/` — runs in CI |
+| **Integration Tests** | 6,975+ defined | `tests/` — require PostgreSQL + Redis |
+| **GHL Real Estate AI Tests** | 1,634 defined | `ghl_real_estate_ai/tests/` |
+| **Advanced RAG Tests** | 1,012 defined | `advanced_rag_system/tests/` |
+| **RAG-as-a-Service Tests** | 214 defined, 90%+ coverage | `rag-as-a-service/tests/` |
 | **Lead Qualification P95** | 1,225 ms | [BENCHMARKS.md](BENCHMARKS.md) (1K iterations, seed=42) |
 | **API /health P95** | 1.97 ms | [BENCHMARKS.md](BENCHMARKS.md) |
 | **CRM Sync P95** | 340 ms | [BENCHMARKS.md](BENCHMARKS.md) |
@@ -76,7 +78,7 @@ EnterpriseHub is an AI-powered real estate platform that transforms lead managem
 
 **Business Impact:** Production-ready with 89% token cost reduction, 87% cache hit rate, and P95 latency under 2 seconds. The platform integrates seamlessly with GoHighLevel CRM and supports multi-LLM orchestration (Claude, Gemini, Perplexity).
 
-**Quick Start:** Launch the demo in seconds with `make demo`—no API keys or database required. For full deployment, complete setup in under 10 minutes using Docker Compose. The platform is part of a flagship portfolio totaling **8,340 automated tests** across 11 repositories.
+**Quick Start:** Launch the demo in seconds with `make demo`—no API keys or database required. For full deployment, complete setup in under 10 minutes using Docker Compose. The platform is part of a flagship portfolio with **8,600+ test functions** across 11 repositories (181 unit tests pass in CI without external services).
 
 ---
 
@@ -166,9 +168,10 @@ EnterpriseHub delivers quantified outcomes based on production deployment (Case 
 
 ### Proof Artifacts
 
-- **Live Demo**: [https://ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app) — Interactive BI dashboard
-- **Source Code**: [GitHub Repository](https://github.com/ChunkyTortoise/EnterpriseHub) — 8,340 portfolio tests, CI/CD, comprehensive docs
-- **Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md) — Detailed system design with diagrams
+- **Live Demo**: [ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app) — Interactive BI dashboard (circuit breaker, cache perf, handoff Sankey)
+- **API Docs**: [/docs](https://enterprisehub-api.onrender.com/docs) — Swagger UI with zero-auth demo endpoints (`/demo/leads`, `/demo/pipeline`, `/demo/health`)
+- **Source Code**: [GitHub](https://github.com/ChunkyTortoise/EnterpriseHub) — 8,600+ test functions, CI/CD, comprehensive docs
+- **Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md) — Monorepo layout, test organization, AI orchestration diagrams
 - **System Diagram**: [assets/diagrams/arete_architecture.svg](assets/diagrams/arete_architecture.svg) — Visual architecture
 
 <details>
@@ -237,7 +240,7 @@ graph TB
 
 | Metric | Value |
 |--------|-------|
-| Test Suite | 8,340 portfolio tests |
+| Test Suite | 8,600+ test functions |
 | LLM Cost Reduction | 89% via 3-tier Redis caching |
 | Orchestration Overhead | <200ms per request |
 | API P95 Latency | <300ms under 10 req/sec |
@@ -302,7 +305,7 @@ Standalone FastAPI module used for the client showcase and deterministic API val
 - Entrypoint: `main.py`
 - Package: `portal_api/`
 - CI workflow: `.github/workflows/portal-api-phase1.yml`
-- Status: **Phase 1 Complete** (8,340 tests)
+- Status: **Phase 1 Complete** (8,600+ test functions)
 
 ### Endpoint Matrix
 
@@ -530,7 +533,7 @@ See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Related Projects
 
-- [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) -- Flagship real estate AI platform with 8,340+ tests and BI dashboards
+- [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) -- Flagship real estate AI platform with 8,600+ test functions and BI dashboards
 - [jorge_real_estate_bots](https://github.com/ChunkyTortoise/jorge_real_estate_bots) -- Three-bot lead qualification system (Lead, Buyer, Seller)
 - [ai-orchestrator](https://github.com/ChunkyTortoise/ai-orchestrator) -- AgentForge: unified async LLM interface (Claude, Gemini, OpenAI, Perplexity)
 - [Revenue-Sprint](https://github.com/ChunkyTortoise/Revenue-Sprint) -- AI-powered freelance pipeline: job scanning and proposal generation
@@ -556,7 +559,7 @@ Ready to transform your real estate lead management? Choose the package that fit
 ### Why These Prices?
 
 - **Proven Results**: 133% conversion increase, 89% cost reduction, 92% accuracy
-- **Production-Ready**: 8,340 tests, enterprise architecture, SOC-ready
+- **Production-Ready**: 8,600+ test functions, enterprise architecture, SOC-ready
 - **Fast Deployment**: Lite in 1 week, Pro in 2 weeks, Revenue Engine in 4 weeks
 
 [Book a Discovery Call](https://calendly.com/caymanroden/discovery-call) — Free 30-minute consultation

@@ -15,7 +15,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, ClassVar
+from typing import Any, ClassVar, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeSellerConfig
 from ghl_real_estate_ai.services.compliance_escalation import ComplianceEscalationService
@@ -59,8 +59,12 @@ class SellerQuestions:
     INVESTOR_LIQUIDITY = "Are you looking for a quick cash exit or are you open to terms if the ROI is right?"
 
     # Loss Aversion Branch
-    LOSS_AVERSION_PLAN_B = "Have you thought about what you'd do if the market slows down? I can help you plan either way."
-    LOSS_AVERSION_RATE_RISK = "With rates shifting, have you considered how that might affect your buying side? Happy to run the numbers."
+    LOSS_AVERSION_PLAN_B = (
+        "Have you thought about what you'd do if the market slows down? I can help you plan either way."
+    )
+    LOSS_AVERSION_RATE_RISK = (
+        "With rates shifting, have you considered how that might affect your buying side? Happy to run the numbers."
+    )
 
     @classmethod
     def get_question_order(cls) -> List[SellerQuestionType]:
@@ -185,9 +189,7 @@ class JorgeSellerEngine:
         #  2. seller_data last-writer-wins corruption
         # asyncio.Lock is per-contact and class-level so it survives
         # per-request engine instantiation.
-        _lock = JorgeSellerEngine._contact_locks.setdefault(
-            contact_id, asyncio.Lock()
-        )
+        _lock = JorgeSellerEngine._contact_locks.setdefault(contact_id, asyncio.Lock())
         async with _lock:
             try:
                 self.logger.info(f"Processing seller response for contact {contact_id}")
@@ -257,12 +259,15 @@ class JorgeSellerEngine:
                             # Run regex-only extraction across prior messages (no LLM calls).
                             recovered_data: Dict = {}
                             for prior_msg in prior_user_messages:
-                                recovered_data = self._extract_seller_data_regex(
-                                    prior_msg, recovered_data
-                                )
+                                recovered_data = self._extract_seller_data_regex(prior_msg, recovered_data)
                             # Merge: history-recovered values fill only fields still None in
                             # extracted_seller_data (current-turn answers take priority).
-                            for field in ["motivation", "timeline_acceptable", "property_condition", "price_expectation"]:
+                            for field in [
+                                "motivation",
+                                "timeline_acceptable",
+                                "property_condition",
+                                "price_expectation",
+                            ]:
                                 if extracted_seller_data.get(field) is None and recovered_data.get(field) is not None:
                                     extracted_seller_data[field] = recovered_data[field]
                                     self.logger.info(
@@ -288,7 +293,9 @@ class JorgeSellerEngine:
 
                         # Attempt real listing history lookup via MLS/Attom
                         listing_history = None
-                        property_address = extracted_seller_data.get("property_address") or context.get("property_address")
+                        property_address = extracted_seller_data.get("property_address") or context.get(
+                            "property_address"
+                        )
                         if property_address and self.mls_client:
                             try:
                                 listing_history = await self.mls_client.get_listing_history(property_address)
@@ -338,9 +345,7 @@ class JorgeSellerEngine:
                     )
 
                 try:
-                    pricing_result = await self.pricing_optimizer.calculate_lead_price(
-                        contact_id, location_id, context
-                    )
+                    pricing_result = await self.pricing_optimizer.calculate_lead_price(contact_id, location_id, context)
                 except Exception as _price_e:
                     self.logger.warning(f"Pricing optimizer failed, using defaults: {_price_e}")
                     pricing_result = SimpleNamespace(
@@ -378,13 +383,16 @@ class JorgeSellerEngine:
                 try:
                     swarm_consensus = await asyncio.wait_for(swarm_task, timeout=3.0)
                     optimizer_insight = next(
-                        (i for i in swarm_consensus.agent_insights if i.agent_type.value == "communication_optimizer"), None
+                        (i for i in swarm_consensus.agent_insights if i.agent_type.value == "communication_optimizer"),
+                        None,
                     )
 
                     if optimizer_insight:
                         drift_data = optimizer_insight.metadata.get("drift", {})
                         extracted_seller_data["drift_softening"] = drift_data.get("is_softening", False)
-                        extracted_seller_data["price_break_probability"] = drift_data.get("price_break_probability", 0.0)
+                        extracted_seller_data["price_break_probability"] = drift_data.get(
+                            "price_break_probability", 0.0
+                        )
                         self.logger.info(
                             f"🧠 Swarm-Driven Drift Detection: softening={extracted_seller_data['drift_softening']}"
                         )
@@ -436,7 +444,10 @@ class JorgeSellerEngine:
 
                     if temperature == "hot" and not context.get("pending_appointment"):
                         try:
-                            from ghl_real_estate_ai.services.calendar_scheduler import AppointmentType, get_smart_scheduler
+                            from ghl_real_estate_ai.services.calendar_scheduler import (
+                                AppointmentType,
+                                get_smart_scheduler,
+                            )
 
                             scheduler = get_smart_scheduler(self.ghl_client)
 
@@ -460,8 +471,8 @@ class JorgeSellerEngine:
                                     )
                                     lines.append(f"{i}) {display}")
 
-                                booking_message = "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n" + "\n".join(
-                                    lines
+                                booking_message = (
+                                    "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n" + "\n".join(lines)
                                 )
 
                                 pending_appointment_data = {
@@ -663,28 +674,28 @@ class JorgeSellerEngine:
         Numbers ≤ $10,000 are rejected (implausible home prices).
         """
         # Pattern 1 — explicit dollar sign
-        m = re.search(r'\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*([kKmM]?)', text)
+        m = re.search(r"\$\s*(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*([kKmM]?)", text)
         if m:
-            raw = re.sub(r'[,\s]', '', m.group(1))
+            raw = re.sub(r"[,\s]", "", m.group(1))
             suffix = m.group(2).lower()
-            mult = 1_000_000 if suffix == 'm' else (1_000 if suffix == 'k' else 1)
+            mult = 1_000_000 if suffix == "m" else (1_000 if suffix == "k" else 1)
             numeric = float(raw) * mult
             if numeric > 10_000:
                 return m.group(1) + m.group(2) if m.group(2) else m.group(1)
 
         # Pattern 2 — k/K/m/M suffix (no $ required)
-        m = re.search(r'\b(\d{1,3}(?:\.\d+)?)\s*([kKmM])\b', text)
+        m = re.search(r"\b(\d{1,3}(?:\.\d+)?)\s*([kKmM])\b", text)
         if m:
             suffix = m.group(2).lower()
-            mult = 1_000_000 if suffix == 'm' else 1_000
+            mult = 1_000_000 if suffix == "m" else 1_000
             numeric = float(m.group(1)) * mult
             if numeric > 10_000:
                 return m.group(1) + m.group(2)
 
         # Pattern 3 — comma-formatted bare number (e.g. "650,000")
-        m = re.search(r'\b(\d{1,3}(?:,\d{3})+(?:\.\d+)?)\b', text)
+        m = re.search(r"\b(\d{1,3}(?:,\d{3})+(?:\.\d+)?)\b", text)
         if m:
-            raw = re.sub(r',', '', m.group(1))
+            raw = re.sub(r",", "", m.group(1))
             if float(raw) > 10_000:
                 return m.group(1)
 
@@ -722,15 +733,17 @@ class JorgeSellerEngine:
             # greetings are cleared so Q1 is asked normally on T2.
             if not current_seller_data and extracted_data.get("motivation"):
                 _msg_lower_mq = user_message.lower()
-                _has_specific_reason = bool(re.search(
-                    r"relocat|movin[g']?\s+to|transfer|new job|got a job|job\s+(?:in|at|offer)|"
-                    r"downsize|down-size|too big|smaller|retire|empty nest|"
-                    r"divorce|separat|split up|"
-                    r"inherited|inherit|passed away|died|probate|"
-                    r"financial|need(?:\s+the)?\s+money|debt|foreclosure|behind on|afford|"
-                    r"upgrad|larger|bigger|more space|growing family|new baby|too small|outgrown",
-                    _msg_lower_mq
-                ))
+                _has_specific_reason = bool(
+                    re.search(
+                        r"relocat|movin[g']?\s+to|transfer|new job|got a job|job\s+(?:in|at|offer)|"
+                        r"downsize|down-size|too big|smaller|retire|empty nest|"
+                        r"divorce|separat|split up|"
+                        r"inherited|inherit|passed away|died|probate|"
+                        r"financial|need(?:\s+the)?\s+money|debt|foreclosure|behind on|afford|"
+                        r"upgrad|larger|bigger|more space|growing family|new baby|too small|outgrown",
+                        _msg_lower_mq,
+                    )
+                )
                 if not _has_specific_reason:
                     extracted_data.pop("motivation", None)
                     self.logger.debug(
@@ -747,13 +760,14 @@ class JorgeSellerEngine:
             # 0a. Property address — detect "123 Main St" / "456 Oak Ave, City" patterns
             # Discard LLM-extracted address that doesn't look like a real street address
             existing_addr = extracted_data.get("property_address", "")
-            if existing_addr and not re.search(r'\b\d{2,6}\s+[A-Za-z]', existing_addr):
+            if existing_addr and not re.search(r"\b\d{2,6}\s+[A-Za-z]", existing_addr):
                 extracted_data.pop("property_address", None)
 
             if not extracted_data.get("property_address"):
                 addr_match = re.search(
-                    r'\b\d{2,6}\s+[A-Za-z]{2,}[\s\w]*(?:St|Ave|Blvd|Dr|Rd|Ln|Way|Ct|Pl|Cir|Pkwy|Hwy)\b',
-                    user_message, re.I
+                    r"\b\d{2,6}\s+[A-Za-z]{2,}[\s\w]*(?:St|Ave|Blvd|Dr|Rd|Ln|Way|Ct|Pl|Cir|Pkwy|Hwy)\b",
+                    user_message,
+                    re.I,
                 )
                 if addr_match:
                     extracted_data["property_address"] = addr_match.group(0).strip()
@@ -785,7 +799,10 @@ class JorgeSellerEngine:
                     extracted_data["motivation"] = "inherited"
                 elif re.search(r"financial|need(?: the)? money|debt|foreclosure|behind on|afford", msg_lower):
                     extracted_data["motivation"] = "financial"
-                elif re.search(r"upgrad|larger|bigger|more space|growing family|new baby|second baby|another baby|too small|outgrown|need more room|kids? (are )?growing", msg_lower):
+                elif re.search(
+                    r"upgrad|larger|bigger|more space|growing family|new baby|second baby|another baby|too small|outgrown|need more room|kids? (are )?growing",
+                    msg_lower,
+                ):
                     extracted_data["motivation"] = "upgrading"
                 elif re.search(r"\bsell\b|\bselling\b", msg_lower) and current_seller_data:
                     # Generic sell intent — only count as motivation after first turn
@@ -804,7 +821,10 @@ class JorgeSellerEngine:
                     msg_lower,
                 ):
                     extracted_data["timeline_acceptable"] = True
-                elif re.search(r"\b(urgent|asap|immediately|need to move|right away|as soon as|quickly|sell quickly|sell fast|fast sale)\b", msg_lower):
+                elif re.search(
+                    r"\b(urgent|asap|immediately|need to move|right away|as soon as|quickly|sell quickly|sell fast|fast sale)\b",
+                    msg_lower,
+                ):
                     extracted_data["timeline_acceptable"] = True
                 elif re.search(r"\b(30|45)\b.{0,20}\b(day|days)\b", msg_lower) and not re.search(
                     r"\b(no|not|won'?t|can'?t)\b.{0,15}\b(30|45)\b", msg_lower
@@ -817,7 +837,9 @@ class JorgeSellerEngine:
                     extracted_data["timeline_acceptable"] = False
                 else:
                     # "within X months" / "within the next X months" / "in X months" where X <= 4
-                    _mo = re.search(r"(?:within|sell\s+in|in)\s+(?:the\s+next\s+)?(\d+)\s*(?:to\s*\d+\s*)?months?", msg_lower)
+                    _mo = re.search(
+                        r"(?:within|sell\s+in|in)\s+(?:the\s+next\s+)?(\d+)\s*(?:to\s*\d+\s*)?months?", msg_lower
+                    )
                     if _mo and int(_mo.group(1)) <= 4:
                         extracted_data["timeline_acceptable"] = True
                     else:
@@ -827,18 +849,21 @@ class JorgeSellerEngine:
                             # ≤4 months → accepts 30-45 day offer; >4 months → doesn't accept but move on
                             extracted_data["timeline_acceptable"] = int(_mo2.group(1)) <= 4
                         # Seasonal / relative timeframes
-                        elif re.search(r"\b(spring|summer|this year|end of year|few months|couple months|a few months)\b", msg_lower):
+                        elif re.search(
+                            r"\b(spring|summer|this year|end of year|few months|couple months|a few months)\b",
+                            msg_lower,
+                        ):
                             extracted_data["timeline_acceptable"] = True
                         # "next year" / "no rush" / "not urgent" → warm/cold, but move past Q2
-                        elif re.search(r"\b(next year|no rush|not urgent|eventually|someday|not sure yet|exploring)\b", msg_lower):
+                        elif re.search(
+                            r"\b(next year|no rush|not urgent|eventually|someday|not sure yet|exploring)\b", msg_lower
+                        ):
                             extracted_data["timeline_acceptable"] = False
 
             # 2. Price — handle "$580k", "$650,000", "750 to 800 thousand", "800 thousand"
             if not extracted_data.get("price_expectation"):
                 # "X to Y thousand" or "X thousand" (e.g. "620 thousand dollars")
-                thousand_match = re.search(
-                    r"(\d+(?:\.\d+)?)\s*(?:to\s*\d+(?:\.\d+)?\s*)?thousand", msg_lower
-                )
+                thousand_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:to\s*\d+(?:\.\d+)?\s*)?thousand", msg_lower)
                 if thousand_match:
                     extracted_data["price_expectation"] = f"{float(thousand_match.group(1)) * 1000:,.0f}"
                 else:
@@ -862,7 +887,10 @@ class JorgeSellerEngine:
 
             # 3. Condition
             if not extracted_data.get("property_condition"):
-                if re.search(r"move.?in.?ready|great shape|good shape|great condition|good condition|pretty good|excellent|updated|remodel|renovated|recently\s+\w+|replaced (the )?roof|new roof|kept it up|well maintained|well-maintained|pristine|turnkey|turn.?key", msg_lower):
+                if re.search(
+                    r"move.?in.?ready|great shape|good shape|great condition|good condition|pretty good|excellent|updated|remodel|renovated|recently\s+\w+|replaced (the )?roof|new roof|kept it up|well maintained|well-maintained|pristine|turnkey|turn.?key",
+                    msg_lower,
+                ):
                     extracted_data["property_condition"] = "Move-in Ready"
                 elif re.search(r"needs?.{0,8}(work|repair|fix|updat)|fixer|rough|\bold\b|dated", msg_lower):
                     extracted_data["property_condition"] = "Needs Work"
@@ -1045,7 +1073,10 @@ class JorgeSellerEngine:
                 extracted["motivation"] = "inherited"
             elif re.search(r"financial|need(?: the)? money|debt|foreclosure|behind on|afford", msg_lower):
                 extracted["motivation"] = "financial"
-            elif re.search(r"upgrad|larger|bigger|more space|growing family|new baby|second baby|another baby|too small|outgrown|need more room|kids? (are )?growing", msg_lower):
+            elif re.search(
+                r"upgrad|larger|bigger|more space|growing family|new baby|second baby|another baby|too small|outgrown|need more room|kids? (are )?growing",
+                msg_lower,
+            ):
                 extracted["motivation"] = "upgrading"
             elif re.search(r"\bsell\b|\bselling\b", msg_lower) and current_seller_data:
                 extracted["motivation"] = "other"
@@ -1056,15 +1087,17 @@ class JorgeSellerEngine:
         # one step on T1, while still allowing same-turn extraction when motivation+urgency
         # appear together (e.g. "relocating for work, need to sell quickly" at T3).
         if extracted.get("timeline_acceptable") is None and (
-            current_seller_data.get("motivation") is not None
-            or extracted.get("motivation") is not None
+            current_seller_data.get("motivation") is not None or extracted.get("motivation") is not None
         ):
             if re.search(
                 r"no problem|no issue|not a problem|that works|works for (me|us)|fine with|works fine|totally fine|absolutely|sounds good|that'?s fine",
                 msg_lower,
             ):
                 extracted["timeline_acceptable"] = True
-            elif re.search(r"\b(urgent|asap|immediately|need to move|right away|as soon as|quickly|sell quickly|sell fast|fast sale)\b", msg_lower):
+            elif re.search(
+                r"\b(urgent|asap|immediately|need to move|right away|as soon as|quickly|sell quickly|sell fast|fast sale)\b",
+                msg_lower,
+            ):
                 extracted["timeline_acceptable"] = True
             elif re.search(r"\b(30|45)\b.{0,20}\b(day|days)\b", msg_lower) and not re.search(
                 r"\b(no|not|won'?t|can'?t)\b.{0,15}\b(30|45)\b", msg_lower
@@ -1075,16 +1108,22 @@ class JorgeSellerEngine:
             ):
                 extracted["timeline_acceptable"] = False
             else:
-                _mo = re.search(r"(?:within|sell\s+in|in)\s+(?:the\s+next\s+)?(\d+)\s*(?:to\s*\d+\s*)?months?", msg_lower)
+                _mo = re.search(
+                    r"(?:within|sell\s+in|in)\s+(?:the\s+next\s+)?(\d+)\s*(?:to\s*\d+\s*)?months?", msg_lower
+                )
                 if _mo and int(_mo.group(1)) <= 4:
                     extracted["timeline_acceptable"] = True
                 else:
                     _mo2 = re.search(r"\b(\d+)\s*(?:to\s*\d+\s*)?months?\b", msg_lower)
                     if _mo2:
                         extracted["timeline_acceptable"] = int(_mo2.group(1)) <= 4
-                    elif re.search(r"\b(spring|summer|this year|end of year|few months|couple months|a few months)\b", msg_lower):
+                    elif re.search(
+                        r"\b(spring|summer|this year|end of year|few months|couple months|a few months)\b", msg_lower
+                    ):
                         extracted["timeline_acceptable"] = True
-                    elif re.search(r"\b(next year|no rush|not urgent|eventually|someday|not sure yet|exploring)\b", msg_lower):
+                    elif re.search(
+                        r"\b(next year|no rush|not urgent|eventually|someday|not sure yet|exploring)\b", msg_lower
+                    ):
                         extracted["timeline_acceptable"] = False
 
         # --- Property condition ---
@@ -1140,7 +1179,7 @@ class JorgeSellerEngine:
         _HOT_QA_FLOOR = 4
         if (
             questions_answered >= hot_questions
-            and questions_answered >= _HOT_QA_FLOOR   # absolute floor
+            and questions_answered >= _HOT_QA_FLOOR  # absolute floor
             and timeline_acceptable is True  # Must accept 30-45 day timeline
         ):
             temperature = "hot"
@@ -1190,14 +1229,19 @@ class JorgeSellerEngine:
         _sched_step = seller_data.get("scheduling_step", "")
         if _sched_step in ("time_asked", "day_asked"):
             _lr_s = last_response.lower() if last_response else ""
-            _s_gave_day = bool(re.search(
-                r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b", _lr_s
-            ))
+            _s_gave_day = bool(
+                re.search(
+                    r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b",
+                    _lr_s,
+                )
+            )
             _s_gave_time = bool(re.search(r"\b(morning|afternoon|evening)\b", _lr_s))
-            _s_post_confirm = bool(re.search(
-                r"\b(thanks|thank you|sounds good|got it|appreciate|prepare|preparing|looking forward|see you|all set|great|perfect)\b",
-                _lr_s,
-            ))
+            _s_post_confirm = bool(
+                re.search(
+                    r"\b(thanks|thank you|sounds good|got it|appreciate|prepare|preparing|looking forward|see you|all set|great|perfect)\b",
+                    _lr_s,
+                )
+            )
             if _s_post_confirm:
                 seller_data["scheduling_step"] = "confirmed"
                 message = "You're all set. Our team will reach out to confirm the details. Talk soon!"
@@ -1236,9 +1280,19 @@ class JorgeSellerEngine:
         )
         if _schedule_intent:
             _lr_si = last_response.lower()
-            _gave_day_si = bool(re.search(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b", _lr_si))
+            _gave_day_si = bool(
+                re.search(
+                    r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b",
+                    _lr_si,
+                )
+            )
             _gave_time_si = bool(re.search(r"\b(morning|afternoon|evening)\b", _lr_si))
-            _post_confirm_si = bool(re.search(r"\b(thanks|thank you|sounds good|got it|appreciate|prepare|preparing|looking forward|see you|all set)\b", _lr_si))
+            _post_confirm_si = bool(
+                re.search(
+                    r"\b(thanks|thank you|sounds good|got it|appreciate|prepare|preparing|looking forward|see you|all set)\b",
+                    _lr_si,
+                )
+            )
             if _post_confirm_si:
                 seller_data["scheduling_step"] = "confirmed"
                 message = "You're all set. Our team will call before then to confirm everything. Talk soon!"
@@ -1281,18 +1335,20 @@ class JorgeSellerEngine:
                 }
 
             _lr = last_response.lower() if last_response else ""
-            _gave_day = bool(re.search(
-                r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b",
-                _lr,
-            ))
+            _gave_day = bool(
+                re.search(
+                    r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b",
+                    _lr,
+                )
+            )
             _gave_time = bool(re.search(r"\b(morning|afternoon|evening)\b", _lr))
-            _hot_sched = bool(re.search(
-                r"\b(when can|schedule|book|call|meeting|talk|available|appointment)\b", _lr
-            ))
-            _post_confirm = bool(re.search(
-                r"\b(yes|yeah|yep|yup|sure|great|perfect|sounds good|alright|ok|okay|got it|that works|works for me|all set|appreciate|thanks|thank you|looking forward)\b",
-                _lr,
-            ))
+            _hot_sched = bool(re.search(r"\b(when can|schedule|book|call|meeting|talk|available|appointment)\b", _lr))
+            _post_confirm = bool(
+                re.search(
+                    r"\b(yes|yeah|yep|yup|sure|great|perfect|sounds good|alright|ok|okay|got it|that works|works for me|all set|appreciate|thanks|thank you|looking forward)\b",
+                    _lr,
+                )
+            )
 
             if _post_confirm and not _gave_time and not _gave_day:
                 # User confirmed scheduling — wrap it up
@@ -1387,11 +1443,18 @@ class JorgeSellerEngine:
             # (e.g. "need to sell quickly" sets timeline_acceptable=True and advances
             # current_question_number from 2→3), do NOT re-ask Q2 just because the
             # quality assessor rated the answer as vague.
-            elif response_quality < 0.5 and last_response and current_question_number > 1 and (
-                {2: "motivation", 3: "timeline_acceptable", 4: "property_condition"}.get(current_question_number) is None
-                or seller_data.get(
-                    {2: "motivation", 3: "timeline_acceptable", 4: "property_condition"}[current_question_number]
-                ) is None
+            elif (
+                response_quality < 0.5
+                and last_response
+                and current_question_number > 1
+                and (
+                    {2: "motivation", 3: "timeline_acceptable", 4: "property_condition"}.get(current_question_number)
+                    is None
+                    or seller_data.get(
+                        {2: "motivation", 3: "timeline_acceptable", 4: "property_condition"}[current_question_number]
+                    )
+                    is None
+                )
             ):
                 message = self.tone_engine.generate_follow_up_message(
                     last_response=last_response,
@@ -1464,9 +1527,19 @@ class JorgeSellerEngine:
         )
         if _schedule_intent_full:
             _lr_full = user_message.lower()
-            _gave_day_full = bool(re.search(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b", _lr_full))
+            _gave_day_full = bool(
+                re.search(
+                    r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b",
+                    _lr_full,
+                )
+            )
             _gave_time_full = bool(re.search(r"\b(morning|afternoon|evening)\b", _lr_full))
-            _post_confirm_full = bool(re.search(r"\b(thanks|thank you|sounds good|got it|appreciate|prepare|preparing|looking forward|see you|all set)\b", _lr_full))
+            _post_confirm_full = bool(
+                re.search(
+                    r"\b(thanks|thank you|sounds good|got it|appreciate|prepare|preparing|looking forward|see you|all set)\b",
+                    _lr_full,
+                )
+            )
             if _post_confirm_full:
                 _sched_msg = "You're all set. Our team will call before then to confirm everything. Talk soon!"
             elif _gave_day_full:
@@ -1532,12 +1605,19 @@ class JorgeSellerEngine:
             if newly_answered_count == 0 or _hot_sched_full:
                 # Already sent handoff (or seller asking to schedule) — return early to skip persona adaptation
                 _lr_hot = user_message.lower()
-                _gave_day_hot = bool(re.search(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b", _lr_hot))
+                _gave_day_hot = bool(
+                    re.search(
+                        r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b",
+                        _lr_hot,
+                    )
+                )
                 _gave_time_hot = bool(re.search(r"\b(morning|afternoon|evening)\b", _lr_hot))
-                _post_confirm_hot = bool(re.search(
-                    r"\b(yes|yeah|yep|yup|sure|great|perfect|sounds good|alright|ok|okay|got it|that works|works for me|all set|appreciate|thanks|thank you|looking forward)\b",
-                    _lr_hot,
-                ))
+                _post_confirm_hot = bool(
+                    re.search(
+                        r"\b(yes|yeah|yep|yup|sure|great|perfect|sounds good|alright|ok|okay|got it|that works|works for me|all set|appreciate|thanks|thank you|looking forward)\b",
+                        _lr_hot,
+                    )
+                )
                 if _post_confirm_hot and not _gave_time_hot and not _gave_day_hot:
                     _sched_msg = "You're all set. Our team will reach out to confirm the details. Talk soon!"
                 elif _gave_day_hot:
@@ -1545,7 +1625,9 @@ class JorgeSellerEngine:
                 elif _gave_time_hot:
                     _sched_msg = "What day works best — this week or next?"
                 else:
-                    _sched_msg = "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
+                    _sched_msg = (
+                        "What time works best for a quick call — morning, afternoon, or evening? We'll lock it in."
+                    )
                 return {
                     "message": _sched_msg,
                     "response_type": "scheduling",
@@ -1841,7 +1923,12 @@ class JorgeSellerEngine:
             )
             if _wants_schedule_full:
                 _lr_nurture = _last_msg_full
-                _gave_day_nurture = bool(re.search(r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b", _lr_nurture))
+                _gave_day_nurture = bool(
+                    re.search(
+                        r"\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|this week|next week)\b",
+                        _lr_nurture,
+                    )
+                )
                 _gave_time_nurture = bool(re.search(r"\b(morning|afternoon|evening)\b", _lr_nurture))
                 if _gave_day_nurture:
                     message = "Perfect, I'll have Jorge's team reach out to lock it in. Talk soon!"
@@ -1975,9 +2062,7 @@ class JorgeSellerEngine:
             # the seller's own price_expectation is a far more meaningful field value.
             _price_expectation = seller_data.get("price_expectation") or seller_data.get("asking_price")
             if _price_expectation:
-                actions.append(
-                    {"type": "update_custom_field", "field": price_field, "value": str(_price_expectation)}
-                )
+                actions.append({"type": "update_custom_field", "field": price_field, "value": str(_price_expectation)})
 
         # --- PERSONA INTELLIGENCE ---
         if persona_data:
@@ -2117,9 +2202,7 @@ class JorgeSellerEngine:
         # Property Address (must be written so GHL workflows can build links)
         if seller_data.get("property_address"):
             field_id = JorgeSellerConfig.get_ghl_custom_field_id("property_address") or "property_address"
-            actions.append(
-                {"type": "update_custom_field", "field": field_id, "value": seller_data["property_address"]}
-            )
+            actions.append({"type": "update_custom_field", "field": field_id, "value": seller_data["property_address"]})
 
         # Motivation
         if seller_data.get("motivation"):

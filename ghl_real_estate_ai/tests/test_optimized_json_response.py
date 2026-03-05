@@ -14,7 +14,6 @@ from pydantic import BaseModel
 
 from ghl_real_estate_ai.api.main import OptimizedJSONResponse
 
-
 # ---------------------------------------------------------------------------
 # Pydantic helpers
 # ---------------------------------------------------------------------------

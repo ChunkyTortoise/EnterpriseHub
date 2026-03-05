@@ -41,10 +41,19 @@ from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
 from ghl_real_estate_ai.ghl_utils.jorge_rancho_config import rancho_config
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.models.lead_scoring import (
+    ConditionRealism,
+    FinancialReadinessScore,
+    LeadIntentProfile,
+    MotivationSignals,
+    PriceResponsiveness,
+    PsychologicalCommitmentScore,
+    TimelineCommitment,
+)
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
 from ghl_real_estate_ai.services.attribution_analytics import AttributionAnalytics
-from ghl_real_estate_ai.services.calendar_scheduler import CalendarScheduler
 from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.services.calendar_scheduler import CalendarScheduler
 from ghl_real_estate_ai.services.compliance_guard import ComplianceStatus, compliance_guard
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer
 from ghl_real_estate_ai.services.ghl_client import GHLClient
@@ -55,15 +64,6 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import Processin
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
 from ghl_real_estate_ai.services.mls_client import MLSClient
-from ghl_real_estate_ai.models.lead_scoring import (
-    ConditionRealism,
-    FinancialReadinessScore,
-    LeadIntentProfile,
-    MotivationSignals,
-    PriceResponsiveness,
-    PsychologicalCommitmentScore,
-    TimelineCommitment,
-)
 from ghl_real_estate_ai.services.security_framework import verify_webhook
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
 from ghl_real_estate_ai.services.tenant_service import TenantService
@@ -100,6 +100,7 @@ def _signals_to_handoff_profile(contact_id: str, signals: dict) -> LeadIntentPro
         seller_intent_confidence=signals.get("seller_intent_score", 0.0),
         detected_intent_phrases=signals.get("detected_intent_phrases", []),
     )
+
 
 SMS_MAX_CHARS = 320
 router = APIRouter(prefix="/ghl", tags=["ghl"])
@@ -238,12 +239,8 @@ def _normalize_tags(raw_tags: list[str] | None) -> set[str]:
 
 # Tags that the lead bot itself applies — a contact carrying ONLY these tags
 # should still activate lead mode on subsequent turns (passthrough activation).
-_LEAD_PASSTHROUGH_TAGS: frozenset[str] = frozenset(
-    {"hot-lead", "warm-lead", "cold-lead", "lead-qualified"}
-)
-_SELLER_PASSTHROUGH_TAGS: frozenset[str] = frozenset(
-    {"hot-seller", "warm-seller", "cold-seller", "seller-qualified"}
-)
+_LEAD_PASSTHROUGH_TAGS: frozenset[str] = frozenset({"hot-lead", "warm-lead", "cold-lead", "lead-qualified"})
+_SELLER_PASSTHROUGH_TAGS: frozenset[str] = frozenset({"hot-seller", "warm-seller", "cold-seller", "seller-qualified"})
 
 
 def _tag_present(tag: str | None, tags_lower: set[str]) -> bool:
@@ -282,14 +279,16 @@ def _compute_mode_flags(
     buyer_active = buyer_tag_present and buyer_mode_enabled and not should_deactivate
     lead_active = (
         (
-            # Tag-match activation — excluded when seller or buyer already owns this contact.
-            _tag_present(lead_activation_tag, tags_lower)
-            and not seller_active
-            and not buyer_active
+            (
+                # Tag-match activation — excluded when seller or buyer already owns this contact.
+                _tag_present(lead_activation_tag, tags_lower) and not seller_active and not buyer_active
+            )
+            or (not tags_lower and lead_mode_enabled)
+            or (lead_mode_enabled and bool(tags_lower) and tags_lower.issubset(_LEAD_PASSTHROUGH_TAGS))
         )
-        or (not tags_lower and lead_mode_enabled)
-        or (lead_mode_enabled and bool(tags_lower) and tags_lower.issubset(_LEAD_PASSTHROUGH_TAGS))
-    ) and lead_mode_enabled and not should_deactivate
+        and lead_mode_enabled
+        and not should_deactivate
+    )
     return {"seller": seller_active, "buyer": buyer_active, "lead": lead_active}
 
 
@@ -330,15 +329,41 @@ def _detect_buy_sell_intent(message: str) -> str | None:
     """
     msg = message.lower()
     seller_signals = {
-        "sell", "selling", "list", "listing", "want to sell", "looking to sell",
-        "thinking about selling", "put it on the market", "on the market",
-        "my home", "my house", "my property", "my condo", "my place",
+        "sell",
+        "selling",
+        "list",
+        "listing",
+        "want to sell",
+        "looking to sell",
+        "thinking about selling",
+        "put it on the market",
+        "on the market",
+        "my home",
+        "my house",
+        "my property",
+        "my condo",
+        "my place",
     }
     buyer_signals = {
-        "buy", "buying", "purchase", "purchasing", "looking for", "find a home",
-        "looking to buy", "want to buy", "interested in buying", "find a house",
-        "searching for", "need a home", "need a house", "want a home", "want a house",
-        "first home", "first house", "investment property", "rental property",
+        "buy",
+        "buying",
+        "purchase",
+        "purchasing",
+        "looking for",
+        "find a home",
+        "looking to buy",
+        "want to buy",
+        "interested in buying",
+        "find a house",
+        "searching for",
+        "need a home",
+        "need a house",
+        "want a home",
+        "want a house",
+        "first home",
+        "first house",
+        "investment property",
+        "rental property",
     }
     seller_score = sum(1 for s in seller_signals if s in msg)
     buyer_score = sum(1 for s in buyer_signals if s in msg)
@@ -349,11 +374,28 @@ def _detect_buy_sell_intent(message: str) -> str | None:
     return None
 
 
-_CC_NEGATIVE_KEYWORDS = frozenset([
-    "angry", "frustrated", "disappointed", "furious", "upset", "scam", "rip off",
-    "waste of time", "terrible", "awful", "horrible", "ridiculous", "unacceptable",
-    "this is bs", "this is b.s", "forget it", "never mind", "stop contacting",
-])
+_CC_NEGATIVE_KEYWORDS = frozenset(
+    [
+        "angry",
+        "frustrated",
+        "disappointed",
+        "furious",
+        "upset",
+        "scam",
+        "rip off",
+        "waste of time",
+        "terrible",
+        "awful",
+        "horrible",
+        "ridiculous",
+        "unacceptable",
+        "this is bs",
+        "this is b.s",
+        "forget it",
+        "never mind",
+        "stop contacting",
+    ]
+)
 
 
 def _detect_negative_sentiment(message: str) -> bool:
@@ -362,11 +404,23 @@ def _detect_negative_sentiment(message: str) -> bool:
     return any(kw in msg for kw in _CC_NEGATIVE_KEYWORDS)
 
 
-_CC_REJECTED_OFFER_KEYWORDS = frozenset([
-    "rejected", "won't accept", "not accepting", "turned down", "declined the offer",
-    "offer was rejected", "offer rejected", "no deal", "not interested in the offer",
-    "below asking", "too low", "lowball", "insulting offer",
-])
+_CC_REJECTED_OFFER_KEYWORDS = frozenset(
+    [
+        "rejected",
+        "won't accept",
+        "not accepting",
+        "turned down",
+        "declined the offer",
+        "offer was rejected",
+        "offer rejected",
+        "no deal",
+        "not interested in the offer",
+        "below asking",
+        "too low",
+        "lowball",
+        "insulting offer",
+    ]
+)
 
 
 def _detect_rejected_offer(message: str) -> bool:
@@ -940,9 +994,7 @@ async def handle_ghl_webhook(
                     # appointment-confirmed.
                     ai_off_action = GHLAction(type=ActionType.ADD_TAG, tag="AI-Off")
                     confirmation_plus_ai_off = list(booking_result.confirmation_actions) + [ai_off_action]
-                    background_tasks.add_task(
-                        ghl_client_default.add_tags, contact_id, ["AI-Off"]
-                    )
+                    background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["AI-Off"])
                     background_tasks.add_task(
                         ghl_client_default.remove_tags,
                         contact_id,
@@ -1360,7 +1412,19 @@ async def handle_ghl_webhook(
             )
             _has_timeline = any(
                 kw in _conv_history_text
-                for kw in ("days", "weeks", "months", "asap", "soon", "quickly", "ready", "by ", "within", "moving", "relocat")
+                for kw in (
+                    "days",
+                    "weeks",
+                    "months",
+                    "asap",
+                    "soon",
+                    "quickly",
+                    "ready",
+                    "by ",
+                    "within",
+                    "moving",
+                    "relocat",
+                )
             )
             if buyer_result.get("is_qualified"):
                 buyer_temp = "warm"
@@ -1388,17 +1452,31 @@ async def handle_ghl_webhook(
                 if isinstance(_budget_range, dict):
                     _budget_val = _budget_range.get("budget_max") or _budget_range.get("max", "")
                     if _budget_val:
-                        actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=settings.custom_field_budget, value=str(_budget_val)))
+                        actions.append(
+                            GHLAction(
+                                type=ActionType.UPDATE_CUSTOM_FIELD,
+                                field=settings.custom_field_budget,
+                                value=str(_budget_val),
+                            )
+                        )
                 elif isinstance(_budget_range, str) and _budget_range:
-                    actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=settings.custom_field_budget, value=_budget_range))
+                    actions.append(
+                        GHLAction(
+                            type=ActionType.UPDATE_CUSTOM_FIELD, field=settings.custom_field_budget, value=_budget_range
+                        )
+                    )
 
             _buyer_temp_field = os.getenv("CUSTOM_FIELD_BUYER_TEMPERATURE")
             if _buyer_temp_field and buyer_temp in ("hot", "warm", "cold"):
-                actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=_buyer_temp_field, value=buyer_temp))
+                actions.append(
+                    GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=_buyer_temp_field, value=buyer_temp)
+                )
 
             _pre_approval_field = os.getenv("CUSTOM_FIELD_PRE_APPROVAL_STATUS")
             if _pre_approval_field and _pre_approved:
-                actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=_pre_approval_field, value="pre-approved"))
+                actions.append(
+                    GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=_pre_approval_field, value="pre-approved")
+                )
 
             _prefs_field = os.getenv("CUSTOM_FIELD_PROPERTY_PREFERENCES")
             if _prefs_field:
@@ -1422,11 +1500,8 @@ async def handle_ghl_webhook(
             # We do NOT require _scheduling_response here because Claude generates too many
             # phrasings to reliably enumerate (e.g. "ready to see a few this week").
             _buyer_booking_msg = ""
-            _offer_slots = (
-                not context.get("appointment_confirmed")
-                and (
-                    (buyer_temp == "hot") or (buyer_temp == "warm" and _conv_len >= 5)
-                )
+            _offer_slots = not context.get("appointment_confirmed") and (
+                (buyer_temp == "hot") or (buyer_temp == "warm" and _conv_len >= 5)
             )
             if _offer_slots and not context.get("pending_appointment"):
                 try:
@@ -1449,8 +1524,8 @@ async def handle_ghl_webhook(
                                 }
                             )
                             _lines.append(f"{i}) {slot.format_for_lead()}")
-                        _buyer_booking_msg = (
-                            "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n" + "\n".join(_lines)
+                        _buyer_booking_msg = "I can get you on Jorge's calendar. Reply with 1, 2, or 3.\n" + "\n".join(
+                            _lines
                         )
                         context["pending_appointment"] = {
                             "status": "awaiting_selection",
@@ -1507,7 +1582,6 @@ async def handle_ghl_webhook(
                     "I'd love to help you find your next home. What's most important to you in a property?"
                 )
                 actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
-
 
             # --- CROSS-BOT HANDOFF CHECK ---
             if buyer_result.get("handoff_signals"):
@@ -1632,7 +1706,9 @@ async def handle_ghl_webhook(
                 background_tasks.add_task(ghl_client_default.add_tags, contact_id, ["Bot-Fallback-Active"])
             except Exception as tag_error:
                 logger.error(f"Failed to add Bot-Fallback-Active tag: {tag_error}")
-            buyer_rescue_msg = "Thanks for reaching out! Could you tell me more about what you're looking for in a home?"
+            buyer_rescue_msg = (
+                "Thanks for reaching out! Could you tell me more about what you're looking for in a home?"
+            )
             # Route through response pipeline (language mirror, TCPA, compliance, translation, truncation).
             try:
                 rescue_pipeline_context = ProcessingContext(
@@ -1667,9 +1743,7 @@ async def handle_ghl_webhook(
         # that means they're already in the seller pipeline — skip lead bot to avoid race.
         # NOTE: with LEAD_ACTIVATION_TAG=lead-bot (distinct from "needs qualifying") this
         # collision should never happen; the guard is a belt-and-suspenders safety net.
-        _lead_tag_is_seller_tag = (
-            jorge_settings.LEAD_ACTIVATION_TAG.lower() in ("needs qualifying", "seller-lead")
-        )
+        _lead_tag_is_seller_tag = jorge_settings.LEAD_ACTIVATION_TAG.lower() in ("needs qualifying", "seller-lead")
         if jorge_seller_mode and _lead_tag_is_seller_tag and "needs qualifying" in tags_lower:
             logger.warning(
                 "Dual-bot collision detected: contact %s has 'Needs Qualifying' tag with both "
@@ -1700,7 +1774,9 @@ async def handle_ghl_webhook(
                 # Determine sequence_day from first contact timestamp
                 lead_ctx = await conversation_manager.get_context(contact_id, location_id)
                 first_contact = lead_ctx.get("first_contact_at")
-                is_lead_first_message = not first_contact and not lead_ctx.get("initial_outreach_sent")  # True ONLY on genuine T1
+                is_lead_first_message = not first_contact and not lead_ctx.get(
+                    "initial_outreach_sent"
+                )  # True ONLY on genuine T1
                 if not first_contact:
                     lead_ctx["first_contact_at"] = datetime.utcnow().isoformat()
                     sequence_day = 0
@@ -1717,9 +1793,7 @@ async def handle_ghl_webhook(
                 #     the seller or buyer bot takes over from the next turn onward.
                 # If intent is still unclear, fall through to the normal lead bot.
                 # ──────────────────────────────────────────────────────────────────
-                contact_first_name = (
-                    event.contact.first_name if event.contact and event.contact.first_name else "there"
-                )
+                contact_first_name = event.contact.first_name if event.contact and event.contact.first_name else "there"
 
                 if is_lead_first_message:
                     # T1 — check if intent is already clear in the opening message.
@@ -1741,9 +1815,7 @@ async def handle_ghl_webhook(
                         background_tasks.add_task(
                             safe_send_message, current_ghl_client, contact_id, t1_message, event.message.type
                         )
-                        background_tasks.add_task(
-                            safe_apply_actions, current_ghl_client, contact_id, routing_actions
-                        )
+                        background_tasks.add_task(safe_apply_actions, current_ghl_client, contact_id, routing_actions)
                         await conversation_manager.update_context(
                             contact_id=contact_id,
                             user_message=user_message,
@@ -1756,23 +1828,18 @@ async def handle_ghl_webhook(
                         )
 
                     if t1_intent == "buyer":
-                        logger.info(
-                            "Lead T1 buyer intent detected for %s — routing directly to buyer bot", contact_id
-                        )
+                        logger.info("Lead T1 buyer intent detected for %s — routing directly to buyer bot", contact_id)
                         routing_actions = [
                             GHLAction(type=ActionType.ADD_TAG, tag=jorge_settings.BUYER_ACTIVATION_TAG),
                             GHLAction(type=ActionType.REMOVE_TAG, tag=jorge_settings.LEAD_ACTIVATION_TAG),
                         ]
                         t1_message = (
-                            f"Perfect, {contact_first_name}! What area or neighborhoods "
-                            f"are you looking to buy in?"
+                            f"Perfect, {contact_first_name}! What area or neighborhoods are you looking to buy in?"
                         )
                         background_tasks.add_task(
                             safe_send_message, current_ghl_client, contact_id, t1_message, event.message.type
                         )
-                        background_tasks.add_task(
-                            safe_apply_actions, current_ghl_client, contact_id, routing_actions
-                        )
+                        background_tasks.add_task(safe_apply_actions, current_ghl_client, contact_id, routing_actions)
                         await conversation_manager.update_context(
                             contact_id=contact_id,
                             user_message=user_message,
@@ -1786,13 +1853,8 @@ async def handle_ghl_webhook(
 
                     # Intent unclear — send the qualifying question and return early
                     contact_market = rancho_config.MARKET_CONFIG.MARKET_NAME
-                    t1_message = (
-                        f"Hey {contact_first_name}! Are you looking to buy or sell "
-                        f"in {contact_market}?"
-                    )
-                    logger.info(
-                        "Lead T1 qualifying question sent to %s — bypassing LangGraph", contact_id
-                    )
+                    t1_message = f"Hey {contact_first_name}! Are you looking to buy or sell in {contact_market}?"
+                    logger.info("Lead T1 qualifying question sent to %s — bypassing LangGraph", contact_id)
                     background_tasks.add_task(
                         safe_send_message,
                         current_ghl_client,
@@ -1814,9 +1876,7 @@ async def handle_ghl_webhook(
                 # T2 — detect intent from the contact's reply and route accordingly
                 detected_intent = _detect_buy_sell_intent(user_message)
                 if detected_intent == "seller":
-                    logger.info(
-                        "Lead T2 seller intent detected for %s — routing to seller bot", contact_id
-                    )
+                    logger.info("Lead T2 seller intent detected for %s — routing to seller bot", contact_id)
                     routing_actions = [
                         GHLAction(type=ActionType.ADD_TAG, tag="Needs Qualifying"),
                         GHLAction(type=ActionType.REMOVE_TAG, tag=jorge_settings.LEAD_ACTIVATION_TAG),
@@ -1850,17 +1910,12 @@ async def handle_ghl_webhook(
                     )
 
                 if detected_intent == "buyer":
-                    logger.info(
-                        "Lead T2 buyer intent detected for %s — routing to buyer bot", contact_id
-                    )
+                    logger.info("Lead T2 buyer intent detected for %s — routing to buyer bot", contact_id)
                     routing_actions = [
                         GHLAction(type=ActionType.ADD_TAG, tag=jorge_settings.BUYER_ACTIVATION_TAG),
                         GHLAction(type=ActionType.REMOVE_TAG, tag=jorge_settings.LEAD_ACTIVATION_TAG),
                     ]
-                    t2_message = (
-                        f"Perfect, {contact_first_name}! What area or neighborhoods "
-                        f"are you looking to buy in?"
-                    )
+                    t2_message = f"Perfect, {contact_first_name}! What area or neighborhoods are you looking to buy in?"
                     background_tasks.add_task(
                         safe_send_message,
                         current_ghl_client,
@@ -1922,11 +1977,19 @@ async def handle_ghl_webhook(
                 # Write lead score so Jorge can filter/sort contacts in GHL
                 if settings.custom_field_lead_score:
                     _lead_score_val = lead_result.get("lead_score", 0)
-                    actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=settings.custom_field_lead_score, value=_lead_score_val))
+                    actions.append(
+                        GHLAction(
+                            type=ActionType.UPDATE_CUSTOM_FIELD,
+                            field=settings.custom_field_lead_score,
+                            value=_lead_score_val,
+                        )
+                    )
                 # Write nurture sequence day so Jorge can see where in follow-up each lead is
                 _seq_day_field = os.getenv("CUSTOM_FIELD_LEAD_SEQUENCE_DAY")
                 if _seq_day_field:
-                    actions.append(GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=_seq_day_field, value=str(sequence_day)))
+                    actions.append(
+                        GHLAction(type=ActionType.UPDATE_CUSTOM_FIELD, field=_seq_day_field, value=str(sequence_day))
+                    )
 
                 # Check for Jorge handoff signals
                 handoff_triggered = False
@@ -1974,7 +2037,6 @@ async def handle_ghl_webhook(
                     )
                     final_lead_msg = "Thanks for reaching out! How can I help you today?"
                     actions.append(GHLAction(type=ActionType.ADD_TAG, tag="Compliance-Alert"))
-
 
                 # --- CROSS-BOT HANDOFF CHECK ---
                 if handoff_signals:

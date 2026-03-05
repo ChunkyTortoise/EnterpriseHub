@@ -415,9 +415,7 @@ class TestSellerMotivationRegexOverride:
         )
         # Motivation may be overridden to a more specific value (downsize, retirement,
         # divorce) or remain "other" — just must NOT become "relocation".
-        assert result.get("motivation") != "relocation", (
-            f"Should not classify as relocation: {message!r}"
-        )
+        assert result.get("motivation") != "relocation", f"Should not classify as relocation: {message!r}"
 
     def test_transfer_keyword_triggers_relocation(self, engine):
         result = engine._extract_seller_data_regex(

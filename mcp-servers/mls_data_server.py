@@ -12,17 +12,13 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime, timedelta
 import random
 
+
 # MCP Server framework (would use official MCP library in production)
 class MCPServer:
     """Basic MCP server implementation for MLS data"""
 
     def __init__(self):
-        self.capabilities = {
-            "tools": True,
-            "resources": False,
-            "prompts": False,
-            "logging": True
-        }
+        self.capabilities = {"tools": True, "resources": False, "prompts": False, "logging": True}
 
         # Mock MLS client (would use actual MLS API in production)
         self.mls_client = MockMLSClient()
@@ -58,9 +54,9 @@ class MCPServer:
                 "serverInfo": {
                     "name": "mls-data-server",
                     "version": "1.0.0",
-                    "description": "MLS property data integration via MCP"
-                }
-            }
+                    "description": "MLS property data integration via MCP",
+                },
+            },
         }
 
     async def handle_list_tools(self, request_id: int) -> Dict[str, Any]:
@@ -79,14 +75,16 @@ class MCPServer:
                         "price_max": {"type": "integer", "description": "Maximum price"},
                         "beds_min": {"type": "integer", "description": "Minimum bedrooms"},
                         "baths_min": {"type": "number", "description": "Minimum bathrooms"},
-                        "property_type": {"type": "string", "description": "Property type (single_family, condo, etc.)"},
+                        "property_type": {
+                            "type": "string",
+                            "description": "Property type (single_family, condo, etc.)",
+                        },
                         "status": {"type": "string", "description": "Listing status (active, pending, sold)"},
-                        "limit": {"type": "integer", "description": "Maximum results", "default": 50}
+                        "limit": {"type": "integer", "description": "Maximum results", "default": 50},
                     },
-                    "required": []
-                }
+                    "required": [],
+                },
             },
-
             {
                 "name": "get_property_details",
                 "description": "Get detailed information for a specific property",
@@ -94,13 +92,20 @@ class MCPServer:
                     "type": "object",
                     "properties": {
                         "mls_number": {"type": "string", "description": "MLS listing number"},
-                        "include_photos": {"type": "boolean", "description": "Include property photos", "default": false},
-                        "include_history": {"type": "boolean", "description": "Include price history", "default": false}
+                        "include_photos": {
+                            "type": "boolean",
+                            "description": "Include property photos",
+                            "default": false,
+                        },
+                        "include_history": {
+                            "type": "boolean",
+                            "description": "Include price history",
+                            "default": false,
+                        },
                     },
-                    "required": ["mls_number"]
-                }
+                    "required": ["mls_number"],
+                },
             },
-
             {
                 "name": "find_comparables",
                 "description": "Find comparable properties for CMA analysis",
@@ -110,13 +115,16 @@ class MCPServer:
                         "subject_address": {"type": "string", "description": "Subject property address"},
                         "radius_miles": {"type": "number", "description": "Search radius in miles", "default": 1.0},
                         "sold_within_days": {"type": "integer", "description": "Sold within X days", "default": 90},
-                        "size_variance": {"type": "number", "description": "Square footage variance (+/-)", "default": 0.20},
-                        "max_comps": {"type": "integer", "description": "Maximum comparables", "default": 10}
+                        "size_variance": {
+                            "type": "number",
+                            "description": "Square footage variance (+/-)",
+                            "default": 0.20,
+                        },
+                        "max_comps": {"type": "integer", "description": "Maximum comparables", "default": 10},
                     },
-                    "required": ["subject_address"]
-                }
+                    "required": ["subject_address"],
+                },
             },
-
             {
                 "name": "get_market_stats",
                 "description": "Get market statistics for an area",
@@ -125,12 +133,15 @@ class MCPServer:
                     "properties": {
                         "area": {"type": "string", "description": "Area (city, zip, or neighborhood)"},
                         "property_type": {"type": "string", "description": "Property type filter"},
-                        "time_period": {"type": "string", "description": "Time period (30d, 90d, 1y)", "default": "90d"}
+                        "time_period": {
+                            "type": "string",
+                            "description": "Time period (30d, 90d, 1y)",
+                            "default": "90d",
+                        },
                     },
-                    "required": ["area"]
-                }
+                    "required": ["area"],
+                },
             },
-
             {
                 "name": "check_property_status",
                 "description": "Check current status of a property listing",
@@ -138,11 +149,10 @@ class MCPServer:
                     "type": "object",
                     "properties": {
                         "mls_number": {"type": "string", "description": "MLS listing number"},
-                        "address": {"type": "string", "description": "Property address (alternative to MLS number)"}
-                    }
-                }
+                        "address": {"type": "string", "description": "Property address (alternative to MLS number)"},
+                    },
+                },
             },
-
             {
                 "name": "get_off_market_intel",
                 "description": "Get off-market and pre-market property intelligence",
@@ -150,19 +160,22 @@ class MCPServer:
                     "type": "object",
                     "properties": {
                         "area": {"type": "string", "description": "Geographic area"},
-                        "property_types": {"type": "array", "items": {"type": "string"}, "description": "Property types of interest"},
-                        "price_range": {"type": "object", "properties": {"min": {"type": "integer"}, "max": {"type": "integer"}}}
+                        "property_types": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Property types of interest",
+                        },
+                        "price_range": {
+                            "type": "object",
+                            "properties": {"min": {"type": "integer"}, "max": {"type": "integer"}},
+                        },
                     },
-                    "required": ["area"]
-                }
-            }
+                    "required": ["area"],
+                },
+            },
         ]
 
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "result": {"tools": tools}
-        }
+        return {"jsonrpc": "2.0", "id": request_id, "result": {"tools": tools}}
 
     async def handle_call_tool(self, request_id: int, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle tool execution requests"""
@@ -185,11 +198,7 @@ class MCPServer:
         else:
             return self.error_response(request_id, "Unknown tool", tool_name)
 
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "result": result
-        }
+        return {"jsonrpc": "2.0", "id": request_id, "result": result}
 
     # MLS Data tool implementations
 
@@ -205,7 +214,7 @@ class MCPServer:
             "baths_min": args.get("baths_min"),
             "property_type": args.get("property_type"),
             "status": args.get("status", "active"),
-            "limit": args.get("limit", 50)
+            "limit": args.get("limit", 50),
         }
 
         # Call MLS API (mocked for demo)
@@ -216,7 +225,7 @@ class MCPServer:
             "search_criteria": search_criteria,
             "count": len(properties),
             "properties": properties,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     async def get_property_details(self, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -226,21 +235,12 @@ class MCPServer:
         include_history = args.get("include_history", False)
 
         # Call MLS API (mocked for demo)
-        property_details = await self.mls_client.get_property_details(
-            mls_number, include_photos, include_history
-        )
+        property_details = await self.mls_client.get_property_details(mls_number, include_photos, include_history)
 
         if not property_details:
-            return {
-                "success": False,
-                "message": f"Property not found: {mls_number}"
-            }
+            return {"success": False, "message": f"Property not found: {mls_number}"}
 
-        return {
-            "success": True,
-            "mls_number": mls_number,
-            "property": property_details
-        }
+        return {"success": True, "mls_number": mls_number, "property": property_details}
 
     async def find_comparables(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Find comparable properties for CMA"""
@@ -265,7 +265,7 @@ class MCPServer:
                 "average_sold_price": avg_price,
                 "median_sold_price": median_price,
                 "price_per_sqft_avg": avg_price / comparables[0].get("square_feet", 1) if comparables else 0,
-                "days_on_market_avg": sum(comp.get("days_on_market", 0) for comp in comparables) / len(comparables)
+                "days_on_market_avg": sum(comp.get("days_on_market", 0) for comp in comparables) / len(comparables),
             }
         else:
             cma_stats = {}
@@ -276,7 +276,7 @@ class MCPServer:
             "search_radius": radius_miles,
             "comparables_found": len(comparables),
             "comparables": comparables,
-            "cma_statistics": cma_stats
+            "cma_statistics": cma_stats,
         }
 
     async def get_market_stats(self, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -293,7 +293,7 @@ class MCPServer:
             "area": area,
             "property_type": property_type,
             "time_period": time_period,
-            "statistics": market_stats
+            "statistics": market_stats,
         }
 
     async def check_property_status(self, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -302,19 +302,12 @@ class MCPServer:
         address = args.get("address")
 
         if not mls_number and not address:
-            return {
-                "success": False,
-                "message": "Either mls_number or address is required"
-            }
+            return {"success": False, "message": "Either mls_number or address is required"}
 
         # Call MLS API (mocked for demo)
         status_info = await self.mls_client.check_property_status(mls_number, address)
 
-        return {
-            "success": True,
-            "property_identifier": mls_number or address,
-            "status_info": status_info
-        }
+        return {"success": True, "property_identifier": mls_number or address, "status_info": status_info}
 
     async def get_off_market_intel(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Get off-market property intelligence"""
@@ -329,20 +322,13 @@ class MCPServer:
             "success": True,
             "area": area,
             "property_types": property_types,
-            "off_market_opportunities": off_market_data
+            "off_market_opportunities": off_market_data,
         }
 
     def error_response(self, request_id: int, error_type: str, details: str) -> Dict[str, Any]:
         """Generate error response"""
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {
-                "code": -32000,
-                "message": error_type,
-                "data": details
-            }
-        }
+        return {"jsonrpc": "2.0", "id": request_id, "error": {"code": -32000, "message": error_type, "data": details}}
+
 
 class MockMLSClient:
     """Mock MLS client for demonstration (replace with actual MLS API client)"""
@@ -378,7 +364,7 @@ class MockMLSClient:
                 "lot_size": random.randint(5000, 15000),
                 "year_built": random.randint(1990, 2025),
                 "listing_agent": f"Agent {random.randint(1, 50)}",
-                "description": f"Beautiful {property_types[i % len(property_types)]} in {city}"
+                "description": f"Beautiful {property_types[i % len(property_types)]} in {city}",
             }
 
             # Add sold price for sold properties
@@ -423,7 +409,9 @@ class MockMLSClient:
 
         return filtered_properties
 
-    async def get_property_details(self, mls_number: str, include_photos: bool, include_history: bool) -> Optional[Dict[str, Any]]:
+    async def get_property_details(
+        self, mls_number: str, include_photos: bool, include_history: bool
+    ) -> Optional[Dict[str, Any]]:
         """Mock property details retrieval"""
         # Find property by MLS number
         property_data = next((prop for prop in self.properties if prop["mls_number"] == mls_number), None)
@@ -438,7 +426,7 @@ class MockMLSClient:
             details["photos"] = [
                 f"https://example.com/photos/{mls_number}_01.jpg",
                 f"https://example.com/photos/{mls_number}_02.jpg",
-                f"https://example.com/photos/{mls_number}_03.jpg"
+                f"https://example.com/photos/{mls_number}_03.jpg",
             ]
 
         if include_history:
@@ -447,18 +435,16 @@ class MockMLSClient:
                 {
                     "date": (datetime.now() - timedelta(days=30)).isoformat(),
                     "price": details["price"] + 10000,
-                    "event": "price_reduction"
+                    "event": "price_reduction",
                 },
-                {
-                    "date": details["listing_date"],
-                    "price": details["price"] + 20000,
-                    "event": "listed"
-                }
+                {"date": details["listing_date"], "price": details["price"] + 20000, "event": "listed"},
             ]
 
         return details
 
-    async def find_comparables(self, subject_address: str, radius_miles: float, sold_within_days: int, size_variance: float, max_comps: int) -> List[Dict[str, Any]]:
+    async def find_comparables(
+        self, subject_address: str, radius_miles: float, sold_within_days: int, size_variance: float, max_comps: int
+    ) -> List[Dict[str, Any]]:
         """Mock comparable properties search"""
         # For demo, return random sold properties
         sold_properties = [prop for prop in self.properties if prop["status"] == "sold"]
@@ -466,7 +452,8 @@ class MockMLSClient:
         # Filter by sold within days
         cutoff_date = datetime.now() - timedelta(days=sold_within_days)
         recent_sold = [
-            prop for prop in sold_properties
+            prop
+            for prop in sold_properties
             if datetime.fromisoformat(prop.get("sold_date", "1970-01-01")) > cutoff_date
         ]
 
@@ -483,12 +470,7 @@ class MockMLSClient:
 
         # Calculate mock statistics
         if not area_properties:
-            return {
-                "total_listings": 0,
-                "average_price": 0,
-                "median_price": 0,
-                "average_days_on_market": 0
-            }
+            return {"total_listings": 0, "average_price": 0, "median_price": 0, "average_days_on_market": 0}
 
         active_properties = [prop for prop in area_properties if prop["status"] == "active"]
         sold_properties = [prop for prop in area_properties if prop["status"] == "sold"]
@@ -501,10 +483,15 @@ class MockMLSClient:
             "sold_listings": len(sold_properties),
             "average_price": sum(prices) / len(prices) if prices else 0,
             "median_price": sorted(prices)[len(prices) // 2] if prices else 0,
-            "price_per_sqft": sum(prop["price"] / prop["square_feet"] for prop in area_properties) / len(area_properties) if area_properties else 0,
-            "average_days_on_market": sum(prop["days_on_market"] for prop in area_properties) / len(area_properties) if area_properties else 0,
+            "price_per_sqft": sum(prop["price"] / prop["square_feet"] for prop in area_properties)
+            / len(area_properties)
+            if area_properties
+            else 0,
+            "average_days_on_market": sum(prop["days_on_market"] for prop in area_properties) / len(area_properties)
+            if area_properties
+            else 0,
             "inventory_level": len(active_properties),
-            "absorption_rate": len(sold_properties) / max(len(active_properties), 1)
+            "absorption_rate": len(sold_properties) / max(len(active_properties), 1),
         }
 
     async def check_property_status(self, mls_number: Optional[str], address: Optional[str]) -> Dict[str, Any]:
@@ -516,10 +503,7 @@ class MockMLSClient:
             prop = next((p for p in self.properties if address.lower() in p["address"].lower()), None)
 
         if not prop:
-            return {
-                "found": False,
-                "message": "Property not found in MLS"
-            }
+            return {"found": False, "message": "Property not found in MLS"}
 
         return {
             "found": True,
@@ -528,10 +512,12 @@ class MockMLSClient:
             "listing_date": prop["listing_date"],
             "days_on_market": prop["days_on_market"],
             "current_price": prop["price"],
-            "last_updated": datetime.now().isoformat()
+            "last_updated": datetime.now().isoformat(),
         }
 
-    async def get_off_market_intel(self, area: str, property_types: List[str], price_range: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def get_off_market_intel(
+        self, area: str, property_types: List[str], price_range: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         """Mock off-market intelligence"""
         # Mock off-market opportunities
         opportunities = [
@@ -541,7 +527,7 @@ class MockMLSClient:
                 "estimated_value": random.randint(300000, 600000),
                 "equity_position": random.randint(50000, 200000),
                 "timeline": "30-60 days",
-                "confidence": random.uniform(0.7, 0.9)
+                "confidence": random.uniform(0.7, 0.9),
             },
             {
                 "type": "estate_sale",
@@ -549,11 +535,12 @@ class MockMLSClient:
                 "estimated_value": random.randint(400000, 700000),
                 "motivation": "estate_settlement",
                 "timeline": "60-90 days",
-                "confidence": random.uniform(0.6, 0.8)
-            }
+                "confidence": random.uniform(0.6, 0.8),
+            },
         ]
 
         return opportunities
+
 
 async def main():
     """Run MLS Data MCP server"""
@@ -581,11 +568,7 @@ async def main():
             error_response = {
                 "jsonrpc": "2.0",
                 "id": None,
-                "error": {
-                    "code": -32700,
-                    "message": "Parse error",
-                    "data": str(e)
-                }
+                "error": {"code": -32700, "message": "Parse error", "data": str(e)},
             }
             print(json.dumps(error_response))
             sys.stdout.flush()
@@ -595,14 +578,11 @@ async def main():
             error_response = {
                 "jsonrpc": "2.0",
                 "id": None,
-                "error": {
-                    "code": -32000,
-                    "message": "Internal error",
-                    "data": str(e)
-                }
+                "error": {"code": -32000, "message": "Internal error", "data": str(e)},
             }
             print(json.dumps(error_response))
             sys.stdout.flush()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

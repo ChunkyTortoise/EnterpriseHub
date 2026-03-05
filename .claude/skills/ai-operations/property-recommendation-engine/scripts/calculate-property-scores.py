@@ -25,6 +25,7 @@ import math
 @dataclass
 class ScoreBreakdown:
     """Detailed score breakdown by category."""
+
     budget_fit: float
     location_match: float
     features_match: float
@@ -35,6 +36,7 @@ class ScoreBreakdown:
 @dataclass
 class PropertyScore:
     """Complete property match score."""
+
     property_id: str
     address: str
     price: int
@@ -49,6 +51,7 @@ class PropertyScore:
 @dataclass
 class RecommendationResult:
     """Complete recommendation result."""
+
     lead_id: str
     preferences_used: Dict[str, Any]
     properties_scored: int
@@ -60,6 +63,7 @@ def load_preferences(lead_id: str) -> Dict[str, Any]:
     """Load lead preferences from data sources."""
     try:
         from ghl_real_estate_ai.services.memory_service import MemoryService
+
         memory = MemoryService()
         return memory.get_lead_preferences(lead_id)
     except ImportError:
@@ -77,7 +81,7 @@ def load_preferences(lead_id: str) -> Dict[str, Any]:
             "commute_to": "Downtown Rancho Cucamonga",
             "commute_max_minutes": 45,
             "style_preference": "modern",
-            "yard_size": "medium"
+            "yard_size": "medium",
         }
 
 
@@ -90,6 +94,7 @@ def load_listings(file_path: str = None) -> List[Dict[str, Any]]:
 
     try:
         from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
+
         matcher = PropertyMatcher()
         return matcher.listings
     except ImportError:
@@ -107,7 +112,7 @@ def load_listings(file_path: str = None) -> List[Dict[str, Any]]:
                 "year_built": 2018,
                 "school_rating": 8,
                 "style": "modern",
-                "features": ["open floor plan", "updated kitchen", "large backyard"]
+                "features": ["open floor plan", "updated kitchen", "large backyard"],
             },
             {
                 "property_id": "prop_002",
@@ -121,7 +126,7 @@ def load_listings(file_path: str = None) -> List[Dict[str, Any]]:
                 "year_built": 2015,
                 "school_rating": 7,
                 "style": "traditional",
-                "features": ["corner lot", "covered patio", "granite counters"]
+                "features": ["corner lot", "covered patio", "granite counters"],
             },
             {
                 "property_id": "prop_003",
@@ -135,7 +140,7 @@ def load_listings(file_path: str = None) -> List[Dict[str, Any]]:
                 "year_built": 2020,
                 "school_rating": 8,
                 "style": "modern",
-                "features": ["pool", "game room", "chef's kitchen", "home office"]
+                "features": ["pool", "game room", "chef's kitchen", "home office"],
             },
             {
                 "property_id": "prop_004",
@@ -149,11 +154,15 @@ def load_listings(file_path: str = None) -> List[Dict[str, Any]]:
                 "year_built": 2012,
                 "school_rating": 6,
                 "style": "ranch",
-                "features": ["single story", "large lot", "workshop"]
+                "features": ["single story", "large lot", "workshop"],
             },
             {
                 "property_id": "prop_005",
-                "address": {"street": "555 Rancho Cucamonga Blvd", "neighborhood": "Downtown", "city": "Rancho Cucamonga"},
+                "address": {
+                    "street": "555 Rancho Cucamonga Blvd",
+                    "neighborhood": "Downtown",
+                    "city": "Rancho Cucamonga",
+                },
                 "price": 895000,
                 "bedrooms": 3,
                 "bathrooms": 2,
@@ -163,8 +172,8 @@ def load_listings(file_path: str = None) -> List[Dict[str, Any]]:
                 "year_built": 2022,
                 "school_rating": 7,
                 "style": "modern",
-                "features": ["walkable", "rooftop deck", "smart home"]
-            }
+                "features": ["walkable", "rooftop deck", "smart home"],
+            },
         ]
 
 
@@ -389,10 +398,14 @@ def calculate_behavioral_boost(property_data: Dict, feedback_history: List[Dict]
 
 
 def generate_match_reasoning(
-    budget_score: float, budget_reason: str,
-    location_score: float, location_reason: str,
-    features_score: float, features_reason: str,
-    lifestyle_score: float, lifestyle_reason: str
+    budget_score: float,
+    budget_reason: str,
+    location_score: float,
+    location_reason: str,
+    features_score: float,
+    features_reason: str,
+    lifestyle_score: float,
+    lifestyle_reason: str,
 ) -> str:
     """Generate human-readable match reasoning."""
     reasons = []
@@ -442,21 +455,13 @@ def score_property(property_data: Dict, preferences: Dict, feedback_history: Lis
         PropertyScore with complete breakdown
     """
     # Calculate component scores
-    budget_score, budget_reason = calculate_budget_score(
-        property_data.get("price", 0), preferences
-    )
+    budget_score, budget_reason = calculate_budget_score(property_data.get("price", 0), preferences)
 
-    location_score, location_reason = calculate_location_score(
-        property_data.get("address", {}), preferences
-    )
+    location_score, location_reason = calculate_location_score(property_data.get("address", {}), preferences)
 
-    features_score, features_reason, highlights, concerns = calculate_features_score(
-        property_data, preferences
-    )
+    features_score, features_reason, highlights, concerns = calculate_features_score(property_data, preferences)
 
-    lifestyle_score, lifestyle_reason = calculate_lifestyle_score(
-        property_data, preferences
-    )
+    lifestyle_score, lifestyle_reason = calculate_lifestyle_score(property_data, preferences)
 
     behavioral_boost = calculate_behavioral_boost(property_data, feedback_history)
 
@@ -470,19 +475,19 @@ def score_property(property_data: Dict, preferences: Dict, feedback_history: Lis
 
     # Calculate weighted final score
     final_score = (
-        budget_score * 0.25 +
-        location_score * 0.25 +
-        features_score * 0.30 +
-        lifestyle_score * 0.20 +
-        behavioral_boost
+        budget_score * 0.25 + location_score * 0.25 + features_score * 0.30 + lifestyle_score * 0.20 + behavioral_boost
     )
 
     # Generate reasoning
     reasoning = generate_match_reasoning(
-        budget_score, budget_reason,
-        location_score, location_reason,
-        features_score, features_reason,
-        lifestyle_score, lifestyle_reason
+        budget_score,
+        budget_reason,
+        location_score,
+        location_reason,
+        features_score,
+        features_reason,
+        lifestyle_score,
+        lifestyle_reason,
     )
 
     # Format address
@@ -499,21 +504,17 @@ def score_property(property_data: Dict, preferences: Dict, feedback_history: Lis
             location_match=location_score,
             features_match=features_score,
             lifestyle_match=lifestyle_score,
-            behavioral_boost=behavioral_boost
+            behavioral_boost=behavioral_boost,
         ),
         match_reasoning=reasoning,
         highlights=highlights[:5],
         potential_concerns=concerns[:3],
-        rank=0  # Set after sorting
+        rank=0,  # Set after sorting
     )
 
 
 def calculate_property_scores(
-    lead_id: str = None,
-    preferences: Dict = None,
-    listings: List[Dict] = None,
-    limit: int = 10,
-    min_score: float = 0.0
+    lead_id: str = None, preferences: Dict = None, listings: List[Dict] = None, limit: int = 10, min_score: float = 0.0
 ) -> RecommendationResult:
     """
     Calculate scores for all properties and return recommendations.
@@ -559,7 +560,7 @@ def calculate_property_scores(
         preferences_used=preferences,
         properties_scored=len(listings),
         recommendations=recommendations,
-        generated_at=datetime.now().isoformat()
+        generated_at=datetime.now().isoformat(),
     )
 
 
@@ -589,11 +590,7 @@ def main():
 
     # Calculate scores
     result = calculate_property_scores(
-        lead_id=args.lead_id,
-        preferences=preferences,
-        listings=listings,
-        limit=args.limit,
-        min_score=args.min_score
+        lead_id=args.lead_id, preferences=preferences, listings=listings, limit=args.limit, min_score=args.min_score
     )
 
     if args.output == "table":
@@ -623,10 +620,10 @@ def main():
                     "score_breakdown": asdict(r.score_breakdown),
                     "match_reasoning": r.match_reasoning,
                     "highlights": r.highlights,
-                    "potential_concerns": r.potential_concerns
+                    "potential_concerns": r.potential_concerns,
                 }
                 for r in result.recommendations
-            ]
+            ],
         }
         print(json.dumps(output, indent=2))
 

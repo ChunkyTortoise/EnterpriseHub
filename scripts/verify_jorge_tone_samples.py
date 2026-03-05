@@ -6,6 +6,7 @@ Exercises the tone engine for all SIMPLE_MODE paths.
 
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
@@ -13,10 +14,18 @@ from ghl_real_estate_ai.services.jorge.jorge_tone_engine import JorgeToneEngine
 engine = JorgeToneEngine()
 
 AI_PHRASES = [
-    "i understand", "thank you for", "i'd be happy to", "let me help",
-    "that's a great", "i appreciate", "based on my analysis",
-    "certainly", "of course",
-    "feel free", "don't hesitate", "rest assured"
+    "i understand",
+    "thank you for",
+    "i'd be happy to",
+    "let me help",
+    "that's a great",
+    "i appreciate",
+    "based on my analysis",
+    "certainly",
+    "of course",
+    "feel free",
+    "don't hesitate",
+    "rest assured",
 ]
 
 
@@ -26,14 +35,14 @@ def check(label, message):
         errors.append(f"TOO LONG ({len(message)} chars)")
     if any(ord(c) > 0x1F600 for c in message):
         errors.append("HAS EMOJI")
-    if '-' in message:
+    if "-" in message:
         errors.append("HAS HYPHEN")
     for phrase in AI_PHRASES:
         if phrase in message.lower():
             errors.append(f"AI PHRASE: '{phrase}'")
     status = "PASS" if not errors else f"FAIL: {', '.join(errors)}"
     print(f"  [{status}] {label}")
-    print(f"    \"{message}\" ({len(message)} chars)")
+    print(f'    "{message}" ({len(message)} chars)')
     return len(errors) == 0
 
 
@@ -64,9 +73,7 @@ msg = engine.generate_hot_seller_handoff(seller_name="Ana", agent_name="our team
 results.append(check("Hot Seller Handoff", msg))
 
 # 6. Vague answer follow-up (Q1)
-msg = engine.generate_follow_up_message(
-    last_response="maybe idk", question_number=1, seller_name="Robert"
-)
+msg = engine.generate_follow_up_message(last_response="maybe idk", question_number=1, seller_name="Robert")
 results.append(check("Vague Follow-up (Q1)", msg))
 
 # 7. Take-away close (vague streak)
@@ -74,9 +81,7 @@ msg = engine.generate_take_away_close(seller_name="Linda", reason="vague")
 results.append(check("Take-Away Close (vague)", msg))
 
 # 8. No response follow-up (Q2)
-msg = engine.generate_follow_up_message(
-    last_response="", question_number=2, seller_name="David"
-)
+msg = engine.generate_follow_up_message(last_response="", question_number=2, seller_name="David")
 results.append(check("No Response Follow-up (Q2)", msg))
 
 # 9. Warm nurture message
@@ -86,9 +91,7 @@ msg = engine._ensure_sms_compliance(
 results.append(check("Warm Nurture", msg))
 
 # 10. Cold nurture message
-msg = engine._ensure_sms_compliance(
-    "I'll keep your info on file. Reach out if your timeline or situation changes."
-)
+msg = engine._ensure_sms_compliance("I'll keep your info on file. Reach out if your timeline or situation changes.")
 results.append(check("Cold Nurture", msg))
 
 print()

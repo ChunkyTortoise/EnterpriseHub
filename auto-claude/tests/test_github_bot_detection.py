@@ -21,9 +21,8 @@ if str(_github_dir) not in sys.path:
 
 from bot_detection import BotDetectionState, BotDetector
 
+
 @pytest.mark.unit
-
-
 @pytest.fixture
 def temp_state_dir(tmp_path):
     """Create temporary state directory."""
@@ -250,7 +249,10 @@ class TestShouldSkipReview:
         # So commits[-1] is the LATEST commit - which is the bot commit
         commits = [
             {"author": {"login": "alice"}, "oid": "abc123"},  # Oldest commit (by alice)
-            {"author": {"login": "test-bot"}, "oid": "def456"},  # Latest commit (by bot)
+            {
+                "author": {"login": "test-bot"},
+                "oid": "def456",
+            },  # Latest commit (by bot)
         ]
 
         should_skip, reason = mock_bot_detector.should_skip_pr_review(

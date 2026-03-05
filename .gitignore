@@ -66,6 +66,7 @@ ghl_real_estate_ai/.env
 
 # Streamlit
 .streamlit/
+!.streamlit/config.toml
 !.streamlit/*.example
 
 # Testing

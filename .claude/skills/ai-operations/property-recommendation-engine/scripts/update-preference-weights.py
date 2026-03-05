@@ -22,6 +22,7 @@ from collections import defaultdict
 @dataclass
 class FeedbackInput:
     """Feedback data for a property showing."""
+
     property_id: str
     property_features: List[str]
     property_details: Dict  # bedrooms, bathrooms, sqft, price, etc.
@@ -38,6 +39,7 @@ class FeedbackInput:
 @dataclass
 class WeightUpdate:
     """Result of weight update operation."""
+
     lead_id: str
     previous_weights: Dict[str, float]
     updated_weights: Dict[str, float]
@@ -54,7 +56,6 @@ DEFAULT_WEIGHTS = {
     "location_match": 0.25,
     "features_match": 0.30,
     "lifestyle_match": 0.20,
-
     # Sub-weights
     "bedrooms": 0.15,
     "bathrooms": 0.10,
@@ -95,7 +96,7 @@ def load_current_weights(lead_id: str, weights_file: Optional[str] = None) -> Di
     """Load current preference weights for lead."""
     if weights_file:
         try:
-            with open(weights_file, 'r') as f:
+            with open(weights_file, "r") as f:
                 data = json.load(f)
                 if lead_id in data:
                     return data[lead_id]
@@ -112,14 +113,14 @@ def save_weights(lead_id: str, weights: Dict[str, float], weights_file: Optional
         return
 
     try:
-        with open(weights_file, 'r') as f:
+        with open(weights_file, "r") as f:
             data = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         data = {}
 
     data[lead_id] = weights
 
-    with open(weights_file, 'w') as f:
+    with open(weights_file, "w") as f:
         json.dump(data, f, indent=2)
 
 
@@ -166,10 +167,7 @@ def categorize_interest(interest: str) -> Optional[str]:
 
 
 def apply_feature_updates(
-    weights: Dict[str, float],
-    feedback: FeedbackInput,
-    learning_rate: float,
-    is_positive: bool
+    weights: Dict[str, float], feedback: FeedbackInput, learning_rate: float, is_positive: bool
 ) -> Dict[str, float]:
     """Apply updates based on property features."""
     updated = weights.copy()
@@ -200,11 +198,7 @@ def apply_feature_updates(
     return updated
 
 
-def apply_objection_updates(
-    weights: Dict[str, float],
-    objections: List[str],
-    learning_rate: float
-) -> Dict[str, float]:
+def apply_objection_updates(weights: Dict[str, float], objections: List[str], learning_rate: float) -> Dict[str, float]:
     """Apply weight updates based on objections."""
     updated = weights.copy()
 
@@ -222,11 +216,7 @@ def apply_objection_updates(
     return updated
 
 
-def apply_interest_updates(
-    weights: Dict[str, float],
-    interests: List[str],
-    learning_rate: float
-) -> Dict[str, float]:
+def apply_interest_updates(weights: Dict[str, float], interests: List[str], learning_rate: float) -> Dict[str, float]:
     """Apply weight updates based on stated interests."""
     updated = weights.copy()
 
@@ -268,10 +258,7 @@ def normalize_weights(weights: Dict[str, float]) -> Dict[str, float]:
     return {**main_weights, **sub_weights}
 
 
-def calculate_changes(
-    previous: Dict[str, float],
-    updated: Dict[str, float]
-) -> Dict[str, float]:
+def calculate_changes(previous: Dict[str, float], updated: Dict[str, float]) -> Dict[str, float]:
     """Calculate changes between weight sets."""
     changes = {}
 
@@ -312,11 +299,7 @@ def generate_feedback_summary(feedback: FeedbackInput, signal_type: str) -> str:
     return " | ".join(parts) if parts else "Minimal feedback"
 
 
-def update_weights(
-    lead_id: str,
-    feedback: FeedbackInput,
-    current_weights: Dict[str, float]
-) -> WeightUpdate:
+def update_weights(lead_id: str, feedback: FeedbackInput, current_weights: Dict[str, float]) -> WeightUpdate:
     """Main weight update function."""
     previous_weights = current_weights.copy()
 
@@ -327,21 +310,15 @@ def update_weights(
     is_positive = signal_type in ["offer_accepted", "offer_made", "explicit_liked", "implicit_view"]
 
     # Apply feature-based updates
-    updated_weights = apply_feature_updates(
-        current_weights, feedback, learning_rate, is_positive
-    )
+    updated_weights = apply_feature_updates(current_weights, feedback, learning_rate, is_positive)
 
     # Apply objection-based updates (if any)
     if feedback.objections:
-        updated_weights = apply_objection_updates(
-            updated_weights, feedback.objections, learning_rate
-        )
+        updated_weights = apply_objection_updates(updated_weights, feedback.objections, learning_rate)
 
     # Apply interest-based updates (if any)
     if feedback.interests:
-        updated_weights = apply_interest_updates(
-            updated_weights, feedback.interests, learning_rate
-        )
+        updated_weights = apply_interest_updates(updated_weights, feedback.interests, learning_rate)
 
     # Normalize weights
     updated_weights = normalize_weights(updated_weights)
@@ -363,13 +340,13 @@ def update_weights(
         learning_rate_used=learning_rate,
         signal_type=signal_type,
         feedback_summary=summary,
-        updated_at=datetime.now().isoformat()
+        updated_at=datetime.now().isoformat(),
     )
 
 
 def load_feedback(feedback_file: str) -> FeedbackInput:
     """Load feedback from JSON file."""
-    with open(feedback_file, 'r') as f:
+    with open(feedback_file, "r") as f:
         data = json.load(f)
 
     return FeedbackInput(
@@ -383,23 +360,14 @@ def load_feedback(feedback_file: str) -> FeedbackInput:
         objections=data.get("objections", []),
         interests=data.get("interests", []),
         rating=data.get("rating"),
-        comments=data.get("comments")
+        comments=data.get("comments"),
     )
 
 
-def create_mock_feedback(
-    property_id: str,
-    liked: bool,
-    offer_made: bool = False
-) -> FeedbackInput:
+def create_mock_feedback(property_id: str, liked: bool, offer_made: bool = False) -> FeedbackInput:
     """Create mock feedback for demonstration."""
     mock_features = ["pool", "updated kitchen", "3 car garage", "large yard"]
-    mock_details = {
-        "bedrooms": 4,
-        "bathrooms": 3,
-        "sqft": 2800,
-        "price": 650000
-    }
+    mock_details = {"bedrooms": 4, "bathrooms": 3, "sqft": 2800, "price": 650000}
 
     objections = []
     interests = []
@@ -420,47 +388,19 @@ def create_mock_feedback(
         objections=objections,
         interests=interests,
         rating=4 if liked else 2,
-        comments="Nice property overall" if liked else "Not quite right for us"
+        comments="Nice property overall" if liked else "Not quite right for us",
     )
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Update preference weights based on feedback"
-    )
-    parser.add_argument(
-        "--lead-id",
-        required=True,
-        help="Lead ID to update weights for"
-    )
-    parser.add_argument(
-        "--feedback",
-        help="JSON file with feedback data"
-    )
-    parser.add_argument(
-        "--property-id",
-        help="Property ID for manual feedback"
-    )
-    parser.add_argument(
-        "--liked",
-        action="store_true",
-        help="Mark as liked (for manual feedback)"
-    )
-    parser.add_argument(
-        "--offer-made",
-        action="store_true",
-        help="Mark as offer made (for manual feedback)"
-    )
-    parser.add_argument(
-        "--weights-file",
-        help="JSON file to load/save weights"
-    )
-    parser.add_argument(
-        "--output",
-        choices=["json", "text"],
-        default="text",
-        help="Output format"
-    )
+    parser = argparse.ArgumentParser(description="Update preference weights based on feedback")
+    parser.add_argument("--lead-id", required=True, help="Lead ID to update weights for")
+    parser.add_argument("--feedback", help="JSON file with feedback data")
+    parser.add_argument("--property-id", help="Property ID for manual feedback")
+    parser.add_argument("--liked", action="store_true", help="Mark as liked (for manual feedback)")
+    parser.add_argument("--offer-made", action="store_true", help="Mark as offer made (for manual feedback)")
+    parser.add_argument("--weights-file", help="JSON file to load/save weights")
+    parser.add_argument("--output", choices=["json", "text"], default="text", help="Output format")
 
     args = parser.parse_args()
 
@@ -472,11 +412,7 @@ def main():
             print(f"Error: Feedback file not found: {args.feedback}")
             sys.exit(1)
     elif args.property_id:
-        feedback = create_mock_feedback(
-            args.property_id,
-            args.liked,
-            args.offer_made
-        )
+        feedback = create_mock_feedback(args.property_id, args.liked, args.offer_made)
     else:
         # Use default mock feedback
         feedback = create_mock_feedback("mock_property", True, False)
@@ -501,7 +437,7 @@ def main():
             "learning_rate_used": result.learning_rate_used,
             "signal_type": result.signal_type,
             "feedback_summary": result.feedback_summary,
-            "updated_at": result.updated_at
+            "updated_at": result.updated_at,
         }
         print(json.dumps(output, indent=2))
     else:

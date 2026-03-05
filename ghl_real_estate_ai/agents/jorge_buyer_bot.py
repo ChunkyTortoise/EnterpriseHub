@@ -130,7 +130,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
     6. Schedule follow-up actions based on qualification level
 
     This class now delegates to specialized components while maintaining
-    
+
     """
 
     MAX_CONVERSATION_HISTORY = MAX_CONVERSATION_HISTORY
@@ -357,9 +357,18 @@ class JorgeBuyerBot(BaseBotWorkflow):
             # Without it, "timeline" (decoder idx=2) maps to resp idx=3, skipping the
             # bedrooms question when the step guard fires.
             _STEP_ORDER_INTENT = [
-                "budget", "pre-approval", "bedrooms", "timeline", "preferences",
-                "decision_makers", "property", "property_search",
-                "property_matching", "appointment", "appointment_confirmed", "handoff_ready",
+                "budget",
+                "pre-approval",
+                "bedrooms",
+                "timeline",
+                "preferences",
+                "decision_makers",
+                "property",
+                "property_search",
+                "property_matching",
+                "appointment",
+                "appointment_confirmed",
+                "handoff_ready",
             ]
             _STEP_IDX_INTENT = {s: i for i, s in enumerate(_STEP_ORDER_INTENT)}
             _current_step = state.get("current_qualification_step", "budget")
@@ -473,7 +482,6 @@ class JorgeBuyerBot(BaseBotWorkflow):
 
     # ERROR HANDLING & ESCALATION METHODS (Delegated)
 
-
     async def escalate_to_human_review(self, buyer_id: str, reason: str, context: Dict) -> Dict:
         """
         Escalate buyer conversation to human agent review.
@@ -490,7 +498,6 @@ class JorgeBuyerBot(BaseBotWorkflow):
 
     # FALLBACK METHODS (Delegated)
 
-
     async def _fallback_financial_assessment(self, state: BuyerBotState) -> Dict:
         """
         Multi-tier fallback for financial assessment when primary service fails.
@@ -503,7 +510,6 @@ class JorgeBuyerBot(BaseBotWorkflow):
         return assess_financial_from_conversation(conversation_text)
 
     # EXTRACTION HELPERS (Delegated)
-
 
     async def _extract_budget_range(self, conversation_history: List[Dict]) -> Optional[Dict[str, int]]:
         """Extract budget range from conversation history."""
@@ -521,7 +527,6 @@ class JorgeBuyerBot(BaseBotWorkflow):
 
     # HANDOFF CONTEXT HELPERS (Delegated)
 
-
     def _has_valid_handoff_context(self, handoff_context: Optional["EnrichedHandoffContext"]) -> bool:
         """Check if handoff context is valid and recent (<24h)."""
         return self._handoff_manager.has_valid_handoff_context(handoff_context)
@@ -533,7 +538,6 @@ class JorgeBuyerBot(BaseBotWorkflow):
         return self._handoff_manager.populate_state_from_context(handoff_context, initial_state)
 
     # MAIN ENTRY POINT
-
 
     async def process_buyer_conversation(
         self,
@@ -700,9 +704,12 @@ class JorgeBuyerBot(BaseBotWorkflow):
                     conversation_id,
                 )
                 import re as _sg_re
+
                 _sg_hist = initial_state.get("conversation_history", [])
                 _sg_user = " ".join(m.get("content", "") for m in _sg_hist if m.get("role") == "user").lower()
-                _sg_bot = [m.get("content", "").lower() for m in _sg_hist if m.get("role") in ("assistant", "bot", "ai")]
+                _sg_bot = [
+                    m.get("content", "").lower() for m in _sg_hist if m.get("role") in ("assistant", "bot", "ai")
+                ]
                 _sg_todo = []
                 if not _sg_re.search(r"\$[\d,.]+\s*[mkMK]?|\d+\s*(?:m\b|k\b|thousand|million)|\d{6,}", _sg_user):
                     _sg_todo.append("budget range")
@@ -711,7 +718,10 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 # "3 and yes/ya/yeah" — user answering bedroom question directly
                 if not _sg_re.search(r"\d+\s*(?:bed|br|bedroom)|\b[1-9]\b\s+and\s+\w+", _sg_user):
                     _sg_todo.append("bedrooms")
-                if not _sg_re.search(r"\b(?:june|july|august|september|october|spring|summer|fall|winter|months?|weeks?|years?|day|days|asap|soon|quickly|urgent|ready|timeline|moving|relocat|by \w+)\b", _sg_user):
+                if not _sg_re.search(
+                    r"\b(?:june|july|august|september|october|spring|summer|fall|winter|months?|weeks?|years?|day|days|asap|soon|quickly|urgent|ready|timeline|moving|relocat|by \w+)\b",
+                    _sg_user,
+                ):
                     _sg_todo.append("timeline")
                 _sg_fallbacks = {
                     "budget range": "What's your price range? That helps me focus on the right options for you.",
@@ -733,9 +743,9 @@ class JorgeBuyerBot(BaseBotWorkflow):
                 else:
                     # All info collected — check scheduling step
                     _sg_sched_asked = sum(
-                        1 for m in _sg_bot
-                        if "morning or afternoon" in m or "morning, afternoon" in m
-                        or "mornings or afternoons" in m
+                        1
+                        for m in _sg_bot
+                        if "morning or afternoon" in m or "morning, afternoon" in m or "mornings or afternoons" in m
                     )
                     # Advance to confirmation if: bot already asked once AND user replied with a time preference
                     _sg_user_gave_time = _sg_re.search(
@@ -881,7 +891,6 @@ class JorgeBuyerBot(BaseBotWorkflow):
 
     # PHASE 3.3 INTELLIGENCE ENHANCEMENT METHODS
 
-
     async def _enhance_buyer_prompt_with_intelligence(
         self, base_prompt: str, intelligence_context: "BotIntelligenceContext", state: BuyerBotState
     ) -> str:
@@ -949,7 +958,6 @@ class JorgeBuyerBot(BaseBotWorkflow):
 
     # FACTORY METHODS & PERFORMANCE METRICS
 
-
     @classmethod
     def create_enhanced_buyer_bot(cls, tenant_id: str = "jorge_buyer") -> "JorgeBuyerBot":
         """Factory method: Create buyer bot with conversation intelligence enabled"""
@@ -990,7 +998,6 @@ class JorgeBuyerBot(BaseBotWorkflow):
 
     # PHASE 1.4: BUYER PERSONA CLASSIFICATION (Delegated)
 
-
     async def classify_buyer_persona(self, state: BuyerBotState) -> Dict:
         """Classify buyer persona based on conversation analysis ."""
         return await self._workflow_service.classify_buyer_persona(state)
@@ -999,8 +1006,7 @@ class JorgeBuyerBot(BaseBotWorkflow):
         """Sync buyer persona to GHL as tags ."""
         await self._workflow_service._sync_buyer_persona_to_ghl(buyer_id, persona_classification)
 
-    # EXECUTIVE BRIEF GENERATION 
-
+    # EXECUTIVE BRIEF GENERATION
 
     async def generate_executive_brief(self, state: BuyerBotState) -> Dict:
         """

@@ -22,9 +22,10 @@ from ghl_real_estate_ai.agent_system.memory.manager import memory_manager
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 async def main():
     logger.info("Starting Nightly Memory Consolidation...")
-    
+
     if not memory_manager.enabled:
         logger.warning("Graphiti memory is not enabled. Aborting consolidation.")
         return
@@ -35,6 +36,7 @@ async def main():
     except Exception as e:
         logger.error(f"Memory consolidation failed: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

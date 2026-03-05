@@ -40,7 +40,7 @@ from ghl_real_estate_ai.api.schemas.billing import (
     TierDistribution,
     BillingError,
     SubscriptionTier,
-    SubscriptionStatus
+    SubscriptionStatus,
 )
 
 logger = get_logger(__name__)
@@ -54,12 +54,7 @@ monitoring_service = MonitoringService()
 
 # Revenue Protection: Retry logic with exponential backoff
 async def retry_with_exponential_backoff(
-    func,
-    max_retries: int = 3,
-    base_delay: float = 1.0,
-    max_delay: float = 60.0,
-    *args,
-    **kwargs
+    func, max_retries: int = 3, base_delay: float = 1.0, max_delay: float = 60.0, *args, **kwargs
 ):
     """
     Retry function with exponential backoff for revenue protection.
@@ -91,22 +86,17 @@ async def retry_with_exponential_backoff(
                         "function": func.__name__,
                         "attempt": attempt + 1,
                         "recoverable": e.recoverable,
-                        "stripe_error_code": e.stripe_error_code
-                    }
+                        "stripe_error_code": e.stripe_error_code,
+                    },
                 )
                 raise
 
             # Calculate next retry delay
-            delay = min(base_delay * (2 ** attempt), max_delay)
+            delay = min(base_delay * (2**attempt), max_delay)
             logger.warning(
                 f"Billing operation failed (attempt {attempt + 1}/{max_retries + 1}). "
                 f"Retrying in {delay}s: {e.message}",
-                extra={
-                    "function": func.__name__,
-                    "attempt": attempt + 1,
-                    "delay": delay,
-                    "recoverable": e.recoverable
-                }
+                extra={"function": func.__name__, "attempt": attempt + 1, "delay": delay, "recoverable": e.recoverable},
             )
 
             await asyncio.sleep(delay)
@@ -118,11 +108,7 @@ async def retry_with_exponential_backoff(
                 service_name="billing_api",
                 severity=AlertSeverity.CRITICAL,
                 message=f"Unexpected billing system error: {str(e)}",
-                metadata={
-                    "function": func.__name__,
-                    "attempt": attempt + 1,
-                    "error_type": type(e).__name__
-                }
+                metadata={"function": func.__name__, "attempt": attempt + 1, "error_type": type(e).__name__},
             )
             raise
 
@@ -134,11 +120,9 @@ async def retry_with_exponential_backoff(
 # Subscription Management Endpoints
 # ===================================================================
 
+
 @router.post("/subscriptions", response_model=SubscriptionResponse)
-async def create_subscription(
-    request: CreateSubscriptionRequest,
-    background_tasks: BackgroundTasks
-):
+async def create_subscription(request: CreateSubscriptionRequest, background_tasks: BackgroundTasks):
     """
     Create a new subscription for a location.
 
@@ -161,8 +145,8 @@ async def create_subscription(
                 "location_id": request.location_id,
                 "tier": request.tier.value,
                 "trial_days": request.trial_days,
-                "has_email": bool(request.email)
-            }
+                "has_email": bool(request.email),
+            },
         )
 
         # Initialize subscription through subscription manager
@@ -178,8 +162,8 @@ async def create_subscription(
                 "tier": subscription.tier.value,
                 "base_price": float(subscription.base_price),
                 "trial_days": request.trial_days,
-                "arr_impact": float(subscription.base_price) * 12  # Annual value
-            }
+                "arr_impact": float(subscription.base_price) * 12,  # Annual value
+            },
         )
 
         logger.info(
@@ -188,8 +172,8 @@ async def create_subscription(
                 "subscription_id": subscription.id,
                 "location_id": subscription.location_id,
                 "stripe_subscription_id": subscription.stripe_subscription_id,
-                "tier": subscription.tier.value
-            }
+                "tier": subscription.tier.value,
+            },
         )
 
         return subscription
@@ -197,11 +181,7 @@ async def create_subscription(
     except SubscriptionManagerError as e:
         logger.error(
             f"Subscription manager error for location {request.location_id}: {e}",
-            extra={
-                "location_id": request.location_id,
-                "tier": request.tier.value,
-                "error": str(e)
-            }
+            extra={"location_id": request.location_id, "tier": request.tier.value, "error": str(e)},
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -210,18 +190,14 @@ async def create_subscription(
                 "error_message": str(e),
                 "error_type": "subscription_manager",
                 "recoverable": True,
-                "suggested_action": "Verify payment method and try again"
-            }
+                "suggested_action": "Verify payment method and try again",
+            },
         )
     except Exception as e:
         logger.error(
             f"Unexpected error creating subscription for {request.location_id}: {e}",
-            extra={
-                "location_id": request.location_id,
-                "tier": request.tier.value,
-                "error_type": type(e).__name__
-            },
-            exc_info=True
+            extra={"location_id": request.location_id, "tier": request.tier.value, "error_type": type(e).__name__},
+            exc_info=True,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -229,8 +205,8 @@ async def create_subscription(
                 "error_code": "subscription_creation_error",
                 "error_message": "Failed to create subscription",
                 "error_type": "internal_error",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
 
 
@@ -255,9 +231,9 @@ async def get_subscription(subscription_id: int):
         # ROADMAP-008: Implement subscription database lookup
         # Query subscriptions table by ID, join with customers for customer details
         from ghl_real_estate_ai.services.database_service import get_database
-        
+
         db = await get_database()
-        
+
         async with db.get_connection() as conn:
             # Query subscription by ID with customer join
             row = await conn.fetchrow(
@@ -286,9 +262,9 @@ async def get_subscription(subscription_id: int):
                 LEFT JOIN stripe_customers c ON s.stripe_customer_id = c.stripe_customer_id
                 WHERE s.id = $1
                 """,
-                subscription_id
+                subscription_id,
             )
-        
+
         if not row:
             logger.warning(f"Subscription {subscription_id} not found")
             raise HTTPException(
@@ -298,31 +274,29 @@ async def get_subscription(subscription_id: int):
                     "error_message": f"Subscription with ID {subscription_id} not found",
                     "error_type": "not_found",
                     "recoverable": True,
-                    "suggested_action": "Verify the subscription ID and try again"
-                }
+                    "suggested_action": "Verify the subscription ID and try again",
+                },
             )
-        
+
         # Convert row to dict and calculate usage percentage
         sub_data = dict(row)
         usage_percentage = (
-            (sub_data["usage_current"] / sub_data["usage_allowance"]) * 100
-            if sub_data["usage_allowance"] > 0
-            else 0.0
+            (sub_data["usage_current"] / sub_data["usage_allowance"]) * 100 if sub_data["usage_allowance"] > 0 else 0.0
         )
-        
+
         # Build next invoice date (current period end)
         next_invoice_date = sub_data["current_period_end"]
-        
+
         logger.info(
             f"Retrieved subscription {subscription_id}",
             extra={
                 "subscription_id": subscription_id,
                 "location_id": sub_data["location_id"],
                 "tier": sub_data["tier"],
-                "status": sub_data["status"]
-            }
+                "status": sub_data["status"],
+            },
         )
-        
+
         return SubscriptionResponse(
             id=sub_data["id"],
             location_id=sub_data["location_id"],
@@ -342,7 +316,7 @@ async def get_subscription(subscription_id: int):
             cancel_at_period_end=sub_data.get("cancel_at_period_end", False),
             next_invoice_date=next_invoice_date,
             created_at=sub_data["created_at"],
-            updated_at=sub_data.get("updated_at")
+            updated_at=sub_data.get("updated_at"),
         )
 
     except HTTPException:
@@ -355,16 +329,14 @@ async def get_subscription(subscription_id: int):
                 "error_code": "subscription_retrieval_error",
                 "error_message": "Failed to retrieve subscription",
                 "error_type": "database_error",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
 
 
 @router.put("/subscriptions/{subscription_id}", response_model=SubscriptionResponse)
 async def update_subscription(
-    subscription_id: int,
-    request: ModifySubscriptionRequest,
-    background_tasks: BackgroundTasks
+    subscription_id: int, request: ModifySubscriptionRequest, background_tasks: BackgroundTasks
 ):
     """
     Update an existing subscription.
@@ -389,8 +361,8 @@ async def update_subscription(
                 "subscription_id": subscription_id,
                 "tier_change": request.tier.value if request.tier else None,
                 "payment_method_change": bool(request.payment_method_id),
-                "cancellation_scheduled": request.cancel_at_period_end
-            }
+                "cancellation_scheduled": request.cancel_at_period_end,
+            },
         )
 
         # ROADMAP-009: Payment method listing + cancellation via DB + Stripe
@@ -430,9 +402,7 @@ async def update_subscription(
 
         # Handle tier change if requested
         if request.tier:
-            subscription = await subscription_manager.handle_tier_change(
-                subscription_id, request.tier
-            )
+            subscription = await subscription_manager.handle_tier_change(subscription_id, request.tier)
             background_tasks.add_task(
                 _track_billing_event,
                 "subscription_modified",
@@ -492,11 +462,7 @@ async def update_subscription(
             )
 
         sub = dict(updated_row)
-        usage_pct = (
-            (sub["usage_current"] / sub["usage_allowance"]) * 100
-            if sub["usage_allowance"] > 0
-            else 0.0
-        )
+        usage_pct = (sub["usage_current"] / sub["usage_allowance"]) * 100 if sub["usage_allowance"] > 0 else 0.0
 
         # Track subscription modification event
         background_tasks.add_task(
@@ -541,8 +507,8 @@ async def update_subscription(
                 "error_code": "subscription_modification_failed",
                 "error_message": str(e),
                 "error_type": "subscription_manager",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
     except HTTPException:
         raise
@@ -554,8 +520,8 @@ async def update_subscription(
                 "error_code": "subscription_update_error",
                 "error_message": "Failed to update subscription",
                 "error_type": "internal_error",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
 
 
@@ -563,7 +529,7 @@ async def update_subscription(
 async def cancel_subscription(
     subscription_id: int,
     background_tasks: BackgroundTasks,
-    immediate: bool = Query(False, description="Cancel immediately vs at period end")
+    immediate: bool = Query(False, description="Cancel immediately vs at period end"),
 ):
     """
     Cancel a subscription.
@@ -581,18 +547,15 @@ async def cancel_subscription(
     try:
         logger.info(
             f"Canceling subscription {subscription_id}",
-            extra={
-                "subscription_id": subscription_id,
-                "immediate": immediate
-            }
+            extra={"subscription_id": subscription_id, "immediate": immediate},
         )
 
         # ROADMAP-010: Validate subscription exists locally before Stripe cancellation
         # Query subscriptions table first, then call Stripe
         from ghl_real_estate_ai.services.database_service import get_database
-        
+
         db = await get_database()
-        
+
         async with db.get_connection() as conn:
             # Query subscription by ID to validate it exists locally
             subscription_row = await conn.fetchrow(
@@ -608,17 +571,14 @@ async def cancel_subscription(
                 FROM subscriptions
                 WHERE id = $1
                 """,
-                subscription_id
+                subscription_id,
             )
-        
+
         # Validate subscription exists in local database
         if not subscription_row:
             logger.warning(
                 f"Subscription {subscription_id} not found in local database",
-                extra={
-                    "subscription_id": subscription_id,
-                    "action": "cancellation_blocked"
-                }
+                extra={"subscription_id": subscription_id, "action": "cancellation_blocked"},
             )
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -627,10 +587,10 @@ async def cancel_subscription(
                     "error_message": f"Subscription with ID {subscription_id} not found in local database",
                     "error_type": "not_found",
                     "recoverable": True,
-                    "suggested_action": "Verify the subscription ID and try again"
-                }
+                    "suggested_action": "Verify the subscription ID and try again",
+                },
             )
-        
+
         stripe_subscription_id = subscription_row["stripe_subscription_id"]
 
         # ROADMAP-010: Prevent double-cancel
@@ -657,8 +617,8 @@ async def cancel_subscription(
                 extra={
                     "subscription_id": subscription_id,
                     "location_id": subscription_row["location_id"],
-                    "action": "cancellation_blocked_no_stripe_id"
-                }
+                    "action": "cancellation_blocked_no_stripe_id",
+                },
             )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -667,10 +627,10 @@ async def cancel_subscription(
                     "error_message": "Subscription has no associated Stripe subscription ID",
                     "error_type": "invalid_state",
                     "recoverable": True,
-                    "suggested_action": "Contact support to resolve this subscription"
-                }
+                    "suggested_action": "Contact support to resolve this subscription",
+                },
             )
-        
+
         # Log audit trail for database validation passed
         logger.info(
             f"Local subscription validation passed for {subscription_id}",
@@ -680,23 +640,21 @@ async def cancel_subscription(
                 "location_id": subscription_row["location_id"],
                 "current_status": subscription_row["status"],
                 "tier": subscription_row["tier"],
-                "action": "proceeding_to_stripe_cancellation"
-            }
+                "action": "proceeding_to_stripe_cancellation",
+            },
         )
-        
+
         # Now proceed to cancel in Stripe
         try:
-            stripe_result = await billing_service.cancel_subscription(
-                stripe_subscription_id, immediate
-            )
+            stripe_result = await billing_service.cancel_subscription(stripe_subscription_id, immediate)
             logger.info(
                 f"Successfully canceled Stripe subscription {stripe_subscription_id}",
                 extra={
                     "subscription_id": subscription_id,
                     "stripe_subscription_id": stripe_subscription_id,
                     "stripe_response": stripe_result,
-                    "immediate": immediate
-                }
+                    "immediate": immediate,
+                },
             )
 
             # Update local subscription status
@@ -719,8 +677,8 @@ async def cancel_subscription(
                     "subscription_id": subscription_id,
                     "stripe_subscription_id": stripe_subscription_id,
                     "error": str(e),
-                    "stripe_error_code": e.stripe_error_code
-                }
+                    "stripe_error_code": e.stripe_error_code,
+                },
             )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -729,19 +687,15 @@ async def cancel_subscription(
                     "error_message": f"Failed to cancel subscription in Stripe: {str(e)}",
                     "error_type": "stripe_error",
                     "recoverable": e.recoverable,
-                    "suggested_action": "Verify Stripe subscription status and try again"
-                }
+                    "suggested_action": "Verify Stripe subscription status and try again",
+                },
             )
 
         # Track subscription cancellation
         background_tasks.add_task(
             _track_billing_event,
             "subscription_canceled",
-            {
-                "subscription_id": subscription_id,
-                "immediate": immediate,
-                "cancellation_reason": "api_request"
-            }
+            {"subscription_id": subscription_id, "immediate": immediate, "cancellation_reason": "api_request"},
         )
 
         logger.info(f"Successfully canceled subscription {subscription_id}")
@@ -753,7 +707,7 @@ async def cancel_subscription(
             "effective_date": datetime.now().isoformat(),
             "immediate": immediate,
             "refund_amount": 0.0,  # Calculate based on proration
-            "message": f"Subscription {'canceled immediately' if immediate else 'scheduled for cancellation at period end'}"
+            "message": f"Subscription {'canceled immediately' if immediate else 'scheduled for cancellation at period end'}",
         }
 
     except HTTPException:
@@ -766,8 +720,8 @@ async def cancel_subscription(
                 "error_code": "subscription_cancellation_error",
                 "error_message": "Failed to cancel subscription",
                 "error_type": "internal_error",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
 
 
@@ -775,11 +729,9 @@ async def cancel_subscription(
 # Usage Tracking Endpoints
 # ===================================================================
 
+
 @router.post("/usage", response_model=Dict[str, Any])
-async def record_usage(
-    request: UsageRecordRequest,
-    background_tasks: BackgroundTasks
-):
+async def record_usage(request: UsageRecordRequest, background_tasks: BackgroundTasks):
     """
     Record usage event for billing.
 
@@ -802,8 +754,8 @@ async def record_usage(
                 "subscription_id": request.subscription_id,
                 "lead_id": request.lead_id,
                 "amount": float(request.amount),
-                "tier": request.tier
-            }
+                "tier": request.tier,
+            },
         )
 
         # Record usage through billing service with retry logic for revenue protection
@@ -850,8 +802,8 @@ async def record_usage(
                 "subscription_id": request.subscription_id,
                 "amount": float(request.amount),
                 "tier": request.tier,
-                "stripe_usage_record_id": stripe_usage_record.id
-            }
+                "stripe_usage_record_id": stripe_usage_record.id,
+            },
         )
 
         logger.info(f"Successfully recorded usage {stripe_usage_record.id}")
@@ -863,20 +815,22 @@ async def record_usage(
             "amount_billed": float(request.amount),
             "tier": request.tier,
             "billing_period": f"{request.billing_period_start.date()} to {request.billing_period_end.date()}",
-            "next_invoice_impact": f"${request.amount} will be added to next invoice"
+            "next_invoice_impact": f"${request.amount} will be added to next invoice",
         }
 
     except BillingServiceError as e:
         # Retry logic handled by retry_with_exponential_backoff
         # This should only be reached for non-recoverable errors
-        logger.error(f"REVENUE PROTECTION: Usage recording failed after retries: {e.message}",
-                    extra={
-                        "subscription_id": request.subscription_id,
-                        "lead_id": request.lead_id,
-                        "amount": float(request.amount),
-                        "stripe_error_code": e.stripe_error_code,
-                        "revenue_impact": "CRITICAL"
-                    })
+        logger.error(
+            f"REVENUE PROTECTION: Usage recording failed after retries: {e.message}",
+            extra={
+                "subscription_id": request.subscription_id,
+                "lead_id": request.lead_id,
+                "amount": float(request.amount),
+                "stripe_error_code": e.stripe_error_code,
+                "revenue_impact": "CRITICAL",
+            },
+        )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
@@ -884,25 +838,27 @@ async def record_usage(
                 "error_message": f"Revenue recording failed after retries: {e.message}",
                 "error_type": "billing_service",
                 "recoverable": e.recoverable,
-                "stripe_error_code": e.stripe_error_code
-            }
+                "stripe_error_code": e.stripe_error_code,
+            },
         )
     except Exception as e:
         # System errors escalated by retry function
-        logger.error(f"REVENUE PROTECTION: System error in usage recording: {e}",
-                    extra={
-                        "subscription_id": request.subscription_id,
-                        "error_type": type(e).__name__,
-                        "revenue_impact": "CRITICAL"
-                    })
+        logger.error(
+            f"REVENUE PROTECTION: System error in usage recording: {e}",
+            extra={
+                "subscription_id": request.subscription_id,
+                "error_type": type(e).__name__,
+                "revenue_impact": "CRITICAL",
+            },
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
                 "error_code": "usage_recording_system_error",
                 "error_message": "Critical system error in revenue recording",
                 "error_type": "internal_error",
-                "recoverable": False
-            }
+                "recoverable": False,
+            },
         )
 
 
@@ -936,8 +892,8 @@ async def get_usage_data(subscription_id: int):
                     "error_code": "subscription_not_found",
                     "error_message": f"No active subscription found with ID {subscription_id}",
                     "error_type": "not_found",
-                    "recoverable": False
-                }
+                    "recoverable": False,
+                },
             )
 
         logger.info(f"Retrieved usage data for subscription {subscription_id}")
@@ -953,8 +909,8 @@ async def get_usage_data(subscription_id: int):
                 "error_code": "usage_data_error",
                 "error_message": "Failed to retrieve usage data",
                 "error_type": "internal_error",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
 
 
@@ -962,11 +918,9 @@ async def get_usage_data(subscription_id: int):
 # Invoice and Payment Endpoints
 # ===================================================================
 
+
 @router.post("/invoices/{invoice_id}/pay", response_model=Dict[str, Any])
-async def process_payment(
-    invoice_id: str,
-    background_tasks: BackgroundTasks
-):
+async def process_payment(invoice_id: str, background_tasks: BackgroundTasks):
     """
     Process payment for an invoice.
 
@@ -983,10 +937,7 @@ async def process_payment(
         HTTPException: If payment processing fails
     """
     try:
-        logger.info(
-            f"Processing payment for invoice {invoice_id}",
-            extra={"invoice_id": invoice_id}
-        )
+        logger.info(f"Processing payment for invoice {invoice_id}", extra={"invoice_id": invoice_id})
 
         # Get invoice details from Stripe
         invoice = stripe.Invoice.retrieve(invoice_id)
@@ -1003,8 +954,8 @@ async def process_payment(
                     "invoice_id": invoice_id,
                     "amount": invoice.amount_due / 100,  # Convert from cents
                     "customer_id": invoice.customer,
-                    "status": paid_invoice.status
-                }
+                    "status": paid_invoice.status,
+                },
             )
 
             logger.info(f"Successfully processed payment for invoice {invoice_id}")
@@ -1015,14 +966,14 @@ async def process_payment(
                 "amount_paid": invoice.amount_due / 100,
                 "status": paid_invoice.status,
                 "payment_date": datetime.now().isoformat(),
-                "receipt_url": paid_invoice.hosted_invoice_url
+                "receipt_url": paid_invoice.hosted_invoice_url,
             }
         else:
             return {
                 "success": True,
                 "invoice_id": invoice_id,
                 "message": f"Invoice already {invoice.status}",
-                "status": invoice.status
+                "status": invoice.status,
             }
 
     except stripe.error.CardError as e:
@@ -1034,8 +985,8 @@ async def process_payment(
                 "error_message": f"Payment declined: {e.user_message}",
                 "error_type": "card_error",
                 "recoverable": True,
-                "stripe_error_code": e.code
-            }
+                "stripe_error_code": e.code,
+            },
         )
     except stripe.error.StripeError as e:
         logger.error(f"Stripe error processing payment for {invoice_id}: {e}")
@@ -1045,8 +996,8 @@ async def process_payment(
                 "error_code": "stripe_error",
                 "error_message": str(e),
                 "error_type": "stripe_api",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
     except Exception as e:
         logger.error(f"Error processing payment for {invoice_id}: {e}", exc_info=True)
@@ -1056,15 +1007,15 @@ async def process_payment(
                 "error_code": "payment_processing_error",
                 "error_message": "Failed to process payment",
                 "error_type": "internal_error",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
 
 
 @router.get("/invoices", response_model=List[InvoiceDetails])
 async def list_invoices(
     customer_id: str = Query(..., description="Stripe customer ID"),
-    limit: int = Query(default=10, le=100, description="Maximum number of invoices")
+    limit: int = Query(default=10, le=100, description="Maximum number of invoices"),
 ):
     """
     List invoices for a customer.
@@ -1080,10 +1031,7 @@ async def list_invoices(
         HTTPException: If invoice retrieval fails
     """
     try:
-        logger.info(
-            f"Listing invoices for customer {customer_id}",
-            extra={"customer_id": customer_id, "limit": limit}
-        )
+        logger.info(f"Listing invoices for customer {customer_id}", extra={"customer_id": customer_id, "limit": limit})
 
         # Get invoices from billing service
         invoices = await billing_service.get_customer_invoices(customer_id, limit)
@@ -1101,9 +1049,11 @@ async def list_invoices(
                 period_start=datetime.fromtimestamp(invoice.period_start),
                 period_end=datetime.fromtimestamp(invoice.period_end),
                 due_date=datetime.fromtimestamp(invoice.due_date) if invoice.due_date else None,
-                paid_at=datetime.fromtimestamp(invoice.status_transitions.paid_at) if invoice.status_transitions.paid_at else None,
+                paid_at=datetime.fromtimestamp(invoice.status_transitions.paid_at)
+                if invoice.status_transitions.paid_at
+                else None,
                 hosted_invoice_url=invoice.hosted_invoice_url,
-                invoice_pdf=invoice.invoice_pdf
+                invoice_pdf=invoice.invoice_pdf,
             )
             invoice_details.append(invoice_detail)
 
@@ -1118,8 +1068,8 @@ async def list_invoices(
                 "error_code": "invoice_listing_error",
                 "error_message": "Failed to retrieve invoices",
                 "error_type": "internal_error",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
 
 
@@ -1162,9 +1112,11 @@ async def get_billing_history(customer_id: str):
                 period_start=datetime.fromtimestamp(invoice.period_start),
                 period_end=datetime.fromtimestamp(invoice.period_end),
                 due_date=datetime.fromtimestamp(invoice.due_date) if invoice.due_date else None,
-                paid_at=datetime.fromtimestamp(invoice.status_transitions.paid_at) if invoice.status_transitions.paid_at else None,
+                paid_at=datetime.fromtimestamp(invoice.status_transitions.paid_at)
+                if invoice.status_transitions.paid_at
+                else None,
                 hosted_invoice_url=invoice.hosted_invoice_url,
-                invoice_pdf=invoice.invoice_pdf
+                invoice_pdf=invoice.invoice_pdf,
             )
             invoice_details.append(invoice_detail)
 
@@ -1172,14 +1124,16 @@ async def get_billing_history(customer_id: str):
         customer = stripe.Customer.retrieve(customer_id, expand=["sources"])
         payment_methods = []
         for source in customer.sources.data:
-            payment_methods.append({
-                "id": source.id,
-                "type": source.object,
-                "last4": getattr(source, "last4", "****"),
-                "brand": getattr(source, "brand", "Unknown"),
-                "exp_month": getattr(source, "exp_month", None),
-                "exp_year": getattr(source, "exp_year", None)
-            })
+            payment_methods.append(
+                {
+                    "id": source.id,
+                    "type": source.object,
+                    "last4": getattr(source, "last4", "****"),
+                    "brand": getattr(source, "brand", "Unknown"),
+                    "exp_month": getattr(source, "exp_month", None),
+                    "exp_year": getattr(source, "exp_year", None),
+                }
+            )
 
         # Calculate period
         if invoices:
@@ -1207,7 +1161,7 @@ async def get_billing_history(customer_id: str):
             total_spent=total_spent,
             period_start=period_start,
             period_end=period_end,
-            payment_methods=payment_methods
+            payment_methods=payment_methods,
         )
 
         logger.info(f"Retrieved billing history for customer {customer_id}")
@@ -1221,8 +1175,8 @@ async def get_billing_history(customer_id: str):
                 "error_code": "billing_history_error",
                 "error_message": "Failed to retrieve billing history",
                 "error_type": "internal_error",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
 
 
@@ -1230,11 +1184,9 @@ async def get_billing_history(customer_id: str):
 # Stripe Webhook Endpoint
 # ===================================================================
 
+
 @router.post("/webhooks/stripe", response_model=WebhookProcessingResult)
-async def handle_stripe_webhook(
-    request: Request,
-    background_tasks: BackgroundTasks
-):
+async def handle_stripe_webhook(request: Request, background_tasks: BackgroundTasks):
     """
     Handle Stripe webhook events.
 
@@ -1257,30 +1209,19 @@ async def handle_stripe_webhook(
 
         if not signature:
             logger.warning("Missing Stripe signature header")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Missing Stripe signature header"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing Stripe signature header")
 
         # Verify webhook signature
         if not billing_service.verify_webhook_signature(payload, signature):
             logger.error("Invalid Stripe webhook signature")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid webhook signature"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid webhook signature")
 
         # Parse webhook event
         try:
-            event_data = stripe.Webhook.construct_event(
-                payload, signature, os.getenv("STRIPE_WEBHOOK_SECRET")
-            )
+            event_data = stripe.Webhook.construct_event(payload, signature, os.getenv("STRIPE_WEBHOOK_SECRET"))
         except ValueError as e:
             logger.error(f"Invalid JSON in webhook payload: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid JSON payload"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload")
 
         # Process webhook event
         start_time = datetime.now()
@@ -1288,11 +1229,7 @@ async def handle_stripe_webhook(
         processing_time = (datetime.now() - start_time).total_seconds() * 1000
 
         # Store webhook event in database (background task)
-        background_tasks.add_task(
-            _store_webhook_event,
-            event_data,
-            processing_result
-        )
+        background_tasks.add_task(_store_webhook_event, event_data, processing_result)
 
         logger.info(
             f"Processed webhook event {event_data['id']}",
@@ -1300,8 +1237,8 @@ async def handle_stripe_webhook(
                 "event_id": event_data["id"],
                 "event_type": event_data["type"],
                 "processing_time_ms": processing_time,
-                "processed": processing_result["processed"]
-            }
+                "processed": processing_result["processed"],
+            },
         )
 
         return WebhookProcessingResult(
@@ -1310,7 +1247,7 @@ async def handle_stripe_webhook(
             processed=processing_result["processed"],
             processing_time_ms=processing_time,
             error_message=processing_result.get("error"),
-            actions_taken=processing_result.get("actions_taken", [])
+            actions_taken=processing_result.get("actions_taken", []),
         )
 
     except HTTPException:
@@ -1323,14 +1260,15 @@ async def handle_stripe_webhook(
                 "error_code": "webhook_processing_error",
                 "error_message": "Failed to process webhook",
                 "error_type": "internal_error",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
 
 
 # ===================================================================
 # Analytics Endpoints
 # ===================================================================
+
 
 @router.get("/analytics/revenue", response_model=RevenueAnalytics)
 async def get_revenue_analytics():
@@ -1436,8 +1374,8 @@ async def get_revenue_analytics():
                 "total_arr": total_arr,
                 "monthly_revenue": monthly_revenue,
                 "average_arpu": average_arpu,
-                "total_subscriptions": total_subscriptions
-            }
+                "total_subscriptions": total_subscriptions,
+            },
         )
 
         return revenue_analytics
@@ -1450,8 +1388,8 @@ async def get_revenue_analytics():
                 "error_code": "revenue_analytics_error",
                 "error_message": "Failed to calculate revenue analytics",
                 "error_type": "internal_error",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
 
 
@@ -1480,8 +1418,8 @@ async def get_tier_distribution():
                 "starter_count": tier_distribution.starter_count,
                 "professional_count": tier_distribution.professional_count,
                 "enterprise_count": tier_distribution.enterprise_count,
-                "total_subscriptions": tier_distribution.total_subscriptions
-            }
+                "total_subscriptions": tier_distribution.total_subscriptions,
+            },
         )
 
         return tier_distribution
@@ -1494,14 +1432,15 @@ async def get_tier_distribution():
                 "error_code": "tier_distribution_error",
                 "error_message": "Failed to calculate tier distribution",
                 "error_type": "internal_error",
-                "recoverable": True
-            }
+                "recoverable": True,
+            },
         )
 
 
 # ===================================================================
 # Utility Functions
 # ===================================================================
+
 
 async def _track_billing_event(event_type: str, data: Dict[str, Any]) -> None:
     """Track billing events for analytics (background task).

@@ -25,6 +25,7 @@ from mcp.types import Tool, TextContent
 # Load environment variables from .env file
 try:
     from dotenv import load_dotenv
+
     # Find .env file in project root
     env_path = Path(__file__).parent.parent.parent.parent / ".env"
     load_dotenv(env_path)
@@ -57,7 +58,7 @@ class PerplexityMCPServer:
         temperature: float = 0.2,
         return_citations: bool = True,
         return_images: bool = False,
-        search_recency_filter: Optional[str] = None
+        search_recency_filter: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Search using Perplexity AI with real-time web access.
@@ -81,10 +82,7 @@ class PerplexityMCPServer:
             )
         """
         if not self.api_key:
-            return {
-                "error": "PERPLEXITY_API_KEY not configured",
-                "status": "configuration_error"
-            }
+            return {"error": "PERPLEXITY_API_KEY not configured", "status": "configuration_error"}
 
         endpoint = f"{self.base_url}/chat/completions"
 
@@ -93,12 +91,9 @@ class PerplexityMCPServer:
             "messages": [
                 {
                     "role": "system",
-                    "content": "You are a helpful research assistant. Provide accurate, well-cited information."
+                    "content": "You are a helpful research assistant. Provide accurate, well-cited information.",
                 },
-                {
-                    "role": "user",
-                    "content": query
-                }
+                {"role": "user", "content": query},
             ],
             "max_tokens": max_tokens,
             "temperature": temperature,
@@ -111,11 +106,7 @@ class PerplexityMCPServer:
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(
-                    endpoint,
-                    json=payload,
-                    headers=self.headers
-                )
+                response = await client.post(endpoint, json=payload, headers=self.headers)
                 response.raise_for_status()
                 result = response.json()
 
@@ -129,7 +120,7 @@ class PerplexityMCPServer:
                     "images": result.get("images", []),
                     "model": result.get("model"),
                     "usage": result.get("usage", {}),
-                    "status": "success"
+                    "status": "success",
                 }
 
         except httpx.HTTPStatusError as e:
@@ -145,10 +136,7 @@ class PerplexityMCPServer:
             return {"error": error_msg, "status": "failed"}
 
     async def research_topic(
-        self,
-        topic: str,
-        focus: Optional[str] = None,
-        depth: str = "comprehensive"
+        self, topic: str, focus: Optional[str] = None, depth: str = "comprehensive"
     ) -> Dict[str, Any]:
         """
         Conduct deep research on a topic with structured output.
@@ -172,7 +160,7 @@ class PerplexityMCPServer:
         depth_config = {
             "quick": {"max_tokens": 2000, "temperature": 0.1},
             "balanced": {"max_tokens": 3000, "temperature": 0.2},
-            "comprehensive": {"max_tokens": 4000, "temperature": 0.2}
+            "comprehensive": {"max_tokens": 4000, "temperature": 0.2},
         }
 
         config = depth_config.get(depth, depth_config["balanced"])
@@ -185,20 +173,12 @@ class PerplexityMCPServer:
         query += "\n\nInclude: key concepts, current trends, best practices, and relevant examples."
 
         result = await self.search(
-            query=query,
-            max_tokens=config["max_tokens"],
-            temperature=config["temperature"],
-            return_citations=True
+            query=query, max_tokens=config["max_tokens"], temperature=config["temperature"], return_citations=True
         )
 
         return result
 
-    async def get_latest_news(
-        self,
-        topic: str,
-        timeframe: str = "day",
-        max_results: int = 5
-    ) -> Dict[str, Any]:
+    async def get_latest_news(self, topic: str, timeframe: str = "day", max_results: int = 5) -> Dict[str, Any]:
         """
         Get latest news and updates on a topic.
 
@@ -216,20 +196,13 @@ class PerplexityMCPServer:
                 timeframe="week"
             )
         """
-        query = f"What are the latest news and updates about {topic}? Provide {max_results} most recent and relevant items."
-
-        return await self.search(
-            query=query,
-            search_recency_filter=timeframe,
-            return_citations=True,
-            max_tokens=2000
+        query = (
+            f"What are the latest news and updates about {topic}? Provide {max_results} most recent and relevant items."
         )
 
-    async def compare_approaches(
-        self,
-        topic: str,
-        approaches: List[str]
-    ) -> Dict[str, Any]:
+        return await self.search(query=query, search_recency_filter=timeframe, return_citations=True, max_tokens=2000)
+
+    async def compare_approaches(self, topic: str, approaches: List[str]) -> Dict[str, Any]:
         """
         Compare different approaches or technologies.
 
@@ -259,12 +232,7 @@ class PerplexityMCPServer:
         Include practical examples and current industry usage.
         """
 
-        return await self.search(
-            query=query,
-            max_tokens=4000,
-            temperature=0.2,
-            return_citations=True
-        )
+        return await self.search(query=query, max_tokens=4000, temperature=0.2, return_citations=True)
 
 
 async def run_server():
@@ -282,24 +250,21 @@ async def run_server():
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "query": {
-                            "type": "string",
-                            "description": "Search query or question"
-                        },
+                        "query": {"type": "string", "description": "Search query or question"},
                         "search_recency_filter": {
                             "type": "string",
                             "enum": ["day", "week", "month", "year"],
-                            "description": "Filter results by time (optional)"
+                            "description": "Filter results by time (optional)",
                         },
                         "model": {
                             "type": "string",
                             "description": "Perplexity model (default: sonar-pro)",
                             "default": "sonar-pro",
-                            "enum": ["sonar-pro", "sonar", "sonar-reasoning"]
-                        }
+                            "enum": ["sonar-pro", "sonar", "sonar-reasoning"],
+                        },
                     },
-                    "required": ["query"]
-                }
+                    "required": ["query"],
+                },
             ),
             Tool(
                 name="perplexity_research",
@@ -307,23 +272,17 @@ async def run_server():
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "topic": {
-                            "type": "string",
-                            "description": "Main research topic"
-                        },
-                        "focus": {
-                            "type": "string",
-                            "description": "Specific aspect to focus on (optional)"
-                        },
+                        "topic": {"type": "string", "description": "Main research topic"},
+                        "focus": {"type": "string", "description": "Specific aspect to focus on (optional)"},
                         "depth": {
                             "type": "string",
                             "enum": ["quick", "balanced", "comprehensive"],
                             "description": "Research depth",
-                            "default": "balanced"
-                        }
+                            "default": "balanced",
+                        },
                     },
-                    "required": ["topic"]
-                }
+                    "required": ["topic"],
+                },
             ),
             Tool(
                 name="perplexity_news",
@@ -331,19 +290,16 @@ async def run_server():
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "topic": {
-                            "type": "string",
-                            "description": "News topic"
-                        },
+                        "topic": {"type": "string", "description": "News topic"},
                         "timeframe": {
                             "type": "string",
                             "enum": ["day", "week", "month"],
                             "description": "Time filter",
-                            "default": "week"
-                        }
+                            "default": "week",
+                        },
                     },
-                    "required": ["topic"]
-                }
+                    "required": ["topic"],
+                },
             ),
             Tool(
                 name="perplexity_compare",
@@ -351,19 +307,16 @@ async def run_server():
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "topic": {
-                            "type": "string",
-                            "description": "Main topic or problem domain"
-                        },
+                        "topic": {"type": "string", "description": "Main topic or problem domain"},
                         "approaches": {
                             "type": "array",
                             "items": {"type": "string"},
-                            "description": "List of approaches to compare"
-                        }
+                            "description": "List of approaches to compare",
+                        },
                     },
-                    "required": ["topic", "approaches"]
-                }
-            )
+                    "required": ["topic", "approaches"],
+                },
+            ),
         ]
 
     @server.call_tool()
@@ -379,10 +332,7 @@ async def run_server():
         elif name == "perplexity_compare":
             result = await perplexity.compare_approaches(**arguments)
         else:
-            return [TextContent(
-                type="text",
-                text=f"Unknown tool: {name}"
-            )]
+            return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
         # Format response
         if result.get("status") == "success":
@@ -395,20 +345,13 @@ async def run_server():
 
             return [TextContent(type="text", text=response_text)]
         else:
-            return [TextContent(
-                type="text",
-                text=f"Error: {result.get('error', 'Unknown error')}"
-            )]
+            return [TextContent(type="text", text=f"Error: {result.get('error', 'Unknown error')}")]
 
     # Run the server
     from mcp.server.stdio import stdio_server
 
     async with stdio_server() as (read_stream, write_stream):
-        await server.run(
-            read_stream,
-            write_stream,
-            server.create_initialization_options()
-        )
+        await server.run(read_stream, write_stream, server.create_initialization_options())
 
 
 if __name__ == "__main__":

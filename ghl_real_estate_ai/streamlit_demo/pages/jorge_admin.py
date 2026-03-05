@@ -29,9 +29,7 @@ def get_bot_status():
     return {
         "Seller Bot": {
             "active": os.getenv("JORGE_SELLER_MODE", "true").lower() == "true",
-            "mode": "Simple"
-            if os.getenv("JORGE_SIMPLE_MODE", "false").lower() == "true"
-            else "Full",
+            "mode": "Simple" if os.getenv("JORGE_SIMPLE_MODE", "false").lower() == "true" else "Full",
         },
         "Buyer Bot": {
             "active": os.getenv("JORGE_BUYER_MODE", "true").lower() == "true",
@@ -79,10 +77,7 @@ if recent:
     df = pd.DataFrame(recent)
     st.dataframe(df, use_container_width=True)
 else:
-    st.info(
-        "No recent conversation data available. "
-        "Connect to production database to see live data."
-    )
+    st.info("No recent conversation data available. Connect to production database to see live data.")
     # Show demo data structure
     demo_data = [
         {

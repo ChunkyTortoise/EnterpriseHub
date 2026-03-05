@@ -44,6 +44,7 @@ from dataclasses import dataclass, asdict
 @dataclass
 class IndexStatus:
     """Status of a database index"""
+
     index_name: str
     table_name: str
     columns: str
@@ -58,6 +59,7 @@ class IndexStatus:
 @dataclass
 class QueryPerformance:
     """Performance measurement for a query"""
+
     query_name: str
     target_ms: float
     actual_ms: float
@@ -72,95 +74,92 @@ class DatabasePerformanceVerifier:
     # Critical indexes for enterprise sales demos
     CRITICAL_INDEXES = {
         # Lead scoring and ranking (most shown to clients)
-        'idx_leads_status_score': {
-            'table': 'leads',
-            'columns': '(status, score DESC)',
-            'priority': 'CRITICAL',
-            'impact': 'Lead dashboard queries - eliminates 10-100x slowdown',
-            'demo_query': 'Lead ranking and high-score filtering'
+        "idx_leads_status_score": {
+            "table": "leads",
+            "columns": "(status, score DESC)",
+            "priority": "CRITICAL",
+            "impact": "Lead dashboard queries - eliminates 10-100x slowdown",
+            "demo_query": "Lead ranking and high-score filtering",
         },
-        'idx_leads_score_status_created': {
-            'table': 'leads',
-            'columns': '(score DESC, status, created_at DESC)',
-            'priority': 'CRITICAL',
-            'impact': 'Service 6 lead routing - 90% performance improvement',
-            'demo_query': 'High-intent lead identification'
+        "idx_leads_score_status_created": {
+            "table": "leads",
+            "columns": "(score DESC, status, created_at DESC)",
+            "priority": "CRITICAL",
+            "impact": "Service 6 lead routing - 90% performance improvement",
+            "demo_query": "High-intent lead identification",
         },
-        'idx_leads_temperature_interaction': {
-            'table': 'leads',
-            'columns': '(temperature, last_interaction_at DESC, status)',
-            'priority': 'HIGH',
-            'impact': 'Lead temperature tracking and follow-up',
-            'demo_query': 'Hot leads needing immediate attention'
+        "idx_leads_temperature_interaction": {
+            "table": "leads",
+            "columns": "(temperature, last_interaction_at DESC, status)",
+            "priority": "HIGH",
+            "impact": "Lead temperature tracking and follow-up",
+            "demo_query": "Hot leads needing immediate attention",
         },
-
         # Churn prediction (analytics dashboard)
-        'idx_churn_predictions_lead_timestamp': {
-            'table': 'churn_predictions',
-            'columns': '(lead_id, prediction_timestamp DESC)',
-            'priority': 'CRITICAL',
-            'impact': 'Churn analytics dashboard - enterprise feature',
-            'demo_query': 'Latest churn predictions per lead'
+        "idx_churn_predictions_lead_timestamp": {
+            "table": "churn_predictions",
+            "columns": "(lead_id, prediction_timestamp DESC)",
+            "priority": "CRITICAL",
+            "impact": "Churn analytics dashboard - enterprise feature",
+            "demo_query": "Latest churn predictions per lead",
         },
-        'idx_churn_predictions_risk_tier': {
-            'table': 'churn_predictions',
-            'columns': '(risk_tier, risk_score_14d DESC)',
-            'priority': 'HIGH',
-            'impact': 'Risk-based lead segmentation',
-            'demo_query': 'High-risk leads requiring intervention'
+        "idx_churn_predictions_risk_tier": {
+            "table": "churn_predictions",
+            "columns": "(risk_tier, risk_score_14d DESC)",
+            "priority": "HIGH",
+            "impact": "Risk-based lead segmentation",
+            "demo_query": "High-risk leads requiring intervention",
         },
-
         # Churn recovery (retention features)
-        'idx_churn_events_lead_timestamp': {
-            'table': 'churn_events',
-            'columns': '(lead_id, event_timestamp DESC)',
-            'priority': 'HIGH',
-            'impact': 'Churn event history and recovery tracking',
-            'demo_query': 'Lead churn event timeline'
+        "idx_churn_events_lead_timestamp": {
+            "table": "churn_events",
+            "columns": "(lead_id, event_timestamp DESC)",
+            "priority": "HIGH",
+            "impact": "Churn event history and recovery tracking",
+            "demo_query": "Lead churn event timeline",
         },
-        'idx_churn_events_recovery_eligibility': {
-            'table': 'churn_events',
-            'columns': '(recovery_eligibility)',
-            'priority': 'CRITICAL',
-            'impact': 'Recovery campaign targeting',
-            'demo_query': 'Eligible leads for win-back campaigns'
+        "idx_churn_events_recovery_eligibility": {
+            "table": "churn_events",
+            "columns": "(recovery_eligibility)",
+            "priority": "CRITICAL",
+            "impact": "Recovery campaign targeting",
+            "demo_query": "Eligible leads for win-back campaigns",
         },
-
         # Communication tracking (engagement analytics)
-        'idx_comm_followup_history': {
-            'table': 'communication_logs',
-            'columns': '(lead_id, direction, sent_at DESC) WHERE direction = \'outbound\'',
-            'priority': 'HIGH',
-            'impact': 'Communication history - 70% improvement',
-            'demo_query': 'Outbound message history per lead'
+        "idx_comm_followup_history": {
+            "table": "communication_logs",
+            "columns": "(lead_id, direction, sent_at DESC) WHERE direction = 'outbound'",
+            "priority": "HIGH",
+            "impact": "Communication history - 70% improvement",
+            "demo_query": "Outbound message history per lead",
         },
-        'idx_comm_recent_activity': {
-            'table': 'communication_logs',
-            'columns': '(lead_id, sent_at DESC, channel, status)',
-            'priority': 'MEDIUM',
-            'impact': 'Recent activity tracking',
-            'demo_query': 'Last 30 days of communication'
+        "idx_comm_recent_activity": {
+            "table": "communication_logs",
+            "columns": "(lead_id, sent_at DESC, channel, status)",
+            "priority": "MEDIUM",
+            "impact": "Recent activity tracking",
+            "demo_query": "Last 30 days of communication",
         },
     }
 
     # Performance benchmarks for key queries (shown in demos)
     BENCHMARK_QUERIES = {
-        'lead_dashboard_ranking': {
-            'name': 'Lead Dashboard - Top Scoring Leads',
-            'sql': """
+        "lead_dashboard_ranking": {
+            "name": "Lead Dashboard - Top Scoring Leads",
+            "sql": """
                 SELECT id, email, name, score, status, created_at
                 FROM leads
                 WHERE status IN ('new', 'contacted', 'qualified', 'nurturing', 'hot')
                 ORDER BY score DESC, created_at DESC
                 LIMIT 50
             """,
-            'target_ms': 35,
-            'critical': True,
-            'shown_to': 'All enterprise demos'
+            "target_ms": 35,
+            "critical": True,
+            "shown_to": "All enterprise demos",
         },
-        'churn_risk_dashboard': {
-            'name': 'Churn Risk Analytics Dashboard',
-            'sql': """
+        "churn_risk_dashboard": {
+            "name": "Churn Risk Analytics Dashboard",
+            "sql": """
                 SELECT l.id, l.email, l.name, c.risk_score_14d, c.risk_tier
                 FROM leads l
                 INNER JOIN churn_predictions c ON l.id = c.lead_id
@@ -169,13 +168,13 @@ class DatabasePerformanceVerifier:
                 ORDER BY c.risk_score_14d DESC
                 LIMIT 100
             """,
-            'target_ms': 50,
-            'critical': True,
-            'shown_to': 'Enterprise analytics buyers'
+            "target_ms": 50,
+            "critical": True,
+            "shown_to": "Enterprise analytics buyers",
         },
-        'recovery_eligible_leads': {
-            'name': 'Recovery Campaign - Eligible Leads',
-            'sql': """
+        "recovery_eligible_leads": {
+            "name": "Recovery Campaign - Eligible Leads",
+            "sql": """
                 SELECT ce.lead_id, ce.event_type, ce.recovery_eligibility,
                        ce.recovery_attempts_allowed - ce.recovery_attempts_used as attempts_remaining
                 FROM churn_events ce
@@ -188,13 +187,13 @@ class DatabasePerformanceVerifier:
                 AND ce.recovery_attempts_used < ce.recovery_attempts_allowed
                 LIMIT 100
             """,
-            'target_ms': 50,
-            'critical': True,
-            'shown_to': 'Retention/churn demos'
+            "target_ms": 50,
+            "critical": True,
+            "shown_to": "Retention/churn demos",
         },
-        'communication_history': {
-            'name': 'Lead Communication History',
-            'sql': """
+        "communication_history": {
+            "name": "Lead Communication History",
+            "sql": """
                 SELECT id, channel, content, status, sent_at
                 FROM communication_logs
                 WHERE lead_id = (SELECT id FROM leads WHERE deleted_at IS NULL LIMIT 1)
@@ -202,26 +201,26 @@ class DatabasePerformanceVerifier:
                 ORDER BY sent_at DESC
                 LIMIT 50
             """,
-            'target_ms': 25,
-            'critical': False,
-            'shown_to': 'Communication workflow demos'
-        }
+            "target_ms": 25,
+            "critical": False,
+            "shown_to": "Communication workflow demos",
+        },
     }
 
-    def __init__(self, db_url: str, environment: str = 'production', auto_fix: bool = False, simulate: bool = False):
+    def __init__(self, db_url: str, environment: str = "production", auto_fix: bool = False, simulate: bool = False):
         self.db_url = db_url
         self.environment = environment
         self.auto_fix = auto_fix
         self.simulate = simulate
         self.connection: Optional[asyncpg.Connection] = None
         self.results: Dict[str, Any] = {
-            'timestamp': datetime.utcnow().isoformat(),
-            'environment': environment,
-            'index_status': [],
-            'query_performance': [],
-            'missing_indexes': [],
-            'recommendations': [],
-            'enterprise_ready': False
+            "timestamp": datetime.utcnow().isoformat(),
+            "environment": environment,
+            "index_status": [],
+            "query_performance": [],
+            "missing_indexes": [],
+            "recommendations": [],
+            "enterprise_ready": False,
         }
 
     async def connect(self) -> bool:
@@ -249,11 +248,12 @@ class DatabasePerformanceVerifier:
         if self.simulate:
             # Return fake stats for simulation
             import random
+
             return True, {
-                'definition': f"CREATE INDEX {index_name} ON {table_name} ...",
-                'scan_count': random.randint(5000, 50000),
-                'size': '12 MB',
-                'size_mb': 12.5
+                "definition": f"CREATE INDEX {index_name} ON {table_name} ...",
+                "scan_count": random.randint(5000, 50000),
+                "size": "12 MB",
+                "size_mb": 12.5,
             }
 
         try:
@@ -284,10 +284,10 @@ class DatabasePerformanceVerifier:
             stats = await self.connection.fetchrow(stats_query, index_name)
 
             return True, {
-                'definition': index_info['indexdef'],
-                'scan_count': stats['scan_count'] if stats else 0,
-                'size': stats['index_size'] if stats else 'Unknown',
-                'size_mb': float(stats['size_mb']) if stats else 0.0
+                "definition": index_info["indexdef"],
+                "scan_count": stats["scan_count"] if stats else 0,
+                "size": stats["index_size"] if stats else "Unknown",
+                "size_mb": float(stats["size_mb"]) if stats else 0.0,
             }
 
         except Exception as e:
@@ -300,21 +300,21 @@ class DatabasePerformanceVerifier:
         print("=" * 70)
 
         for index_name, config in self.CRITICAL_INDEXES.items():
-            exists, stats = await self.verify_index_exists(index_name, config['table'])
+            exists, stats = await self.verify_index_exists(index_name, config["table"])
 
             status = IndexStatus(
                 index_name=index_name,
-                table_name=config['table'],
-                columns=config['columns'],
+                table_name=config["table"],
+                columns=config["columns"],
                 exists=exists,
-                used=stats.get('scan_count', 0) > 0 if exists else False,
-                scan_count=stats.get('scan_count', 0),
-                size_mb=stats.get('size_mb', 0.0),
-                priority=config['priority'],
-                impact=config['impact']
+                used=stats.get("scan_count", 0) > 0 if exists else False,
+                scan_count=stats.get("scan_count", 0),
+                size_mb=stats.get("size_mb", 0.0),
+                priority=config["priority"],
+                impact=config["impact"],
             )
 
-            self.results['index_status'].append(asdict(status))
+            self.results["index_status"].append(asdict(status))
 
             # Print status
             if exists:
@@ -322,24 +322,26 @@ class DatabasePerformanceVerifier:
                 print(f"✅ {index_name:40} {usage:12} {stats.get('scan_count', 0):>8} scans")
             else:
                 print(f"❌ {index_name:40} {'MISSING':12} {'':>8}")
-                self.results['missing_indexes'].append({
-                    'index_name': index_name,
-                    'table': config['table'],
-                    'columns': config['columns'],
-                    'priority': config['priority'],
-                    'impact': config['impact'],
-                    'demo_query': config.get('demo_query', 'N/A'),
-                    'create_sql': self._generate_create_index_sql(index_name, config)
-                })
+                self.results["missing_indexes"].append(
+                    {
+                        "index_name": index_name,
+                        "table": config["table"],
+                        "columns": config["columns"],
+                        "priority": config["priority"],
+                        "impact": config["impact"],
+                        "demo_query": config.get("demo_query", "N/A"),
+                        "create_sql": self._generate_create_index_sql(index_name, config),
+                    }
+                )
 
     def _generate_create_index_sql(self, index_name: str, config: Dict[str, Any]) -> str:
         """Generate SQL to create missing index"""
-        where_clause = ''
-        columns = config['columns']
+        where_clause = ""
+        columns = config["columns"]
 
         # Extract WHERE clause if present
-        if 'WHERE' in columns:
-            parts = columns.split('WHERE')
+        if "WHERE" in columns:
+            parts = columns.split("WHERE")
             columns = parts[0].strip()
             where_clause = f" WHERE {parts[1].strip()}"
 
@@ -350,31 +352,32 @@ class DatabasePerformanceVerifier:
         if self.simulate:
             # Simulate high performance
             import random
-            target = query_config['target_ms']
-            actual = target * random.uniform(0.5, 0.9) # 50-90% of target (beating it)
+
+            target = query_config["target_ms"]
+            actual = target * random.uniform(0.5, 0.9)  # 50-90% of target (beating it)
             return QueryPerformance(
-                query_name=query_config['name'],
+                query_name=query_config["name"],
                 target_ms=target,
                 actual_ms=actual,
                 meets_target=True,
                 improvement_potential=0,
-                recommendations=["Performance is optimal"]
+                recommendations=["Performance is optimal"],
             )
 
         try:
             # Warm up query cache
-            await self.connection.fetch(query_config['sql'])
+            await self.connection.fetch(query_config["sql"])
 
             # Measure execution time (average of 3 runs)
             times = []
             for _ in range(3):
                 start = datetime.utcnow()
-                await self.connection.fetch(query_config['sql'])
+                await self.connection.fetch(query_config["sql"])
                 elapsed = (datetime.utcnow() - start).total_seconds() * 1000
                 times.append(elapsed)
 
             actual_ms = sum(times) / len(times)
-            target_ms = query_config['target_ms']
+            target_ms = query_config["target_ms"]
             meets_target = actual_ms <= target_ms
 
             # Calculate improvement potential
@@ -388,23 +391,23 @@ class DatabasePerformanceVerifier:
                     recommendations.append("CRITICAL: Will impact demo quality")
 
             return QueryPerformance(
-                query_name=query_config['name'],
+                query_name=query_config["name"],
                 target_ms=target_ms,
                 actual_ms=actual_ms,
                 meets_target=meets_target,
                 improvement_potential=improvement_potential,
-                recommendations=recommendations
+                recommendations=recommendations,
             )
 
         except Exception as e:
             print(f"❌ Error measuring query '{query_config['name']}': {e}")
             return QueryPerformance(
-                query_name=query_config['name'],
-                target_ms=query_config['target_ms'],
+                query_name=query_config["name"],
+                target_ms=query_config["target_ms"],
                 actual_ms=9999,
                 meets_target=False,
                 improvement_potential=100,
-                recommendations=[f"Error: {str(e)}"]
+                recommendations=[f"Error: {str(e)}"],
             )
 
     async def benchmark_all_queries(self):
@@ -414,19 +417,21 @@ class DatabasePerformanceVerifier:
 
         for query_key, query_config in self.BENCHMARK_QUERIES.items():
             perf = await self.measure_query_performance(query_config)
-            self.results['query_performance'].append(asdict(perf))
+            self.results["query_performance"].append(asdict(perf))
 
             # Print results
             status_icon = "✅" if perf.meets_target else "❌"
-            critical_marker = "🔥" if query_config.get('critical') else "  "
-            print(f"{status_icon} {critical_marker} {perf.query_name:45} {perf.actual_ms:>7.1f}ms / {perf.target_ms:>5.0f}ms")
+            critical_marker = "🔥" if query_config.get("critical") else "  "
+            print(
+                f"{status_icon} {critical_marker} {perf.query_name:45} {perf.actual_ms:>7.1f}ms / {perf.target_ms:>5.0f}ms"
+            )
 
-            if not perf.meets_target and query_config.get('critical'):
+            if not perf.meets_target and query_config.get("critical"):
                 print(f"   ⚠️  DEMO RISK: Shown to {query_config['shown_to']}")
 
     async def generate_fix_script(self) -> str:
         """Generate SQL script to fix all missing indexes"""
-        if not self.results['missing_indexes']:
+        if not self.results["missing_indexes"]:
             return "-- All critical indexes are present!"
 
         script = "-- Database Performance Fix Script\n"
@@ -436,11 +441,8 @@ class DatabasePerformanceVerifier:
         script += "BEGIN;\n\n"
 
         # Sort by priority
-        priority_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
-        sorted_indexes = sorted(
-            self.results['missing_indexes'],
-            key=lambda x: priority_order.get(x['priority'], 999)
-        )
+        priority_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+        sorted_indexes = sorted(self.results["missing_indexes"], key=lambda x: priority_order.get(x["priority"], 999))
 
         for idx in sorted_indexes:
             script += f"-- Priority: {idx['priority']} - {idx['impact']}\n"
@@ -462,20 +464,20 @@ class DatabasePerformanceVerifier:
             return
 
         print("\n🔧 Applying Performance Fixes...")
-        
+
         if self.simulate:
             print("✅ Simulation: Applied all missing indexes")
             print("✅ Simulation: Statistics updated")
             return
 
-        if not self.results['missing_indexes']:
+        if not self.results["missing_indexes"]:
             print("✅ No fixes needed - all indexes present")
             return
 
-        for idx in self.results['missing_indexes']:
+        for idx in self.results["missing_indexes"]:
             try:
                 print(f"Creating {idx['index_name']}...")
-                await self.connection.execute(idx['create_sql'])
+                await self.connection.execute(idx["create_sql"])
                 print(f"✅ Created {idx['index_name']}")
             except Exception as e:
                 print(f"❌ Failed to create {idx['index_name']}: {e}")
@@ -493,52 +495,57 @@ class DatabasePerformanceVerifier:
         recs = []
 
         # Missing critical indexes
-        critical_missing = [idx for idx in self.results['missing_indexes']
-                          if idx['priority'] == 'CRITICAL']
+        critical_missing = [idx for idx in self.results["missing_indexes"] if idx["priority"] == "CRITICAL"]
         if critical_missing:
-            recs.append({
-                'severity': 'CRITICAL',
-                'issue': f"{len(critical_missing)} critical indexes missing",
-                'impact': 'Will cause 10-100x slowdown during enterprise demos',
-                'action': 'Apply fix script immediately before next demo'
-            })
+            recs.append(
+                {
+                    "severity": "CRITICAL",
+                    "issue": f"{len(critical_missing)} critical indexes missing",
+                    "impact": "Will cause 10-100x slowdown during enterprise demos",
+                    "action": "Apply fix script immediately before next demo",
+                }
+            )
 
         # Slow queries
-        slow_critical = [q for q in self.results['query_performance']
-                        if not q['meets_target'] and q['improvement_potential'] > 50]
+        slow_critical = [
+            q for q in self.results["query_performance"] if not q["meets_target"] and q["improvement_potential"] > 50
+        ]
         if slow_critical:
-            recs.append({
-                'severity': 'HIGH',
-                'issue': f"{len(slow_critical)} critical queries below target",
-                'impact': 'Noticeable delays during client presentations',
-                'action': 'Investigate query plans and add missing indexes'
-            })
+            recs.append(
+                {
+                    "severity": "HIGH",
+                    "issue": f"{len(slow_critical)} critical queries below target",
+                    "impact": "Noticeable delays during client presentations",
+                    "action": "Investigate query plans and add missing indexes",
+                }
+            )
 
         # Unused indexes (optimization opportunity)
-        unused = [idx for idx in self.results['index_status']
-                 if idx['exists'] and idx['scan_count'] == 0]
+        unused = [idx for idx in self.results["index_status"] if idx["exists"] and idx["scan_count"] == 0]
         if len(unused) > 5:
-            recs.append({
-                'severity': 'MEDIUM',
-                'issue': f"{len(unused)} unused indexes consuming space",
-                'impact': 'Minor impact on write performance',
-                'action': 'Review and remove unused indexes'
-            })
+            recs.append(
+                {
+                    "severity": "MEDIUM",
+                    "issue": f"{len(unused)} unused indexes consuming space",
+                    "impact": "Minor impact on write performance",
+                    "action": "Review and remove unused indexes",
+                }
+            )
 
-        self.results['recommendations'] = recs
+        self.results["recommendations"] = recs
 
     def assess_enterprise_readiness(self) -> bool:
         """Determine if database is enterprise-ready"""
         # Check critical indexes
-        critical_missing = [idx for idx in self.results['missing_indexes']
-                          if idx['priority'] == 'CRITICAL']
+        critical_missing = [idx for idx in self.results["missing_indexes"] if idx["priority"] == "CRITICAL"]
 
         # Check critical query performance
-        critical_slow = [q for q in self.results['query_performance']
-                        if not q['meets_target'] and q['improvement_potential'] > 30]
+        critical_slow = [
+            q for q in self.results["query_performance"] if not q["meets_target"] and q["improvement_potential"] > 30
+        ]
 
         enterprise_ready = len(critical_missing) == 0 and len(critical_slow) == 0
-        self.results['enterprise_ready'] = enterprise_ready
+        self.results["enterprise_ready"] = enterprise_ready
 
         return enterprise_ready
 
@@ -582,9 +589,8 @@ class DatabasePerformanceVerifier:
 
         # Index status
         total_indexes = len(self.CRITICAL_INDEXES)
-        missing = len(self.results['missing_indexes'])
-        critical_missing = len([idx for idx in self.results['missing_indexes']
-                              if idx['priority'] == 'CRITICAL'])
+        missing = len(self.results["missing_indexes"])
+        critical_missing = len([idx for idx in self.results["missing_indexes"] if idx["priority"] == "CRITICAL"])
 
         print(f"\n🔍 Index Status:")
         print(f"   Total Critical Indexes: {total_indexes}")
@@ -592,8 +598,8 @@ class DatabasePerformanceVerifier:
         print(f"   Missing: {missing} (⚠️ {critical_missing} CRITICAL)")
 
         # Query performance
-        queries = self.results['query_performance']
-        passing = len([q for q in queries if q['meets_target']])
+        queries = self.results["query_performance"]
+        passing = len([q for q in queries if q["meets_target"]])
         failing = len(queries) - passing
 
         print(f"\n⚡ Query Performance:")
@@ -603,9 +609,9 @@ class DatabasePerformanceVerifier:
 
         # Recommendations
         print(f"\n💡 Recommendations:")
-        if self.results['recommendations']:
-            for rec in self.results['recommendations']:
-                severity_icon = "🔥" if rec['severity'] == 'CRITICAL' else "⚠️" if rec['severity'] == 'HIGH' else "ℹ️"
+        if self.results["recommendations"]:
+            for rec in self.results["recommendations"]:
+                severity_icon = "🔥" if rec["severity"] == "CRITICAL" else "⚠️" if rec["severity"] == "HIGH" else "ℹ️"
                 print(f"   {severity_icon} [{rec['severity']}] {rec['issue']}")
                 print(f"      Impact: {rec['impact']}")
                 print(f"      Action: {rec['action']}")
@@ -614,7 +620,7 @@ class DatabasePerformanceVerifier:
 
         # Enterprise readiness
         print(f"\n🎯 ENTERPRISE SALES READINESS:")
-        if self.results['enterprise_ready']:
+        if self.results["enterprise_ready"]:
             print("   ✅ READY - Database performance meets enterprise standards")
             print("   ✅ Safe to demo to enterprise clients")
             print("   ✅ Queries will respond in <50ms during presentations")
@@ -625,17 +631,17 @@ class DatabasePerformanceVerifier:
 
         print("\n" + "=" * 70)
 
-    def save_report(self, format: str = 'json', output_file: Optional[str] = None):
+    def save_report(self, format: str = "json", output_file: Optional[str] = None):
         """Save verification report"""
-        if format == 'json':
+        if format == "json":
             content = json.dumps(self.results, indent=2, default=str)
-        elif format == 'markdown':
+        elif format == "markdown":
             content = self._generate_markdown_report()
         else:
             raise ValueError(f"Unsupported format: {format}")
 
         if output_file:
-            with open(output_file, 'w') as f:
+            with open(output_file, "w") as f:
                 f.write(content)
             print(f"📄 Report saved to {output_file}")
         else:
@@ -649,14 +655,14 @@ class DatabasePerformanceVerifier:
         md += f"**Status:** {'✅ ENTERPRISE READY' if self.results['enterprise_ready'] else '❌ NOT READY'}\n\n"
 
         md += "## Executive Summary\n\n"
-        if self.results['enterprise_ready']:
+        if self.results["enterprise_ready"]:
             md += "✅ Database is **ready for enterprise demonstrations**\n"
             md += "- All critical indexes are in place\n"
             md += "- Query performance meets sub-50ms targets\n"
             md += "- Safe to present to enterprise clients\n\n"
         else:
             md += "❌ Database requires optimization before enterprise demos\n"
-            missing_critical = len([i for i in self.results['missing_indexes'] if i['priority'] == 'CRITICAL'])
+            missing_critical = len([i for i in self.results["missing_indexes"] if i["priority"] == "CRITICAL"])
             md += f"- {missing_critical} critical indexes missing\n"
             md += "- Query performance may embarrass during presentations\n"
             md += "- **Action required before next demo**\n\n"
@@ -664,20 +670,20 @@ class DatabasePerformanceVerifier:
         md += "## Index Status\n\n"
         md += "| Index Name | Status | Priority | Scans | Impact |\n"
         md += "|------------|--------|----------|-------|--------|\n"
-        for idx in self.results['index_status']:
-            status = "✅ Present" if idx['exists'] else "❌ Missing"
+        for idx in self.results["index_status"]:
+            status = "✅ Present" if idx["exists"] else "❌ Missing"
             md += f"| `{idx['index_name']}` | {status} | {idx['priority']} | {idx['scan_count']} | {idx['impact']} |\n"
 
         md += "\n## Query Performance\n\n"
         md += "| Query | Actual | Target | Status | Improvement Potential |\n"
         md += "|-------|--------|--------|--------|-----------------------|\n"
-        for q in self.results['query_performance']:
-            status = "✅ Pass" if q['meets_target'] else "❌ Fail"
+        for q in self.results["query_performance"]:
+            status = "✅ Pass" if q["meets_target"] else "❌ Fail"
             md += f"| {q['query_name']} | {q['actual_ms']:.1f}ms | {q['target_ms']:.0f}ms | {status} | {q['improvement_potential']:.0f}% |\n"
 
-        if self.results['recommendations']:
+        if self.results["recommendations"]:
             md += "\n## Recommendations\n\n"
-            for rec in self.results['recommendations']:
+            for rec in self.results["recommendations"]:
                 md += f"### {rec['severity']}: {rec['issue']}\n\n"
                 md += f"**Impact:** {rec['impact']}  \n"
                 md += f"**Action:** {rec['action']}\n\n"
@@ -688,7 +694,7 @@ class DatabasePerformanceVerifier:
 def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(
-        description='Verify database performance for enterprise sales readiness',
+        description="Verify database performance for enterprise sales readiness",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -703,47 +709,50 @@ Examples:
 
   # Save fix script
   python scripts/verify_database_performance.py --save-fix-script fix_indexes.sql
-        """
+        """,
     )
 
-    parser.add_argument('--db-url', default=os.getenv('DATABASE_URL'),
-                       help='PostgreSQL connection URL')
-    parser.add_argument('--environment', default='production',
-                       choices=['development', 'staging', 'production'],
-                       help='Deployment environment')
-    parser.add_argument('--enterprise-mode', action='store_true',
-                       help='Enable strict enterprise verification mode (sets environment=production)')
-    parser.add_argument('--auto-fix', action='store_true',
-                       help='Automatically apply missing indexes')
-    parser.add_argument('--report-format', default='terminal',
-                       choices=['terminal', 'json', 'markdown'],
-                       help='Output format for report')
-    parser.add_argument('--generate-client-report', action='store_true',
-                       help='Generate client-facing performance report')
-    parser.add_argument('--simulate', action='store_true',
-                       help='Run in simulation mode (mock database connection)')
-    parser.add_argument('--save-fix-script', type=str,
-                       help='Save SQL fix script to file')
-    parser.add_argument('--output', type=str,
-                       help='Save report to file')
+    parser.add_argument("--db-url", default=os.getenv("DATABASE_URL"), help="PostgreSQL connection URL")
+    parser.add_argument(
+        "--environment",
+        default="production",
+        choices=["development", "staging", "production"],
+        help="Deployment environment",
+    )
+    parser.add_argument(
+        "--enterprise-mode",
+        action="store_true",
+        help="Enable strict enterprise verification mode (sets environment=production)",
+    )
+    parser.add_argument("--auto-fix", action="store_true", help="Automatically apply missing indexes")
+    parser.add_argument(
+        "--report-format", default="terminal", choices=["terminal", "json", "markdown"], help="Output format for report"
+    )
+    parser.add_argument(
+        "--generate-client-report", action="store_true", help="Generate client-facing performance report"
+    )
+    parser.add_argument("--simulate", action="store_true", help="Run in simulation mode (mock database connection)")
+    parser.add_argument("--save-fix-script", type=str, help="Save SQL fix script to file")
+    parser.add_argument("--output", type=str, help="Save report to file")
 
     args = parser.parse_args()
 
     # Handle argument aliases/defaults
     if args.enterprise_mode:
-        args.environment = 'production'
-    
+        args.environment = "production"
+
     if args.generate_client_report:
-        args.report_format = 'markdown'
+        args.report_format = "markdown"
         if not args.output:
-            args.output = 'ENTERPRISE_PERFORMANCE_REPORT.md'
+            args.output = "ENTERPRISE_PERFORMANCE_REPORT.md"
 
     # Try to load .env if DATABASE_URL is missing
     if not args.db_url and not args.simulate:
         try:
             from dotenv import load_dotenv
+
             load_dotenv()
-            args.db_url = os.getenv('DATABASE_URL')
+            args.db_url = os.getenv("DATABASE_URL")
         except ImportError:
             pass
 
@@ -753,16 +762,13 @@ Examples:
 
     async def run():
         verifier = DatabasePerformanceVerifier(
-            args.db_url or "postgres://simulated:5432/db",
-            args.environment,
-            args.auto_fix,
-            args.simulate
+            args.db_url or "postgres://simulated:5432/db", args.environment, args.auto_fix, args.simulate
         )
 
         enterprise_ready = await verifier.run_complete_verification()
 
         # Print terminal summary unless outputting to file
-        if args.report_format == 'terminal' and not args.output:
+        if args.report_format == "terminal" and not args.output:
             verifier.print_summary()
         else:
             verifier.save_report(args.report_format, args.output)
@@ -770,7 +776,7 @@ Examples:
         # Save fix script if requested
         if args.save_fix_script:
             fix_script = await verifier.generate_fix_script()
-            with open(args.save_fix_script, 'w') as f:
+            with open(args.save_fix_script, "w") as f:
                 f.write(fix_script)
             print(f"🔧 Fix script saved to {args.save_fix_script}")
 
@@ -783,5 +789,5 @@ Examples:
     asyncio.run(run())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -101,7 +101,7 @@ def load_training_data(input_path: Path) -> pd.DataFrame:
     if missing_counts.any():
         logger.warning("Missing values detected:")
         for col, count in missing_counts[missing_counts > 0].items():
-            logger.warning(f"  {col}: {count} missing ({count/len(df):.1%})")
+            logger.warning(f"  {col}: {count} missing ({count / len(df):.1%})")
 
         # Fill missing values with feature means
         df = df.fillna(df.mean())

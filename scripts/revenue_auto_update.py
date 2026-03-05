@@ -48,16 +48,17 @@ log = logging.getLogger(__name__)
 # Data model
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class Transaction:
     id: str
-    date: str               # ISO date "YYYY-MM-DD"
-    channel: str            # "Stripe" | "Gumroad" | "Upwork" | "Manual"
+    date: str  # ISO date "YYYY-MM-DD"
+    channel: str  # "Stripe" | "Gumroad" | "Upwork" | "Manual"
     client: str
     description: str
     amount_usd: float
-    transaction_type: str   # "one-time" | "subscription" | "hourly" | "fixed"
-    status: str             # "completed" | "pending" | "refunded"
+    transaction_type: str  # "one-time" | "subscription" | "hourly" | "fixed"
+    status: str  # "completed" | "pending" | "refunded"
 
 
 @dataclass
@@ -71,6 +72,7 @@ class ETLResult:
 # ---------------------------------------------------------------------------
 # MCP helpers — each returns a list of Transaction or raises gracefully
 # ---------------------------------------------------------------------------
+
 
 def _unix_to_iso(ts: int | float) -> str:
     """Convert Unix timestamp to ISO date string."""
@@ -101,6 +103,7 @@ def _call_mcp_tool(server: str, tool: str, args: dict) -> dict:
 # ---------------------------------------------------------------------------
 # Stripe ETL
 # ---------------------------------------------------------------------------
+
 
 def _extract_stripe(since: Optional[date]) -> ETLResult:
     result = ETLResult(source="stripe")
@@ -152,6 +155,7 @@ def _extract_stripe(since: Optional[date]) -> ETLResult:
 # ---------------------------------------------------------------------------
 # Gumroad ETL
 # ---------------------------------------------------------------------------
+
 
 def _extract_gumroad(since: Optional[date]) -> ETLResult:
     result = ETLResult(source="gumroad")
@@ -206,6 +210,7 @@ def _extract_gumroad(since: Optional[date]) -> ETLResult:
 # Upwork ETL
 # ---------------------------------------------------------------------------
 
+
 def _extract_upwork(since: Optional[date]) -> ETLResult:
     result = ETLResult(source="upwork")
     try:
@@ -250,6 +255,7 @@ def _extract_upwork(since: Optional[date]) -> ETLResult:
 # Deduplication
 # ---------------------------------------------------------------------------
 
+
 def _parse_existing_ids(tracker_content: str) -> set[str]:
     """
     Extract transaction IDs already in the tracker file.
@@ -266,6 +272,7 @@ def _parse_existing_ids(tracker_content: str) -> set[str]:
 # ---------------------------------------------------------------------------
 # Tracker update
 # ---------------------------------------------------------------------------
+
 
 def _month_key(iso_date: str) -> str:
     """Convert '2026-02-19' to 'Feb 2026'."""
@@ -347,7 +354,7 @@ def _update_tracker(
             log_section_match = re.search(r"## Transaction Log\n", content)
             if log_section_match:
                 # Find the last table row in this section
-                after_log = content[log_section_match.end():]
+                after_log = content[log_section_match.end() :]
                 # Append after the last | row before the next ##
                 next_section = re.search(r"\n##", after_log)
                 if next_section:
@@ -369,7 +376,7 @@ def _update_tracker(
             except ValueError:
                 existing_total = 0.0
         new_total = existing_total + total_revenue
-        content = content[:ytd_match.start()] + f"## YTD Total: ${new_total:,.2f}" + content[ytd_match.end():]
+        content = content[: ytd_match.start()] + f"## YTD Total: ${new_total:,.2f}" + content[ytd_match.end() :]
 
     if dry_run:
         log.info("[DRY RUN] Would write updated tracker — no file changes made")
@@ -391,6 +398,7 @@ def _update_tracker(
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Revenue auto-update ETL script")
@@ -447,10 +455,7 @@ def main() -> None:
 
     summary = _update_tracker(TRACKER_PATH, all_transactions, dry_run=args.dry_run)
 
-    log.info(
-        f"Done. Added {summary['added']} transactions, "
-        f"${summary['total_new_revenue']:.2f} new revenue."
-    )
+    log.info(f"Done. Added {summary['added']} transactions, ${summary['total_new_revenue']:.2f} new revenue.")
     sys.exit(0)
 
 

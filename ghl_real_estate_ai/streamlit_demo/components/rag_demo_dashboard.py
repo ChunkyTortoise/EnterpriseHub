@@ -220,10 +220,7 @@ class BM25Index:
         for tokens in self._tokenized:
             for term in set(tokens):
                 df[term] += 1
-        self._idf = {
-            term: math.log((N - freq + 0.5) / (freq + 0.5) + 1)
-            for term, freq in df.items()
-        }
+        self._idf = {term: math.log((N - freq + 0.5) / (freq + 0.5) + 1) for term, freq in df.items()}
 
     def get_scores(self, query_tokens: list[str]) -> list[float]:
         scores = []
@@ -239,9 +236,7 @@ class BM25Index:
                 tf = tf_map.get(term, 0)
                 idf = self._idf[term]
                 numerator = tf * (self.k1 + 1)
-                denominator = tf + self.k1 * (
-                    1 - self.b + self.b * dl / self._avgdl
-                )
+                denominator = tf + self.k1 * (1 - self.b + self.b * dl / self._avgdl)
                 score += idf * numerator / denominator
             scores.append(score)
         return scores
@@ -284,9 +279,7 @@ class DenseIndex:
         for tokens in tokenized:
             all_tokens.update(tokens)
         self._vocab = {t: i for i, t in enumerate(sorted(all_tokens))}
-        self._vectors = [
-            _tfidf_vector(tokens, self._vocab) for tokens in tokenized
-        ]
+        self._vectors = [_tfidf_vector(tokens, self._vocab) for tokens in tokenized]
 
     def get_scores(self, query: str) -> list[float]:
         q_tokens = _tokenize(query)
@@ -402,9 +395,7 @@ def _bm25_only_search(query: str, top_k: int = 5) -> list[SearchResult]:
     bm25, _, chunks, doc_names = _load_indexes()
     scores = bm25.get_scores(_tokenize(query))
     max_s = max(scores) if max(scores) > 0 else 1.0
-    ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[
-        :top_k
-    ]
+    ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
     return [
         SearchResult(
             chunk=chunks[i],
@@ -422,9 +413,7 @@ def _dense_only_search(query: str, top_k: int = 5) -> list[SearchResult]:
     _, dense, chunks, doc_names = _load_indexes()
     scores = dense.get_scores(query)
     max_s = max(scores) if max(scores) > 0 else 1.0
-    ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[
-        :top_k
-    ]
+    ranked = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
     return [
         SearchResult(
             chunk=chunks[i],
@@ -475,18 +464,14 @@ def _generate_answer_stub(query: str, results: list[SearchResult]) -> str:
                 continue
             sentence_lower = sentence.lower()
             if any(kw in sentence_lower for kw in keywords):
-                best_sentences.append(
-                    f"* {sentence} [Source: {result.doc_name}]"
-                )
+                best_sentences.append(f"* {sentence} [Source: {result.doc_name}]")
             if len(best_sentences) >= 3:
                 break
         if len(best_sentences) >= 3:
             break
 
     if best_sentences:
-        return "Based on the retrieved documents:\n\n" + "\n".join(
-            best_sentences[:3]
-        )
+        return "Based on the retrieved documents:\n\n" + "\n".join(best_sentences[:3])
 
     # Fallback: return first chunk excerpt
     return f"From {results[0].doc_name}:\n{results[0].chunk[:400]}"
@@ -524,10 +509,7 @@ def _render_result_card(result: SearchResult, show_breakdown: bool = True) -> No
             st.caption(f"Score: {result.fused_score:.3f}")
 
         with st.expander("Chunk preview"):
-            st.text(
-                result.chunk[:400]
-                + ("..." if len(result.chunk) > 400 else "")
-            )
+            st.text(result.chunk[:400] + ("..." if len(result.chunk) > 400 else ""))
         st.divider()
 
 
@@ -584,9 +566,7 @@ def _tab_document_qa() -> None:
 def _tab_retrieval_explorer() -> None:
     """Retrieval Explorer tab -- side-by-side BM25 | Dense | Fused."""
     st.subheader("Retrieval Explorer")
-    st.markdown(
-        "Compare how BM25, dense retrieval, and RRF fusion rank documents differently."
-    )
+    st.markdown("Compare how BM25, dense retrieval, and RRF fusion rank documents differently.")
 
     query = st.text_input(
         "Explorer query",
@@ -616,9 +596,7 @@ def _tab_retrieval_explorer() -> None:
             st.caption("TF-IDF vector cosine similarity")
             for r in dense_results:
                 st.markdown(f"**#{r.rank}** `{r.doc_name[:25]}...`")
-                st.progress(
-                    r.dense_score, text=f"Dense: {r.dense_score:.3f}"
-                )
+                st.progress(r.dense_score, text=f"Dense: {r.dense_score:.3f}")
                 st.caption(r.chunk[:120] + "...")
                 st.divider()
 
@@ -627,9 +605,7 @@ def _tab_retrieval_explorer() -> None:
             st.caption("Reciprocal Rank Fusion (BM25 + Dense)")
             for r in fused_results:
                 st.markdown(f"**#{r.rank}** `{r.doc_name[:25]}...`")
-                st.progress(
-                    r.fused_score, text=f"Fused: {r.fused_score:.3f}"
-                )
+                st.progress(r.fused_score, text=f"Fused: {r.fused_score:.3f}")
                 st.caption(r.chunk[:120] + "...")
                 st.divider()
 
@@ -758,9 +734,7 @@ ReflectionLayer -> sufficient?        [Phase 4: Agentic]
 
     import pandas as pd
 
-    st.dataframe(
-        pd.DataFrame(stack_data), use_container_width=True, hide_index=True
-    )
+    st.dataframe(pd.DataFrame(stack_data), use_container_width=True, hide_index=True)
 
 
 # -- Main render ---------------------------------------------------------------
@@ -768,9 +742,7 @@ ReflectionLayer -> sufficient?        [Phase 4: Agentic]
 
 def render_rag_demo_dashboard() -> None:
     """Main entry point for the RAG demo dashboard."""
-    tab1, tab2, tab3 = st.tabs(
-        ["Document Q&A", "Retrieval Explorer", "System Metrics"]
-    )
+    tab1, tab2, tab3 = st.tabs(["Document Q&A", "Retrieval Explorer", "System Metrics"])
 
     with tab1:
         _tab_document_qa()

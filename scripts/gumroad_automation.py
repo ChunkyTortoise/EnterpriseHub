@@ -8,26 +8,14 @@ ACCOUNT = "caymanroden@gmail.com"
 ZIP_DIR = "/Users/cave/Documents/GitHub/EnterpriseHub/content/gumroad/zips/"
 
 UPDATES = [
-    {
-        "old_name": "Prompt Engineering Toolkit",
-        "new_name": "Prompt Engineering Toolkit - Starter",
-        "new_price": "29"
-    },
-    {
-        "old_name": "AI Integration Starter Kit",
-        "new_name": "AI Integration Starter Kit - Starter",
-        "new_price": "39"
-    },
-    {
-        "old_name": "Data Intelligence Dashboard Pro",
-        "new_name": "Insight Engine - Pro",
-        "new_price": "199"
-    },
+    {"old_name": "Prompt Engineering Toolkit", "new_name": "Prompt Engineering Toolkit - Starter", "new_price": "29"},
+    {"old_name": "AI Integration Starter Kit", "new_name": "AI Integration Starter Kit - Starter", "new_price": "39"},
+    {"old_name": "Data Intelligence Dashboard Pro", "new_name": "Insight Engine - Pro", "new_price": "199"},
     {
         "old_name": "Data Intelligence Dashboard Enterprise",
         "new_name": "Insight Engine - Enterprise",
-        "new_price": "999"
-    }
+        "new_price": "999",
+    },
 ]
 
 NEW_PRODUCTS = [
@@ -56,7 +44,7 @@ Also Includes Everything in Starter:
 
 Ideal For: Teams optimizing LLM costs, products with user-facing AI features, engineers running prompt experiments.
 
-30-day money-back guarantee. MIT License."""
+30-day money-back guarantee. MIT License.""",
     },
     {
         "name": "Prompt Engineering Toolkit - Enterprise",
@@ -83,7 +71,7 @@ Also Includes Everything in Pro:
 
 Ideal For: Enterprise teams with compliance requirements, agencies building AI products for clients, startups shipping LLM-powered features.
 
-30-day money-back guarantee. Commercial license."""
+30-day money-back guarantee. Commercial license.""",
     },
     {
         "name": "AI Integration Starter Kit - Pro",
@@ -110,7 +98,7 @@ Also Includes Everything in Starter:
 
 Ideal For: Production applications with real users, teams needing reliability guarantees, engineers optimizing LLM costs at scale.
 
-30-day money-back guarantee. MIT License."""
+30-day money-back guarantee. MIT License.""",
     },
     {
         "name": "AI Integration Starter Kit - Enterprise",
@@ -137,7 +125,7 @@ Also Includes Everything in Pro:
 
 Ideal For: Enterprise teams with SLA requirements, agencies building AI products, startups preparing for production launch.
 
-30-day money-back guarantee. Commercial license."""
+30-day money-back guarantee. Commercial license.""",
     },
     {
         "name": "Streamlit Dashboard Templates - Starter",
@@ -165,7 +153,7 @@ Includes:
 - README with customization guide
 - 520+ automated tests
 
-30-day money-back guarantee. MIT License."""
+30-day money-back guarantee. MIT License.""",
     },
     {
         "name": "Streamlit Dashboard Templates - Pro",
@@ -191,7 +179,7 @@ Also Includes Everything in Starter:
 
 Ideal For: Data scientists building ML dashboards, marketing teams tracking campaign performance, product managers monitoring KPIs.
 
-30-day money-back guarantee. MIT License."""
+30-day money-back guarantee. MIT License.""",
     },
     {
         "name": "Streamlit Dashboard Templates - Enterprise",
@@ -220,8 +208,8 @@ Also Includes Everything in Pro:
 
 Ideal For: Enterprise teams building BI platforms, consulting firms delivering client analytics, data teams needing production-grade dashboards.
 
-30-day money-back guarantee. Commercial license."""
-    }
+30-day money-back guarantee. Commercial license.""",
+    },
 ]
 
 BUNDLES = [
@@ -249,7 +237,7 @@ Total Test Coverage: 2,870+ Automated Tests. Production-grade code, not tutorial
 
 Individual Total: $323 | Bundle Price: $149 | You Save: $174 (54%)
 
-Python 3.11+ required. Docker recommended. 30-day money-back guarantee. MIT License."""
+Python 3.11+ required. Docker recommended. 30-day money-back guarantee. MIT License.""",
     },
     {
         "name": "Production AI Toolkit (Pro)",
@@ -273,7 +261,7 @@ What's Inside (7 Pro-Tier Products):
 
 Individual Total: $1,073 | Bundle Price: $549 | You Save: $524 (49%)
 
-30-day money-back guarantee. MIT License."""
+30-day money-back guarantee. MIT License.""",
     },
     {
         "name": "Revenue Sprint Bundle",
@@ -298,9 +286,10 @@ Total: 930+ Automated Tests across all 3 tools.
 
 Individual Total: $117 | Bundle Price: $99 | You Save: $18 (15%)
 
-Python 3.11+ required. Docker included. 30-day money-back guarantee. MIT License."""
-    }
+Python 3.11+ required. Docker included. 30-day money-back guarantee. MIT License.""",
+    },
 ]
+
 
 def run():
     print("🚀 Starting Gumroad Browser Automation...")
@@ -308,22 +297,19 @@ def run():
     with sync_playwright() as p:
         # Use persistent context to save login state
         context = p.chromium.launch_persistent_context(
-            user_data_dir,
-            headless=False,
-            slow_mo=500,
-            args=["--disable-blink-features=AutomationControlled"]
+            user_data_dir, headless=False, slow_mo=500, args=["--disable-blink-features=AutomationControlled"]
         )
         page = context.pages[0] if context.pages else context.new_page()
-        
+
         print("Navigate to Gumroad dashboard...")
         page.goto("https://app.gumroad.com/dashboard")
-        
+
         print("⚠️  PLEASE LOG IN MANUALLY IN THE BROWSER WINDOW.")
         print(f"Account: {ACCOUNT}")
         print("Waiting for login (checking for 'dashboard' or 'products' in URL)...")
-        
+
         try:
-            page.wait_for_url(lambda url: "dashboard" in url or "products" in url, timeout=300000) 
+            page.wait_for_url(lambda url: "dashboard" in url or "products" in url, timeout=300000)
             print("✅ Login detected!")
         except Exception as e:
             print(f"❌ Login wait failed: {e}")
@@ -336,23 +322,23 @@ def run():
             try:
                 print(f"Searching for product: {update['old_name']}")
                 page.goto("https://app.gumroad.com/products")
-                
+
                 # Search for the product
                 page.wait_for_selector('input[placeholder*="Search"]')
-                page.fill('input[placeholder*="Search"]', update['old_name'])
+                page.fill('input[placeholder*="Search"]', update["old_name"])
                 page.keyboard.press("Enter")
                 time.sleep(2)
-                
+
                 # Click the product link (usually the first one that matches the name)
                 selector = f'a:has-text("{update["old_name"]}")'
                 if page.is_visible(selector):
                     page.click(selector)
                     print(f"  Editing {update['old_name']}...")
-                    
+
                     page.wait_for_selector('input[name="name"]')
-                    page.fill('input[name="name"]', update['new_name'])
-                    page.fill('input[name="price"]', update['new_price'])
-                    
+                    page.fill('input[name="name"]', update["new_name"])
+                    page.fill('input[name="price"]', update["new_price"])
+
                     page.click('button:has-text("Save changes")')
                     print(f"  ✅ Updated: {update['new_name']} (${update['new_price']})")
                     updates_done += 1
@@ -369,23 +355,23 @@ def run():
             try:
                 print(f"➕ Creating product: {prod['name']}")
                 page.goto("https://app.gumroad.com/products/new")
-                
+
                 page.wait_for_selector('input[name="name"]')
-                page.fill('input[name="name"]', prod['name'])
-                
+                page.fill('input[name="name"]', prod["name"])
+
                 try:
                     page.click('input[value="digital_product"]')
                 except:
-                    page.click('div[class*="product-type-card"]:first-child') 
-                
-                page.fill('input[name="price"]', prod['price'])
-                page.click('button:has-text("Next: Customize")')
-                
-                page.wait_for_selector('div[contenteditable="true"]')
-                page.fill('div[contenteditable="true"]', prod['description'])
+                    page.click('div[class*="product-type-card"]:first-child')
 
-                if prod['zip']:
-                    zip_path = os.path.join(ZIP_DIR, prod['zip'])
+                page.fill('input[name="price"]', prod["price"])
+                page.click('button:has-text("Next: Customize")')
+
+                page.wait_for_selector('div[contenteditable="true"]')
+                page.fill('div[contenteditable="true"]', prod["description"])
+
+                if prod["zip"]:
+                    zip_path = os.path.join(ZIP_DIR, prod["zip"])
                     if os.path.exists(zip_path):
                         print(f"  📦 Uploading {prod['zip']}...")
                         try:
@@ -416,23 +402,23 @@ def run():
             try:
                 print(f"➕ Creating bundle: {bundle['name']}")
                 page.goto("https://app.gumroad.com/products/new")
-                
+
                 page.wait_for_selector('input[name="name"]')
-                page.fill('input[name="name"]', bundle['name'])
-                
+                page.fill('input[name="name"]', bundle["name"])
+
                 try:
                     page.click('input[value="digital_product"]')
                 except:
-                    page.click('div[class*="product-type-card"]:first-child') 
-                
-                page.fill('input[name="price"]', bundle['price'])
-                page.click('button:has-text("Next: Customize")')
-                
-                page.wait_for_selector('div[contenteditable="true"]')
-                page.fill('div[contenteditable="true"]', bundle['description'])
+                    page.click('div[class*="product-type-card"]:first-child')
 
-                if bundle['zip']:
-                    zip_path = os.path.join(ZIP_DIR, bundle['zip'])
+                page.fill('input[name="price"]', bundle["price"])
+                page.click('button:has-text("Next: Customize")')
+
+                page.wait_for_selector('div[contenteditable="true"]')
+                page.fill('div[contenteditable="true"]', bundle["description"])
+
+                if bundle["zip"]:
+                    zip_path = os.path.join(ZIP_DIR, bundle["zip"])
                     if os.path.exists(zip_path):
                         print(f"  📦 Uploading {bundle['zip']}...")
                         try:
@@ -446,7 +432,7 @@ def run():
                                 page.set_input_files('input[type="file"]', zip_path)
                         except Exception as upload_error:
                             print(f"    ⚠️ Upload error: {upload_error}")
-                
+
                 page.click('button:has-text("Publish")')
                 print(f"  ✅ Published bundle: {bundle['name']}")
                 bundles_done += 1
@@ -458,15 +444,16 @@ def run():
         print("\n--- STEP 4: Verification ---")
         page.goto("https://app.gumroad.com/products")
         time.sleep(5)
-        
+
         print("\n🚀 GUMROAD REPORT:")
         print(f"- Updates completed: {updates_done} of 4")
         print(f"- New products created: {new_products_done} of 7")
         print(f"- Bundles created: {bundles_done} of 3")
-        
+
         print("\nThe browser will remain open for 2 minutes for manual inspection.")
         time.sleep(120)
         browser.close()
+
 
 if __name__ == "__main__":
     run()

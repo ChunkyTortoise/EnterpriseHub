@@ -569,14 +569,8 @@ class GHLWorkflowService:
             current_tags = set(contact.tags)
 
             # Separate into add / remove lists (skip no-ops)
-            tags_to_add = [
-                op.tag for op in operations
-                if op.action == TagAction.ADD and op.tag not in current_tags
-            ]
-            tags_to_remove = [
-                op.tag for op in operations
-                if op.action == TagAction.REMOVE and op.tag in current_tags
-            ]
+            tags_to_add = [op.tag for op in operations if op.action == TagAction.ADD and op.tag not in current_tags]
+            tags_to_remove = [op.tag for op in operations if op.action == TagAction.REMOVE and op.tag in current_tags]
 
             # Use POST /tags (append) and DELETE /tags instead of PUT /contacts
             # to avoid overwriting tags added by other code paths.

@@ -13,18 +13,23 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from ghl_real_estate_ai.agents.sdr.sdr_agent import SDRAgent
+from ghl_real_estate_ai.database.session import get_db
 from ghl_real_estate_ai.models.sdr_models import (
     SDRBatchProcessResult,
     SDREnrollRequest,
+    SDRProspectResponse,
     SDRStatsResponse,
     SDRWebhookPayload,
 )
+from ghl_real_estate_ai.repositories.sdr_repository import SDRRepository
 from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
 from ghl_real_estate_ai.services.sdr.cadence_scheduler import CadenceScheduler
 from ghl_real_estate_ai.services.sdr.outreach_sequence_engine import OutreachSequenceEngine
+from ghl_real_estate_ai.services.sdr.performance_tracker import SDRPerformanceTracker
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/sdr", tags=["sdr"])
@@ -208,17 +213,30 @@ async def enroll_prospects(
 
 
 @router.get("/prospects/{contact_id}")
-async def get_prospect(contact_id: str) -> Dict[str, Any]:
-    """
-    Return the SDR profile and current sequence state for a contact.
+async def get_prospect(
+    contact_id: str,
+    location_id: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+) -> SDRProspectResponse:
+    """Return the SDR profile and current sequence state for a contact."""
+    repo = SDRRepository(db)
+    prospect = await repo.get_prospect_by_contact(contact_id, location_id)
+    if prospect is None:
+        raise HTTPException(status_code=404, detail="Prospect not found")
 
-    Phase 1: returns stub pending DB persistence layer.
-    """
-    # Phase 1 stub — DB queries wired in Phase 3 with SDRPerformanceTracker
-    return {
-        "contact_id": contact_id,
-        "note": "Full DB-backed profile available in Phase 3",
-    }
+    seq = await repo.get_active_sequence(contact_id, location_id)
+    return SDRProspectResponse(
+        contact_id=prospect.contact_id,
+        location_id=prospect.location_id,
+        source=prospect.source,
+        lead_type=prospect.lead_type,
+        frs_score=prospect.frs_score,
+        pcs_score=prospect.pcs_score,
+        enrolled_at=prospect.enrolled_at,
+        current_step=seq.current_step if seq else None,
+        next_touch_at=seq.next_touch_at if seq else None,
+        reply_count=seq.reply_count if seq else 0,
+    )
 
 
 # ===========================================================================
@@ -227,11 +245,37 @@ async def get_prospect(contact_id: str) -> Dict[str, Any]:
 
 
 @router.get("/sequences/{contact_id}")
-async def get_sequence(contact_id: str) -> Dict[str, Any]:
-    """Inspect the current sequence state for a contact (Phase 1 stub)."""
+async def get_sequence(
+    contact_id: str,
+    location_id: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+) -> Dict[str, Any]:
+    """Inspect the current sequence state and touch history for a contact."""
+    repo = SDRRepository(db)
+    seq = await repo.get_active_sequence(contact_id, location_id)
+    if seq is None:
+        raise HTTPException(status_code=404, detail="No active sequence found")
+
+    touches = await repo.get_touches_for_sequence(seq.id)
     return {
-        "contact_id": contact_id,
-        "note": "Full sequence state available in Phase 3 with DB integration",
+        "sequence_id": seq.id,
+        "contact_id": seq.contact_id,
+        "location_id": seq.location_id,
+        "current_step": seq.current_step,
+        "next_touch_at": seq.next_touch_at.isoformat() if seq.next_touch_at else None,
+        "reply_count": seq.reply_count,
+        "ab_variant": seq.ab_variant,
+        "enrolled_at": seq.enrolled_at.isoformat(),
+        "touches": [
+            {
+                "id": t.id,
+                "step": t.step,
+                "channel": t.channel,
+                "sent_at": t.sent_at.isoformat(),
+                "replied_at": t.replied_at.isoformat() if t.replied_at else None,
+            }
+            for t in touches
+        ],
     }
 
 
@@ -264,19 +308,20 @@ async def disenroll_contact(contact_id: str, location_id: str) -> Dict[str, str]
 async def process_batch(
     batch_size: int = Query(default=50, ge=1, le=200),
     location_id: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
 ) -> SDRBatchProcessResult:
     """
     Process a batch of due outreach touches.
 
-    Called by a 15-minute cron job. Phase 1 version operates on in-memory
-    records; Phase 3 wires in DB queries via SDRPerformanceTracker.
+    Called by a 15-minute cron job. Queries DB for sequences where
+    next_touch_at <= now and dispatches the next touch for each.
     """
     start = time.monotonic()
     logger.info(f"[SDR] /sequences/process-batch size={batch_size} location={location_id}")
 
-    # Phase 1: no DB, so no records to fetch — batch runs but processes nothing.
-    # Phase 3 will query sdr_outreach_sequences WHERE next_touch_at <= now.
-    stats = await _scheduler.process_due_touches(records=[], batch_size=batch_size)
+    repo = SDRRepository(db)
+    scheduler = CadenceScheduler(sequence_engine=_sequence_engine, repository=repo)
+    stats = await scheduler.fetch_and_process_due_touches(batch_size=batch_size)
 
     duration_ms = (time.monotonic() - start) * 1000
     return SDRBatchProcessResult(
@@ -297,47 +342,34 @@ async def process_batch(
 async def get_stats(
     location_id: Optional[str] = None,
     days: int = Query(default=30, ge=1, le=90),
+    db: AsyncSession = Depends(get_db),
 ) -> SDRStatsResponse:
-    """
-    Return SDR performance statistics.
-
-    Phase 1: delegates to CadenceScheduler.get_statistics (returns stub).
-    Phase 3: SDRPerformanceTracker provides rolling windows.
-    """
-    raw = await _scheduler.get_statistics(location_id=location_id, days=days)
-    return SDRStatsResponse(
-        window=f"{days}d",
-        enrolled=raw.get("enrolled", 0),
-        touches_sent=raw.get("touches_sent", 0),
-        replies_received=raw.get("replies_received", 0),
-        reply_rate=raw.get("reply_rate", 0.0),
-        objections_handled=raw.get("objections_handled", 0),
-        qualified_leads=raw.get("qualified_leads", 0),
-        appointments_booked=raw.get("appointments_booked", 0),
-    )
+    """Return SDR performance statistics via SDRPerformanceTracker rolling windows."""
+    repo = SDRRepository(db)
+    tracker = SDRPerformanceTracker(repo)
+    return await tracker.get_stats(location_id=location_id, days=days)
 
 
 @router.get("/stats/sequences")
 async def get_sequence_stats(
     location_id: Optional[str] = None,
     days: int = Query(default=30, ge=1, le=90),
+    db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
-    """Per-sequence conversion stats (Phase 3: SDRPerformanceTracker)."""
-    return {
-        "location_id": location_id,
-        "days": days,
-        "note": "Full sequence conversion stats available in Phase 3",
-    }
+    """Per-sequence step-by-step conversion funnel."""
+    repo = SDRRepository(db)
+    tracker = SDRPerformanceTracker(repo)
+    funnel = await tracker.get_sequence_funnel(location_id=location_id, days=days)
+    return {"location_id": location_id, "days": days, "funnel": funnel}
 
 
 @router.get("/stats/objections")
 async def get_objection_stats(
     location_id: Optional[str] = None,
     days: int = Query(default=30, ge=1, le=90),
+    db: AsyncSession = Depends(get_db),
 ) -> Dict[str, Any]:
-    """Objection type distribution and rebuttal effectiveness (Phase 3)."""
-    return {
-        "location_id": location_id,
-        "days": days,
-        "note": "Full objection analytics available in Phase 3",
-    }
+    """Objection type distribution and per-type rates."""
+    repo = SDRRepository(db)
+    tracker = SDRPerformanceTracker(repo)
+    return await tracker.get_objection_analytics(location_id=location_id, days=days)

@@ -1,4 +1,5 @@
 import pytest
+
 """
 Test Suite for Property Scoring Strategy Pattern
 

@@ -43,13 +43,14 @@ class CalendarEventGenerator:
             from google.auth.transport.requests import Request
             from googleapiclient.discovery import build
 
-            SCOPES = ['https://www.googleapis.com/auth/calendar']
+            SCOPES = ["https://www.googleapis.com/auth/calendar"]
             creds = None
 
             # Token file stores user's access and refresh tokens
-            token_path = Path.home() / '.config' / 'revenue-sprint' / 'token.json'
-            credentials_path = os.getenv('GOOGLE_CREDENTIALS_PATH',
-                                        str(Path.home() / '.config' / 'revenue-sprint' / 'credentials.json'))
+            token_path = Path.home() / ".config" / "revenue-sprint" / "token.json"
+            credentials_path = os.getenv(
+                "GOOGLE_CREDENTIALS_PATH", str(Path.home() / ".config" / "revenue-sprint" / "credentials.json")
+            )
 
             # Load existing token
             if token_path.exists():
@@ -70,10 +71,10 @@ class CalendarEventGenerator:
 
                 # Save token for next run
                 token_path.parent.mkdir(parents=True, exist_ok=True)
-                with open(token_path, 'w') as token:
+                with open(token_path, "w") as token:
                     token.write(creds.to_json())
 
-            self.calendar_service = build('calendar', 'v3', credentials=creds)
+            self.calendar_service = build("calendar", "v3", credentials=creds)
             return self.calendar_service
 
         except ImportError:
@@ -85,11 +86,7 @@ class CalendarEventGenerator:
             return None
 
     def create_post_reminder(
-        self,
-        post_date: datetime,
-        post_title: str,
-        post_content: str = "",
-        calendar_name: str = "primary"
+        self, post_date: datetime, post_title: str, post_content: str = "", calendar_name: str = "primary"
     ) -> Optional[str]:
         """
         Create calendar reminder for LinkedIn post
@@ -115,32 +112,29 @@ class CalendarEventGenerator:
         try:
             # Create event
             event = {
-                'summary': f'LinkedIn Post: {post_title}',
-                'description': post_content,
-                'start': {
-                    'dateTime': post_date.isoformat(),
-                    'timeZone': 'America/Los_Angeles',
+                "summary": f"LinkedIn Post: {post_title}",
+                "description": post_content,
+                "start": {
+                    "dateTime": post_date.isoformat(),
+                    "timeZone": "America/Los_Angeles",
                 },
-                'end': {
-                    'dateTime': (post_date + timedelta(minutes=30)).isoformat(),
-                    'timeZone': 'America/Los_Angeles',
+                "end": {
+                    "dateTime": (post_date + timedelta(minutes=30)).isoformat(),
+                    "timeZone": "America/Los_Angeles",
                 },
-                'reminders': {
-                    'useDefault': False,
-                    'overrides': [
-                        {'method': 'popup', 'minutes': 15},
-                        {'method': 'popup', 'minutes': 60},
+                "reminders": {
+                    "useDefault": False,
+                    "overrides": [
+                        {"method": "popup", "minutes": 15},
+                        {"method": "popup", "minutes": 60},
                     ],
                 },
             }
 
-            created_event = self.calendar_service.events().insert(
-                calendarId=calendar_name,
-                body=event
-            ).execute()
+            created_event = self.calendar_service.events().insert(calendarId=calendar_name, body=event).execute()
 
             print(f"✓ Created calendar event: {created_event.get('htmlLink')}")
-            return created_event['id']
+            return created_event["id"]
 
         except Exception as e:
             print(f"Error creating calendar event: {e}")
@@ -159,18 +153,18 @@ class CalendarEventGenerator:
         with open(yaml_path) as f:
             config = yaml.safe_load(f)
 
-        posts = config.get('posts', [])
+        posts = config.get("posts", [])
         event_ids = []
 
         for post in posts:
-            date_str = post.get('date')
-            post_date = datetime.strptime(date_str, '%Y-%m-%d %H:%M')
+            date_str = post.get("date")
+            post_date = datetime.strptime(date_str, "%Y-%m-%d %H:%M")
 
             event_id = self.create_post_reminder(
                 post_date=post_date,
-                post_title=post.get('title', 'Untitled'),
-                post_content=post.get('content', ''),
-                calendar_name=calendar_name
+                post_title=post.get("title", "Untitled"),
+                post_content=post.get("content", ""),
+                calendar_name=calendar_name,
             )
 
             if event_id:
@@ -184,13 +178,7 @@ class ConnectionRequestFormatter:
 
     MAX_LENGTH = 200  # LinkedIn connection request character limit
 
-    def format_request(
-        self,
-        name: str,
-        company: str,
-        hook: str,
-        template: str = None
-    ) -> str:
+    def format_request(self, name: str, company: str, hook: str, template: str = None) -> str:
         """
         Format connection request with character limit
 
@@ -209,23 +197,20 @@ class ConnectionRequestFormatter:
 
         try:
             from jinja2 import Template
+
             tmpl = Template(template)
             message = tmpl.render(name=name, company=company, hook=hook)
         except ImportError:
             # Fallback without Jinja2
-            message = template.replace('{{name}}', name).replace('{{company}}', company).replace('{{hook}}', hook)
+            message = template.replace("{{name}}", name).replace("{{company}}", company).replace("{{hook}}", hook)
 
         # Truncate if too long
         if len(message) > self.MAX_LENGTH:
-            message = message[:self.MAX_LENGTH - 3] + '...'
+            message = message[: self.MAX_LENGTH - 3] + "..."
 
         return message
 
-    def generate_variants(
-        self,
-        targets: List[Dict],
-        templates: List[str] = None
-    ) -> List[Dict]:
+    def generate_variants(self, targets: List[Dict], templates: List[str] = None) -> List[Dict]:
         """
         Generate connection request variants for multiple targets
 
@@ -251,19 +236,21 @@ class ConnectionRequestFormatter:
         for i, target in enumerate(targets):
             template = templates[i % len(templates)]
             message = self.format_request(
-                name=target['name'],
-                company=target.get('company', ''),
-                hook=target.get('hook', 'I think we have aligned interests.'),
-                template=template
+                name=target["name"],
+                company=target.get("company", ""),
+                hook=target.get("hook", "I think we have aligned interests."),
+                template=template,
             )
 
-            results.append({
-                'name': target['name'],
-                'company': target.get('company', ''),
-                'linkedin_url': target.get('linkedin', ''),
-                'message': message,
-                'length': len(message)
-            })
+            results.append(
+                {
+                    "name": target["name"],
+                    "company": target.get("company", ""),
+                    "linkedin_url": target.get("linkedin", ""),
+                    "message": message,
+                    "length": len(message),
+                }
+            )
 
             print(f"✓ {target['name']}: {message} ({len(message)} chars)")
 
@@ -275,16 +262,16 @@ class EngagementTracker:
 
     def __init__(self):
         self.columns = [
-            'Post Date',
-            'Post Title',
-            'Post URL',
-            'Impressions',
-            'Likes',
-            'Comments',
-            'Shares',
-            'Clicks',
-            'Engagement Rate',
-            'Notes'
+            "Post Date",
+            "Post Title",
+            "Post URL",
+            "Impressions",
+            "Likes",
+            "Comments",
+            "Shares",
+            "Clicks",
+            "Engagement Rate",
+            "Notes",
         ]
 
     def create_template(self, output_path: str):
@@ -293,14 +280,7 @@ class EngagementTracker:
         df.to_csv(output_path, index=False)
         print(f"✓ Engagement tracker created: {output_path}")
 
-    def track_post(
-        self,
-        post_date: str,
-        post_title: str,
-        post_url: str,
-        metrics: Dict,
-        output_path: str
-    ):
+    def track_post(self, post_date: str, post_title: str, post_url: str, metrics: Dict, output_path: str):
         """
         Add post metrics to tracking file
 
@@ -318,22 +298,22 @@ class EngagementTracker:
             df = pd.DataFrame(columns=self.columns)
 
         # Calculate engagement rate
-        impressions = metrics.get('impressions', 0)
-        engagements = metrics.get('likes', 0) + metrics.get('comments', 0) + metrics.get('shares', 0)
+        impressions = metrics.get("impressions", 0)
+        engagements = metrics.get("likes", 0) + metrics.get("comments", 0) + metrics.get("shares", 0)
         engagement_rate = (engagements / impressions * 100) if impressions > 0 else 0.0
 
         # Add new row
         new_row = {
-            'Post Date': post_date,
-            'Post Title': post_title,
-            'Post URL': post_url,
-            'Impressions': metrics.get('impressions', 0),
-            'Likes': metrics.get('likes', 0),
-            'Comments': metrics.get('comments', 0),
-            'Shares': metrics.get('shares', 0),
-            'Clicks': metrics.get('clicks', 0),
-            'Engagement Rate': f"{engagement_rate:.2f}%",
-            'Notes': metrics.get('notes', '')
+            "Post Date": post_date,
+            "Post Title": post_title,
+            "Post URL": post_url,
+            "Impressions": metrics.get("impressions", 0),
+            "Likes": metrics.get("likes", 0),
+            "Comments": metrics.get("comments", 0),
+            "Shares": metrics.get("shares", 0),
+            "Clicks": metrics.get("clicks", 0),
+            "Engagement Rate": f"{engagement_rate:.2f}%",
+            "Notes": metrics.get("notes", ""),
         }
 
         df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
@@ -344,32 +324,32 @@ class EngagementTracker:
 
 def main():
     parser = argparse.ArgumentParser(description="LinkedIn automation helper")
-    subparsers = parser.add_subparsers(dest='command', help='Command to run')
+    subparsers = parser.add_subparsers(dest="command", help="Command to run")
 
     # Calendar command
-    calendar_parser = subparsers.add_parser('calendar', help='Create calendar events for posts')
-    calendar_parser.add_argument('--posts', required=True, help='YAML file with post schedule')
-    calendar_parser.add_argument('--calendar', default='primary', help='Calendar name')
+    calendar_parser = subparsers.add_parser("calendar", help="Create calendar events for posts")
+    calendar_parser.add_argument("--posts", required=True, help="YAML file with post schedule")
+    calendar_parser.add_argument("--calendar", default="primary", help="Calendar name")
 
     # Connection requests command
-    requests_parser = subparsers.add_parser('requests', help='Generate connection requests')
-    requests_parser.add_argument('--targets', required=True, help='CSV file with targets')
-    requests_parser.add_argument('--templates', help='File with custom templates (one per line)')
-    requests_parser.add_argument('--output', required=True, help='Output CSV file')
+    requests_parser = subparsers.add_parser("requests", help="Generate connection requests")
+    requests_parser.add_argument("--targets", required=True, help="CSV file with targets")
+    requests_parser.add_argument("--templates", help="File with custom templates (one per line)")
+    requests_parser.add_argument("--output", required=True, help="Output CSV file")
 
     # Tracking command
-    track_parser = subparsers.add_parser('track', help='Track post engagement')
-    track_parser.add_argument('--create', action='store_true', help='Create new tracker')
-    track_parser.add_argument('--post-date', help='Post date (YYYY-MM-DD)')
-    track_parser.add_argument('--post-title', help='Post title')
-    track_parser.add_argument('--post-url', help='LinkedIn post URL')
-    track_parser.add_argument('--impressions', type=int, default=0)
-    track_parser.add_argument('--likes', type=int, default=0)
-    track_parser.add_argument('--comments', type=int, default=0)
-    track_parser.add_argument('--shares', type=int, default=0)
-    track_parser.add_argument('--clicks', type=int, default=0)
-    track_parser.add_argument('--notes', default='')
-    track_parser.add_argument('--output', required=True, help='Tracker CSV file')
+    track_parser = subparsers.add_parser("track", help="Track post engagement")
+    track_parser.add_argument("--create", action="store_true", help="Create new tracker")
+    track_parser.add_argument("--post-date", help="Post date (YYYY-MM-DD)")
+    track_parser.add_argument("--post-title", help="Post title")
+    track_parser.add_argument("--post-url", help="LinkedIn post URL")
+    track_parser.add_argument("--impressions", type=int, default=0)
+    track_parser.add_argument("--likes", type=int, default=0)
+    track_parser.add_argument("--comments", type=int, default=0)
+    track_parser.add_argument("--shares", type=int, default=0)
+    track_parser.add_argument("--clicks", type=int, default=0)
+    track_parser.add_argument("--notes", default="")
+    track_parser.add_argument("--output", required=True, help="Tracker CSV file")
 
     args = parser.parse_args()
 
@@ -378,7 +358,7 @@ def main():
         sys.exit(1)
 
     # Execute commands
-    if args.command == 'calendar':
+    if args.command == "calendar":
         generator = CalendarEventGenerator()
         event_ids = generator.create_from_yaml(args.posts, args.calendar)
 
@@ -387,10 +367,10 @@ def main():
         else:
             print("\n⚠ No events created (calendar API may not be configured)")
 
-    elif args.command == 'requests':
+    elif args.command == "requests":
         # Read targets
         df = pd.read_csv(args.targets)
-        targets = df.to_dict('records')
+        targets = df.to_dict("records")
 
         # Load custom templates if provided
         templates = None
@@ -409,7 +389,7 @@ def main():
         print(f"\n✓ Generated {len(results)} connection requests")
         print(f"✓ Saved to: {args.output}")
 
-    elif args.command == 'track':
+    elif args.command == "track":
         tracker = EngagementTracker()
 
         if args.create:
@@ -421,12 +401,12 @@ def main():
                 sys.exit(1)
 
             metrics = {
-                'impressions': args.impressions,
-                'likes': args.likes,
-                'comments': args.comments,
-                'shares': args.shares,
-                'clicks': args.clicks,
-                'notes': args.notes
+                "impressions": args.impressions,
+                "likes": args.likes,
+                "comments": args.comments,
+                "shares": args.shares,
+                "clicks": args.clicks,
+                "notes": args.notes,
             }
 
             tracker.track_post(
@@ -434,9 +414,9 @@ def main():
                 post_title=args.post_title,
                 post_url=args.post_url,
                 metrics=metrics,
-                output_path=args.output
+                output_path=args.output,
             )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -14,6 +14,7 @@ from dataclasses import dataclass
 @dataclass
 class SchoolScore:
     """School quality scoring with distance weighting."""
+
     elementary_rating: Optional[float]
     middle_rating: Optional[float]
     high_rating: Optional[float]
@@ -27,6 +28,7 @@ class SchoolScore:
 @dataclass
 class CommuteScore:
     """Commute convenience scoring."""
+
     to_downtown_minutes: Optional[int]
     to_workplace_minutes: Optional[int]
     public_transit_access: float
@@ -50,10 +52,7 @@ class LifestyleScoringEngine:
         self.neighborhood_cache = self._load_neighborhood_data()
 
     def score_school_quality(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any],
-        weight: float
+        self, property_data: Dict[str, Any], preferences: Dict[str, Any], weight: float
     ) -> SchoolScore:
         """
         Score school quality with distance weighting.
@@ -71,7 +70,7 @@ class LifestyleScoringEngine:
                 distance_penalty=0.0,
                 overall_score=0.5 * weight,
                 top_school_name=None,
-                reasoning="School data not available"
+                reasoning="School data not available",
             )
 
         # Extract ratings by level
@@ -136,14 +135,11 @@ class LifestyleScoringEngine:
             distance_penalty=distance_penalty,
             overall_score=overall_score,
             top_school_name=top_school_name,
-            reasoning=reasoning
+            reasoning=reasoning,
         )
 
     def score_commute_convenience(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any],
-        weight: float
+        self, property_data: Dict[str, Any], preferences: Dict[str, Any], weight: float
     ) -> CommuteScore:
         """
         Score commute convenience with multiple destination support.
@@ -199,10 +195,7 @@ class LifestyleScoringEngine:
                 workplace_score = 0.3
             commute_factors.append(workplace_score * 0.4)
 
-        commute_factors.extend([
-            public_transit * 0.1,
-            highway_access * 0.1
-        ])
+        commute_factors.extend([public_transit * 0.1, highway_access * 0.1])
 
         overall_score = sum(commute_factors) * weight
 
@@ -225,7 +218,7 @@ class LifestyleScoringEngine:
             public_transit_access=public_transit,
             highway_access=highway_access,
             overall_score=overall_score,
-            reasoning=reasoning
+            reasoning=reasoning,
         )
 
     def _extract_rating(self, schools: List[Dict], school_type: str) -> Optional[float]:
@@ -244,15 +237,15 @@ class LifestyleScoringEngine:
                 "public_transit_score": 0.8,
                 "highway_access": 0.7,
                 "walkability": 0.9,
-                "safety_rating": 7.5
+                "safety_rating": 7.5,
             },
             "steiner_ranch_rancho_cucamonga": {
                 "downtown_commute_min": 35,
                 "public_transit_score": 0.3,
                 "highway_access": 0.9,
                 "walkability": 0.4,
-                "safety_rating": 9.0
-            }
+                "safety_rating": 9.0,
+            },
             # ... more neighborhoods
         }
 
@@ -264,7 +257,7 @@ class LifestyleScoringEngine:
             "east rancho_cucamonga": 8,
             "west campus": 10,
             "steiner ranch": 35,
-            "avery ranch": 40
+            "avery ranch": 40,
         }
         return downtown_estimates.get(neighborhood)
 
@@ -274,7 +267,7 @@ class LifestyleScoringEngine:
         workplace_map = {
             "domain": {"hyde park": 25, "steiner ranch": 15},
             "ut campus": {"hyde park": 10, "west campus": 5},
-            "downtown": {"hyde park": 15, "east rancho_cucamonga": 8}
+            "downtown": {"hyde park": 15, "east rancho_cucamonga": 8},
         }
 
         for location, commutes in workplace_map.items():

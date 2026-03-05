@@ -31,11 +31,7 @@ def verify_signature(request: Request, body: bytes) -> bool:
     if not WEBHOOK_SECRET or not signature:
         return False
 
-    expected = hmac.new(
-        WEBHOOK_SECRET.encode(),
-        body,
-        hashlib.sha256
-    ).hexdigest()
+    expected = hmac.new(WEBHOOK_SECRET.encode(), body, hashlib.sha256).hexdigest()
 
     return hmac.compare_digest(signature, expected)
 
@@ -80,21 +76,13 @@ async def handle_webhook(request: Request):
 
     # Initialize or get lead state
     if contact_id not in leads:
-        leads[contact_id] = {
-            "answers": {},
-            "current_question": "budget",
-            "score": 0,
-            "status": "cold"
-        }
+        leads[contact_id] = {"answers": {}, "current_question": "budget", "score": 0, "status": "cold"}
 
     lead = leads[contact_id]
 
     # Check if already qualified
     if lead["status"] == "hot":
-        return JSONResponse({
-            "status": "qualified",
-            "message": "Thanks! A team member will contact you soon."
-        })
+        return JSONResponse({"status": "qualified", "message": "Thanks! A team member will contact you soon."})
 
     # Determine next question
     questions = {
@@ -103,18 +91,15 @@ async def handle_webhook(request: Request):
         "bedrooms": "How many bedrooms?",
         "timeline": "When do you want to move?",
         "preapproval": "Are you pre-approved?",
-        "motivation": "What's driving your decision?"
+        "motivation": "What's driving your decision?",
     }
 
     current_q = lead["current_question"]
     message = questions.get(current_q, "Tell me more about what you're looking for.")
 
-    return JSONResponse({
-        "status": "question",
-        "message": message,
-        "score": lead["score"],
-        "classification": lead["status"]
-    })
+    return JSONResponse(
+        {"status": "question", "message": message, "score": lead["score"], "classification": lead["status"]}
+    )
 
 
 @app.post("/webhook/response")
@@ -148,21 +133,13 @@ async def handle_response(request: Request):
     lead["score"] = score
     lead["status"] = status
 
-    return JSONResponse({
-        "status": "updated",
-        "score": score,
-        "classification": status
-    })
+    return JSONResponse({"status": "updated", "score": score, "classification": status})
 
 
 @app.get("/")
 def health_check():
     """Health check"""
-    return {
-        "service": "Simple GHL Lead Qualifier",
-        "version": "1.0",
-        "leads_tracked": len(leads)
-    }
+    return {"service": "Simple GHL Lead Qualifier", "version": "1.0", "leads_tracked": len(leads)}
 
 
 @app.get("/leads/{contact_id}")
@@ -177,7 +154,7 @@ def get_lead_status(contact_id: str):
         "score": lead["score"],
         "status": lead["status"],
         "answers": lead["answers"],
-        "next_question": lead["current_question"]
+        "next_question": lead["current_question"],
     }
 
 
