@@ -31,9 +31,8 @@ from merge import (
 )
 from merge.types import compute_content_hash, sanitize_path_for_storage
 
+
 @pytest.mark.unit
-
-
 class TestContentHashing:
     """Tests for content hash computation."""
 
@@ -267,4 +266,6 @@ class TestTaskSnapshot:
         assert restored.task_intent == original.task_intent
         assert restored.started_at == original.started_at
         assert len(restored.semantic_changes) == len(original.semantic_changes)
-        assert restored.semantic_changes[0].target == original.semantic_changes[0].target
+        assert (
+            restored.semantic_changes[0].target == original.semantic_changes[0].target
+        )

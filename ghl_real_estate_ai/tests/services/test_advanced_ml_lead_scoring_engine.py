@@ -302,7 +302,9 @@ class TestXGBoostConversionModel:
             assert isinstance(value, (int, float))
             assert value >= 0
 
-    @pytest.mark.skip(reason="MLFeatureVector with None values raises TypeError in predict() - implementation does not handle None gracefully")
+    @pytest.mark.skip(
+        reason="MLFeatureVector with None values raises TypeError in predict() - implementation does not handle None gracefully"
+    )
     @pytest.mark.asyncio
     async def test_prediction_error_handling(self, model):
         """Test error handling with invalid feature data"""

@@ -4,6 +4,7 @@ Obsidian MCP Server
 Filesystem-based Obsidian vault integration for Claude Code.
 No Obsidian desktop or plugins required.
 """
+
 import json
 import logging
 import os
@@ -30,9 +31,7 @@ VAULT_PATH = os.environ.get("OBSIDIAN_VAULT_PATH", "")
 def _get_vault() -> Path:
     """Get and validate vault path."""
     if not VAULT_PATH:
-        raise RuntimeError(
-            "OBSIDIAN_VAULT_PATH not set. Export it or add to .mcp.json env."
-        )
+        raise RuntimeError("OBSIDIAN_VAULT_PATH not set. Export it or add to .mcp.json env.")
     vault = Path(VAULT_PATH).resolve()
     if not vault.is_dir():
         raise RuntimeError(f"Vault directory not found: {vault}")
@@ -94,9 +93,7 @@ async def obsidian_read_note(path: str) -> str:
 
 
 @mcp.tool()
-async def obsidian_write_note(
-    path: str, content: str, metadata: dict | None = None
-) -> str:
+async def obsidian_write_note(path: str, content: str, metadata: dict | None = None) -> str:
     """Create or update a note. Optionally include YAML frontmatter metadata."""
     vault = _get_vault()
     note = _safe_path(vault, path)
@@ -252,9 +249,7 @@ async def obsidian_recent_notes(limit: int = 20, folder: str = "") -> str:
 
 
 @mcp.tool()
-async def obsidian_create_from_template(
-    template_name: str, output_path: str, variables: dict | None = None
-) -> str:
+async def obsidian_create_from_template(template_name: str, output_path: str, variables: dict | None = None) -> str:
     """Create a note from a vault template with {{variable}} substitution."""
     vault = _get_vault()
     template = _safe_path(vault, f"templates/{template_name}")

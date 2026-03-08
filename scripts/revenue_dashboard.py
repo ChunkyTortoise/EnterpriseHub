@@ -69,6 +69,7 @@ CHANNEL_COLORS = {
 # Data loading
 # ---------------------------------------------------------------------------
 
+
 @st.cache_data(ttl=60)
 def load_tracker(path: Path) -> str:
     if not path.exists():
@@ -205,6 +206,7 @@ def _month_sort_key(month_str: str) -> int:
 # Weekly trend calculation
 # ---------------------------------------------------------------------------
 
+
 def build_weekly_trend(tx_df: pd.DataFrame) -> pd.DataFrame:
     """Aggregate transactions into weekly buckets for trend chart."""
     if tx_df.empty:
@@ -223,6 +225,7 @@ def build_weekly_trend(tx_df: pd.DataFrame) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 # Streamlit UI
 # ---------------------------------------------------------------------------
+
 
 def render_header(ytd: float, last_updated: str) -> None:
     col1, col2, col3 = st.columns([2, 1, 1])
@@ -488,6 +491,7 @@ def render_run_update_button() -> None:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     render_run_update_button()

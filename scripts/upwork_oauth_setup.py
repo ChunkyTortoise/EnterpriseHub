@@ -119,9 +119,7 @@ class OAuthCallbackHandler(http.server.BaseHTTPRequestHandler):
             self.send_response(400)
             self.send_header("Content-Type", "text/html")
             self.end_headers()
-            self.wfile.write(
-                f"<h1>Authorization Failed</h1><p>{error}: {desc}</p>".encode()
-            )
+            self.wfile.write(f"<h1>Authorization Failed</h1><p>{error}: {desc}</p>".encode())
             print(f"\nERROR: Authorization failed: {error} - {desc}")
             return
 
@@ -138,10 +136,7 @@ class OAuthCallbackHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "text/html")
         self.end_headers()
-        self.wfile.write(
-            b"<h1>Authorization Successful!</h1>"
-            b"<p>You can close this tab. Tokens are being saved...</p>"
-        )
+        self.wfile.write(b"<h1>Authorization Successful!</h1><p>You can close this tab. Tokens are being saved...</p>")
 
     def log_message(self, format, *args):
         """Suppress default logging."""

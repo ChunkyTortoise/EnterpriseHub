@@ -26,6 +26,7 @@ from ghl_real_estate_ai.services.sdr.prospect_sourcer import ProspectSource, Pro
 from ghl_real_estate_ai.services.sdr.qualification_gate import QualificationGate
 
 if TYPE_CHECKING:
+    from ghl_real_estate_ai.repositories.sdr_repository import SDRRepository
     from ghl_real_estate_ai.services.enhanced_ghl_client import EnhancedGHLClient
     from ghl_real_estate_ai.services.sdr.qualification_gate import GateDecision
 
@@ -79,6 +80,7 @@ class SDRAgent(BaseBotWorkflow):
         ghl_client: Optional["EnhancedGHLClient"] = None,
         config: Optional[SDRBotConfig] = None,
         industry_config: Optional[Any] = None,
+        repository: Optional["SDRRepository"] = None,
     ) -> None:
         self.config = config or SDRBotConfig()  # Must be set BEFORE super().__init__
         super().__init__(
@@ -87,11 +89,12 @@ class SDRAgent(BaseBotWorkflow):
             enable_ml_analytics=self.config.enable_ml_scoring,
         )
         self.ghl_client = ghl_client
+        self._repo = repository
 
         # Wire up SDR subsystems
         self._sourcer = ProspectSourcer(ghl_client=ghl_client)
-        self._engine = OutreachSequenceEngine(ghl_client=ghl_client)
-        self._scheduler = CadenceScheduler(sequence_engine=self._engine)
+        self._engine = OutreachSequenceEngine(ghl_client=ghl_client, repository=repository)
+        self._scheduler = CadenceScheduler(sequence_engine=self._engine, repository=repository)
         self._objection_handler = ObjectionHandler(orchestrator=None)
 
         # Intent decoder for qualification gate
@@ -100,7 +103,7 @@ class SDRAgent(BaseBotWorkflow):
         self._intent_decoder = LeadIntentDecoder(ghl_client=ghl_client)
         self._gate = QualificationGate(intent_decoder=self._intent_decoder)
 
-        logger.info("[SDR] SDRAgent initialized")
+        logger.info("[SDR] SDRAgent initialized (db=%s)", "yes" if repository else "no")
 
     # -----------------------------------------------------------------------
     # Primary entry points
@@ -141,11 +144,28 @@ class SDRAgent(BaseBotWorkflow):
 
             for prospect in prospects:
                 try:
-                    await self._engine.enroll_prospect(
+                    record = await self._engine.enroll_prospect(
                         contact_id=prospect.contact_id,
                         location_id=prospect.location_id,
                         lead_type=prospect.lead_type,
                     )
+                    # Persist to DB if repo is wired
+                    if self._repo is not None:
+                        db_prospect = await self._repo.upsert_prospect(
+                            contact_id=prospect.contact_id,
+                            location_id=prospect.location_id,
+                            source=prospect.source.value,
+                            lead_type=prospect.lead_type,
+                            enrolled_at=record.enrolled_at,
+                        )
+                        await self._repo.create_sequence(
+                            prospect_id=db_prospect.id,
+                            contact_id=prospect.contact_id,
+                            location_id=prospect.location_id,
+                            current_step=record.current_step.value,
+                            enrolled_at=record.enrolled_at,
+                            ab_variant=record.ab_variant,
+                        )
                     result.enrolled += 1
                     self.publish_event(
                         "sdr.prospect_enrolled",
@@ -213,13 +233,26 @@ class SDRAgent(BaseBotWorkflow):
                 )
             except Exception as exc:
                 logger.error(f"[SDR] DND tag failed contact={contact_id}: {exc}")
+            # Persist opt-out to DB
+            if self._repo is not None:
+                seq = await self._repo.get_active_sequence(contact_id, location_id)
+                if seq is not None:
+                    await self._repo.update_sequence_step(seq.id, "opted_out")
             result.action_taken = "opt_out"
             self.publish_event("sdr.contact_opted_out", {"contact_id": contact_id})
             return result
 
+        # Persist objection to DB if detected
+        if objection_result.objection_type is not None and self._repo is not None:
+            await self._repo.log_objection(
+                contact_id=contact_id,
+                objection_type=objection_result.objection_type,
+                raw_message=message,
+                rebuttal_used=None,
+            )
+
         if objection_result.should_pause:
             result.action_taken = "rebuttal_sent"
-            # Phase 2: dispatch rebuttal via GHL; for now just log
             logger.info(f"[SDR] Nurture pause for contact={contact_id} objection={objection_result.objection_type}")
             return result
 
@@ -227,6 +260,20 @@ class SDRAgent(BaseBotWorkflow):
             # Non-blocking objection — send rebuttal and continue
             result.action_taken = "rebuttal_sent"
             return result
+
+        # Persist engagement reply to DB
+        if self._repo is not None:
+            seq = await self._repo.get_active_sequence(contact_id, location_id)
+            if seq is not None:
+                await self._repo.increment_reply_count(seq.id)
+                touches = await self._repo.get_touches_for_sequence(seq.id)
+                if touches:
+                    latest_touch = touches[-1]
+                    await self._repo.record_reply(
+                        touch_id=latest_touch.id,
+                        reply_body=message,
+                        replied_at=datetime.now(timezone.utc),
+                    )
 
         # Step 2: engagement reply → run qualification gate
         history = conversation_history or [{"role": "user", "content": message}]
@@ -251,6 +298,18 @@ class SDRAgent(BaseBotWorkflow):
             handoff_ok = await self._trigger_handoff(contact_id, location_id, gate_decision)
             result.handoff_triggered = handoff_ok
             result.action_taken = "gate_passed"
+            # Persist qualification to DB
+            if handoff_ok and self._repo is not None:
+                seq = await self._repo.get_active_sequence(contact_id, location_id)
+                if seq is not None:
+                    await self._repo.update_sequence_step(seq.id, "qualified")
+                prospect = await self._repo.get_prospect_by_contact(contact_id, location_id)
+                if prospect is not None and gate_decision.frs_score is not None:
+                    await self._repo.update_scores(
+                        prospect.id,
+                        frs_score=gate_decision.frs_score,
+                        pcs_score=gate_decision.pcs_score or 0.0,
+                    )
         else:
             result.action_taken = "sequence_advanced"
 

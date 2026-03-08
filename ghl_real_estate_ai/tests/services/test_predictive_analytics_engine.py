@@ -231,12 +231,7 @@ class TestABTestingFramework:
 
         # Verify conversion is recorded in participants
         experiment = ab_framework.active_experiments[experiment_id]
-        converted_leads = [
-            p["lead_id"]
-            for v in experiment["participants"].values()
-            for p in v
-            if p["converted"]
-        ]
+        converted_leads = [p["lead_id"] for v in experiment["participants"].values() for p in v if p["converted"]]
         assert "lead_convert" in converted_leads
 
     @pytest.mark.asyncio
@@ -315,23 +310,27 @@ class TestBehavioralPatternDiscovery:
         # Need 10+ converted leads with high email_open_rate and 10+ non-converted with low rate
         leads_data = []
         for i in range(12):
-            leads_data.append({
-                "id": f"lead_{i}",
-                "converted": True,
-                "email_open_rate": 0.85,
-                "interactions": [
-                    {"type": "email_open", "timestamp": datetime.now() - timedelta(days=1)},
-                    {"type": "website_visit", "timestamp": datetime.now() - timedelta(hours=12)},
-                    {"type": "email_click", "timestamp": datetime.now() - timedelta(hours=6)},
-                ],
-            })
+            leads_data.append(
+                {
+                    "id": f"lead_{i}",
+                    "converted": True,
+                    "email_open_rate": 0.85,
+                    "interactions": [
+                        {"type": "email_open", "timestamp": datetime.now() - timedelta(days=1)},
+                        {"type": "website_visit", "timestamp": datetime.now() - timedelta(hours=12)},
+                        {"type": "email_click", "timestamp": datetime.now() - timedelta(hours=6)},
+                    ],
+                }
+            )
         for i in range(12, 24):
-            leads_data.append({
-                "id": f"lead_{i}",
-                "converted": False,
-                "email_open_rate": 0.05,
-                "interactions": [],
-            })
+            leads_data.append(
+                {
+                    "id": f"lead_{i}",
+                    "converted": False,
+                    "email_open_rate": 0.05,
+                    "interactions": [],
+                }
+            )
 
         patterns = await pattern_discovery.discover_conversion_patterns(leads_data)
 
@@ -345,27 +344,31 @@ class TestBehavioralPatternDiscovery:
         # Need 10+ converted leads with fast response and 10+ non-converted with slow response
         leads_data = []
         for i in range(12):
-            leads_data.append({
-                "id": f"timeline_lead_{i}",
-                "converted": True,
-                "avg_response_time_hours": 2.0,  # Fast responders converted
-                "email_open_rate": 0.6,
-                "created_at": datetime.now() - timedelta(days=14),
-                "interactions": [
-                    {"type": "inquiry", "timestamp": datetime.now() - timedelta(days=14)},
-                    {"type": "property_view", "timestamp": datetime.now() - timedelta(days=10)},
-                    {"type": "conversion", "timestamp": datetime.now() - timedelta(days=7)},
-                ],
-            })
+            leads_data.append(
+                {
+                    "id": f"timeline_lead_{i}",
+                    "converted": True,
+                    "avg_response_time_hours": 2.0,  # Fast responders converted
+                    "email_open_rate": 0.6,
+                    "created_at": datetime.now() - timedelta(days=14),
+                    "interactions": [
+                        {"type": "inquiry", "timestamp": datetime.now() - timedelta(days=14)},
+                        {"type": "property_view", "timestamp": datetime.now() - timedelta(days=10)},
+                        {"type": "conversion", "timestamp": datetime.now() - timedelta(days=7)},
+                    ],
+                }
+            )
         for i in range(12, 24):
-            leads_data.append({
-                "id": f"timeline_lead_{i}",
-                "converted": False,
-                "avg_response_time_hours": 72.0,  # Slow responders did not convert
-                "email_open_rate": 0.2,
-                "created_at": datetime.now() - timedelta(days=14),
-                "interactions": [],
-            })
+            leads_data.append(
+                {
+                    "id": f"timeline_lead_{i}",
+                    "converted": False,
+                    "avg_response_time_hours": 72.0,  # Slow responders did not convert
+                    "email_open_rate": 0.2,
+                    "created_at": datetime.now() - timedelta(days=14),
+                    "interactions": [],
+                }
+            )
 
         patterns = await pattern_discovery.discover_conversion_patterns(leads_data)
 
@@ -673,7 +676,7 @@ class TestPredictiveAnalyticsPerformance:
         # Generate large dataset with converted/non-converted split and proper fields
         large_dataset = []
         for i in range(1000):
-            converted = (i % 2 == 0)
+            converted = i % 2 == 0
             lead = {
                 "id": f"large_dataset_lead_{i}",
                 "converted": converted,

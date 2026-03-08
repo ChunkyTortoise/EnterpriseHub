@@ -32,10 +32,12 @@ class TestExtractBudgetRange:
     @pytest.fixture
     def cfg(self):
         from ghl_real_estate_ai.ghl_utils.jorge_config import BuyerBudgetConfig
+
         return BuyerBudgetConfig()
 
     def _run(self, history, cfg=None):
         from ghl_real_estate_ai.agents.buyer.utils import extract_budget_range
+
         return run(extract_budget_range(history, cfg))
 
     # ── regression: the bug case ─────────────────────────────────────────────
@@ -105,6 +107,7 @@ class TestBuyerIntentDecoderScoring:
     def decoder(self):
         from ghl_real_estate_ai.agents.buyer_intent_decoder import BuyerIntentDecoder
         from ghl_real_estate_ai.config.industry_config import IndustryConfig
+
         cfg = IndustryConfig.default_real_estate()
         return BuyerIntentDecoder(industry_config=cfg)
 

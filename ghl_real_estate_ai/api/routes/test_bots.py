@@ -23,6 +23,8 @@ from pydantic import BaseModel
 
 from ghl_real_estate_ai.api.routes.inbound_compliance import (
     check_inbound_compliance as _check_inbound_compliance,
+)
+from ghl_real_estate_ai.api.routes.inbound_compliance import (
     sanitise_message as _sanitise_message,
 )
 
@@ -45,6 +47,7 @@ def _get_session(contact_id: str, location_id: str = "test") -> Dict[str, Any]:
 
 
 # ââ Stub ConversationManager ââââââââââââââââââââââââââââââââââââââââââââââââââ
+
 
 class _StubMemoryService:
     async def save_context(self, *args: Any, **kwargs: Any) -> None:  # noqa: ANN401
@@ -120,6 +123,7 @@ class _StubConversationManager:
 
 # ââ Stub GHL Client âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
 
+
 class _StubGHLClient:
     """Records all GHL side-effects without hitting the API."""
 
@@ -138,6 +142,7 @@ class _StubGHLClient:
 
 
 # ââ Request / Response models âââââââââââââââââââââââââââââââââââââââââââââââââ
+
 
 class TestSellerRequest(BaseModel):
     message: str
@@ -164,6 +169,7 @@ class TestBotResponse(BaseModel):
 
 
 # ââ POST /test/seller âââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
 
 @router.post(
     "/seller",
@@ -228,7 +234,9 @@ async def test_seller(req: TestSellerRequest) -> TestBotResponse:
     existing_turns = len(sess["history"])
     if not any(m.get("content") == req.message for m in sess["history"] if m.get("role") == "user"):
         sess["history"].append({"role": "user", "content": req.message})
-    if response_text and not any(m.get("content") == response_text for m in sess["history"] if m.get("role") == "assistant"):
+    if response_text and not any(
+        m.get("content") == response_text for m in sess["history"] if m.get("role") == "assistant"
+    ):
         sess["history"].append({"role": "assistant", "content": response_text})
 
     sess["turn"] = sess.get("turn", 0) + 1
@@ -247,6 +255,7 @@ async def test_seller(req: TestSellerRequest) -> TestBotResponse:
 
 
 # ââ POST /test/buyer ââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+
 
 @router.post(
     "/buyer",
@@ -288,6 +297,7 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
 
     try:
         from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+
         # Reuse the same bot instance across turns so conversation_memory persists state
         if "buyer_bot" not in sess:
             sess["buyer_bot"] = JorgeBuyerBot()
@@ -316,8 +326,13 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
     # The buyer bot result uses different keys than the seller bot.
     # Pull the available qualification fields into a structured dict.
     buyer_extracted: Dict[str, Any] = {}
-    for _key in ("budget_range", "current_qualification_step", "financial_readiness",
-                 "urgency_score", "buying_motivation_score"):
+    for _key in (
+        "budget_range",
+        "current_qualification_step",
+        "financial_readiness",
+        "urgency_score",
+        "buying_motivation_score",
+    ):
         _val = result.get(_key)
         if _val is not None:
             buyer_extracted[_key] = _val
@@ -334,6 +349,7 @@ async def test_buyer(req: TestBuyerRequest) -> TestBotResponse:
 
 
 # ââ Session management helpers ââââââââââââââââââââââââââââââââââââââââââââââââ
+
 
 @router.delete(
     "/session/{contact_id}",

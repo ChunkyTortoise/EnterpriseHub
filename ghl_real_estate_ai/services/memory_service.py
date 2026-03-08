@@ -354,9 +354,7 @@ class MemoryService:
             # Context lasts 7 days in Redis
             redis_saved = await self.cache_service.set(cache_key, context, ttl=604800)
             if not redis_saved:
-                logger.warning(
-                    f"Redis save returned False for {contact_id} — process-level cache is fallback"
-                )
+                logger.warning(f"Redis save returned False for {contact_id} — process-level cache is fallback")
 
             # If we are in transition/backup mode, also save to file
             if settings.environment != "production":

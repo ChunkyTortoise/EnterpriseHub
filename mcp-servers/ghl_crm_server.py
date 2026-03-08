@@ -11,17 +11,13 @@ import sys
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 
+
 # MCP Server framework (would use official MCP library in production)
 class MCPServer:
     """Basic MCP server implementation for GHL CRM"""
 
     def __init__(self):
-        self.capabilities = {
-            "tools": True,
-            "resources": False,
-            "prompts": False,
-            "logging": True
-        }
+        self.capabilities = {"tools": True, "resources": False, "prompts": False, "logging": True}
 
         # Mock GHL client (would use actual GHL API in production)
         self.ghl_client = MockGHLClient()
@@ -57,9 +53,9 @@ class MCPServer:
                 "serverInfo": {
                     "name": "ghl-crm-server",
                     "version": "1.0.0",
-                    "description": "GoHighLevel CRM integration via MCP"
-                }
-            }
+                    "description": "GoHighLevel CRM integration via MCP",
+                },
+            },
         }
 
     async def handle_list_tools(self, request_id: int) -> Dict[str, Any]:
@@ -75,12 +71,11 @@ class MCPServer:
                         "last_name": {"type": "string", "description": "Contact last name"},
                         "email": {"type": "string", "description": "Contact email address"},
                         "phone": {"type": "string", "description": "Contact phone number"},
-                        "custom_fields": {"type": "object", "description": "Custom field values"}
+                        "custom_fields": {"type": "object", "description": "Custom field values"},
                     },
-                    "required": ["first_name", "last_name"]
-                }
+                    "required": ["first_name", "last_name"],
+                },
             },
-
             {
                 "name": "update_contact",
                 "description": "Update an existing contact in GHL CRM",
@@ -92,24 +87,20 @@ class MCPServer:
                         "last_name": {"type": "string"},
                         "email": {"type": "string"},
                         "phone": {"type": "string"},
-                        "custom_fields": {"type": "object"}
+                        "custom_fields": {"type": "object"},
                     },
-                    "required": ["contact_id"]
-                }
+                    "required": ["contact_id"],
+                },
             },
-
             {
                 "name": "get_contact",
                 "description": "Retrieve contact information by ID",
                 "inputSchema": {
                     "type": "object",
-                    "properties": {
-                        "contact_id": {"type": "string", "description": "GHL contact ID"}
-                    },
-                    "required": ["contact_id"]
-                }
+                    "properties": {"contact_id": {"type": "string", "description": "GHL contact ID"}},
+                    "required": ["contact_id"],
+                },
             },
-
             {
                 "name": "search_contacts",
                 "description": "Search contacts by criteria",
@@ -118,12 +109,11 @@ class MCPServer:
                     "properties": {
                         "query": {"type": "string", "description": "Search query"},
                         "limit": {"type": "integer", "description": "Maximum results", "default": 20},
-                        "filters": {"type": "object", "description": "Additional filters"}
+                        "filters": {"type": "object", "description": "Additional filters"},
                     },
-                    "required": ["query"]
-                }
+                    "required": ["query"],
+                },
             },
-
             {
                 "name": "trigger_workflow",
                 "description": "Trigger a GHL workflow for a contact",
@@ -132,12 +122,11 @@ class MCPServer:
                     "properties": {
                         "contact_id": {"type": "string", "description": "GHL contact ID"},
                         "workflow_id": {"type": "string", "description": "GHL workflow ID"},
-                        "custom_data": {"type": "object", "description": "Custom workflow data"}
+                        "custom_data": {"type": "object", "description": "Custom workflow data"},
                     },
-                    "required": ["contact_id", "workflow_id"]
-                }
+                    "required": ["contact_id", "workflow_id"],
+                },
             },
-
             {
                 "name": "set_custom_field",
                 "description": "Set custom field value for a contact",
@@ -146,18 +135,14 @@ class MCPServer:
                     "properties": {
                         "contact_id": {"type": "string", "description": "GHL contact ID"},
                         "field_name": {"type": "string", "description": "Custom field name"},
-                        "field_value": {"type": "string", "description": "Custom field value"}
+                        "field_value": {"type": "string", "description": "Custom field value"},
                     },
-                    "required": ["contact_id", "field_name", "field_value"]
-                }
-            }
+                    "required": ["contact_id", "field_name", "field_value"],
+                },
+            },
         ]
 
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "result": {"tools": tools}
-        }
+        return {"jsonrpc": "2.0", "id": request_id, "result": {"tools": tools}}
 
     async def handle_call_tool(self, request_id: int, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle tool execution requests"""
@@ -180,11 +165,7 @@ class MCPServer:
         else:
             return self.error_response(request_id, "Unknown tool", tool_name)
 
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "result": result
-        }
+        return {"jsonrpc": "2.0", "id": request_id, "result": result}
 
     # GHL CRM tool implementations
 
@@ -195,7 +176,7 @@ class MCPServer:
             "lastName": args["last_name"],
             "email": args.get("email"),
             "phone": args.get("phone"),
-            "customFields": args.get("custom_fields", {})
+            "customFields": args.get("custom_fields", {}),
         }
 
         # Call GHL API (mocked for demo)
@@ -205,7 +186,7 @@ class MCPServer:
             "success": True,
             "contact_id": contact["id"],
             "contact": contact,
-            "message": f"Created contact: {args['first_name']} {args['last_name']}"
+            "message": f"Created contact: {args['first_name']} {args['last_name']}",
         }
 
     async def update_contact(self, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -231,7 +212,7 @@ class MCPServer:
             "success": True,
             "contact_id": contact_id,
             "contact": contact,
-            "message": f"Updated contact: {contact_id}"
+            "message": f"Updated contact: {contact_id}",
         }
 
     async def get_contact(self, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -242,15 +223,9 @@ class MCPServer:
         contact = await self.ghl_client.get_contact(contact_id)
 
         if not contact:
-            return {
-                "success": False,
-                "message": f"Contact not found: {contact_id}"
-            }
+            return {"success": False, "message": f"Contact not found: {contact_id}"}
 
-        return {
-            "success": True,
-            "contact": contact
-        }
+        return {"success": True, "contact": contact}
 
     async def search_contacts(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Search contacts by query"""
@@ -261,12 +236,7 @@ class MCPServer:
         # Call GHL API (mocked for demo)
         contacts = await self.ghl_client.search_contacts(query, limit, filters)
 
-        return {
-            "success": True,
-            "query": query,
-            "count": len(contacts),
-            "contacts": contacts
-        }
+        return {"success": True, "query": query, "count": len(contacts), "contacts": contacts}
 
     async def trigger_workflow(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Trigger GHL workflow"""
@@ -282,7 +252,7 @@ class MCPServer:
             "workflow_triggered": True,
             "workflow_id": workflow_id,
             "contact_id": contact_id,
-            "execution_id": result.get("execution_id")
+            "execution_id": result.get("execution_id"),
         }
 
     async def set_custom_field(self, args: Dict[str, Any]) -> Dict[str, Any]:
@@ -299,20 +269,13 @@ class MCPServer:
             "contact_id": contact_id,
             "field_name": field_name,
             "field_value": field_value,
-            "updated": True
+            "updated": True,
         }
 
     def error_response(self, request_id: int, error_type: str, details: str) -> Dict[str, Any]:
         """Generate error response"""
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {
-                "code": -32000,
-                "message": error_type,
-                "data": details
-            }
-        }
+        return {"jsonrpc": "2.0", "id": request_id, "error": {"code": -32000, "message": error_type, "data": details}}
+
 
 class MockGHLClient:
     """Mock GHL client for demonstration (replace with actual GHL API client)"""
@@ -334,7 +297,7 @@ class MockGHLClient:
             "phone": contact_data.get("phone"),
             "customFields": contact_data.get("customFields", {}),
             "created": datetime.now().isoformat(),
-            "updated": datetime.now().isoformat()
+            "updated": datetime.now().isoformat(),
         }
 
         self.contacts[contact_id] = contact
@@ -362,7 +325,9 @@ class MockGHLClient:
 
         for contact in self.contacts.values():
             # Simple text search across name and email
-            searchable_text = f"{contact.get('firstName', '')} {contact.get('lastName', '')} {contact.get('email', '')}".lower()
+            searchable_text = (
+                f"{contact.get('firstName', '')} {contact.get('lastName', '')} {contact.get('email', '')}".lower()
+            )
 
             if query_lower in searchable_text:
                 results.append(contact)
@@ -378,7 +343,7 @@ class MockGHLClient:
             "execution_id": f"exec_{int(datetime.now().timestamp())}",
             "status": "triggered",
             "contact_id": contact_id,
-            "workflow_id": workflow_id
+            "workflow_id": workflow_id,
         }
 
     async def set_custom_field(self, contact_id: str, field_name: str, field_value: str) -> Dict[str, Any]:
@@ -394,6 +359,7 @@ class MockGHLClient:
         contact["updated"] = datetime.now().isoformat()
 
         return {"success": True}
+
 
 async def main():
     """Run GHL CRM MCP server"""
@@ -421,11 +387,7 @@ async def main():
             error_response = {
                 "jsonrpc": "2.0",
                 "id": None,
-                "error": {
-                    "code": -32700,
-                    "message": "Parse error",
-                    "data": str(e)
-                }
+                "error": {"code": -32700, "message": "Parse error", "data": str(e)},
             }
             print(json.dumps(error_response))
             sys.stdout.flush()
@@ -435,14 +397,11 @@ async def main():
             error_response = {
                 "jsonrpc": "2.0",
                 "id": None,
-                "error": {
-                    "code": -32000,
-                    "message": "Internal error",
-                    "data": str(e)
-                }
+                "error": {"code": -32000, "message": "Internal error", "data": str(e)},
             }
             print(json.dumps(error_response))
             sys.stdout.flush()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

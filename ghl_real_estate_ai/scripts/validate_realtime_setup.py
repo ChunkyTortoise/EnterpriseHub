@@ -28,7 +28,7 @@ try:
         validate_realtime_setup,
         REDIS_AVAILABLE,
         WEBSOCKETS_AVAILABLE,
-        AIOREDIS_AVAILABLE
+        AIOREDIS_AVAILABLE,
     )
 except ImportError as e:
     print(f"❌ Import Error: {e}")
@@ -39,22 +39,23 @@ except ImportError as e:
 
 class Colors:
     """ANSI color codes for terminal output"""
-    GREEN = '\033[92m'
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    MAGENTA = '\033[95m'
-    CYAN = '\033[96m'
-    WHITE = '\033[97m'
-    BOLD = '\033[1m'
-    END = '\033[0m'
+
+    GREEN = "\033[92m"
+    RED = "\033[91m"
+    YELLOW = "\033[93m"
+    BLUE = "\033[94m"
+    MAGENTA = "\033[95m"
+    CYAN = "\033[96m"
+    WHITE = "\033[97m"
+    BOLD = "\033[1m"
+    END = "\033[0m"
 
 
 def print_header(title: str):
     """Print formatted header"""
-    print(f"\n{Colors.BOLD}{Colors.BLUE}{'='*60}{Colors.END}")
+    print(f"\n{Colors.BOLD}{Colors.BLUE}{'=' * 60}{Colors.END}")
     print(f"{Colors.BOLD}{Colors.BLUE} {title:^56} {Colors.END}")
-    print(f"{Colors.BOLD}{Colors.BLUE}{'='*60}{Colors.END}\n")
+    print(f"{Colors.BOLD}{Colors.BLUE}{'=' * 60}{Colors.END}\n")
 
 
 def print_success(message: str):
@@ -84,7 +85,7 @@ def check_dependencies():
     dependencies = [
         ("Redis", REDIS_AVAILABLE, "pip install redis>=5.0.0"),
         ("WebSockets", WEBSOCKETS_AVAILABLE, "pip install websockets>=12.0"),
-        ("Async Redis", AIOREDIS_AVAILABLE, "pip install aioredis>=2.0.1")
+        ("Async Redis", AIOREDIS_AVAILABLE, "pip install aioredis>=2.0.1"),
     ]
 
     all_available = True
@@ -106,14 +107,14 @@ def check_environment_variables():
     required_vars = [
         ("ANTHROPIC_API_KEY", "Anthropic Claude API key"),
         ("GHL_API_KEY", "GoHighLevel API key"),
-        ("GHL_LOCATION_ID", "GoHighLevel Location ID")
+        ("GHL_LOCATION_ID", "GoHighLevel Location ID"),
     ]
 
     optional_vars = [
         ("REDIS_URL", "Redis connection URL", "redis://localhost:6379"),
         ("WEBSOCKET_HOST", "WebSocket host", "localhost"),
         ("WEBSOCKET_PORT", "WebSocket port", "8765"),
-        ("REALTIME_ENABLED", "Enable real-time features", "true")
+        ("REALTIME_ENABLED", "Enable real-time features", "true"),
     ]
 
     # Check required variables
@@ -264,12 +265,11 @@ def print_next_steps(all_good: bool):
 async def main():
     """Main validation function"""
     parser = argparse.ArgumentParser(description="Validate real-time setup for GHL Real Estate AI")
-    parser.add_argument("--environment", "-e", default="development",
-                       help="Environment to validate (development, staging, production)")
-    parser.add_argument("--verbose", "-v", action="store_true",
-                       help="Enable verbose output")
-    parser.add_argument("--quick", "-q", action="store_true",
-                       help="Run quick validation (skip connection tests)")
+    parser.add_argument(
+        "--environment", "-e", default="development", help="Environment to validate (development, staging, production)"
+    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
+    parser.add_argument("--quick", "-q", action="store_true", help="Run quick validation (skip connection tests)")
 
     args = parser.parse_args()
 

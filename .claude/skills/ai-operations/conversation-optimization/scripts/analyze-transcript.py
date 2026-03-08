@@ -26,6 +26,7 @@ import statistics
 @dataclass
 class ResponseQuality:
     """Quality assessment for a single response."""
+
     message_index: int
     relevance_score: float
     empathy_score: float
@@ -39,6 +40,7 @@ class ResponseQuality:
 @dataclass
 class TranscriptAnalysis:
     """Complete transcript analysis results."""
+
     conversation_id: str
     message_count: int
     agent_response_count: int
@@ -62,6 +64,7 @@ def load_transcript(conversation_id: str = None, file_path: str = None) -> List[
     # Production: Load from services
     try:
         from ghl_real_estate_ai.services.memory_service import MemoryService
+
         memory = MemoryService()
         return memory.get_conversation_history(conversation_id)
     except ImportError:
@@ -76,7 +79,10 @@ def load_transcript(conversation_id: str = None, file_path: str = None) -> List[
             {"role": "lead", "content": "Yes, we're pre-approved for up to $750k"},
             {"role": "agent", "content": "Excellent! When do you need to move by?"},
             {"role": "lead", "content": "Our lease ends in 3 months, so ideally before then"},
-            {"role": "agent", "content": "Got it. I have several options that could work. Can I send you some listings?"},
+            {
+                "role": "agent",
+                "content": "Got it. I have several options that could work. Can I send you some listings?",
+            },
         ]
 
 
@@ -90,8 +96,8 @@ def analyze_relevance(agent_msg: str, lead_msg: str) -> Tuple[float, str]:
     agent_lower = agent_msg.lower()
 
     # Check if response addresses keywords from lead message
-    lead_keywords = set(re.findall(r'\b\w{4,}\b', lead_lower))
-    agent_keywords = set(re.findall(r'\b\w{4,}\b', agent_lower))
+    lead_keywords = set(re.findall(r"\b\w{4,}\b", lead_lower))
+    agent_keywords = set(re.findall(r"\b\w{4,}\b", agent_lower))
 
     # Overlap calculation
     overlap = len(lead_keywords & agent_keywords)
@@ -124,16 +130,21 @@ def analyze_empathy(agent_msg: str, lead_msg: str) -> Tuple[float, str]:
     Returns score (0-1) and feedback.
     """
     empathy_indicators = [
-        r"\bi understand\b", r"\bi see\b", r"\bthat makes sense\b",
-        r"\bof course\b", r"\babsolutely\b", r"\bgreat\b",
-        r"\bexcellent\b", r"\bperfect\b", r"\bthank\b",
-        r"\bappreciate\b", r"\bhappy to\b", r"\blove to\b"
+        r"\bi understand\b",
+        r"\bi see\b",
+        r"\bthat makes sense\b",
+        r"\bof course\b",
+        r"\babsolutely\b",
+        r"\bgreat\b",
+        r"\bexcellent\b",
+        r"\bperfect\b",
+        r"\bthank\b",
+        r"\bappreciate\b",
+        r"\bhappy to\b",
+        r"\blove to\b",
     ]
 
-    dismissive_indicators = [
-        r"\bactually\b", r"\bbut\b.*first", r"\bno\b,",
-        r"\bthat's not\b", r"\byou should\b"
-    ]
+    dismissive_indicators = [r"\bactually\b", r"\bbut\b.*first", r"\bno\b,", r"\bthat's not\b", r"\byou should\b"]
 
     agent_lower = agent_msg.lower()
 
@@ -172,10 +183,10 @@ def analyze_completeness(agent_msg: str, lead_msg: str) -> Tuple[float, str]:
     word_count = len(agent_msg.split())
 
     # Check if response includes action/next step
-    has_action = any(phrase in agent_msg.lower() for phrase in [
-        "i'll", "i will", "let me", "would you like",
-        "can i", "shall we", "how about"
-    ])
+    has_action = any(
+        phrase in agent_msg.lower()
+        for phrase in ["i'll", "i will", "let me", "would you like", "can i", "shall we", "how about"]
+    )
 
     # Calculate score
     score = 0.5
@@ -220,7 +231,7 @@ def analyze_persuasiveness(agent_msg: str) -> Tuple[float, str]:
         "value_statement": [r"benefit", r"advantage", r"help you", r"save", r"best"],
         "social_proof": [r"other (buyers|clients)", r"many people", r"typically"],
         "urgency": [r"limited", r"available", r"soon", r"quickly"],
-        "cta": [r"would you like", r"can i", r"shall we", r"let's", r"ready to"]
+        "cta": [r"would you like", r"can i", r"shall we", r"let's", r"ready to"],
     }
 
     agent_lower = agent_msg.lower()
@@ -270,7 +281,9 @@ def analyze_personalization(agent_msg: str, conversation_context: List[Dict]) ->
 
     if lead_info.get("budget_mentioned") and any(word in agent_lower for word in ["budget", "price", "range"]):
         references += 1
-    if lead_info.get("location_mentioned") and any(word in agent_lower for word in ["area", "neighborhood", "location"]):
+    if lead_info.get("location_mentioned") and any(
+        word in agent_lower for word in ["area", "neighborhood", "location"]
+    ):
         references += 1
     if lead_info.get("family_mentioned") and any(word in agent_lower for word in ["family", "kids", "school"]):
         references += 1
@@ -302,7 +315,7 @@ def detect_objections(messages: List[Dict]) -> List[Dict]:
         "timeline": [r"not ready", r"need time", r"think about", r"rush"],
         "features": [r"too small", r"doesn't have", r"need more"],
         "competition": [r"another agent", r"comparing", r"other homes"],
-        "authority": [r"spouse", r"partner", r"family", r"check with"]
+        "authority": [r"spouse", r"partner", r"family", r"check with"],
     }
 
     for i, msg in enumerate(messages):
@@ -318,12 +331,9 @@ def detect_objections(messages: List[Dict]) -> List[Dict]:
                 if i + 1 < len(messages) and messages[i + 1].get("role") == "agent":
                     resolved = len(messages[i + 1].get("content", "")) > 50
 
-                objections.append({
-                    "type": obj_type,
-                    "message_index": i,
-                    "content_snippet": content[:100],
-                    "resolved": resolved
-                })
+                objections.append(
+                    {"type": obj_type, "message_index": i, "content_snippet": content[:100], "resolved": resolved}
+                )
                 break
 
     return objections
@@ -338,7 +348,7 @@ def detect_missed_opportunities(messages: List[Dict]) -> List[Dict]:
         "budget": ["budget", "price range", "afford"],
         "timeline": ["when", "timeline", "move by"],
         "pre_approval": ["pre-approved", "financing", "lender"],
-        "motivation": ["why", "reason", "looking for"]
+        "motivation": ["why", "reason", "looking for"],
     }
 
     asked = set()
@@ -353,11 +363,13 @@ def detect_missed_opportunities(messages: List[Dict]) -> List[Dict]:
     if len(messages) >= 10:
         for q_type in qualification_questions:
             if q_type not in asked:
-                opportunities.append({
-                    "type": "missing_qualification",
-                    "detail": f"Never asked about {q_type}",
-                    "recommendation": f"Ask about {q_type} to better qualify lead"
-                })
+                opportunities.append(
+                    {
+                        "type": "missing_qualification",
+                        "detail": f"Never asked about {q_type}",
+                        "recommendation": f"Ask about {q_type} to better qualify lead",
+                    }
+                )
 
     # Check for buying signals that weren't followed up
     buying_signals = ["pre-approved", "lease ends", "need to move", "ready to"]
@@ -370,11 +382,13 @@ def detect_missed_opportunities(messages: List[Dict]) -> List[Dict]:
                     if i + 1 < len(messages):
                         agent_response = messages[i + 1].get("content", "").lower()
                         if "schedule" not in agent_response and "view" not in agent_response:
-                            opportunities.append({
-                                "type": "missed_signal",
-                                "detail": f"Lead mentioned '{signal}' but no viewing scheduled",
-                                "recommendation": "Suggest scheduling property viewings"
-                            })
+                            opportunities.append(
+                                {
+                                    "type": "missed_signal",
+                                    "detail": f"Lead mentioned '{signal}' but no viewing scheduled",
+                                    "recommendation": "Suggest scheduling property viewings",
+                                }
+                            )
 
     return opportunities
 
@@ -385,8 +399,8 @@ def calculate_quality_trend(qualities: List[ResponseQuality]) -> str:
         return "insufficient_data"
 
     scores = [q.overall_score for q in qualities]
-    first_half = statistics.mean(scores[:len(scores)//2])
-    second_half = statistics.mean(scores[len(scores)//2:])
+    first_half = statistics.mean(scores[: len(scores) // 2])
+    second_half = statistics.mean(scores[len(scores) // 2 :])
 
     if second_half > first_half * 1.1:
         return "improving"
@@ -397,9 +411,7 @@ def calculate_quality_trend(qualities: List[ResponseQuality]) -> str:
 
 
 def generate_coaching_summary(
-    qualities: List[ResponseQuality],
-    objections: List[Dict],
-    missed_opportunities: List[Dict]
+    qualities: List[ResponseQuality], objections: List[Dict], missed_opportunities: List[Dict]
 ) -> Dict[str, Any]:
     """Generate coaching summary from analysis."""
     # Calculate average scores by category
@@ -411,7 +423,7 @@ def generate_coaching_summary(
         "empathy": statistics.mean([q.empathy_score for q in qualities]),
         "completeness": statistics.mean([q.completeness_score for q in qualities]),
         "persuasiveness": statistics.mean([q.persuasiveness_score for q in qualities]),
-        "personalization": statistics.mean([q.personalization_score for q in qualities])
+        "personalization": statistics.mean([q.personalization_score for q in qualities]),
     }
 
     # Identify weakest areas
@@ -435,17 +447,18 @@ def generate_coaching_summary(
         "objection_resolution_rate": round(resolution_rate, 2),
         "missed_opportunity_count": len(missed_opportunities),
         "top_recommendations": [
-            f"Focus on improving {improvement_priorities[0]['area']}" if improvement_priorities else "Maintain current performance",
-            f"Address {len([o for o in objections if not o.get('resolved')])} unresolved objections" if objections else "No objections to address",
-            missed_opportunities[0]["recommendation"] if missed_opportunities else "No missed opportunities detected"
-        ]
+            f"Focus on improving {improvement_priorities[0]['area']}"
+            if improvement_priorities
+            else "Maintain current performance",
+            f"Address {len([o for o in objections if not o.get('resolved')])} unresolved objections"
+            if objections
+            else "No objections to address",
+            missed_opportunities[0]["recommendation"] if missed_opportunities else "No missed opportunities detected",
+        ],
     }
 
 
-def analyze_transcript(
-    conversation_id: str = None,
-    file_path: str = None
-) -> TranscriptAnalysis:
+def analyze_transcript(conversation_id: str = None, file_path: str = None) -> TranscriptAnalysis:
     """
     Perform comprehensive transcript analysis.
 
@@ -470,7 +483,7 @@ def analyze_transcript(
             missed_opportunities=[],
             conversation_health="unknown",
             coaching_summary={},
-            analysis_timestamp=datetime.now().isoformat()
+            analysis_timestamp=datetime.now().isoformat(),
         )
 
     # Analyze each agent response
@@ -481,11 +494,11 @@ def analyze_transcript(
 
         # Get preceding lead message
         lead_msg = ""
-        if i > 0 and messages[i-1].get("role") == "lead":
-            lead_msg = messages[i-1].get("content", "")
+        if i > 0 and messages[i - 1].get("role") == "lead":
+            lead_msg = messages[i - 1].get("content", "")
 
         # Context is all messages up to this point
-        context = messages[:i+1]
+        context = messages[: i + 1]
 
         # Analyze response quality
         relevance, _ = analyze_relevance(msg["content"], lead_msg)
@@ -495,11 +508,7 @@ def analyze_transcript(
         personalization, _ = analyze_personalization(msg["content"], context)
 
         overall = (
-            relevance * 0.25 +
-            empathy * 0.20 +
-            completeness * 0.20 +
-            persuasiveness * 0.20 +
-            personalization * 0.15
+            relevance * 0.25 + empathy * 0.20 + completeness * 0.20 + persuasiveness * 0.20 + personalization * 0.15
         )
 
         # Generate improvement suggestions
@@ -515,16 +524,18 @@ def analyze_transcript(
         if personalization < 0.6:
             suggestions.append("Reference lead's specific stated preferences")
 
-        qualities.append(ResponseQuality(
-            message_index=i,
-            relevance_score=relevance,
-            empathy_score=empathy,
-            completeness_score=completeness,
-            persuasiveness_score=persuasiveness,
-            personalization_score=personalization,
-            overall_score=round(overall, 2),
-            improvement_suggestions=suggestions[:2]  # Top 2 per response
-        ))
+        qualities.append(
+            ResponseQuality(
+                message_index=i,
+                relevance_score=relevance,
+                empathy_score=empathy,
+                completeness_score=completeness,
+                persuasiveness_score=persuasiveness,
+                personalization_score=personalization,
+                overall_score=round(overall, 2),
+                improvement_suggestions=suggestions[:2],  # Top 2 per response
+            )
+        )
 
     # Detect objections and opportunities
     objections = detect_objections(messages)
@@ -557,7 +568,7 @@ def analyze_transcript(
         missed_opportunities=opportunities,
         conversation_health=health,
         coaching_summary=coaching,
-        analysis_timestamp=datetime.now().isoformat()
+        analysis_timestamp=datetime.now().isoformat(),
     )
 
 
@@ -608,7 +619,7 @@ def main():
             "objections_detected": analysis.objections_detected,
             "missed_opportunities": analysis.missed_opportunities,
             "coaching_summary": analysis.coaching_summary,
-            "analysis_timestamp": analysis.analysis_timestamp
+            "analysis_timestamp": analysis.analysis_timestamp,
         }
         print(json.dumps(output, indent=2))
 

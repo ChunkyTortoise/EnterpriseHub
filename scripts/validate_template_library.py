@@ -22,7 +22,7 @@ def validate_template_library() -> bool:
         print("❌ Template library service file not found")
         return False
 
-    with open(template_file, 'r') as f:
+    with open(template_file, "r") as f:
         content = f.read()
 
     print("🧪 Validating Template Library Service")
@@ -34,7 +34,7 @@ def validate_template_library() -> bool:
         "analyze_ab_test_results",
         "complete_ab_test",
         "assign_template_for_ab_test",
-        "class ABTestConfig"
+        "class ABTestConfig",
     ]
 
     ab_implemented = []
@@ -47,11 +47,11 @@ def validate_template_library() -> bool:
 
     # Check actual CRUD operations
     crud_operations = [
-        "get_template",          # Read operation
-        "delete_template",       # Delete operation
-        "get_template_versions", # Versioning
-        "rollback_template",     # Template management
-        "get_template_statistics" # Analytics
+        "get_template",  # Read operation
+        "delete_template",  # Delete operation
+        "get_template_versions",  # Versioning
+        "rollback_template",  # Template management
+        "get_template_statistics",  # Analytics
     ]
 
     crud_implemented = []
@@ -63,12 +63,7 @@ def validate_template_library() -> bool:
             print(f"   ❌ {operation}")
 
     # Check for statistical analysis functions
-    statistical_functions = [
-        "scipy.stats",
-        "statistics",
-        "confidence",
-        "significance"
-    ]
+    statistical_functions = ["scipy.stats", "statistics", "confidence", "significance"]
 
     stats_implemented = []
     for func in statistical_functions:
@@ -77,12 +72,7 @@ def validate_template_library() -> bool:
             print(f"   ✅ {func} (statistical analysis)")
 
     # Check for Jinja2 template rendering
-    template_rendering = [
-        "jinja2",
-        "Environment",
-        "Template",
-        "validate_template_syntax"
-    ]
+    template_rendering = ["jinja2", "Environment", "Template", "validate_template_syntax"]
 
     rendering_implemented = []
     for element in template_rendering:
@@ -105,7 +95,7 @@ def validate_template_library() -> bool:
     print(f"   🎨 Template Rendering: {rendering_score:.1f}%")
     print(f"   🎯 Overall Implementation: {overall_score:.1f}%")
 
-    file_lines = len(content.split('\n'))
+    file_lines = len(content.split("\n"))
     print(f"\n📄 Implementation Details:")
     print(f"   File size: {file_lines} lines")
     print(f"   A/B elements: {len(ab_implemented)}/{len(ab_testing_elements)}")

@@ -9,7 +9,6 @@ from unittest.mock import patch
 import pytest
 
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
-
     JorgeHandoffService,
 )
 
@@ -177,10 +176,14 @@ class TestCLIScript:
         export_file = tmp_path / "test_export.json"
         result = subprocess.run(
             [
-                sys.executable, SCRIPT_PATH,
-                "--num-samples", "10",
-                "--seed", "42",
-                "--export", str(export_file),
+                sys.executable,
+                SCRIPT_PATH,
+                "--num-samples",
+                "10",
+                "--seed",
+                "42",
+                "--export",
+                str(export_file),
             ],
             capture_output=True,
             text=True,

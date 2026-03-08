@@ -15,6 +15,7 @@ from typing import Dict, List, Any, Optional
 # from your_project.matching_core import PropertyMatchingEngine, LeadSegment
 # from your_project.lifestyle_scoring import LifestyleScoringEngine
 
+
 # Mock implementations for demo
 class MockPropertyMatchingEngine:
     """Mock implementation for demonstration."""
@@ -23,11 +24,7 @@ class MockPropertyMatchingEngine:
         self.processed_properties = 0
 
     def find_enhanced_matches(
-        self,
-        properties: List[Dict],
-        preferences: Dict,
-        segment: str = "first_time_buyer",
-        limit: int = 10
+        self, properties: List[Dict], preferences: Dict, segment: str = "first_time_buyer", limit: int = 10
     ) -> List[Dict]:
         """Find top property matches with full 15-factor analysis."""
 
@@ -52,7 +49,7 @@ class MockPropertyMatchingEngine:
                 "reasoning": reasoning,
                 "predicted_engagement": score_breakdown["overall_score"] * 0.7,
                 "predicted_showing_request": score_breakdown["overall_score"] * 0.4,
-                "market_timing_urgency": self._assess_market_urgency(prop)
+                "market_timing_urgency": self._assess_market_urgency(prop),
             }
 
             matches.append(match)
@@ -62,12 +59,7 @@ class MockPropertyMatchingEngine:
         matches.sort(key=lambda x: x["overall_score"], reverse=True)
         return matches[:limit]
 
-    def _calculate_15_factor_score(
-        self,
-        property_data: Dict,
-        preferences: Dict,
-        segment: str
-    ) -> Dict:
+    def _calculate_15_factor_score(self, property_data: Dict, preferences: Dict, segment: str) -> Dict:
         """Calculate comprehensive 15-factor score."""
 
         # Traditional factors (60%)
@@ -77,7 +69,7 @@ class MockPropertyMatchingEngine:
             "bedrooms": self._score_bedrooms(property_data, preferences),
             "bathrooms": self._score_bathrooms(property_data, preferences),
             "property_type": self._score_property_type(property_data, preferences),
-            "sqft": self._score_sqft(property_data, preferences)
+            "sqft": self._score_sqft(property_data, preferences),
         }
 
         # Lifestyle factors (25%)
@@ -85,7 +77,7 @@ class MockPropertyMatchingEngine:
             "schools": self._score_schools(property_data, preferences, segment),
             "commute": self._score_commute(property_data, preferences, segment),
             "walkability": self._score_walkability(property_data, preferences),
-            "safety": self._score_safety(property_data, preferences)
+            "safety": self._score_safety(property_data, preferences),
         }
 
         # Contextual factors (10%)
@@ -93,7 +85,7 @@ class MockPropertyMatchingEngine:
             "hoa_fee": self._score_hoa(property_data, preferences),
             "lot_size": self._score_lot_size(property_data, preferences),
             "home_age": self._score_home_age(property_data, preferences),
-            "parking": self._score_parking(property_data, preferences)
+            "parking": self._score_parking(property_data, preferences),
         }
 
         # Market timing (5%)
@@ -104,10 +96,10 @@ class MockPropertyMatchingEngine:
 
         # Calculate weighted overall score
         overall_score = (
-            sum(traditional_scores[f] * weights.get(f, 0.1) for f in traditional_scores) +
-            sum(lifestyle_scores[f] * weights.get(f, 0.05) for f in lifestyle_scores) +
-            sum(contextual_scores[f] * weights.get(f, 0.02) for f in contextual_scores) +
-            market_timing * weights.get("market_timing", 0.05)
+            sum(traditional_scores[f] * weights.get(f, 0.1) for f in traditional_scores)
+            + sum(lifestyle_scores[f] * weights.get(f, 0.05) for f in lifestyle_scores)
+            + sum(contextual_scores[f] * weights.get(f, 0.02) for f in contextual_scores)
+            + market_timing * weights.get("market_timing", 0.05)
         )
 
         return {
@@ -118,7 +110,7 @@ class MockPropertyMatchingEngine:
             "market_timing": market_timing,
             "weights_used": weights,
             "confidence_level": 0.85,
-            "data_completeness": 0.9
+            "data_completeness": 0.9,
         }
 
     def _score_budget(self, prop, prefs):
@@ -167,11 +159,11 @@ class MockPropertyMatchingEngine:
         elif prop_beds == pref_beds + 1:
             return 0.95  # Bonus room
         elif prop_beds > pref_beds:
-            return 0.8   # More rooms
+            return 0.8  # More rooms
         elif prop_beds == pref_beds - 1:
-            return 0.6   # One fewer
+            return 0.6  # One fewer
         else:
-            return 0.3   # Significantly fewer
+            return 0.3  # Significantly fewer
 
     def _score_bathrooms(self, prop, prefs):
         """Score bathroom compatibility."""
@@ -257,9 +249,9 @@ class MockPropertyMatchingEngine:
         description = prop.get("description", "")
 
         walkable_indicators = ["walkable", "walk", "restaurants", "shops", "transit", "downtown"]
-        walkable_count = sum(1 for text in features + [description]
-                           for indicator in walkable_indicators
-                           if indicator in text.lower())
+        walkable_count = sum(
+            1 for text in features + [description] for indicator in walkable_indicators if indicator in text.lower()
+        )
 
         return min(1.0, 0.3 + walkable_count * 0.15)
 
@@ -325,9 +317,9 @@ class MockPropertyMatchingEngine:
         description = prop.get("description", "")
 
         parking_indicators = ["garage", "parking", "carport", "driveway"]
-        has_parking = any(indicator in text.lower()
-                         for text in features + [description]
-                         for indicator in parking_indicators)
+        has_parking = any(
+            indicator in text.lower() for text in features + [description] for indicator in parking_indicators
+        )
 
         return 0.8 if has_parking else 0.4
 
@@ -347,28 +339,35 @@ class MockPropertyMatchingEngine:
     def _get_segment_weights(self, segment: str) -> Dict[str, float]:
         """Get weights based on lead segment."""
         segment_weights = {
-            "family_with_kids": {
-                "schools": 0.35, "safety": 0.25, "bedrooms": 0.15,
-                "budget": 0.15, "location": 0.10
-            },
+            "family_with_kids": {"schools": 0.35, "safety": 0.25, "bedrooms": 0.15, "budget": 0.15, "location": 0.10},
             "young_professional": {
-                "commute": 0.35, "walkability": 0.25, "property_type": 0.15,
-                "budget": 0.15, "location": 0.10
+                "commute": 0.35,
+                "walkability": 0.25,
+                "property_type": 0.15,
+                "budget": 0.15,
+                "location": 0.10,
             },
             "luxury_buyer": {
-                "location": 0.30, "property_type": 0.20, "lot_size": 0.15,
-                "home_age": 0.10, "budget": 0.10, "market_timing": 0.15
+                "location": 0.30,
+                "property_type": 0.20,
+                "lot_size": 0.15,
+                "home_age": 0.10,
+                "budget": 0.10,
+                "market_timing": 0.15,
             },
             "investor": {
-                "budget": 0.30, "market_timing": 0.25, "location": 0.20,
-                "property_type": 0.15, "schools": 0.10
-            }
+                "budget": 0.30,
+                "market_timing": 0.25,
+                "location": 0.20,
+                "property_type": 0.15,
+                "schools": 0.10,
+            },
         }
 
-        return segment_weights.get(segment, {
-            "budget": 0.20, "location": 0.15, "bedrooms": 0.10,
-            "bathrooms": 0.05, "schools": 0.08, "commute": 0.06
-        })
+        return segment_weights.get(
+            segment,
+            {"budget": 0.20, "location": 0.15, "bedrooms": 0.10, "bathrooms": 0.05, "schools": 0.08, "commute": 0.06},
+        )
 
     def _generate_reasoning(self, prop, score_breakdown, prefs):
         """Generate human-readable reasoning."""
@@ -397,7 +396,7 @@ class MockPropertyMatchingEngine:
             "strengths": strengths,
             "concerns": concerns[:2],  # Limit concerns
             "overall_fit": self._overall_fit_description(score_breakdown["overall_score"]),
-            "market_opportunity": self._market_opportunity(score_breakdown["market_timing"])
+            "market_opportunity": self._market_opportunity(score_breakdown["market_timing"]),
         }
 
     def _factor_to_reason(self, factor, prop, score):
@@ -410,7 +409,7 @@ class MockPropertyMatchingEngine:
             "commute": "Convenient commute to downtown/workplace",
             "walkability": "Very walkable with nearby amenities",
             "safety": "Safe, family-friendly neighborhood",
-            "market_timing": "Good opportunity for negotiation"
+            "market_timing": "Good opportunity for negotiation",
         }
         return reasons.get(factor, f"Strong {factor} match")
 
@@ -422,7 +421,7 @@ class MockPropertyMatchingEngine:
             "bedrooms": f"Only {prop.get('bedrooms', 0)} bedrooms (may be tight)",
             "schools": "School ratings are below average",
             "commute": "Longer commute to downtown/workplace",
-            "hoa_fee": f"HOA fee of ${prop.get('hoa_fee', 0)} may be high"
+            "hoa_fee": f"HOA fee of ${prop.get('hoa_fee', 0)} may be high",
         }
         return concerns.get(factor, f"Lower {factor} compatibility")
 
@@ -475,14 +474,14 @@ def demo_property_matching():
             "address": {"neighborhood": "Hyde Park", "city": "Rancho Cucamonga", "zip": "78751"},
             "schools": [
                 {"name": "Mathews Elementary", "rating": 9, "type": "Elementary"},
-                {"name": "McCallum High", "rating": 8, "type": "High"}
+                {"name": "McCallum High", "rating": 8, "type": "High"},
             ],
             "features": ["Updated kitchen", "Hardwood floors", "Large backyard"],
             "highlights": ["Walkable neighborhood", "Near restaurants"],
             "hoa_fee": 150,
             "year_built": 1995,
             "days_on_market": 12,
-            "lot_size_sqft": 7200
+            "lot_size_sqft": 7200,
         },
         {
             "id": "prop_002",
@@ -494,14 +493,14 @@ def demo_property_matching():
             "address": {"neighborhood": "Steiner Ranch", "city": "Rancho Cucamonga", "zip": "78732"},
             "schools": [
                 {"name": "River Ridge Elementary", "rating": 9, "type": "Elementary"},
-                {"name": "Vandegrift High", "rating": 10, "type": "High"}
+                {"name": "Vandegrift High", "rating": 10, "type": "High"},
             ],
             "features": ["Gated community", "Resort amenities", "Two-car garage"],
             "highlights": ["Family-friendly", "Excellent schools"],
             "hoa_fee": 280,
             "year_built": 2010,
             "days_on_market": 45,
-            "lot_size_sqft": 12000
+            "lot_size_sqft": 12000,
         },
         {
             "id": "prop_003",
@@ -517,8 +516,8 @@ def demo_property_matching():
             "hoa_fee": 400,
             "year_built": 2018,
             "days_on_market": 5,
-            "lot_size_sqft": 0
-        }
+            "lot_size_sqft": 0,
+        },
     ]
 
     # Test different lead profiles
@@ -532,8 +531,8 @@ def demo_property_matching():
                 "bathrooms": 2,
                 "property_type": "Single Family",
                 "min_sqft": 1500,
-                "max_hoa": 200
-            }
+                "max_hoa": 200,
+            },
         },
         {
             "segment": "young_professional",
@@ -544,8 +543,8 @@ def demo_property_matching():
                 "bathrooms": 2,
                 "property_type": "Condo",
                 "workplace_location": "downtown",
-                "max_hoa": 500
-            }
+                "max_hoa": 500,
+            },
         },
         {
             "segment": "luxury_buyer",
@@ -556,25 +555,22 @@ def demo_property_matching():
                 "bathrooms": 3,
                 "property_type": "Single Family",
                 "min_sqft": 2000,
-                "min_lot_size": 10000
-            }
-        }
+                "min_lot_size": 10000,
+            },
+        },
     ]
 
     # Initialize matching engine
     matcher = MockPropertyMatchingEngine()
 
     for profile in lead_profiles:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"🎯 LEAD PROFILE: {profile['segment'].replace('_', ' ').upper()}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         # Find matches
         matches = matcher.find_enhanced_matches(
-            properties=properties,
-            preferences=profile["preferences"],
-            segment=profile["segment"],
-            limit=3
+            properties=properties, preferences=profile["preferences"], segment=profile["segment"], limit=3
         )
 
         print(f"\n📊 TOP MATCHES:")
@@ -607,12 +603,12 @@ def demo_property_matching():
             print(f"   Predicted Engagement: {match['predicted_engagement']:.1%}")
             print(f"   Showing Request Probability: {match['predicted_showing_request']:.1%}")
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"✅ ANALYSIS COMPLETE")
     print(f"📈 Total Properties Analyzed: {matcher.processed_properties}")
     print(f"🎯 Matching Algorithm: 15-Factor Analysis")
     print(f"🧠 AI Features: Adaptive Weights, Predictive Analytics")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
 
 if __name__ == "__main__":

@@ -28,27 +28,27 @@ from html.parser import HTMLParser
 
 # Color codes for terminal output
 class Colors:
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    RED = '\033[91m'
-    BLUE = '\033[94m'
-    CYAN = '\033[96m'
-    BOLD = '\033[1m'
-    END = '\033[0m'
+    GREEN = "\033[92m"
+    YELLOW = "\033[93m"
+    RED = "\033[91m"
+    BLUE = "\033[94m"
+    CYAN = "\033[96m"
+    BOLD = "\033[1m"
+    END = "\033[0m"
 
 
 # Fallback market data from research (Feb 2026)
 MARKET_DATA_FALLBACK = {
-    'AI/ML Junior': {'low': 40, 'mid': 52, 'high': 65},
-    'AI/ML Mid-Level': {'low': 65, 'mid': 82, 'high': 100},
-    'AI/ML Senior': {'low': 100, 'mid': 125, 'high': 150},
-    'AI/ML Expert': {'low': 150, 'mid': 200, 'high': 250},
-    'Python Developer': {'low': 50, 'mid': 75, 'high': 100},
-    'RAG Specialist': {'low': 100, 'mid': 137, 'high': 175},
-    'Multi-Agent Systems': {'low': 125, 'mid': 162, 'high': 200},
-    'FastAPI Developer': {'low': 75, 'mid': 100, 'high': 125},
-    'Chatbot Developer': {'low': 80, 'mid': 110, 'high': 140},
-    'Dashboard Developer': {'low': 60, 'mid': 85, 'high': 110}
+    "AI/ML Junior": {"low": 40, "mid": 52, "high": 65},
+    "AI/ML Mid-Level": {"low": 65, "mid": 82, "high": 100},
+    "AI/ML Senior": {"low": 100, "mid": 125, "high": 150},
+    "AI/ML Expert": {"low": 150, "mid": 200, "high": 250},
+    "Python Developer": {"low": 50, "mid": 75, "high": 100},
+    "RAG Specialist": {"low": 100, "mid": 137, "high": 175},
+    "Multi-Agent Systems": {"low": 125, "mid": 162, "high": 200},
+    "FastAPI Developer": {"low": 75, "mid": 100, "high": 125},
+    "Chatbot Developer": {"low": 80, "mid": 110, "high": 140},
+    "Dashboard Developer": {"low": 60, "mid": 85, "high": 110},
 }
 
 
@@ -79,19 +79,17 @@ def scrape_bonsai_rates() -> Optional[Dict]:
     Note: This is a best-effort scraping attempt. Bonsai may block scrapers
     or change their HTML structure. Fallback data will be used if scraping fails.
     """
-    url = 'https://www.hellobonsai.com/rates/ai-machine-learning'
+    url = "https://www.hellobonsai.com/rates/ai-machine-learning"
 
     try:
         # Add user-agent to avoid basic bot detection
-        req = Request(url, headers={
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-        })
+        req = Request(url, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"})
 
         with urlopen(req, timeout=10) as response:
             if response.status != 200:
                 return None
 
-            html = response.read().decode('utf-8')
+            html = response.read().decode("utf-8")
 
             # Simple regex-based extraction as HTMLParser may be too brittle
             # Look for common patterns like "$XX - $YY / hour"
@@ -102,8 +100,8 @@ def scrape_bonsai_rates() -> Optional[Dict]:
             # Pattern: "Role: $XX - $YY/hour" or similar
             # This is a simplified example - actual patterns depend on Bonsai's HTML
             rate_patterns = [
-                r'(\w+[\w\s]+?):\s*\$(\d+)\s*-\s*\$(\d+)',
-                r'<span[^>]*>(\w+[\w\s]+?)</span>.*?\$(\d+).*?\$(\d+)',
+                r"(\w+[\w\s]+?):\s*\$(\d+)\s*-\s*\$(\d+)",
+                r"<span[^>]*>(\w+[\w\s]+?)</span>.*?\$(\d+).*?\$(\d+)",
             ]
 
             for pattern in rate_patterns:
@@ -114,7 +112,7 @@ def scrape_bonsai_rates() -> Optional[Dict]:
                     high = int(match.group(3))
                     mid = (low + high) / 2
 
-                    rates[role] = {'low': low, 'mid': mid, 'high': high}
+                    rates[role] = {"low": low, "mid": mid, "high": high}
 
             return rates if rates else None
 
@@ -135,8 +133,8 @@ def calculate_percentile(rate: float, market_data: Dict) -> Dict[str, float]:
     percentiles = {}
 
     for role, rates in market_data.items():
-        low = rates['low']
-        high = rates['high']
+        low = rates["low"]
+        high = rates["high"]
 
         if rate < low:
             percentile = 0
@@ -157,26 +155,26 @@ def categorize_rate(rate: float, market_data: Dict) -> str:
     matches = []
 
     for role, rates in market_data.items():
-        if rates['low'] <= rate <= rates['high']:
-            if 'Junior' in role:
-                matches.append('Junior')
-            elif 'Mid' in role:
-                matches.append('Mid-Level')
-            elif 'Senior' in role:
-                matches.append('Senior')
-            elif 'Expert' in role:
-                matches.append('Expert')
+        if rates["low"] <= rate <= rates["high"]:
+            if "Junior" in role:
+                matches.append("Junior")
+            elif "Mid" in role:
+                matches.append("Mid-Level")
+            elif "Senior" in role:
+                matches.append("Senior")
+            elif "Expert" in role:
+                matches.append("Expert")
             else:
-                matches.append('Mid-Level')  # Default
+                matches.append("Mid-Level")  # Default
 
     if not matches:
         # Rate doesn't fit standard ranges
         if rate < 50:
-            return 'Below Junior'
+            return "Below Junior"
         elif rate > 200:
-            return 'Above Expert'
+            return "Above Expert"
         else:
-            return 'Mid-Level'
+            return "Mid-Level"
 
     # Return most common match
     return max(set(matches), key=matches.count)
@@ -189,12 +187,16 @@ def generate_recommendations(rate: float, percentiles: Dict, market_data: Dict) 
     avg_percentile = sum(percentiles.values()) / len(percentiles)
 
     if avg_percentile < 30:
-        recommendations.append(f"{Colors.RED}Your rate (${rate}/hr) is below the 30th percentile for AI/ML work.{Colors.END}")
+        recommendations.append(
+            f"{Colors.RED}Your rate (${rate}/hr) is below the 30th percentile for AI/ML work.{Colors.END}"
+        )
         recommendations.append("Consider raising your rate to $85-100/hr to match mid-level market rates.")
         recommendations.append("Focus on P1 jobs ($80+/hr) to build higher-paying portfolio.")
 
     elif avg_percentile < 50:
-        recommendations.append(f"{Colors.YELLOW}Your rate (${rate}/hr) is competitive but below median for specialized work.{Colors.END}")
+        recommendations.append(
+            f"{Colors.YELLOW}Your rate (${rate}/hr) is competitive but below median for specialized work.{Colors.END}"
+        )
         recommendations.append("You're positioned well for mid-level roles.")
         recommendations.append("Emphasize specialized skills (RAG, multi-agent) to justify $100+/hr rates.")
 
@@ -204,30 +206,37 @@ def generate_recommendations(rate: float, percentiles: Dict, market_data: Dict) 
         recommendations.append("Target enterprise clients and complex projects ($100-150/hr).")
 
     else:
-        recommendations.append(f"{Colors.GREEN}Your rate (${rate}/hr) is in the top quartile for AI/ML freelancers.{Colors.END}")
+        recommendations.append(
+            f"{Colors.GREEN}Your rate (${rate}/hr) is in the top quartile for AI/ML freelancers.{Colors.END}"
+        )
         recommendations.append("Position yourself as an expert/specialist.")
         recommendations.append("Focus on high-value projects: architecture, optimization, compliance.")
 
     # Specialty positioning
-    if 'RAG Specialist' in market_data:
-        rag_rates = market_data['RAG Specialist']
-        if rag_rates['low'] <= rate <= rag_rates['high']:
-            recommendations.append(f"\n{Colors.BLUE}RAG Positioning:{Colors.END} Your rate aligns with RAG specialist market.")
+    if "RAG Specialist" in market_data:
+        rag_rates = market_data["RAG Specialist"]
+        if rag_rates["low"] <= rate <= rag_rates["high"]:
+            recommendations.append(
+                f"\n{Colors.BLUE}RAG Positioning:{Colors.END} Your rate aligns with RAG specialist market."
+            )
             recommendations.append("Emphasize RAG portfolio (docqa-engine, EnterpriseHub) in proposals.")
 
-    if 'Multi-Agent Systems' in market_data:
-        agent_rates = market_data['Multi-Agent Systems']
-        if agent_rates['low'] <= rate <= agent_rates['high']:
-            recommendations.append(f"\n{Colors.BLUE}Multi-Agent Positioning:{Colors.END} Your rate aligns with multi-agent specialists.")
+    if "Multi-Agent Systems" in market_data:
+        agent_rates = market_data["Multi-Agent Systems"]
+        if agent_rates["low"] <= rate <= agent_rates["high"]:
+            recommendations.append(
+                f"\n{Colors.BLUE}Multi-Agent Positioning:{Colors.END} Your rate aligns with multi-agent specialists."
+            )
             recommendations.append("Highlight jorge_real_estate_bots and ai-orchestrator in proposals.")
 
     return recommendations
 
 
-def format_markdown_report(rate: float, percentiles: Dict, market_data: Dict,
-                          recommendations: List[str], data_source: str) -> str:
+def format_markdown_report(
+    rate: float, percentiles: Dict, market_data: Dict, recommendations: List[str], data_source: str
+) -> str:
     """Generate markdown report."""
-    timestamp = datetime.now().strftime('%Y-%m-%d')
+    timestamp = datetime.now().strftime("%Y-%m-%d")
 
     report = f"""# Rate Intelligence Report
 
@@ -256,7 +265,9 @@ def format_markdown_report(rate: float, percentiles: Dict, market_data: Dict,
         else:
             indicator = "🔵 Expert tier"
 
-        report += f"| {role} | ${rates['low']}/hr | ${rates['mid']:.0f}/hr | ${rates['high']}/hr | {position} {indicator} |\n"
+        report += (
+            f"| {role} | ${rates['low']}/hr | ${rates['mid']:.0f}/hr | ${rates['high']}/hr | {position} {indicator} |\n"
+        )
 
     # Average positioning
     avg_percentile = sum(percentiles.values()) / len(percentiles)
@@ -271,8 +282,8 @@ def format_markdown_report(rate: float, percentiles: Dict, market_data: Dict,
 
     for rec in recommendations:
         # Strip color codes for markdown
-        clean_rec = rec.replace(Colors.GREEN, '').replace(Colors.YELLOW, '').replace(Colors.RED, '')
-        clean_rec = clean_rec.replace(Colors.BLUE, '').replace(Colors.CYAN, '').replace(Colors.END, '')
+        clean_rec = rec.replace(Colors.GREEN, "").replace(Colors.YELLOW, "").replace(Colors.RED, "")
+        clean_rec = clean_rec.replace(Colors.BLUE, "").replace(Colors.CYAN, "").replace(Colors.END, "")
         report += f"{clean_rec}\n\n"
 
     # Rate strategy
@@ -320,7 +331,7 @@ def format_markdown_report(rate: float, percentiles: Dict, market_data: Dict,
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Analyze market rates for AI/ML freelancers',
+        description="Analyze market rates for AI/ML freelancers",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -328,17 +339,13 @@ Examples:
   ./rate_intelligence.py --json           # JSON output
   ./rate_intelligence.py --rate 85        # Check specific rate
   ./rate_intelligence.py --no-scrape      # Use fallback data only
-        """
+        """,
     )
 
-    parser.add_argument('--rate', '-r', type=float, default=85,
-                       help='Target hourly rate to analyze (default: $85/hr)')
-    parser.add_argument('--json', action='store_true',
-                       help='Output as JSON instead of markdown')
-    parser.add_argument('--no-scrape', action='store_true',
-                       help='Skip scraping, use fallback data only')
-    parser.add_argument('--output', '-o',
-                       help='Output file path (default: reports/rate-intelligence-{date}.md)')
+    parser.add_argument("--rate", "-r", type=float, default=85, help="Target hourly rate to analyze (default: $85/hr)")
+    parser.add_argument("--json", action="store_true", help="Output as JSON instead of markdown")
+    parser.add_argument("--no-scrape", action="store_true", help="Skip scraping, use fallback data only")
+    parser.add_argument("--output", "-o", help="Output file path (default: reports/rate-intelligence-{date}.md)")
 
     args = parser.parse_args()
 
@@ -375,13 +382,21 @@ Examples:
     if args.json:
         # JSON output
         output = {
-            'rate': args.rate,
-            'data_source': data_source,
-            'market_data': market_data,
-            'percentiles': percentiles,
-            'average_percentile': round(sum(percentiles.values()) / len(percentiles), 1),
-            'category': categorize_rate(args.rate, market_data),
-            'recommendations': [r.replace(Colors.GREEN, '').replace(Colors.YELLOW, '').replace(Colors.RED, '').replace(Colors.BLUE, '').replace(Colors.CYAN, '').replace(Colors.END, '') for r in recommendations]
+            "rate": args.rate,
+            "data_source": data_source,
+            "market_data": market_data,
+            "percentiles": percentiles,
+            "average_percentile": round(sum(percentiles.values()) / len(percentiles), 1),
+            "category": categorize_rate(args.rate, market_data),
+            "recommendations": [
+                r.replace(Colors.GREEN, "")
+                .replace(Colors.YELLOW, "")
+                .replace(Colors.RED, "")
+                .replace(Colors.BLUE, "")
+                .replace(Colors.CYAN, "")
+                .replace(Colors.END, "")
+                for r in recommendations
+            ],
         }
 
         print(json.dumps(output, indent=2))
@@ -406,8 +421,10 @@ Examples:
                 color = Colors.CYAN
                 indicator = "🔵"
 
-            print(f"{indicator} {color}{role:30s}{Colors.END} "
-                  f"${rates['low']:3.0f}-${rates['high']:3.0f}/hr → {percentile:5.1f}th percentile")
+            print(
+                f"{indicator} {color}{role:30s}{Colors.END} "
+                f"${rates['low']:3.0f}-${rates['high']:3.0f}/hr → {percentile:5.1f}th percentile"
+            )
 
         avg_percentile = sum(percentiles.values()) / len(percentiles)
         category = categorize_rate(args.rate, market_data)
@@ -419,17 +436,16 @@ Examples:
             print(f"  {rec}")
 
         # Generate markdown report
-        report = format_markdown_report(args.rate, percentiles, market_data,
-                                       recommendations, data_source)
+        report = format_markdown_report(args.rate, percentiles, market_data, recommendations, data_source)
 
         # Save report
         if args.output:
             output_path = Path(args.output)
         else:
-            reports_dir = Path(__file__).parent.parent / 'reports'
+            reports_dir = Path(__file__).parent.parent / "reports"
             reports_dir.mkdir(exist_ok=True)
-            timestamp = datetime.now().strftime('%Y-%m-%d')
-            output_path = reports_dir / f'rate-intelligence-{timestamp}.md'
+            timestamp = datetime.now().strftime("%Y-%m-%d")
+            output_path = reports_dir / f"rate-intelligence-{timestamp}.md"
 
         output_path.write_text(report)
 
@@ -442,5 +458,5 @@ Examples:
         print("-" * 80)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

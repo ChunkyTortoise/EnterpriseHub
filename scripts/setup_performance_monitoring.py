@@ -11,54 +11,51 @@ import os
 import time
 from datetime import datetime
 
+
 def setup_monitoring():
     print("🚀 Setting up Enterprise Performance Monitoring...")
-    
+
     # 1. Generate Monitoring Configuration
     config = {
         "dashboard_name": "EnterpriseHub Operations Center",
         "refresh_rate": "5s",
         "data_sources": ["PostgreSQL", "Redis", "Application Logs", "Voice AI Stream"],
         "panels": [
-            {
-                "title": "System Health",
-                "type": "gauge",
-                "metrics": ["cpu_usage", "memory_usage", "uptime"]
-            },
+            {"title": "System Health", "type": "gauge", "metrics": ["cpu_usage", "memory_usage", "uptime"]},
             {
                 "title": "Database Performance",
                 "type": "timeseries",
-                "metrics": ["query_latency_p95", "active_connections", "cache_hit_ratio"]
+                "metrics": ["query_latency_p95", "active_connections", "cache_hit_ratio"],
             },
             {
                 "title": "Voice AI Throughput",
                 "type": "heatmap",
-                "metrics": ["concurrent_calls", "processing_latency", "error_rate"]
+                "metrics": ["concurrent_calls", "processing_latency", "error_rate"],
             },
             {
                 "title": "Business Logic",
                 "type": "stat",
-                "metrics": ["leads_processed", "appointments_booked", "conversion_rate"]
-            }
+                "metrics": ["leads_processed", "appointments_booked", "conversion_rate"],
+            },
         ],
         "alerting": {
             "channels": ["slack", "email", "pagerduty"],
             "rules": [
                 {"metric": "query_latency_p95", "threshold": ">50ms", "severity": "warning"},
                 {"metric": "error_rate", "threshold": ">1%", "severity": "critical"},
-                {"metric": "uptime", "threshold": "<99.9%", "severity": "critical"}
-            ]
-        }
+                {"metric": "uptime", "threshold": "<99.9%", "severity": "critical"},
+            ],
+        },
     }
-    
+
     with open("monitoring_config.json", "w") as f:
         json.dump(config, f, indent=2)
     print("✅ Monitoring configuration generated: monitoring_config.json")
-    
+
     # 2. Simulate Dashboard Creation
     print("🎨 Building Dashboard Panels...")
     time.sleep(1)
-    
+
     dashboard_md = f"""# EnterpriseHub Real-Time Monitoring
 **Status:** Online 🟢
 **Last Updated:** {datetime.now().isoformat()}
@@ -85,12 +82,13 @@ def setup_monitoring():
 | High Error Rate (>1%) | ✅ OK | 1s ago |
 | System Down | ✅ OK | 1s ago |
 """
-    
+
     with open("PERFORMANCE_DASHBOARD.md", "w") as f:
         f.write(dashboard_md)
     print("✅ Dashboard view generated: PERFORMANCE_DASHBOARD.md")
-    
+
     print("\n✨ Monitoring Setup Complete. Dashboard is live.")
+
 
 if __name__ == "__main__":
     setup_monitoring()

@@ -48,7 +48,7 @@ def create_product(token, product):
 
     if result.get("success"):
         prod = result["product"]
-        print(f"  CREATED: {product['name']} -> ${product['price_cents']/100:.0f} (ID: {prod['id']})")
+        print(f"  CREATED: {product['name']} -> ${product['price_cents'] / 100:.0f} (ID: {prod['id']})")
         return prod
     else:
         print(f"  FAILED: {product['name']} -> {result.get('message', resp.text)}")
@@ -122,7 +122,7 @@ def main():
         # Rate limit: Gumroad allows ~10 req/s, be conservative
         time.sleep(1)
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"RESULTS: {created} created, {skipped} skipped, {failed} failed")
     print(f"Total on Gumroad: {len(existing) + created}")
 

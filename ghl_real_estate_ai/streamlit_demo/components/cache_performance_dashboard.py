@@ -20,9 +20,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 
-def _generate_demo_cache_data(
-    days: int = 14, seed: int = 20260301
-) -> Dict[str, Any]:
+def _generate_demo_cache_data(days: int = 14, seed: int = 20260301) -> Dict[str, Any]:
     """Generate deterministic demo cache metrics."""
     rng = random.Random(seed)
 

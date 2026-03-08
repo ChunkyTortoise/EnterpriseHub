@@ -38,6 +38,7 @@ class FlakyWebSocketTest:
 @dataclass
 class WebSocketTestClient:
     """Enhanced WebSocket client for testing with built-in synchronization."""
+
     uri: str
     websocket: websockets.WebSocketServerProtocol = None
     connected: bool = False
@@ -50,7 +51,7 @@ class WebSocketTestClient:
         condition: Callable[[], bool],
         timeout: float = 10.0,
         poll_interval: float = 0.1,
-        error_message: str = "Condition not met"
+        error_message: str = "Condition not met",
     ) -> None:
         """Wait for a condition to become true."""
         start_time = asyncio.get_event_loop().time()
@@ -76,23 +77,18 @@ class WebSocketTestClient:
         await self.wait_for_condition(
             condition=lambda: len(self.messages) > 0,
             timeout=timeout,
-            error_message="No initial message received from WebSocket"
+            error_message="No initial message received from WebSocket",
         )
 
     async def authenticate(self, token: str, timeout: float = 5.0):
         """Authenticate and wait for confirmation."""
-        await self.send_message({
-            "type": "auth",
-            "token": token
-        })
+        await self.send_message({"type": "auth", "token": token})
 
         # Wait for auth confirmation
         await self.wait_for_condition(
-            condition=lambda: any(
-                msg.get("type") == "auth_success" for msg in self.messages
-            ),
+            condition=lambda: any(msg.get("type") == "auth_success" for msg in self.messages),
             timeout=timeout,
-            error_message="Authentication not confirmed"
+            error_message="Authentication not confirmed",
         )
 
         self.authenticated = True
@@ -104,18 +100,12 @@ class WebSocketTestClient:
 
         await self.websocket.send(json.dumps(message))
 
-    async def wait_for_message_type(
-        self,
-        message_type: str,
-        timeout: float = 10.0
-    ) -> Dict[str, Any]:
+    async def wait_for_message_type(self, message_type: str, timeout: float = 10.0) -> Dict[str, Any]:
         """Wait for a specific message type."""
         await self.wait_for_condition(
-            condition=lambda: any(
-                msg.get("type") == message_type for msg in self.messages
-            ),
+            condition=lambda: any(msg.get("type") == message_type for msg in self.messages),
             timeout=timeout,
-            error_message=f"Message of type '{message_type}' not received"
+            error_message=f"Message of type '{message_type}' not received",
         )
 
         # Return the first message of the requested type
@@ -128,22 +118,15 @@ class WebSocketTestClient:
         await self.wait_for_condition(
             condition=lambda: len(self.messages) >= count,
             timeout=timeout,
-            error_message=f"Expected {count} messages, got {len(self.messages)}"
+            error_message=f"Expected {count} messages, got {len(self.messages)}",
         )
 
-    async def wait_for_message_containing(
-        self,
-        key: str,
-        value: Any,
-        timeout: float = 10.0
-    ) -> Dict[str, Any]:
+    async def wait_for_message_containing(self, key: str, value: Any, timeout: float = 10.0) -> Dict[str, Any]:
         """Wait for a message containing specific key-value pair."""
         await self.wait_for_condition(
-            condition=lambda: any(
-                msg.get(key) == value for msg in self.messages
-            ),
+            condition=lambda: any(msg.get(key) == value for msg in self.messages),
             timeout=timeout,
-            error_message=f"No message with {key}={value} received"
+            error_message=f"No message with {key}={value} received",
         )
 
         for msg in self.messages:
@@ -219,16 +202,10 @@ class RobustWebSocketTest:
         await ws_client.authenticate("test_token")
 
         # Request data
-        await ws_client.send_message({
-            "type": "get_data",
-            "resource": "user_profile"
-        })
+        await ws_client.send_message({"type": "get_data", "resource": "user_profile"})
 
         # Wait for specific response
-        response = await ws_client.wait_for_message_type(
-            "data_response",
-            timeout=10.0
-        )
+        response = await ws_client.wait_for_message_type("data_response", timeout=10.0)
 
         assert response["resource"] == "user_profile"
         assert "data" in response
@@ -239,30 +216,18 @@ class RobustWebSocketTest:
         await ws_client.authenticate("test_token")
 
         # Subscribe to events
-        await ws_client.send_message({
-            "type": "subscribe",
-            "channel": "user_notifications"
-        })
+        await ws_client.send_message({"type": "subscribe", "channel": "user_notifications"})
 
         # Wait for subscription confirmation
-        confirmation = await ws_client.wait_for_message_type(
-            "subscription_confirmed",
-            timeout=5.0
-        )
+        confirmation = await ws_client.wait_for_message_type("subscription_confirmed", timeout=5.0)
         assert confirmation["channel"] == "user_notifications"
 
         # Trigger an event (this would be done by another part of the system)
         # For testing, we simulate it by sending a trigger message
-        await ws_client.send_message({
-            "type": "trigger_notification",
-            "message": "test notification"
-        })
+        await ws_client.send_message({"type": "trigger_notification", "message": "test notification"})
 
         # Wait for the notification to arrive
-        notification = await ws_client.wait_for_message_containing(
-            "type", "notification",
-            timeout=10.0
-        )
+        notification = await ws_client.wait_for_message_containing("type", "notification", timeout=10.0)
 
         assert notification["channel"] == "user_notifications"
         assert notification["message"] == "test notification"
@@ -271,15 +236,10 @@ class RobustWebSocketTest:
     async def test_websocket_error_handling(self, ws_client):
         """Test WebSocket error scenarios with proper waiting."""
         # Try to access protected resource without authentication
-        await ws_client.send_message({
-            "type": "get_protected_data"
-        })
+        await ws_client.send_message({"type": "get_protected_data"})
 
         # Wait for error response
-        error = await ws_client.wait_for_message_type(
-            "error",
-            timeout=5.0
-        )
+        error = await ws_client.wait_for_message_type("error", timeout=5.0)
 
         assert error["code"] == "UNAUTHORIZED"
         assert "authentication required" in error["message"].lower()
@@ -310,7 +270,7 @@ class WebSocketReconnectionTest:
                         self.reconnect_attempts += 1
                         if self.reconnect_attempts >= self.max_reconnect_attempts:
                             raise
-                        await asyncio.sleep(2 ** self.reconnect_attempts)  # Exponential backoff
+                        await asyncio.sleep(2**self.reconnect_attempts)  # Exponential backoff
 
             async def send_with_reconnect(self, message: Dict[str, Any]):
                 """Send message with automatic reconnection on failure."""
@@ -334,15 +294,10 @@ class WebSocketReconnectionTest:
             # (In real test, this would involve killing/restarting the server)
 
             # Verify messages can still be sent after reconnection
-            await client.send_with_reconnect({
-                "type": "test_after_reconnect"
-            })
+            await client.send_with_reconnect({"type": "test_after_reconnect"})
 
             # Wait for confirmation that reconnection worked
-            response = await client.wait_for_message_type(
-                "test_response",
-                timeout=10.0
-            )
+            response = await client.wait_for_message_type("test_response", timeout=10.0)
 
             assert response["status"] == "success"
 
@@ -369,17 +324,13 @@ class WebSocketPerformanceTest:
 
             # Send messages rapidly
             for i in range(message_count):
-                await client.send_message({
-                    "type": "echo",
-                    "id": i,
-                    "data": f"message_{i}"
-                })
+                await client.send_message({"type": "echo", "id": i, "data": f"message_{i}"})
 
             # Wait for all echo responses
             await client.wait_for_condition(
                 condition=lambda: len(client.get_messages_by_type("echo_response")) >= message_count,
                 timeout=30.0,
-                error_message=f"Not all {message_count} responses received"
+                error_message=f"Not all {message_count} responses received",
             )
 
             end_time = asyncio.get_event_loop().time()
@@ -391,7 +342,7 @@ class WebSocketPerformanceTest:
             assert avg_time_per_message < 0.1  # Average < 100ms per message
 
             print(f"Processed {message_count} messages in {total_time:.2f}s")
-            print(f"Average time per message: {avg_time_per_message*1000:.2f}ms")
+            print(f"Average time per message: {avg_time_per_message * 1000:.2f}ms")
 
         finally:
             await client.close()

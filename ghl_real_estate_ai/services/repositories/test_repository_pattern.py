@@ -35,8 +35,6 @@ from .strategy_integration import RepositoryPropertyMatcher, enhanced_generate_p
 
 
 @pytest.mark.integration
-
-
 class TestPropertyQuery:
     """Test PropertyQuery data structure and validation"""
 

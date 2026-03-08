@@ -14,7 +14,7 @@ else:
     fields = ghl.inspect_custom_fields()
 
     print("\n--- GHL CUSTOM FIELDS INSPECTOR ---")
-    print(f"{ 'Field Name':<30} | {'Field ID':<40}")
+    print(f"{'Field Name':<30} | {'Field ID':<40}")
     print("-" * 75)
     for f in fields:
         print(f"{f['name']:<30} | {f['id']:<40}")
