@@ -11,6 +11,21 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
 [![Demo](https://img.shields.io/badge/demo-live-FF4B4B.svg?logo=streamlit&logoColor=white)](https://ct-enterprise-ai.streamlit.app)
 
+---
+
+## Live Demo
+
+| | |
+|--|--|
+| **Dashboard** | https://ct-enterprise-ai.streamlit.app *(update URL after Render deploy)* |
+| **API Docs** | `<api-url>/docs` — Swagger UI with 40+ routes |
+| **Demo login** | `demo_user` / `Demo1234!` |
+| **Admin login** | `admin` / `Admin1234!` |
+
+> **Deploying your own instance?** See [Deployment](#deployment) below. Run `python scripts/seed_demo.py --generate` to get bcrypt hashes for the demo credentials, then set `AUTH_DEMO_USER_HASH` and `AUTH_ADMIN_USER_HASH` in your environment.
+
+---
+
 ## Key Metrics
 
 | System | Metric | Value |
