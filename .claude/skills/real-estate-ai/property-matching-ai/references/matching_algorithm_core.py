@@ -15,6 +15,7 @@ from enum import Enum
 
 class LeadSegment(Enum):
     """Lead segments with different priority factors."""
+
     FAMILY_WITH_KIDS = "family_with_kids"
     YOUNG_PROFESSIONAL = "young_professional"
     LUXURY_BUYER = "luxury_buyer"
@@ -27,6 +28,7 @@ class LeadSegment(Enum):
 @dataclass
 class FactorScore:
     """Individual factor scoring result with reasoning."""
+
     factor_name: str
     raw_score: float  # 0-1 unweighted score
     weighted_score: float  # Score after applying weight
@@ -39,6 +41,7 @@ class FactorScore:
 @dataclass
 class MatchScoreBreakdown:
     """Complete scoring breakdown for a property match."""
+
     # Individual factor categories
     traditional_scores: Dict[str, FactorScore]
     lifestyle_scores: Dict[str, FactorScore]
@@ -57,6 +60,7 @@ class MatchScoreBreakdown:
 @dataclass
 class PropertyMatch:
     """Complete property match result with all analysis."""
+
     property_id: str
     property_data: Dict[str, Any]
     overall_score: float
@@ -83,70 +87,63 @@ class PropertyMatch:
 # Base weights for different property factors
 DEFAULT_FACTOR_WEIGHTS = {
     # Traditional factors (60% total)
-    "budget": 0.20,          # Most important - can they afford it?
-    "location": 0.15,        # Location preferences
-    "bedrooms": 0.10,        # Bedroom count requirements
-    "bathrooms": 0.05,       # Bathroom count preferences
-    "property_type": 0.05,   # Single family, condo, etc.
-    "sqft": 0.05,           # Square footage preferences
-
+    "budget": 0.20,  # Most important - can they afford it?
+    "location": 0.15,  # Location preferences
+    "bedrooms": 0.10,  # Bedroom count requirements
+    "bathrooms": 0.05,  # Bathroom count preferences
+    "property_type": 0.05,  # Single family, condo, etc.
+    "sqft": 0.05,  # Square footage preferences
     # Lifestyle factors (25% total)
-    "schools": 0.08,         # School quality and ratings
-    "commute": 0.06,         # Commute convenience
-    "walkability": 0.06,     # Walkability and amenities
-    "safety": 0.05,          # Neighborhood safety
-
+    "schools": 0.08,  # School quality and ratings
+    "commute": 0.06,  # Commute convenience
+    "walkability": 0.06,  # Walkability and amenities
+    "safety": 0.05,  # Neighborhood safety
     # Contextual factors (10% total)
-    "hoa_fee": 0.03,         # HOA fees and restrictions
-    "lot_size": 0.03,        # Lot size preferences
-    "home_age": 0.02,        # Age and condition
-    "parking": 0.02,         # Parking availability
-
+    "hoa_fee": 0.03,  # HOA fees and restrictions
+    "lot_size": 0.03,  # Lot size preferences
+    "home_age": 0.02,  # Age and condition
+    "parking": 0.02,  # Parking availability
     # Market timing (5% total)
-    "market_timing": 0.05    # Days on market, price trends
+    "market_timing": 0.05,  # Days on market, price trends
 }
 
 # Segment-specific weight adjustments
 SEGMENT_WEIGHT_MODIFIERS = {
     LeadSegment.FAMILY_WITH_KIDS: {
-        "schools": 0.35,         # Much higher priority
-        "safety": 0.25,          # Safety is crucial
-        "bedrooms": 0.15,        # Need space
-        "walkability": 0.10,     # Less important
-        "commute": 0.15          # Still important for parents
+        "schools": 0.35,  # Much higher priority
+        "safety": 0.25,  # Safety is crucial
+        "bedrooms": 0.15,  # Need space
+        "walkability": 0.10,  # Less important
+        "commute": 0.15,  # Still important for parents
     },
-
     LeadSegment.YOUNG_PROFESSIONAL: {
-        "commute": 0.35,         # Commute is top priority
-        "walkability": 0.30,     # Urban lifestyle
-        "property_type": 0.15,   # Prefer condos/modern
-        "schools": 0.05,         # Not relevant yet
-        "budget": 0.15           # Budget conscious
+        "commute": 0.35,  # Commute is top priority
+        "walkability": 0.30,  # Urban lifestyle
+        "property_type": 0.15,  # Prefer condos/modern
+        "schools": 0.05,  # Not relevant yet
+        "budget": 0.15,  # Budget conscious
     },
-
     LeadSegment.LUXURY_BUYER: {
-        "location": 0.30,        # Exclusive neighborhoods
-        "property_type": 0.20,   # Specific luxury preferences
-        "lot_size": 0.15,        # Larger lots
-        "home_age": 0.10,        # Newer/updated properties
-        "market_timing": 0.25    # Less price sensitive, timing flexible
+        "location": 0.30,  # Exclusive neighborhoods
+        "property_type": 0.20,  # Specific luxury preferences
+        "lot_size": 0.15,  # Larger lots
+        "home_age": 0.10,  # Newer/updated properties
+        "market_timing": 0.25,  # Less price sensitive, timing flexible
     },
-
     LeadSegment.INVESTOR: {
-        "budget": 0.30,          # ROI focused
-        "market_timing": 0.25,   # Market opportunities
-        "location": 0.20,        # Rental demand areas
-        "property_type": 0.15,   # Investment-friendly types
-        "schools": 0.10          # Affects rental appeal
+        "budget": 0.30,  # ROI focused
+        "market_timing": 0.25,  # Market opportunities
+        "location": 0.20,  # Rental demand areas
+        "property_type": 0.15,  # Investment-friendly types
+        "schools": 0.10,  # Affects rental appeal
     },
-
     LeadSegment.FIRST_TIME_BUYER: {
-        "budget": 0.35,          # Very budget conscious
-        "home_age": 0.15,        # Prefer move-in ready
-        "location": 0.20,        # Good starter neighborhoods
-        "hoa_fee": 0.10,         # Minimize extra costs
-        "market_timing": 0.20    # Look for deals
-    }
+        "budget": 0.35,  # Very budget conscious
+        "home_age": 0.15,  # Prefer move-in ready
+        "location": 0.20,  # Good starter neighborhoods
+        "hoa_fee": 0.10,  # Minimize extra costs
+        "market_timing": 0.20,  # Look for deals
+    },
 }
 
 
@@ -167,7 +164,7 @@ class PropertyMatchingEngine:
         property_data: Dict[str, Any],
         lead_preferences: Dict[str, Any],
         lead_segment: LeadSegment = LeadSegment.FIRST_TIME_BUYER,
-        behavioral_data: Optional[Dict[str, Any]] = None
+        behavioral_data: Optional[Dict[str, Any]] = None,
     ) -> PropertyMatch:
         """
         Calculate comprehensive property match score.
@@ -183,25 +180,15 @@ class PropertyMatchingEngine:
         """
 
         # Calculate adaptive weights for this lead
-        adaptive_weights = self._calculate_adaptive_weights(
-            lead_segment, lead_preferences, behavioral_data
-        )
+        adaptive_weights = self._calculate_adaptive_weights(lead_segment, lead_preferences, behavioral_data)
 
         # Score all factors
-        score_breakdown = self._calculate_factor_scores(
-            property_data, lead_preferences, adaptive_weights
-        )
+        score_breakdown = self._calculate_factor_scores(property_data, lead_preferences, adaptive_weights)
 
         # Generate predictions
-        engagement_prediction = self._predict_engagement(
-            score_breakdown, behavioral_data
-        )
-        showing_prediction = self._predict_showing_request(
-            score_breakdown, lead_segment
-        )
-        offer_prediction = self._predict_offer_probability(
-            score_breakdown, lead_segment, behavioral_data
-        )
+        engagement_prediction = self._predict_engagement(score_breakdown, behavioral_data)
+        showing_prediction = self._predict_showing_request(score_breakdown, lead_segment)
+        offer_prediction = self._predict_offer_probability(score_breakdown, lead_segment, behavioral_data)
 
         # Generate reasoning and talking points
         strengths, benefits, concerns, talking_points = self._generate_reasoning(
@@ -223,14 +210,11 @@ class PropertyMatchingEngine:
             agent_talking_points=talking_points,
             generated_at=datetime.utcnow(),
             segment_used=lead_segment,
-            market_conditions=self._get_current_market_conditions()
+            market_conditions=self._get_current_market_conditions(),
         )
 
     def _calculate_adaptive_weights(
-        self,
-        segment: LeadSegment,
-        preferences: Dict[str, Any],
-        behavioral_data: Optional[Dict[str, Any]]
+        self, segment: LeadSegment, preferences: Dict[str, Any], behavioral_data: Optional[Dict[str, Any]]
     ) -> Dict[str, float]:
         """Calculate adaptive weights based on lead profile."""
 
@@ -270,92 +254,64 @@ class PropertyMatchingEngine:
         return weights
 
     def _calculate_factor_scores(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any],
-        weights: Dict[str, float]
+        self, property_data: Dict[str, Any], preferences: Dict[str, Any], weights: Dict[str, float]
     ) -> MatchScoreBreakdown:
         """Calculate scores for all factors."""
 
         # Traditional factors
         traditional_scores = {
-            "budget": self._score_budget_compatibility(
-                property_data, preferences, weights["budget"]
-            ),
-            "location": self._score_location_match(
-                property_data, preferences, weights["location"]
-            ),
-            "bedrooms": self._score_bedroom_requirements(
-                property_data, preferences, weights["bedrooms"]
-            ),
-            "bathrooms": self._score_bathroom_requirements(
-                property_data, preferences, weights["bathrooms"]
-            ),
-            "property_type": self._score_property_type_match(
-                property_data, preferences, weights["property_type"]
-            ),
-            "sqft": self._score_square_footage(
-                property_data, preferences, weights["sqft"]
-            )
+            "budget": self._score_budget_compatibility(property_data, preferences, weights["budget"]),
+            "location": self._score_location_match(property_data, preferences, weights["location"]),
+            "bedrooms": self._score_bedroom_requirements(property_data, preferences, weights["bedrooms"]),
+            "bathrooms": self._score_bathroom_requirements(property_data, preferences, weights["bathrooms"]),
+            "property_type": self._score_property_type_match(property_data, preferences, weights["property_type"]),
+            "sqft": self._score_square_footage(property_data, preferences, weights["sqft"]),
         }
 
         # Lifestyle factors
         lifestyle_scores = {
-            "schools": self._score_school_quality(
-                property_data, preferences, weights["schools"]
-            ),
-            "commute": self._score_commute_convenience(
-                property_data, preferences, weights["commute"]
-            ),
-            "walkability": self._score_walkability(
-                property_data, preferences, weights["walkability"]
-            ),
-            "safety": self._score_neighborhood_safety(
-                property_data, preferences, weights["safety"]
-            )
+            "schools": self._score_school_quality(property_data, preferences, weights["schools"]),
+            "commute": self._score_commute_convenience(property_data, preferences, weights["commute"]),
+            "walkability": self._score_walkability(property_data, preferences, weights["walkability"]),
+            "safety": self._score_neighborhood_safety(property_data, preferences, weights["safety"]),
         }
 
         # Contextual factors
         contextual_scores = {
-            "hoa_fee": self._score_hoa_acceptability(
-                property_data, preferences, weights["hoa_fee"]
-            ),
-            "lot_size": self._score_lot_size_preference(
-                property_data, preferences, weights["lot_size"]
-            ),
-            "home_age": self._score_home_age_preference(
-                property_data, preferences, weights["home_age"]
-            ),
-            "parking": self._score_parking_adequacy(
-                property_data, preferences, weights["parking"]
-            )
+            "hoa_fee": self._score_hoa_acceptability(property_data, preferences, weights["hoa_fee"]),
+            "lot_size": self._score_lot_size_preference(property_data, preferences, weights["lot_size"]),
+            "home_age": self._score_home_age_preference(property_data, preferences, weights["home_age"]),
+            "parking": self._score_parking_adequacy(property_data, preferences, weights["parking"]),
         }
 
         # Market timing
-        market_timing_score = self._score_market_timing(
-            property_data, preferences, weights["market_timing"]
-        )
+        market_timing_score = self._score_market_timing(property_data, preferences, weights["market_timing"])
 
         # Calculate overall score
-        overall_score = sum(
-            score.weighted_score for category_scores in [
-                traditional_scores.values(),
-                lifestyle_scores.values(),
-                contextual_scores.values()
-            ] for score in category_scores
-        ) + market_timing_score.weighted_score
+        overall_score = (
+            sum(
+                score.weighted_score
+                for category_scores in [
+                    traditional_scores.values(),
+                    lifestyle_scores.values(),
+                    contextual_scores.values(),
+                ]
+                for score in category_scores
+            )
+            + market_timing_score.weighted_score
+        )
 
         # Calculate confidence and completeness
-        all_scores = list(traditional_scores.values()) + \
-                    list(lifestyle_scores.values()) + \
-                    list(contextual_scores.values()) + \
-                    [market_timing_score]
+        all_scores = (
+            list(traditional_scores.values())
+            + list(lifestyle_scores.values())
+            + list(contextual_scores.values())
+            + [market_timing_score]
+        )
 
         confidence_level = sum(score.confidence for score in all_scores) / len(all_scores)
 
-        data_completeness = sum(
-            1 for score in all_scores if score.data_quality in ["high", "medium"]
-        ) / len(all_scores)
+        data_completeness = sum(1 for score in all_scores if score.data_quality in ["high", "medium"]) / len(all_scores)
 
         return MatchScoreBreakdown(
             traditional_scores=traditional_scores,
@@ -365,16 +321,13 @@ class PropertyMatchingEngine:
             overall_score=min(1.0, overall_score),  # Cap at 1.0
             confidence_level=confidence_level,
             data_completeness=data_completeness,
-            adaptive_weights=weights
+            adaptive_weights=weights,
         )
 
     # Individual factor scoring methods
 
     def _score_budget_compatibility(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any],
-        weight: float
+        self, property_data: Dict[str, Any], preferences: Dict[str, Any], weight: float
     ) -> FactorScore:
         """Score budget compatibility with stretch analysis."""
 
@@ -389,7 +342,7 @@ class PropertyMatchingEngine:
                 weight=weight,
                 confidence=0.3,
                 reasoning="Budget not specified",
-                data_quality="missing"
+                data_quality="missing",
             )
 
         if price <= budget * 0.95:  # Under budget
@@ -427,14 +380,11 @@ class PropertyMatchingEngine:
             weight=weight,
             confidence=confidence,
             reasoning=reasoning,
-            data_quality="high"
+            data_quality="high",
         )
 
     def _score_location_match(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any],
-        weight: float
+        self, property_data: Dict[str, Any], preferences: Dict[str, Any], weight: float
     ) -> FactorScore:
         """Score location compatibility with fuzzy matching."""
 
@@ -449,7 +399,7 @@ class PropertyMatchingEngine:
                 weight=weight,
                 confidence=0.3,
                 reasoning="Location preference not specified",
-                data_quality="missing"
+                data_quality="missing",
             )
 
         # Extract location components
@@ -502,14 +452,11 @@ class PropertyMatchingEngine:
             weight=weight,
             confidence=confidence,
             reasoning=reasoning,
-            data_quality="high"
+            data_quality="high",
         )
 
     def _score_bedroom_requirements(
-        self,
-        property_data: Dict[str, Any],
-        preferences: Dict[str, Any],
-        weight: float
+        self, property_data: Dict[str, Any], preferences: Dict[str, Any], weight: float
     ) -> FactorScore:
         """Score bedroom count compatibility."""
 
@@ -524,7 +471,7 @@ class PropertyMatchingEngine:
                 weight=weight,
                 confidence=0.3,
                 reasoning="Bedroom preference not specified",
-                data_quality="missing"
+                data_quality="missing",
             )
 
         if property_bedrooms == required_bedrooms:
@@ -561,16 +508,14 @@ class PropertyMatchingEngine:
             weight=weight,
             confidence=confidence,
             reasoning=reasoning,
-            data_quality="high"
+            data_quality="high",
         )
 
     # Additional scoring methods would continue here...
     # Due to length constraints, implementing core methods only
 
     def _predict_engagement(
-        self,
-        score_breakdown: MatchScoreBreakdown,
-        behavioral_data: Optional[Dict[str, Any]]
+        self, score_breakdown: MatchScoreBreakdown, behavioral_data: Optional[Dict[str, Any]]
     ) -> float:
         """Predict probability of lead engagement (click/view)."""
 
@@ -585,16 +530,12 @@ class PropertyMatchingEngine:
             engagement_history = behavioral_data.get("historical_engagement", 0.5)
             behavior_adjustment = (engagement_history - 0.5) * 0.1
 
-        predicted_engagement = min(0.95, base_engagement + confidence_boost +
-                                 completeness_boost + behavior_adjustment)
+        predicted_engagement = min(0.95, base_engagement + confidence_boost + completeness_boost + behavior_adjustment)
 
         return max(0.05, predicted_engagement)
 
     def _generate_reasoning(
-        self,
-        property_data: Dict[str, Any],
-        score_breakdown: MatchScoreBreakdown,
-        preferences: Dict[str, Any]
+        self, property_data: Dict[str, Any], score_breakdown: MatchScoreBreakdown, preferences: Dict[str, Any]
     ) -> Tuple[List[str], List[str], List[str], List[str]]:
         """Generate human-readable reasoning for the match."""
 
@@ -605,9 +546,11 @@ class PropertyMatchingEngine:
 
         # Analyze top-scoring factors
         all_factors = []
-        for category in [score_breakdown.traditional_scores,
-                        score_breakdown.lifestyle_scores,
-                        score_breakdown.contextual_scores]:
+        for category in [
+            score_breakdown.traditional_scores,
+            score_breakdown.lifestyle_scores,
+            score_breakdown.contextual_scores,
+        ]:
             for factor_score in category.values():
                 all_factors.append(factor_score)
 
@@ -649,7 +592,7 @@ class PropertyMatchingEngine:
             "inventory_level": "moderate",
             "interest_rate_trend": "stable",
             "seasonal_factor": "spring_buying_season",
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.utcnow().isoformat(),
         }
 
     # Placeholder implementations for remaining scoring methods

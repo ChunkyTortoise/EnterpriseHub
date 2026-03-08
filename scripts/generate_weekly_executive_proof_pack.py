@@ -47,15 +47,15 @@ def render(row: dict[str, str]) -> str:
     return f"""# Weekly Executive Proof-Pack
 
 ## Tenant
-- Tenant ID: {row['tenant_id']}
-- Week Start: {row['week_start']}
+- Tenant ID: {row["tenant_id"]}
+- Week Start: {row["week_start"]}
 - Report Generated At (UTC): {generated_at}
 
 ## KPI Summary
-- 5-minute response SLA attainment: {row['response_sla_pct']}%
-- Lead qualification throughput: {row['qualified_leads']} qualified / {row['leads_received']} received
-- Appointments booked: {row['appointments_booked']}
-- Cost per qualified lead: ${row['cost_per_qualified_lead']}
+- 5-minute response SLA attainment: {row["response_sla_pct"]}%
+- Lead qualification throughput: {row["qualified_leads"]} qualified / {row["leads_received"]} received
+- Appointments booked: {row["appointments_booked"]}
+- Cost per qualified lead: ${row["cost_per_qualified_lead"]}
 
 ## Operational Highlights
 - Wins: TODO

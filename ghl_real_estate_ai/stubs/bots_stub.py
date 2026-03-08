@@ -57,6 +57,9 @@ class TouchpointOptimization:
 class MLAnalyticsEngine:
     """No-op stub for MLAnalyticsEngine."""
 
+    def __init__(self, *args, **kwargs) -> None:
+        pass
+
     async def extract_features(self, lead_id: str, location_id: str = "") -> Dict[str, Any]:
         return {}
 

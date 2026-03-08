@@ -48,9 +48,20 @@ MAX_TOKENS_DRAFT = 2048
 
 TARGET_RATE = "$65-75/hr"
 TECH_STACK = [
-    "Python", "FastAPI", "RAG", "Claude API", "multi-agent systems",
-    "Streamlit", "PostgreSQL", "Redis", "LangChain", "vector databases",
-    "async/await", "Docker", "Celery", "Pydantic",
+    "Python",
+    "FastAPI",
+    "RAG",
+    "Claude API",
+    "multi-agent systems",
+    "Streamlit",
+    "PostgreSQL",
+    "Redis",
+    "LangChain",
+    "vector databases",
+    "async/await",
+    "Docker",
+    "Celery",
+    "Pydantic",
 ]
 
 PORTFOLIO_PROOF_POINTS = """
@@ -235,26 +246,26 @@ def save_proposal(title: str, proposal: str, scoring: Dict) -> Path:
     content = f"""# Proposal Draft: {title}
 
 **Generated**: {datetime.now().isoformat()}
-**AI Score**: {scoring.get('overall_score', 'N/A')}/10 ({scoring.get('priority', 'N/A')})
-**Cost**: {scoring.get('estimated_cost', 'N/A')}
+**AI Score**: {scoring.get("overall_score", "N/A")}/10 ({scoring.get("priority", "N/A")})
+**Cost**: {scoring.get("estimated_cost", "N/A")}
 
 ## Scores
 | Dimension | Score |
 |-----------|-------|
-| Budget Alignment | {scoring.get('scores', {}).get('budget_alignment', 'N/A')}/10 |
-| Tech Match | {scoring.get('scores', {}).get('tech_match', 'N/A')}/10 |
-| Client Quality | {scoring.get('scores', {}).get('client_quality', 'N/A')}/10 |
-| Portfolio Showcase | {scoring.get('scores', {}).get('portfolio_showcase', 'N/A')}/10 |
-| Scope Clarity | {scoring.get('scores', {}).get('scope_clarity', 'N/A')}/10 |
+| Budget Alignment | {scoring.get("scores", {}).get("budget_alignment", "N/A")}/10 |
+| Tech Match | {scoring.get("scores", {}).get("tech_match", "N/A")}/10 |
+| Client Quality | {scoring.get("scores", {}).get("client_quality", "N/A")}/10 |
+| Portfolio Showcase | {scoring.get("scores", {}).get("portfolio_showcase", "N/A")}/10 |
+| Scope Clarity | {scoring.get("scores", {}).get("scope_clarity", "N/A")}/10 |
 
 ## Reasoning
-{scoring.get('reasoning', 'N/A')}
+{scoring.get("reasoning", "N/A")}
 
 ## Key Selling Points
-{chr(10).join('- ' + p for p in scoring.get('key_selling_points', []))}
+{chr(10).join("- " + p for p in scoring.get("key_selling_points", []))}
 
 ## Risks
-{chr(10).join('- ' + r for r in scoring.get('risks', []))}
+{chr(10).join("- " + r for r in scoring.get("risks", []))}
 
 ---
 
@@ -275,6 +286,7 @@ def save_proposal(title: str, proposal: str, scoring: Dict) -> Path:
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def main():
     import argparse

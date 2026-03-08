@@ -20,7 +20,9 @@ def create_rag(name):
     return rag, persist_dir
 
 
-@pytest.mark.skip(reason="RAG tenant scoping returns 0 results - ChromaDB collection not properly persisting in test environment")
+@pytest.mark.skip(
+    reason="RAG tenant scoping returns 0 results - ChromaDB collection not properly persisting in test environment"
+)
 def test_multitenancy_scoping():
     """Verify that search is correctly scoped by location_id."""
     temp_rag, persist_dir = create_rag("scoping")
@@ -67,7 +69,9 @@ def test_multitenancy_scoping():
             shutil.rmtree(persist_dir)
 
 
-@pytest.mark.skip(reason="RAG tenant scoping returns 0 results - ChromaDB collection not properly persisting in test environment")
+@pytest.mark.skip(
+    reason="RAG tenant scoping returns 0 results - ChromaDB collection not properly persisting in test environment"
+)
 def test_multitenancy_no_global():
     """Verify scoping when no global documents exist."""
     temp_rag, persist_dir = create_rag("no_global")

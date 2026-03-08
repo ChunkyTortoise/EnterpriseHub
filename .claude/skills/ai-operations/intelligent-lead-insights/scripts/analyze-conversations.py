@@ -26,6 +26,7 @@ import statistics
 @dataclass
 class ConversationMetrics:
     """Metrics extracted from conversation analysis."""
+
     lead_id: str
     message_count: int
     agent_messages: int
@@ -49,6 +50,7 @@ class ConversationMetrics:
 @dataclass
 class BuyingSignal:
     """Detected buying signal with context."""
+
     signal_type: str
     message_content: str
     timestamp: str
@@ -77,7 +79,11 @@ def load_conversation_history(lead_id: str) -> List[Dict[str, Any]]:
     except ImportError:
         # Return sample data for standalone testing
         return [
-            {"role": "lead", "content": "Hi, I'm looking for a home in Rancho Cucamonga", "timestamp": "2026-01-15T10:00:00"},
+            {
+                "role": "lead",
+                "content": "Hi, I'm looking for a home in Rancho Cucamonga",
+                "timestamp": "2026-01-15T10:00:00",
+            },
             {"role": "agent", "content": "Great! What's your budget range?", "timestamp": "2026-01-15T10:05:00"},
             {"role": "lead", "content": "We're pre-approved for $750k", "timestamp": "2026-01-15T10:08:00"},
         ]
@@ -89,7 +95,7 @@ def calculate_response_times(messages: List[Dict]) -> List[float]:
 
     for i in range(1, len(messages)):
         try:
-            prev_time = datetime.fromisoformat(messages[i-1].get("timestamp", ""))
+            prev_time = datetime.fromisoformat(messages[i - 1].get("timestamp", ""))
             curr_time = datetime.fromisoformat(messages[i].get("timestamp", ""))
             diff_hours = (curr_time - prev_time).total_seconds() / 3600
             if diff_hours > 0:
@@ -105,24 +111,39 @@ def detect_buying_signals(messages: List[Dict]) -> List[BuyingSignal]:
     signals = []
 
     financial_keywords = [
-        "pre-approved", "pre approved", "budget", "down payment",
-        "mortgage", "afford", "financing", "loan"
+        "pre-approved",
+        "pre approved",
+        "budget",
+        "down payment",
+        "mortgage",
+        "afford",
+        "financing",
+        "loan",
     ]
 
     timeline_keywords = [
-        "lease ends", "need to move", "moving", "timeline",
-        "how soon", "when can", "by when", "deadline"
+        "lease ends",
+        "need to move",
+        "moving",
+        "timeline",
+        "how soon",
+        "when can",
+        "by when",
+        "deadline",
     ]
 
     commitment_keywords = [
-        "offer", "put in an offer", "next steps", "how do we",
-        "move forward", "secure", "schedule", "view"
+        "offer",
+        "put in an offer",
+        "next steps",
+        "how do we",
+        "move forward",
+        "secure",
+        "schedule",
+        "view",
     ]
 
-    engagement_keywords = [
-        "love", "perfect", "exactly", "interested",
-        "tell me more", "show me", "can we see"
-    ]
+    engagement_keywords = ["love", "perfect", "exactly", "interested", "tell me more", "show me", "can we see"]
 
     for msg in messages:
         if msg.get("role") != "lead":
@@ -134,49 +155,57 @@ def detect_buying_signals(messages: List[Dict]) -> List[BuyingSignal]:
         # Check financial signals
         for keyword in financial_keywords:
             if keyword in content:
-                signals.append(BuyingSignal(
-                    signal_type="financial_readiness",
-                    message_content=msg.get("content", "")[:100],
-                    timestamp=timestamp,
-                    confidence=0.85,
-                    category="financial"
-                ))
+                signals.append(
+                    BuyingSignal(
+                        signal_type="financial_readiness",
+                        message_content=msg.get("content", "")[:100],
+                        timestamp=timestamp,
+                        confidence=0.85,
+                        category="financial",
+                    )
+                )
                 break
 
         # Check timeline signals
         for keyword in timeline_keywords:
             if keyword in content:
-                signals.append(BuyingSignal(
-                    signal_type="timeline_urgency",
-                    message_content=msg.get("content", "")[:100],
-                    timestamp=timestamp,
-                    confidence=0.80,
-                    category="timeline"
-                ))
+                signals.append(
+                    BuyingSignal(
+                        signal_type="timeline_urgency",
+                        message_content=msg.get("content", "")[:100],
+                        timestamp=timestamp,
+                        confidence=0.80,
+                        category="timeline",
+                    )
+                )
                 break
 
         # Check commitment signals
         for keyword in commitment_keywords:
             if keyword in content:
-                signals.append(BuyingSignal(
-                    signal_type="commitment_indicator",
-                    message_content=msg.get("content", "")[:100],
-                    timestamp=timestamp,
-                    confidence=0.90,
-                    category="commitment"
-                ))
+                signals.append(
+                    BuyingSignal(
+                        signal_type="commitment_indicator",
+                        message_content=msg.get("content", "")[:100],
+                        timestamp=timestamp,
+                        confidence=0.90,
+                        category="commitment",
+                    )
+                )
                 break
 
         # Check engagement signals
         for keyword in engagement_keywords:
             if keyword in content:
-                signals.append(BuyingSignal(
-                    signal_type="high_engagement",
-                    message_content=msg.get("content", "")[:100],
-                    timestamp=timestamp,
-                    confidence=0.70,
-                    category="engagement"
-                ))
+                signals.append(
+                    BuyingSignal(
+                        signal_type="high_engagement",
+                        message_content=msg.get("content", "")[:100],
+                        timestamp=timestamp,
+                        confidence=0.70,
+                        category="engagement",
+                    )
+                )
                 break
 
     return signals
@@ -185,10 +214,18 @@ def detect_buying_signals(messages: List[Dict]) -> List[BuyingSignal]:
 def detect_objections(messages: List[Dict]) -> int:
     """Count objection indicators in messages."""
     objection_keywords = [
-        "too expensive", "out of budget", "can't afford",
-        "need to think", "not sure", "talk to spouse",
-        "looking at other", "competition", "another agent",
-        "not ready", "waiting", "later"
+        "too expensive",
+        "out of budget",
+        "can't afford",
+        "need to think",
+        "not sure",
+        "talk to spouse",
+        "looking at other",
+        "competition",
+        "another agent",
+        "not ready",
+        "waiting",
+        "later",
     ]
 
     count = 0
@@ -207,13 +244,29 @@ def detect_objections(messages: List[Dict]) -> int:
 def calculate_sentiment(messages: List[Dict]) -> float:
     """Calculate overall sentiment score from -1 to 1."""
     positive_words = [
-        "love", "great", "perfect", "excited", "wonderful",
-        "amazing", "beautiful", "exactly", "thank", "appreciate"
+        "love",
+        "great",
+        "perfect",
+        "excited",
+        "wonderful",
+        "amazing",
+        "beautiful",
+        "exactly",
+        "thank",
+        "appreciate",
     ]
 
     negative_words = [
-        "hate", "bad", "terrible", "disappointed", "frustrated",
-        "annoyed", "worried", "concerned", "problem", "issue"
+        "hate",
+        "bad",
+        "terrible",
+        "disappointed",
+        "frustrated",
+        "annoyed",
+        "worried",
+        "concerned",
+        "problem",
+        "issue",
     ]
 
     positive_count = 0
@@ -244,10 +297,7 @@ def count_questions(messages: List[Dict]) -> tuple:
     question_count = 0
     detailed_count = 0
 
-    detail_indicators = [
-        "how much", "what's the", "can you tell me",
-        "what about", "how does", "what if"
-    ]
+    detail_indicators = ["how much", "what's the", "can you tell me", "what about", "how does", "what if"]
 
     for msg in messages:
         if msg.get("role") != "lead":
@@ -344,7 +394,7 @@ def analyze_conversation(lead_id: str) -> ConversationMetrics:
             objection_count=0,
             last_activity_days=999,
             conversation_health="unknown",
-            analysis_timestamp=datetime.now().isoformat()
+            analysis_timestamp=datetime.now().isoformat(),
         )
 
     # Count messages by role
@@ -357,8 +407,8 @@ def analyze_conversation(lead_id: str) -> ConversationMetrics:
 
     # Determine response time trend
     if len(response_times) >= 3:
-        first_half = response_times[:len(response_times)//2]
-        second_half = response_times[len(response_times)//2:]
+        first_half = response_times[: len(response_times) // 2]
+        second_half = response_times[len(response_times) // 2 :]
         first_avg = statistics.mean(first_half)
         second_avg = statistics.mean(second_half)
         if second_avg < first_avg * 0.8:
@@ -402,7 +452,7 @@ def analyze_conversation(lead_id: str) -> ConversationMetrics:
         "avg_response_time_hours": avg_response_time,
         "sentiment_score": sentiment,
         "buying_signal_count": len(signals),
-        "objection_count": objection_count
+        "objection_count": objection_count,
     }
 
     # Determine health
@@ -426,7 +476,7 @@ def analyze_conversation(lead_id: str) -> ConversationMetrics:
         objection_count=objection_count,
         last_activity_days=last_activity_days,
         conversation_health=health,
-        analysis_timestamp=datetime.now().isoformat()
+        analysis_timestamp=datetime.now().isoformat(),
     )
 
 
@@ -450,6 +500,7 @@ def main():
 
         if args.output == "csv":
             import csv
+
             if results:
                 writer = csv.DictWriter(sys.stdout, fieldnames=results[0].keys())
                 writer.writeheader()

@@ -40,19 +40,21 @@ def create_default_pipeline() -> ResponsePostProcessor:
     Disclosure happens only when a lead explicitly asks "are you a bot?" / "are you AI?"
     Per SB 1001 (CA) — no proactive footer required or added.
     """
-    return ResponsePostProcessor(stages=[
-        LanguageMirrorProcessor(),
-        # Defense-in-depth: primary opt-out check is in webhook.py (lines 408-437)
-        TCPAOptOutProcessor(),
-        ConversationRepairProcessor(),
-        ComplianceCheckProcessor(),
-        # AIDisclosureProcessor is a no-op stub — kept for future optional use
-        AIDisclosureProcessor(),
-        # F-13 FIX: Translate fixed qualification / scheduling / handoff messages
-        # to match the user's detected language.
-        ResponseTranslationProcessor(),
-        SMSTruncationProcessor(),
-    ])
+    return ResponsePostProcessor(
+        stages=[
+            LanguageMirrorProcessor(),
+            # Defense-in-depth: primary opt-out check is in webhook.py (lines 408-437)
+            TCPAOptOutProcessor(),
+            ConversationRepairProcessor(),
+            ComplianceCheckProcessor(),
+            # AIDisclosureProcessor is a no-op stub — kept for future optional use
+            AIDisclosureProcessor(),
+            # F-13 FIX: Translate fixed qualification / scheduling / handoff messages
+            # to match the user's detected language.
+            ResponseTranslationProcessor(),
+            SMSTruncationProcessor(),
+        ]
+    )
 
 
 _pipeline: ResponsePostProcessor | None = None

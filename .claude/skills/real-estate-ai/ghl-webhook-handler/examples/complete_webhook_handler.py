@@ -24,10 +24,7 @@ import uvicorn
 
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
@@ -54,16 +51,28 @@ conversation_histories: Dict[str, List] = {}
 
 class MockWebhookSecurityManager:
     """Mock security manager for example"""
-    def __init__(self, secret): self.secret = secret
-    def verify_webhook_signature(self, request, body): return True
-    def check_rate_limit(self, ip): return True
-    def validate_payload(self, payload): return payload.get("contactId") and payload.get("locationId")
-    def sanitize_payload(self, payload): return payload
+
+    def __init__(self, secret):
+        self.secret = secret
+
+    def verify_webhook_signature(self, request, body):
+        return True
+
+    def check_rate_limit(self, ip):
+        return True
+
+    def validate_payload(self, payload):
+        return payload.get("contactId") and payload.get("locationId")
+
+    def sanitize_payload(self, payload):
+        return payload
 
 
 class MockAIGenerator:
     """Mock AI generator for example"""
-    def __init__(self, api_key): self.api_key = api_key
+
+    def __init__(self, api_key):
+        self.api_key = api_key
 
     async def generate_qualification_response(self, contact_data, history, question_type, context=None):
         """Generate mock response for example"""
@@ -73,7 +82,7 @@ class MockAIGenerator:
             "bedrooms": "How many bedrooms do you need?",
             "timeline": "When are you hoping to make a move?",
             "preapproval": "Are you pre-approved or do you need a lender recommendation?",
-            "motivation": "What's driving the decision right now?"
+            "motivation": "What's driving the decision right now?",
         }
         await asyncio.sleep(0.1)  # Simulate API call
         return responses.get(question_type, "Thanks for the information!")
@@ -91,7 +100,7 @@ async def health_check():
         "service": "GHL Real Estate AI Webhook",
         "status": "active",
         "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
 
 
@@ -145,11 +154,9 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
         ai_off = "AI Assistant: OFF" in tags or "ai_off" in tags
 
         if ai_off or not ai_on:
-            return JSONResponse({
-                "status": "skipped",
-                "reason": "AI not enabled for this contact",
-                "contact_id": contact_id
-            })
+            return JSONResponse(
+                {"status": "skipped", "reason": "AI not enabled for this contact", "contact_id": contact_id}
+            )
 
         # Step 5: Get or create qualification state
         if contact_id not in qualification_states:
@@ -161,7 +168,7 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
                 "score": 0,
                 "status": "cold",
                 "created_at": start_time,
-                "engagement_level": 0.0
+                "engagement_level": 0.0,
             }
             conversation_histories[contact_id] = []
 
@@ -173,32 +180,29 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
             logger.info(f"Lead {contact_id} is HOT (score: {state['score']}) - handing off to human")
 
             # Schedule background tasks for handoff
-            background_tasks.add_task(
-                update_contact_tag,
-                contact_id, location_id, "Hot Lead"
-            )
-            background_tasks.add_task(
-                update_contact_tag,
-                contact_id, location_id, "AI Assistant: OFF"
-            )
+            background_tasks.add_task(update_contact_tag, contact_id, location_id, "Hot Lead")
+            background_tasks.add_task(update_contact_tag, contact_id, location_id, "AI Assistant: OFF")
             background_tasks.add_task(
                 send_sms_via_ghl,
-                contact_id, location_id,
-                "Thanks for all the info! A team member will reach out shortly to help you. 🎉"
+                contact_id,
+                location_id,
+                "Thanks for all the info! A team member will reach out shortly to help you. 🎉",
             )
 
-            return JSONResponse({
-                "status": "handoff",
-                "score": state["score"],
-                "status_label": state["status"],
-                "contact_id": contact_id
-            })
+            return JSONResponse(
+                {
+                    "status": "handoff",
+                    "score": state["score"],
+                    "status_label": state["status"],
+                    "contact_id": contact_id,
+                }
+            )
 
         # Step 7: Generate AI response
         contact_data = {
             "name": payload.get("firstName", ""),
             "phone": payload.get("phone", ""),
-            "email": payload.get("email", "")
+            "email": payload.get("email", ""),
         }
 
         try:
@@ -206,28 +210,16 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
                 contact_data=contact_data,
                 conversation_history=history,
                 question_type=state["current_question"],
-                lead_context={
-                    "score": state["score"],
-                    "engagement_level": state["engagement_level"]
-                }
+                lead_context={"score": state["score"], "engagement_level": state["engagement_level"]},
             )
         except Exception as e:
             logger.error(f"AI generation failed: {e}")
             ai_message = "Quick question - what's your budget range looking like?"
 
         # Step 8: Schedule background tasks
-        background_tasks.add_task(
-            send_sms_via_ghl,
-            contact_id, location_id, ai_message
-        )
-        background_tasks.add_task(
-            update_conversation_history,
-            contact_id, ai_message, "agent"
-        )
-        background_tasks.add_task(
-            log_qualification_event,
-            contact_id, state, ai_message
-        )
+        background_tasks.add_task(send_sms_via_ghl, contact_id, location_id, ai_message)
+        background_tasks.add_task(update_conversation_history, contact_id, ai_message, "agent")
+        background_tasks.add_task(log_qualification_event, contact_id, state, ai_message)
 
         # Step 9: Update state
         state["message_count"] += 1
@@ -236,15 +228,17 @@ async def handle_ghl_webhook(request: Request, background_tasks: BackgroundTasks
         # Calculate response time for analytics
         response_time_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
 
-        return JSONResponse({
-            "status": "sent",
-            "message": ai_message,
-            "score": state["score"],
-            "status_label": state["status"],
-            "question": state["current_question"],
-            "contact_id": contact_id,
-            "response_time_ms": int(response_time_ms)
-        })
+        return JSONResponse(
+            {
+                "status": "sent",
+                "message": ai_message,
+                "score": state["score"],
+                "status_label": state["status"],
+                "question": state["current_question"],
+                "contact_id": contact_id,
+                "response_time_ms": int(response_time_ms),
+            }
+        )
 
     except HTTPException:
         raise  # Re-raise HTTP exceptions
@@ -280,9 +274,8 @@ async def handle_contact_response(request: Request, background_tasks: Background
 
         # Calculate engagement level from response
         engagement = calculate_answer_engagement(message)
-        state["engagement_level"] = (
-            (state["engagement_level"] * state["message_count"] + engagement) /
-            (state["message_count"] + 1)
+        state["engagement_level"] = (state["engagement_level"] * state["message_count"] + engagement) / (
+            state["message_count"] + 1
         )
 
         # Move to next question
@@ -295,8 +288,7 @@ async def handle_contact_response(request: Request, background_tasks: Background
             pass  # Keep current question if not found
 
         # Recalculate score
-        answered_count = len([ans for ans in state["answers"].values()
-                             if ans and len(str(ans).strip()) > 2])
+        answered_count = len([ans for ans in state["answers"].values() if ans and len(str(ans).strip()) > 2])
 
         if answered_count >= 3:
             state["score"] = answered_count
@@ -309,30 +301,25 @@ async def handle_contact_response(request: Request, background_tasks: Background
             state["status"] = "cold"
 
         # Update tags in background
-        background_tasks.add_task(
-            update_contact_tag,
-            contact_id, location_id, f"{state['status'].title()} Lead"
-        )
+        background_tasks.add_task(update_contact_tag, contact_id, location_id, f"{state['status'].title()} Lead")
 
         logger.info(
-            f"Contact {contact_id} - Score: {state['score']} ({state['status']}), "
-            f"Answers: {len(state['answers'])}"
+            f"Contact {contact_id} - Score: {state['score']} ({state['status']}), Answers: {len(state['answers'])}"
         )
 
-        return JSONResponse({
-            "status": "processed",
-            "score": state["score"],
-            "status_label": state["status"],
-            "answers_count": len(state["answers"]),
-            "engagement_level": round(state["engagement_level"], 2)
-        })
+        return JSONResponse(
+            {
+                "status": "processed",
+                "score": state["score"],
+                "status_label": state["status"],
+                "answers_count": len(state["answers"]),
+                "engagement_level": round(state["engagement_level"], 2),
+            }
+        )
 
     except Exception as e:
         logger.error(f"Error processing contact response: {e}")
-        return JSONResponse({
-            "status": "error",
-            "message": str(e)
-        }, status_code=500)
+        return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 
 
 # Background task functions
@@ -341,16 +328,8 @@ async def send_sms_via_ghl(contact_id: str, location_id: str, message: str):
     import httpx
 
     url = f"{GHL_API_BASE_URL}/conversations/messages"
-    headers = {
-        "Authorization": f"Bearer {GHL_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "contactId": contact_id,
-        "locationId": location_id,
-        "message": message,
-        "type": "SMS"
-    }
+    headers = {"Authorization": f"Bearer {GHL_API_KEY}", "Content-Type": "application/json"}
+    payload = {"contactId": contact_id, "locationId": location_id, "message": message, "type": "SMS"}
 
     try:
         async with httpx.AsyncClient() as client:
@@ -366,10 +345,7 @@ async def update_contact_tag(contact_id: str, location_id: str, tag: str):
     import httpx
 
     url = f"{GHL_API_BASE_URL}/contacts/{contact_id}/tags"
-    headers = {
-        "Authorization": f"Bearer {GHL_API_KEY}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Bearer {GHL_API_KEY}", "Content-Type": "application/json"}
     payload = {"tags": [tag]}
 
     try:
@@ -386,11 +362,9 @@ async def update_conversation_history(contact_id: str, message: str, sender: str
     if contact_id not in conversation_histories:
         conversation_histories[contact_id] = []
 
-    conversation_histories[contact_id].append({
-        "timestamp": datetime.utcnow().isoformat(),
-        "sender": sender,
-        "message": message
-    })
+    conversation_histories[contact_id].append(
+        {"timestamp": datetime.utcnow().isoformat(), "sender": sender, "message": message}
+    )
 
     # Keep only last 20 messages for memory efficiency
     if len(conversation_histories[contact_id]) > 20:
@@ -409,7 +383,7 @@ async def log_qualification_event(contact_id: str, state: Dict, ai_message: str)
         "message_count": state["message_count"],
         "engagement_level": state["engagement_level"],
         "ai_message": ai_message,
-        "answers_provided": len(state["answers"])
+        "answers_provided": len(state["answers"]),
     }
 
     # In production, send to analytics service
@@ -427,12 +401,11 @@ def calculate_answer_engagement(answer: str) -> float:
     length_score = min(1.0, len(answer) / 50)
 
     # Bonus for specific details
-    detail_indicators = ['$', 'bedroom', 'month', 'year', 'area', 'job', 'family']
-    detail_bonus = min(0.3, sum(0.05 for indicator in detail_indicators
-                               if indicator in answer.lower()))
+    detail_indicators = ["$", "bedroom", "month", "year", "area", "job", "family"]
+    detail_bonus = min(0.3, sum(0.05 for indicator in detail_indicators if indicator in answer.lower()))
 
     # Bonus for questions (shows engagement)
-    question_bonus = 0.1 if '?' in answer else 0.0
+    question_bonus = 0.1 if "?" in answer else 0.0
 
     return min(1.0, length_score + detail_bonus + question_bonus)
 
@@ -459,7 +432,7 @@ async def get_qualification_analytics():
         "cold_leads": cold_leads,
         "conversion_rate": round((hot_leads + warm_leads) / total_leads * 100, 1),
         "average_engagement": round(avg_engagement, 2),
-        "average_score": round(avg_score, 1)
+        "average_score": round(avg_score, 1),
     }
 
 
@@ -480,8 +453,10 @@ async def get_lead_analytics(contact_id: str):
         "message_count": state["message_count"],
         "engagement_level": state.get("engagement_level", 0),
         "conversation_length": len(history),
-        "created_at": state.get("created_at", "").isoformat() if isinstance(state.get("created_at"), datetime) else state.get("created_at"),
-        "answers": state["answers"]
+        "created_at": state.get("created_at", "").isoformat()
+        if isinstance(state.get("created_at"), datetime)
+        else state.get("created_at"),
+        "answers": state["answers"],
     }
 
 
@@ -496,13 +471,7 @@ if __name__ == "__main__":
     print(f"🔐 Webhook security: {'Enabled' if GHL_WEBHOOK_SECRET else 'Disabled (dev mode)'}")
     print(f"🤖 AI responses: {'Enabled' if ANTHROPIC_API_KEY else 'Mock mode'}")
 
-    uvicorn.run(
-        "complete_webhook_handler:app",
-        host=host,
-        port=port,
-        reload=debug,
-        log_level="info"
-    )
+    uvicorn.run("complete_webhook_handler:app", host=host, port=port, reload=debug, log_level="info")
 
 
 """

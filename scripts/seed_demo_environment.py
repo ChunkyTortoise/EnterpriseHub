@@ -16,20 +16,13 @@ import logging
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from ghl_real_estate_ai.services.client_demo_service import (
-    ClientDemoService,
-    DemoScenario,
-    DemoEnvironment
-)
+from ghl_real_estate_ai.services.client_demo_service import ClientDemoService, DemoScenario, DemoEnvironment
 from ghl_real_estate_ai.services.jorge.jorge_handoff_service import (
     JorgeHandoffService,
 )
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -57,16 +50,13 @@ class DemoEnvironmentSeeder:
                 demo_env = await self.demo_service.create_demo_session(
                     scenario=scenario,
                     client_name=f"Demo {scenario.value.replace('_', ' ').title()}",
-                    agency_name=f"Professional {scenario.value.replace('_', ' ').title()} Agency"
+                    agency_name=f"Professional {scenario.value.replace('_', ' ').title()} Agency",
                 )
 
                 environments.append(demo_env)
                 self.created_sessions.append(demo_env.session_id)
 
-                logger.info(
-                    f"Created {scenario.value} demo: {demo_env.session_id} "
-                    f"({demo_env.client_profile.name})"
-                )
+                logger.info(f"Created {scenario.value} demo: {demo_env.session_id} ({demo_env.client_profile.name})")
 
             except Exception as e:
                 logger.error(f"Failed to create {scenario.value} demo: {str(e)}")
@@ -74,11 +64,7 @@ class DemoEnvironmentSeeder:
         return environments
 
     async def create_specific_scenario(
-        self,
-        scenario: str,
-        client_name: str = None,
-        agency_name: str = None,
-        custom_params: Dict[str, Any] = None
+        self, scenario: str, client_name: str = None, agency_name: str = None, custom_params: Dict[str, Any] = None
     ) -> DemoEnvironment:
         """Create demo environment for specific scenario"""
 
@@ -90,18 +76,12 @@ class DemoEnvironmentSeeder:
         logger.info(f"Creating demo environment for {scenario}")
 
         demo_env = await self.demo_service.create_demo_session(
-            scenario=scenario_enum,
-            client_name=client_name,
-            agency_name=agency_name,
-            custom_params=custom_params
+            scenario=scenario_enum, client_name=client_name, agency_name=agency_name, custom_params=custom_params
         )
 
         self.created_sessions.append(demo_env.session_id)
 
-        logger.info(
-            f"Created {scenario} demo: {demo_env.session_id} "
-            f"({demo_env.client_profile.name})"
-        )
+        logger.info(f"Created {scenario} demo: {demo_env.session_id} ({demo_env.client_profile.name})")
 
         return demo_env
 
@@ -113,7 +93,7 @@ class DemoEnvironmentSeeder:
                 "session_id": demo_env.session_id,
                 "scenario": demo_env.client_profile.market_segment.value,
                 "created_at": demo_env.created_at.isoformat(),
-                "expires_at": demo_env.expires_at.isoformat()
+                "expires_at": demo_env.expires_at.isoformat(),
             },
             "client_profile": {
                 "name": demo_env.client_profile.name,
@@ -127,24 +107,32 @@ class DemoEnvironmentSeeder:
                 "tech_adoption": demo_env.client_profile.tech_adoption,
                 "current_challenges": demo_env.client_profile.current_challenges,
                 "goals": demo_env.client_profile.goals,
-                "pain_points": demo_env.client_profile.pain_points
+                "pain_points": demo_env.client_profile.pain_points,
             },
             "demo_metrics": {
                 "total_leads": len(demo_env.demo_leads),
                 "total_properties": len(demo_env.demo_properties),
-                "total_conversations": len(demo_env.demo_conversations)
+                "total_conversations": len(demo_env.demo_conversations),
             },
             "roi_summary": demo_env.roi_calculation.get("summary", {}),
             "performance_highlights": {
-                "response_time_improvement": demo_env.performance_metrics.get("response_times", {}).get("improvement", "N/A"),
-                "conversion_improvement": demo_env.performance_metrics.get("conversion_rates", {}).get("improvement", "N/A"),
-                "accuracy_improvement": demo_env.performance_metrics.get("accuracy_scores", {}).get("improvement", "N/A"),
-                "monthly_revenue_increase": demo_env.performance_metrics.get("monthly_performance", {}).get("additional_revenue", 0),
-                "business_impact": demo_env.performance_metrics.get("business_impact", {})
-            }
+                "response_time_improvement": demo_env.performance_metrics.get("response_times", {}).get(
+                    "improvement", "N/A"
+                ),
+                "conversion_improvement": demo_env.performance_metrics.get("conversion_rates", {}).get(
+                    "improvement", "N/A"
+                ),
+                "accuracy_improvement": demo_env.performance_metrics.get("accuracy_scores", {}).get(
+                    "improvement", "N/A"
+                ),
+                "monthly_revenue_increase": demo_env.performance_metrics.get("monthly_performance", {}).get(
+                    "additional_revenue", 0
+                ),
+                "business_impact": demo_env.performance_metrics.get("business_impact", {}),
+            },
         }
 
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(export_data, f, indent=2, default=str)
 
         logger.info(f"Demo data exported to {output_file}")
@@ -160,14 +148,16 @@ class DemoEnvironmentSeeder:
             "has_roi_calculation": bool(demo_env.roi_calculation),
             "has_performance_metrics": bool(demo_env.performance_metrics),
             "roi_has_summary": "summary" in demo_env.roi_calculation,
-            "has_business_impact": "business_impact" in demo_env.performance_metrics
+            "has_business_impact": "business_impact" in demo_env.performance_metrics,
         }
 
         # Detailed validations
         if demo_env.client_profile:
             validations["profile_has_challenges"] = len(demo_env.client_profile.current_challenges) > 0
             validations["profile_has_goals"] = len(demo_env.client_profile.goals) > 0
-            validations["profile_has_contact_info"] = bool(demo_env.client_profile.name and demo_env.client_profile.agency_name)
+            validations["profile_has_contact_info"] = bool(
+                demo_env.client_profile.name and demo_env.client_profile.agency_name
+            )
 
         # ROI calculation validations
         if demo_env.roi_calculation and "summary" in demo_env.roi_calculation:
@@ -196,9 +186,9 @@ class DemoEnvironmentSeeder:
 
     async def print_demo_summary(self, demo_env: DemoEnvironment):
         """Print demo environment summary"""
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print(f"DEMO ENVIRONMENT SUMMARY")
-        print("="*80)
+        print("=" * 80)
 
         profile = demo_env.client_profile
 
@@ -234,50 +224,30 @@ class DemoEnvironmentSeeder:
             print(f"  • Payback Period: {impact.get('payback_period', 'N/A')}")
 
         print(f"\nExpires: {demo_env.expires_at}")
-        print("="*80)
+        print("=" * 80)
 
 
 async def main():
     """Main execution function"""
-    parser = argparse.ArgumentParser(description='Jorge AI Platform Demo Environment Seeder')
+    parser = argparse.ArgumentParser(description="Jorge AI Platform Demo Environment Seeder")
 
     parser.add_argument(
-        '--scenario',
+        "--scenario",
         choices=[s.value for s in DemoScenario],
-        help='Specific scenario to create (creates all if not specified)'
+        help="Specific scenario to create (creates all if not specified)",
     )
 
-    parser.add_argument(
-        '--client-name',
-        help='Custom client name for demo'
-    )
+    parser.add_argument("--client-name", help="Custom client name for demo")
 
-    parser.add_argument(
-        '--agency-name',
-        help='Custom agency name for demo'
-    )
+    parser.add_argument("--agency-name", help="Custom agency name for demo")
 
-    parser.add_argument(
-        '--export',
-        help='Export demo data to JSON file'
-    )
+    parser.add_argument("--export", help="Export demo data to JSON file")
 
-    parser.add_argument(
-        '--validate-only',
-        action='store_true',
-        help='Only validate existing demo environments'
-    )
+    parser.add_argument("--validate-only", action="store_true", help="Only validate existing demo environments")
 
-    parser.add_argument(
-        '--cleanup',
-        action='store_true',
-        help='Clean up created sessions after completion'
-    )
+    parser.add_argument("--cleanup", action="store_true", help="Clean up created sessions after completion")
 
-    parser.add_argument(
-        '--custom-params',
-        help='Custom parameters as JSON string'
-    )
+    parser.add_argument("--custom-params", help="Custom parameters as JSON string")
 
     args = parser.parse_args()
 
@@ -304,10 +274,7 @@ async def main():
         if args.scenario:
             # Create specific scenario
             demo_env = await seeder.create_specific_scenario(
-                args.scenario,
-                args.client_name,
-                args.agency_name,
-                custom_params
+                args.scenario, args.client_name, args.agency_name, custom_params
             )
 
             await seeder.print_demo_summary(demo_env)
@@ -339,9 +306,7 @@ async def main():
         # Seed Jorge handoff history for pattern learning
         logger.info("Seeding Jorge handoff outcome history...")
         JorgeHandoffService.reset_analytics()
-        handoff_result = JorgeHandoffService.seed_historical_data(
-            num_samples=20, seed=42
-        )
+        handoff_result = JorgeHandoffService.seed_historical_data(num_samples=20, seed=42)
         logger.info(
             "Seeded %d handoff records across %d routes",
             handoff_result["total_records"],

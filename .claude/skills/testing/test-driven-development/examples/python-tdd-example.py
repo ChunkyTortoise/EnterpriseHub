@@ -12,6 +12,7 @@ from typing import List, Dict
 # RED PHASE - Write Failing Tests
 # ============================================================================
 
+
 class TestShoppingCart:
     """Test suite following TDD principles"""
 
@@ -21,65 +22,66 @@ class TestShoppingCart:
 
         total = cart.calculate_total()
 
-        assert total == Decimal('0.00')
+        assert total == Decimal("0.00")
 
     def test_can_add_single_item(self):
         """RED: Test for adding items"""
         cart = ShoppingCart()
 
-        cart.add_item("laptop", Decimal('999.99'))
+        cart.add_item("laptop", Decimal("999.99"))
 
         assert len(cart.items) == 1
-        assert cart.items[0]['name'] == "laptop"
-        assert cart.items[0]['price'] == Decimal('999.99')
+        assert cart.items[0]["name"] == "laptop"
+        assert cart.items[0]["price"] == Decimal("999.99")
 
     def test_calculate_total_with_single_item(self):
         """RED: Test total calculation"""
         cart = ShoppingCart()
-        cart.add_item("laptop", Decimal('999.99'))
+        cart.add_item("laptop", Decimal("999.99"))
 
         total = cart.calculate_total()
 
-        assert total == Decimal('999.99')
+        assert total == Decimal("999.99")
 
     def test_calculate_total_with_multiple_items(self):
         """RED: Test multiple items"""
         cart = ShoppingCart()
-        cart.add_item("laptop", Decimal('999.99'))
-        cart.add_item("mouse", Decimal('29.99'))
+        cart.add_item("laptop", Decimal("999.99"))
+        cart.add_item("mouse", Decimal("29.99"))
 
         total = cart.calculate_total()
 
-        assert total == Decimal('1029.98')
+        assert total == Decimal("1029.98")
 
     def test_apply_discount_percentage(self):
         """RED: Test discount functionality"""
         cart = ShoppingCart()
-        cart.add_item("laptop", Decimal('1000.00'))
+        cart.add_item("laptop", Decimal("1000.00"))
 
-        discounted_total = cart.apply_discount(Decimal('10'))  # 10%
+        discounted_total = cart.apply_discount(Decimal("10"))  # 10%
 
-        assert discounted_total == Decimal('900.00')
+        assert discounted_total == Decimal("900.00")
 
     def test_cannot_apply_negative_discount(self):
         """RED: Test error handling"""
         cart = ShoppingCart()
-        cart.add_item("laptop", Decimal('1000.00'))
+        cart.add_item("laptop", Decimal("1000.00"))
 
         with pytest.raises(ValueError, match="Discount cannot be negative"):
-            cart.apply_discount(Decimal('-5'))
+            cart.apply_discount(Decimal("-5"))
 
     def test_cannot_add_item_with_negative_price(self):
         """RED: Test input validation"""
         cart = ShoppingCart()
 
         with pytest.raises(ValueError, match="Price cannot be negative"):
-            cart.add_item("invalid_item", Decimal('-10.00'))
+            cart.add_item("invalid_item", Decimal("-10.00"))
 
 
 # ============================================================================
 # GREEN PHASE - Minimal Implementation
 # ============================================================================
+
 
 class ShoppingCart:
     """Minimal implementation to make tests pass"""
@@ -93,14 +95,11 @@ class ShoppingCart:
         if price < 0:
             raise ValueError("Price cannot be negative")
 
-        self.items.append({
-            'name': name,
-            'price': price
-        })
+        self.items.append({"name": name, "price": price})
 
     def calculate_total(self) -> Decimal:
         """GREEN: Calculate total price"""
-        return sum(item['price'] for item in self.items)
+        return sum(item["price"] for item in self.items)
 
     def apply_discount(self, discount_percentage: Decimal) -> Decimal:
         """GREEN: Apply percentage discount"""
@@ -108,13 +107,14 @@ class ShoppingCart:
             raise ValueError("Discount cannot be negative")
 
         total = self.calculate_total()
-        discount_amount = total * (discount_percentage / Decimal('100'))
+        discount_amount = total * (discount_percentage / Decimal("100"))
         return total - discount_amount
 
 
 # ============================================================================
 # REFACTOR PHASE - Improve Design
 # ============================================================================
+
 
 class CartItem:
     """REFACTOR: Extract item as separate class"""
@@ -183,7 +183,7 @@ class ShoppingCartRefactored:
             raise ValueError("Discount cannot exceed 100%")
 
         total = self.calculate_total()
-        discount_amount = total * (discount_percentage / Decimal('100'))
+        discount_amount = total * (discount_percentage / Decimal("100"))
         return total - discount_amount
 
     def is_empty(self) -> bool:
@@ -199,20 +199,21 @@ class ShoppingCartRefactored:
 # ADDITIONAL TESTS FOR REFACTORED VERSION
 # ============================================================================
 
+
 class TestShoppingCartRefactored:
     """Tests for refactored implementation"""
 
     def test_add_item_with_quantity(self):
         cart = ShoppingCartRefactored()
 
-        cart.add_item("pen", Decimal('2.00'), 5)
+        cart.add_item("pen", Decimal("2.00"), 5)
 
         assert cart.item_count() == 5
-        assert cart.calculate_total() == Decimal('10.00')
+        assert cart.calculate_total() == Decimal("10.00")
 
     def test_remove_item_from_cart(self):
         cart = ShoppingCartRefactored()
-        cart.add_item("laptop", Decimal('999.99'))
+        cart.add_item("laptop", Decimal("999.99"))
 
         removed = cart.remove_item("laptop")
 
@@ -228,15 +229,16 @@ class TestShoppingCartRefactored:
 
     def test_discount_cannot_exceed_100_percent(self):
         cart = ShoppingCartRefactored()
-        cart.add_item("item", Decimal('100.00'))
+        cart.add_item("item", Decimal("100.00"))
 
         with pytest.raises(ValueError, match="Discount cannot exceed 100%"):
-            cart.apply_discount(Decimal('150'))
+            cart.apply_discount(Decimal("150"))
 
 
 # ============================================================================
 # TDD CYCLE DEMONSTRATION
 # ============================================================================
+
 
 def demonstrate_tdd_cycle():
     """
@@ -272,14 +274,14 @@ if __name__ == "__main__":
     demonstrate_tdd_cycle()
 
     # Run tests to verify implementation
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("Running TDD Example Tests")
-    print("="*50)
+    print("=" * 50)
 
     # Example usage of refactored cart
     cart = ShoppingCartRefactored()
-    cart.add_item("MacBook Pro", Decimal('2499.00'))
-    cart.add_item("Magic Mouse", Decimal('79.00'), 2)
+    cart.add_item("MacBook Pro", Decimal("2499.00"))
+    cart.add_item("Magic Mouse", Decimal("79.00"), 2)
 
     print(f"Cart total: ${cart.calculate_total()}")
     print(f"With 10% discount: ${cart.apply_discount(Decimal('10'))}")

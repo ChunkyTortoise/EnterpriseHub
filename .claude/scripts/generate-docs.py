@@ -35,15 +35,15 @@ class DocumentationGenerator:
 
 Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
-Version: {manifest['metadata']['version']}
+Version: {manifest["metadata"]["version"]}
 
 ---
 
 ## Overview
 
-{manifest['metadata']['description']}
+{manifest["metadata"]["description"]}
 
-**Total Skills**: {len(manifest['skills'])}
+**Total Skills**: {len(manifest["skills"])}
 
 ---
 
@@ -52,31 +52,28 @@ Version: {manifest['metadata']['version']}
 """
 
         # Group skills by category
-        categories = manifest.get('categories', {})
+        categories = manifest.get("categories", {})
 
         for category, category_data in categories.items():
             md += f"### {category.replace('-', ' ').title()}\n\n"
             md += f"{category_data.get('description', '')}\n\n"
 
             # Get skills in this category
-            category_skills = [
-                s for s in manifest['skills']
-                if s['category'] == category
-            ]
+            category_skills = [s for s in manifest["skills"] if s["category"] == category]
 
             for skill in category_skills:
                 md += f"#### {skill['name']}\n\n"
                 md += f"**Version**: {skill['version']}\n\n"
                 md += f"**Description**: {skill['description']}\n\n"
                 md += f"**Triggers**:\n"
-                for trigger in skill.get('triggers', []):
-                    md += f"- \"{trigger}\"\n"
+                for trigger in skill.get("triggers", []):
+                    md += f'- "{trigger}"\n'
                 md += f"\n**Path**: `.claude/skills/{skill['path']}`\n\n"
 
                 # Add time/cost savings if available
-                if 'time_savings' in skill:
+                if "time_savings" in skill:
                     md += f"⚡ **Time Savings**: {skill['time_savings']}\n\n"
-                if 'cost_savings' in skill:
+                if "cost_savings" in skill:
                     md += f"💰 **Cost Savings**: {skill['cost_savings']}\n\n"
 
                 md += "---\n\n"
@@ -89,8 +86,8 @@ Version: {manifest['metadata']['version']}
 |-------|----------|----------|------|
 """
 
-        for skill in manifest['skills']:
-            triggers = skill.get('triggers', [])[:2]  # First 2 triggers
+        for skill in manifest["skills"]:
+            triggers = skill.get("triggers", [])[:2]  # First 2 triggers
             trigger_str = ", ".join(f'"{t}"' for t in triggers)
             md += f"| {skill['name']} | {skill['category']} | {trigger_str} | `.claude/skills/{skill['path']}` |\n"
 
@@ -134,9 +131,9 @@ points in the workflow to enforce rules, validate inputs, and capture learnings.
                 content = hook_file.read_text()
                 # Extract first comment or description
                 if hook_file.suffix == ".sh":
-                    lines = [l.strip() for l in content.split('\n') if l.strip().startswith('#')]
+                    lines = [l.strip() for l in content.split("\n") if l.strip().startswith("#")]
                     if lines:
-                        desc = lines[0].lstrip('#').strip()
+                        desc = lines[0].lstrip("#").strip()
                         md += f"**Description**: {desc}\n\n"
                 elif hook_file.suffix == ".md":
                     # Extract from frontmatter or first paragraph
@@ -145,7 +142,7 @@ points in the workflow to enforce rules, validate inputs, and capture learnings.
                         if len(parts) >= 3:
                             try:
                                 frontmatter = yaml.safe_load(parts[1])
-                                if 'description' in frontmatter:
+                                if "description" in frontmatter:
                                     md += f"**Description**: {frontmatter['description']}\n\n"
                             except:
                                 pass
@@ -189,15 +186,15 @@ through external integrations.
 
                     md += f"### {profile_name.title()}\n\n"
 
-                    if 'description' in profile:
+                    if "description" in profile:
                         md += f"{profile['description']}\n\n"
 
-                    if 'mcp_servers' in profile:
+                    if "mcp_servers" in profile:
                         md += "**Enabled Servers**:\n\n"
-                        for server, config in profile['mcp_servers'].items():
-                            if config.get('enabled', True):
+                        for server, config in profile["mcp_servers"].items():
+                            if config.get("enabled", True):
                                 md += f"- **{server}**"
-                                if 'description' in config:
+                                if "description" in config:
                                     md += f": {config['description']}"
                                 md += "\n"
                         md += "\n"
@@ -239,24 +236,24 @@ This report provides an overview of system usage, performance, and costs.
                 md += "## Current Metrics\n\n"
 
                 # Skills
-                if 'skills' in data:
-                    skills = data['skills']
+                if "skills" in data:
+                    skills = data["skills"]
                     md += f"### Skills Usage\n\n"
                     md += f"- **Total Invocations**: {skills.get('total_invocations', 0):,}\n"
                     md += f"- **Unique Skills**: {skills.get('unique_skills_used', 0)}\n"
                     md += f"- **Success Rate**: {skills.get('success_rate', 0):.1f}%\n\n"
 
                 # Costs
-                if 'costs' in data:
-                    costs = data['costs']
+                if "costs" in data:
+                    costs = data["costs"]
                     md += f"### Cost & Efficiency\n\n"
                     md += f"- **Monthly Tokens**: {costs.get('monthly_tokens', 0):,}\n"
                     md += f"- **Budget Usage**: {costs.get('monthly_budget_pct', 0):.1f}%\n"
                     md += f"- **Estimated Cost**: ${costs.get('estimated_monthly_cost_usd', 0):.2f}/month\n\n"
 
                 # Recommendations
-                if 'recommendations' in data:
-                    recs = data['recommendations']
+                if "recommendations" in data:
+                    recs = data["recommendations"]
                     if recs:
                         md += "## Recommendations\n\n"
                         for i, rec in enumerate(recs, 1):

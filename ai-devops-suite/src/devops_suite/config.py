@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import os
 from enum import Enum
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -69,9 +70,20 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
 
     # Auth
-    jwt_secret: str = "change-me-in-production"
+    jwt_secret: str = Field(default="", description="JWT signing secret — set DEVOPS_JWT_SECRET in env")
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60
+
+    @field_validator("jwt_secret")
+    @classmethod
+    def validate_jwt_secret(cls, v: str) -> str:
+        env = os.environ.get("ENVIRONMENT", "development").lower()
+        if env == "production" and (not v or v == "change-me-in-production"):
+            raise ValueError(
+                "DEVOPS_JWT_SECRET must be set in production. "
+                "Generate one with: openssl rand -hex 32"
+            )
+        return v or "dev-only-insecure-secret"
 
     # Feature flags
     enable_monitoring: bool = True

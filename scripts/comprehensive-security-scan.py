@@ -37,24 +37,25 @@ from enum import Enum
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('security-scan.log'),
-        logging.StreamHandler()
-    ]
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("security-scan.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger(__name__)
 
+
 class SeverityLevel(str, Enum):
     """Security vulnerability severity levels."""
+
     CRITICAL = "critical"
     HIGH = "high"
     MEDIUM = "medium"
     LOW = "low"
     INFO = "info"
 
+
 class ScanType(str, Enum):
     """Types of security scans available."""
+
     DEPENDENCIES = "dependencies"
     CONTAINER = "container"
     CODE = "code"
@@ -62,9 +63,11 @@ class ScanType(str, Enum):
     COMPLIANCE = "compliance"
     ALL = "all"
 
+
 @dataclass
 class Vulnerability:
     """Security vulnerability data model."""
+
     id: str
     title: str
     description: str
@@ -79,9 +82,11 @@ class Vulnerability:
         if self.references is None:
             self.references = []
 
+
 @dataclass
 class ScanResult:
     """Security scan result container."""
+
     scan_type: ScanType
     timestamp: datetime
     duration_seconds: float
@@ -89,6 +94,7 @@ class ScanResult:
     vulnerabilities: List[Vulnerability]
     summary: Dict[str, int]
     metadata: Dict[str, Any]
+
 
 class ComprehensiveSecurityScanner:
     """
@@ -113,19 +119,12 @@ class ComprehensiveSecurityScanner:
             "severity_threshold": SeverityLevel.MEDIUM,
             "fail_on_critical": True,
             "fail_on_high": False,
-            "exclude_patterns": [
-                "tests/",
-                "__pycache__/",
-                ".git/",
-                "node_modules/"
-            ],
-            "container_registries": [
-                "ghcr.io/jorge-salas/jorge-revenue-platform"
-            ],
+            "exclude_patterns": ["tests/", "__pycache__/", ".git/", "node_modules/"],
+            "container_registries": ["ghcr.io/jorge-salas/jorge-revenue-platform"],
             "compliance_frameworks": ["soc2", "gdpr", "real-estate"],
             "output_formats": ["json", "sarif", "html"],
             "notification_channels": [],
-            "remediation_suggestions": True
+            "remediation_suggestions": True,
         }
 
         if config_file and Path(config_file).exists():
@@ -141,8 +140,13 @@ class ComprehensiveSecurityScanner:
         logger.info(f"Scan types: {', '.join(scan_types)}")
 
         if ScanType.ALL in scan_types:
-            scan_types = [ScanType.DEPENDENCIES, ScanType.CONTAINER, ScanType.CODE,
-                         ScanType.INFRASTRUCTURE, ScanType.COMPLIANCE]
+            scan_types = [
+                ScanType.DEPENDENCIES,
+                ScanType.CONTAINER,
+                ScanType.CODE,
+                ScanType.INFRASTRUCTURE,
+                ScanType.COMPLIANCE,
+            ]
 
         # Run scans concurrently for better performance
         scan_tasks = []
@@ -206,8 +210,8 @@ class ComprehensiveSecurityScanner:
                 metadata={
                     "tools_used": ["safety", "pip-audit"],
                     "packages_scanned": await self._count_packages(),
-                    "scan_duration": duration
-                }
+                    "scan_duration": duration,
+                },
             )
 
         except Exception as e:
@@ -219,7 +223,7 @@ class ComprehensiveSecurityScanner:
                 status="failed",
                 vulnerabilities=[],
                 summary={},
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
     async def _run_safety_scan(self) -> List[Vulnerability]:
@@ -229,10 +233,7 @@ class ComprehensiveSecurityScanner:
         try:
             # Run safety check
             result = subprocess.run(
-                ["safety", "check", "--json", "--full-report"],
-                capture_output=True,
-                text=True,
-                timeout=300
+                ["safety", "check", "--json", "--full-report"], capture_output=True, text=True, timeout=300
             )
 
             if result.stdout:
@@ -247,7 +248,7 @@ class ComprehensiveSecurityScanner:
                         cve=vuln.get("cve"),
                         affected_component=vuln.get("package_name"),
                         remediation=f"Upgrade to version {vuln.get('safe_version', 'latest')} or higher",
-                        references=[vuln.get("more_info_url", "")]
+                        references=[vuln.get("more_info_url", "")],
                     )
                     vulnerabilities.append(vulnerability)
 
@@ -267,7 +268,7 @@ class ComprehensiveSecurityScanner:
                 ["pip-audit", "--format", "json", "--progress-spinner", "off"],
                 capture_output=True,
                 text=True,
-                timeout=300
+                timeout=300,
             )
 
             if result.stdout:
@@ -281,7 +282,7 @@ class ComprehensiveSecurityScanner:
                         severity=self._map_pip_audit_severity(vuln.get("fix_versions", [])),
                         affected_component=vuln.get("package"),
                         remediation=f"Update to fixed version: {', '.join(vuln.get('fix_versions', []))}",
-                        references=vuln.get("aliases", [])
+                        references=vuln.get("aliases", []),
                     )
                     vulnerabilities.append(vulnerability)
 
@@ -324,8 +325,8 @@ class ComprehensiveSecurityScanner:
                 metadata={
                     "tools_used": ["trivy", "grype"],
                     "images_scanned": len(self.config.get("container_registries", [])),
-                    "scan_duration": duration
-                }
+                    "scan_duration": duration,
+                },
             )
 
         except Exception as e:
@@ -337,7 +338,7 @@ class ComprehensiveSecurityScanner:
                 status="failed",
                 vulnerabilities=[],
                 summary={},
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
     async def _scan_code_security(self) -> ScanResult:
@@ -375,8 +376,8 @@ class ComprehensiveSecurityScanner:
                 metadata={
                     "tools_used": ["bandit", "semgrep", "jorge-custom"],
                     "files_scanned": await self._count_python_files(),
-                    "scan_duration": duration
-                }
+                    "scan_duration": duration,
+                },
             )
 
         except Exception as e:
@@ -388,7 +389,7 @@ class ComprehensiveSecurityScanner:
                 status="failed",
                 vulnerabilities=[],
                 summary={},
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
     async def _run_bandit_scan(self) -> List[Vulnerability]:
@@ -397,10 +398,7 @@ class ComprehensiveSecurityScanner:
 
         try:
             result = subprocess.run(
-                ["bandit", "-r", "ghl_real_estate_ai/", "-f", "json", "-q"],
-                capture_output=True,
-                text=True,
-                timeout=300
+                ["bandit", "-r", "ghl_real_estate_ai/", "-f", "json", "-q"], capture_output=True, text=True, timeout=300
             )
 
             if result.stdout:
@@ -414,7 +412,7 @@ class ComprehensiveSecurityScanner:
                         severity=self._map_bandit_severity(result.get("issue_severity", "LOW")),
                         affected_component=result.get("filename"),
                         remediation=result.get("more_info", "Review code and apply security best practices"),
-                        references=[result.get("more_info", "")]
+                        references=[result.get("more_info", "")],
                     )
                     vulnerabilities.append(vulnerability)
 
@@ -458,8 +456,8 @@ class ComprehensiveSecurityScanner:
                 metadata={
                     "tools_used": ["checkov", "kics", "jorge-custom"],
                     "config_files_scanned": await self._count_config_files(),
-                    "scan_duration": duration
-                }
+                    "scan_duration": duration,
+                },
             )
 
         except Exception as e:
@@ -471,7 +469,7 @@ class ComprehensiveSecurityScanner:
                 status="failed",
                 vulnerabilities=[],
                 summary={},
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
     async def _scan_compliance(self) -> ScanResult:
@@ -506,8 +504,8 @@ class ComprehensiveSecurityScanner:
                 metadata={
                     "frameworks_checked": ["soc2", "gdpr", "real-estate"],
                     "controls_evaluated": len(vulnerabilities) * 5,  # Approximate
-                    "scan_duration": duration
-                }
+                    "scan_duration": duration,
+                },
             )
 
         except Exception as e:
@@ -519,7 +517,7 @@ class ComprehensiveSecurityScanner:
                 status="failed",
                 vulnerabilities=[],
                 summary={},
-                metadata={"error": str(e)}
+                metadata={"error": str(e)},
             )
 
     async def _check_soc2_compliance(self) -> List[Vulnerability]:
@@ -528,25 +526,29 @@ class ComprehensiveSecurityScanner:
 
         # CC6.1 - Access Controls
         if not await self._check_file_exists("infrastructure/security/rbac.yaml"):
-            vulnerabilities.append(Vulnerability(
-                id="SOC2-CC6.1-001",
-                title="Missing RBAC configuration",
-                description="Role-Based Access Control configuration not found",
-                severity=SeverityLevel.HIGH,
-                affected_component="Infrastructure",
-                remediation="Implement RBAC policies for access control"
-            ))
+            vulnerabilities.append(
+                Vulnerability(
+                    id="SOC2-CC6.1-001",
+                    title="Missing RBAC configuration",
+                    description="Role-Based Access Control configuration not found",
+                    severity=SeverityLevel.HIGH,
+                    affected_component="Infrastructure",
+                    remediation="Implement RBAC policies for access control",
+                )
+            )
 
         # CC6.3 - Data Encryption
         if not await self._check_encryption_config():
-            vulnerabilities.append(Vulnerability(
-                id="SOC2-CC6.3-001",
-                title="Encryption configuration missing",
-                description="Data encryption at rest and in transit not properly configured",
-                severity=SeverityLevel.CRITICAL,
-                affected_component="Data Protection",
-                remediation="Configure encryption for data at rest and in transit"
-            ))
+            vulnerabilities.append(
+                Vulnerability(
+                    id="SOC2-CC6.3-001",
+                    title="Encryption configuration missing",
+                    description="Data encryption at rest and in transit not properly configured",
+                    severity=SeverityLevel.CRITICAL,
+                    affected_component="Data Protection",
+                    remediation="Configure encryption for data at rest and in transit",
+                )
+            )
 
         return vulnerabilities
 
@@ -556,14 +558,16 @@ class ComprehensiveSecurityScanner:
 
         # Check for data processing lawfulness
         if not await self._check_privacy_policy():
-            vulnerabilities.append(Vulnerability(
-                id="GDPR-ART6-001",
-                title="Privacy policy not found",
-                description="Privacy policy documenting lawful basis for processing not found",
-                severity=SeverityLevel.HIGH,
-                affected_component="Privacy",
-                remediation="Create comprehensive privacy policy"
-            ))
+            vulnerabilities.append(
+                Vulnerability(
+                    id="GDPR-ART6-001",
+                    title="Privacy policy not found",
+                    description="Privacy policy documenting lawful basis for processing not found",
+                    severity=SeverityLevel.HIGH,
+                    affected_component="Privacy",
+                    remediation="Create comprehensive privacy policy",
+                )
+            )
 
         return vulnerabilities
 
@@ -588,17 +592,17 @@ class ComprehensiveSecurityScanner:
                 "platform": "Jorge's Real Estate AI Platform",
                 "total_scans": len(self.scan_results),
                 "total_vulnerabilities": sum(len(scan.vulnerabilities) for scan in self.scan_results),
-                "severity_breakdown": self._get_overall_severity_breakdown()
+                "severity_breakdown": self._get_overall_severity_breakdown(),
             },
             "scan_results": [asdict(result) for result in self.scan_results],
             "compliance_status": self._get_compliance_status(),
-            "recommendations": self._generate_recommendations()
+            "recommendations": self._generate_recommendations(),
         }
 
         report_json = json.dumps(report, indent=2, default=str)
         report_file = f"security-report-{datetime.now().strftime('%Y%m%d-%H%M%S')}.json"
 
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             f.write(report_json)
 
         logger.info(f"✅ JSON report generated: {report_file}")
@@ -610,27 +614,30 @@ class ComprehensiveSecurityScanner:
 
         # Critical vulnerabilities
         critical_count = sum(
-            len([v for v in scan.vulnerabilities if v.severity == SeverityLevel.CRITICAL])
-            for scan in self.scan_results
+            len([v for v in scan.vulnerabilities if v.severity == SeverityLevel.CRITICAL]) for scan in self.scan_results
         )
 
         if critical_count > 0:
-            recommendations.append({
-                "priority": "immediate",
-                "category": "critical_vulnerabilities",
-                "recommendation": f"Address {critical_count} critical vulnerabilities immediately",
-                "impact": "System security compromise risk"
-            })
+            recommendations.append(
+                {
+                    "priority": "immediate",
+                    "category": "critical_vulnerabilities",
+                    "recommendation": f"Address {critical_count} critical vulnerabilities immediately",
+                    "impact": "System security compromise risk",
+                }
+            )
 
         # Dependency updates
         dep_scan = next((s for s in self.scan_results if s.scan_type == ScanType.DEPENDENCIES), None)
         if dep_scan and len(dep_scan.vulnerabilities) > 0:
-            recommendations.append({
-                "priority": "high",
-                "category": "dependency_management",
-                "recommendation": "Update vulnerable dependencies and implement automated scanning",
-                "impact": "Supply chain security"
-            })
+            recommendations.append(
+                {
+                    "priority": "high",
+                    "category": "dependency_management",
+                    "recommendation": "Update vulnerable dependencies and implement automated scanning",
+                    "impact": "Supply chain security",
+                }
+            )
 
         return recommendations
 
@@ -652,7 +659,7 @@ class ComprehensiveSecurityScanner:
             "status": status,
             "frameworks": ["soc2", "gdpr", "real-estate"],
             "last_assessment": datetime.utcnow().isoformat(),
-            "critical_gaps": len(critical_compliance)
+            "critical_gaps": len(critical_compliance),
         }
 
     # Helper methods
@@ -670,9 +677,19 @@ class ComprehensiveSecurityScanner:
             "pip-audit": ["pip", "install", "pip-audit"],
             "bandit": ["pip", "install", "bandit"],
             "semgrep": ["pip", "install", "semgrep"],
-            "trivy": ["curl", "-sfL", "https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh", "|", "sh", "-s", "--", "-b", "/usr/local/bin"],
+            "trivy": [
+                "curl",
+                "-sfL",
+                "https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh",
+                "|",
+                "sh",
+                "-s",
+                "--",
+                "-b",
+                "/usr/local/bin",
+            ],
             "checkov": ["pip", "install", "checkov"],
-            "kics": ["docker", "pull", "checkmarx/kics:latest"]
+            "kics": ["docker", "pull", "checkmarx/kics:latest"],
         }
 
         if tool in install_commands:
@@ -690,26 +707,18 @@ class ComprehensiveSecurityScanner:
             "high": len([v for v in vulnerabilities if v.severity == SeverityLevel.HIGH]),
             "medium": len([v for v in vulnerabilities if v.severity == SeverityLevel.MEDIUM]),
             "low": len([v for v in vulnerabilities if v.severity == SeverityLevel.LOW]),
-            "info": len([v for v in vulnerabilities if v.severity == SeverityLevel.INFO])
+            "info": len([v for v in vulnerabilities if v.severity == SeverityLevel.INFO]),
         }
         return summary
 
     def _map_safety_severity(self, safety_severity: str) -> SeverityLevel:
         """Map Safety tool severity to our standard levels."""
-        mapping = {
-            "high": SeverityLevel.HIGH,
-            "medium": SeverityLevel.MEDIUM,
-            "low": SeverityLevel.LOW
-        }
+        mapping = {"high": SeverityLevel.HIGH, "medium": SeverityLevel.MEDIUM, "low": SeverityLevel.LOW}
         return mapping.get(safety_severity.lower(), SeverityLevel.MEDIUM)
 
     def _map_bandit_severity(self, bandit_severity: str) -> SeverityLevel:
         """Map Bandit severity to our standard levels."""
-        mapping = {
-            "HIGH": SeverityLevel.HIGH,
-            "MEDIUM": SeverityLevel.MEDIUM,
-            "LOW": SeverityLevel.LOW
-        }
+        mapping = {"HIGH": SeverityLevel.HIGH, "MEDIUM": SeverityLevel.MEDIUM, "LOW": SeverityLevel.LOW}
         return mapping.get(bandit_severity, SeverityLevel.MEDIUM)
 
     # Placeholder methods for additional functionality
@@ -732,14 +741,16 @@ class ComprehensiveSecurityScanner:
                 with open(config_file) as f:
                     content = f.read()
                     if "API_KEY" in content and ("sk-" in content or "AKIA" in content):
-                        vulnerabilities.append(Vulnerability(
-                            id="JORGE-SEC-001",
-                            title="Potential API key exposure in configuration",
-                            description=f"Configuration file {config_file} may contain exposed API keys",
-                            severity=SeverityLevel.CRITICAL,
-                            affected_component=config_file,
-                            remediation="Move API keys to environment variables or secure secrets management"
-                        ))
+                        vulnerabilities.append(
+                            Vulnerability(
+                                id="JORGE-SEC-001",
+                                title="Potential API key exposure in configuration",
+                                description=f"Configuration file {config_file} may contain exposed API keys",
+                                severity=SeverityLevel.CRITICAL,
+                                affected_component=config_file,
+                                remediation="Move API keys to environment variables or secure secrets management",
+                            )
+                        )
 
         return vulnerabilities
 
@@ -747,7 +758,7 @@ class ComprehensiveSecurityScanner:
         """Count number of Python packages."""
         try:
             result = subprocess.run(["pip", "list", "--format=freeze"], capture_output=True, text=True)
-            return len(result.stdout.strip().split('\n')) if result.stdout else 0
+            return len(result.stdout.strip().split("\n")) if result.stdout else 0
         except Exception:
             return 0
 
@@ -768,17 +779,27 @@ class ComprehensiveSecurityScanner:
         """Check if privacy policy exists."""
         return Path("docs/privacy-policy.md").exists()
 
+
 async def main():
     """Main entry point for the security scanner."""
     parser = argparse.ArgumentParser(description="Jorge Platform Comprehensive Security Scanner")
-    parser.add_argument("--scan-types", nargs="+",
-                       choices=["dependencies", "container", "code", "infrastructure", "compliance", "all"],
-                       default=["all"], help="Types of security scans to perform")
+    parser.add_argument(
+        "--scan-types",
+        nargs="+",
+        choices=["dependencies", "container", "code", "infrastructure", "compliance", "all"],
+        default=["all"],
+        help="Types of security scans to perform",
+    )
     parser.add_argument("--config", help="Path to scanner configuration file")
-    parser.add_argument("--output-format", choices=["json", "html", "sarif"],
-                       default="json", help="Output format for the security report")
-    parser.add_argument("--fail-on-critical", action="store_true",
-                       help="Exit with non-zero code if critical vulnerabilities found")
+    parser.add_argument(
+        "--output-format",
+        choices=["json", "html", "sarif"],
+        default="json",
+        help="Output format for the security report",
+    )
+    parser.add_argument(
+        "--fail-on-critical", action="store_true", help="Exit with non-zero code if critical vulnerabilities found"
+    )
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
 
     args = parser.parse_args()
@@ -801,8 +822,7 @@ async def main():
 
         # Calculate exit code
         critical_vulns = sum(
-            len([v for v in scan.vulnerabilities if v.severity == SeverityLevel.CRITICAL])
-            for scan in results
+            len([v for v in scan.vulnerabilities if v.severity == SeverityLevel.CRITICAL]) for scan in results
         )
 
         if args.fail_on_critical and critical_vulns > 0:
@@ -815,6 +835,7 @@ async def main():
     except Exception as e:
         logger.error(f"❌ Security scan failed: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -59,7 +59,10 @@ def test_weekly_kpi_generation_success(tmp_path: Path):
     assert proc.returncode == 0, proc.stderr
     assert output.exists()
     content = output.read_text(encoding="utf-8")
-    assert "tenant_id,week_start,leads_received,qualified_leads,response_sla_pct,appointments_booked,cost_per_qualified_lead" in content
+    assert (
+        "tenant_id,week_start,leads_received,qualified_leads,response_sla_pct,appointments_booked,cost_per_qualified_lead"
+        in content
+    )
 
 
 def test_weekly_kpi_generation_fails_on_missing_cost_value(tmp_path: Path):

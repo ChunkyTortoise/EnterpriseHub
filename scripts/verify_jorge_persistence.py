@@ -104,7 +104,7 @@ async def verify_data_persistence():
             success=True,
             cache_hit=True,
             timestamp=test_timestamp,
-            metadata={"test": "verification"}
+            metadata={"test": "verification"},
         )
         print("     ✅ Saved interaction to database")
 
@@ -118,11 +118,7 @@ async def verify_data_persistence():
         # Test 3b: Save and load handoff event
         print("\n  📝 Test 3b: Handoff Event Persistence")
         await repo.save_handoff(
-            source="lead",
-            target="buyer",
-            success=True,
-            duration_ms=125.0,
-            timestamp=test_timestamp
+            source="lead", target="buyer", success=True, duration_ms=125.0, timestamp=test_timestamp
         )
         print("     ✅ Saved handoff to database")
 
@@ -140,7 +136,7 @@ async def verify_data_persistence():
             duration_ms=320.5,
             success=True,
             cache_hit=False,
-            timestamp=test_timestamp
+            timestamp=test_timestamp,
         )
         print("     ✅ Saved performance operation to database")
 
@@ -158,7 +154,7 @@ async def verify_data_persistence():
             target_bot="buyer",
             outcome="successful",
             timestamp=test_timestamp,
-            metadata={"confidence": 0.85}
+            metadata={"confidence": 0.85},
         )
         print("     ✅ Saved handoff outcome to database")
 
@@ -175,6 +171,7 @@ async def verify_data_persistence():
     except Exception as e:
         print(f"❌ FAIL: Data persistence failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
@@ -199,12 +196,7 @@ async def verify_service_integration():
         # Record interaction through service API
         print("\n  📝 Recording interaction via BotMetricsCollector")
         test_timestamp = time.time()
-        metrics_collector.record_interaction(
-            bot_type="buyer",
-            duration_ms=500.0,
-            success=True,
-            cache_hit=True
-        )
+        metrics_collector.record_interaction(bot_type="buyer", duration_ms=500.0, success=True, cache_hit=True)
 
         # Give async persistence a moment to complete
         await asyncio.sleep(0.5)
@@ -226,6 +218,7 @@ async def verify_service_integration():
     except Exception as e:
         print(f"❌ FAIL: Service integration failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

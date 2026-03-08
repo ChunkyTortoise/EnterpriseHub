@@ -23,7 +23,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../../"))
 
 import httpx
 from anthropic_mcp import MCPServer, Tool
@@ -56,7 +56,7 @@ class GHLMCPServer:
         email: Optional[str] = None,
         phone: Optional[str] = None,
         tags: Optional[List[str]] = None,
-        custom_fields: Optional[Dict[str, Any]] = None
+        custom_fields: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Create a new contact in GoHighLevel.
@@ -88,7 +88,7 @@ class GHLMCPServer:
                 "email": email,
                 "phone": phone,
                 "tags": tags or [],
-                "locationId": settings.ghl_location_id
+                "locationId": settings.ghl_location_id,
             }
 
         endpoint = f"{self.base_url}/contacts/"
@@ -106,18 +106,12 @@ class GHLMCPServer:
             payload["tags"] = tags
         if custom_fields:
             payload["customFields"] = [
-                {"id": field_id, "value": str(value)}
-                for field_id, value in custom_fields.items()
+                {"id": field_id, "value": str(value)} for field_id, value in custom_fields.items()
             ]
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    endpoint,
-                    json=payload,
-                    headers=self.headers,
-                    timeout=10.0
-                )
+                response = await client.post(endpoint, json=payload, headers=self.headers, timeout=10.0)
                 response.raise_for_status()
                 result = response.json()
 
@@ -145,18 +139,14 @@ class GHLMCPServer:
                 "name": "Test Contact",
                 "email": "test@example.com",
                 "tags": ["Buyer"],
-                "customFields": []
+                "customFields": [],
             }
 
         endpoint = f"{self.base_url}/contacts/{contact_id}"
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    endpoint,
-                    headers=self.headers,
-                    timeout=10.0
-                )
+                response = await client.get(endpoint, headers=self.headers, timeout=10.0)
                 response.raise_for_status()
                 return response.json()
 
@@ -166,10 +156,7 @@ class GHLMCPServer:
             return {"error": error_msg, "status": "not_found"}
 
     async def search_ghl_contacts(
-        self,
-        query: Optional[str] = None,
-        tags: Optional[List[str]] = None,
-        limit: int = 20
+        self, query: Optional[str] = None, tags: Optional[List[str]] = None, limit: int = 20
     ) -> List[Dict[str, Any]]:
         """
         Search for contacts in GoHighLevel.
@@ -186,30 +173,18 @@ class GHLMCPServer:
             search_ghl_contacts(query="john smith", tags=["Hot Lead"], limit=10)
         """
         if settings.test_mode:
-            return [{
-                "id": f"mock_{i}",
-                "name": f"Test Contact {i}",
-                "tags": tags or []
-            } for i in range(min(limit, 3))]
+            return [{"id": f"mock_{i}", "name": f"Test Contact {i}", "tags": tags or []} for i in range(min(limit, 3))]
 
         endpoint = f"{self.base_url}/contacts/search"
 
-        params = {
-            "locationId": settings.ghl_location_id,
-            "limit": limit
-        }
+        params = {"locationId": settings.ghl_location_id, "limit": limit}
 
         if query:
             params["query"] = query
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(
-                    endpoint,
-                    params=params,
-                    headers=self.headers,
-                    timeout=10.0
-                )
+                response = await client.get(endpoint, params=params, headers=self.headers, timeout=10.0)
                 response.raise_for_status()
                 result = response.json()
 
@@ -217,10 +192,7 @@ class GHLMCPServer:
 
                 # Filter by tags if specified
                 if tags:
-                    contacts = [
-                        c for c in contacts
-                        if any(tag in c.get("tags", []) for tag in tags)
-                    ]
+                    contacts = [c for c in contacts if any(tag in c.get("tags", []) for tag in tags)]
 
                 return contacts[:limit]
 
@@ -232,11 +204,7 @@ class GHLMCPServer:
     # ==================== Lead Intelligence ====================
 
     async def update_lead_score(
-        self,
-        contact_id: str,
-        score: float,
-        factors: Dict[str, Any],
-        notes: Optional[str] = None
+        self, contact_id: str, score: float, factors: Dict[str, Any], notes: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Update lead score with AI-driven intelligence.
@@ -266,9 +234,7 @@ class GHLMCPServer:
             )
         """
         # Prepare custom field updates
-        custom_fields = {
-            settings.custom_field_lead_score or "lead_score": str(int(score))
-        }
+        custom_fields = {settings.custom_field_lead_score or "lead_score": str(int(score))}
 
         # Add factor-based fields
         if "budget" in factors:
@@ -280,23 +246,13 @@ class GHLMCPServer:
 
         # Add comprehensive analysis as JSON
         if settings.custom_field_lead_score:
-            analysis = {
-                "score": score,
-                "factors": factors,
-                "updated_at": datetime.now().isoformat(),
-                "notes": notes
-            }
+            analysis = {"score": score, "factors": factors, "updated_at": datetime.now().isoformat(), "notes": notes}
             custom_fields["lead_analysis_json"] = json.dumps(analysis)
 
         # Update contact
         endpoint = f"{self.base_url}/contacts/{contact_id}"
 
-        payload = {
-            "customFields": [
-                {"id": field_id, "value": str(value)}
-                for field_id, value in custom_fields.items()
-            ]
-        }
+        payload = {"customFields": [{"id": field_id, "value": str(value)} for field_id, value in custom_fields.items()]}
 
         # Add tags based on score
         tags = []
@@ -312,21 +268,11 @@ class GHLMCPServer:
 
         if settings.test_mode:
             logger.info(f"[TEST MODE] Would update lead score for {contact_id}: {score}")
-            return {
-                "id": contact_id,
-                "score": score,
-                "tags": tags,
-                "custom_fields": custom_fields
-            }
+            return {"id": contact_id, "score": score, "tags": tags, "custom_fields": custom_fields}
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.put(
-                    endpoint,
-                    json=payload,
-                    headers=self.headers,
-                    timeout=10.0
-                )
+                response = await client.put(endpoint, json=payload, headers=self.headers, timeout=10.0)
                 response.raise_for_status()
                 result = response.json()
 
@@ -335,8 +281,7 @@ class GHLMCPServer:
                 # Trigger high-value lead workflow if score is high
                 if score >= 85:
                     await self.trigger_ghl_workflow(
-                        contact_id,
-                        settings.notify_agent_workflow_id or "high_value_lead_workflow"
+                        contact_id, settings.notify_agent_workflow_id or "high_value_lead_workflow"
                     )
 
                 return result
@@ -349,10 +294,7 @@ class GHLMCPServer:
     # ==================== Workflow Automation ====================
 
     async def trigger_ghl_workflow(
-        self,
-        contact_id: str,
-        workflow_id: str,
-        custom_values: Optional[Dict[str, Any]] = None
+        self, contact_id: str, workflow_id: str, custom_values: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
         Trigger a GHL workflow for a contact.
@@ -374,12 +316,7 @@ class GHLMCPServer:
         """
         return await self.ghl_client.trigger_workflow(contact_id, workflow_id)
 
-    async def send_ghl_sms(
-        self,
-        contact_id: str,
-        message: str,
-        message_type: str = "transactional"
-    ) -> Dict[str, Any]:
+    async def send_ghl_sms(self, contact_id: str, message: str, message_type: str = "transactional") -> Dict[str, Any]:
         """
         Send SMS message to a contact.
 
@@ -399,11 +336,8 @@ class GHLMCPServer:
             )
         """
         from ghl_real_estate_ai.api.schemas.ghl import MessageType
-        return await self.ghl_client.send_message(
-            contact_id,
-            message,
-            MessageType.SMS
-        )
+
+        return await self.ghl_client.send_message(contact_id, message, MessageType.SMS)
 
     # ==================== Opportunity Management ====================
 
@@ -414,7 +348,7 @@ class GHLMCPServer:
         stage_id: str,
         name: str,
         value: Optional[float] = None,
-        notes: Optional[str] = None
+        notes: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Create an opportunity in GHL pipeline.
@@ -448,7 +382,7 @@ class GHLMCPServer:
                 "contact_id": contact_id,
                 "pipeline_id": pipeline_id,
                 "stage_id": stage_id,
-                "value": value
+                "value": value,
             }
 
         endpoint = f"{self.base_url}/opportunities/"
@@ -459,7 +393,7 @@ class GHLMCPServer:
             "pipelineId": pipeline_id,
             "pipelineStageId": stage_id,
             "name": name,
-            "status": "open"
+            "status": "open",
         }
 
         if value is not None:
@@ -469,12 +403,7 @@ class GHLMCPServer:
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    endpoint,
-                    json=payload,
-                    headers=self.headers,
-                    timeout=10.0
-                )
+                response = await client.post(endpoint, json=payload, headers=self.headers, timeout=10.0)
                 response.raise_for_status()
                 result = response.json()
 
@@ -488,6 +417,7 @@ class GHLMCPServer:
 
 
 # ==================== MCP Server Setup ====================
+
 
 def create_mcp_tools(server: GHLMCPServer) -> List[Tool]:
     """Create MCP tool definitions"""
@@ -505,31 +435,24 @@ def create_mcp_tools(server: GHLMCPServer) -> List[Tool]:
                     "tags": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "Tags to apply (e.g., 'Hot Lead', 'Buyer')"
+                        "description": "Tags to apply (e.g., 'Hot Lead', 'Buyer')",
                     },
-                    "custom_fields": {
-                        "type": "object",
-                        "description": "Custom field IDs and values"
-                    }
+                    "custom_fields": {"type": "object", "description": "Custom field IDs and values"},
                 },
-                "required": ["name"]
+                "required": ["name"],
             },
-            handler=server.create_ghl_contact
+            handler=server.create_ghl_contact,
         ),
-
         Tool(
             name="get_ghl_contact",
             description="Retrieve a contact by ID from GoHighLevel",
             input_schema={
                 "type": "object",
-                "properties": {
-                    "contact_id": {"type": "string", "description": "GHL contact ID"}
-                },
-                "required": ["contact_id"]
+                "properties": {"contact_id": {"type": "string", "description": "GHL contact ID"}},
+                "required": ["contact_id"],
             },
-            handler=server.get_ghl_contact
+            handler=server.get_ghl_contact,
         ),
-
         Tool(
             name="search_ghl_contacts",
             description="Search for contacts by name, email, phone, or tags",
@@ -537,17 +460,12 @@ def create_mcp_tools(server: GHLMCPServer) -> List[Tool]:
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "Search query"},
-                    "tags": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Filter by tags"
-                    },
-                    "limit": {"type": "integer", "description": "Max results (default 20)"}
-                }
+                    "tags": {"type": "array", "items": {"type": "string"}, "description": "Filter by tags"},
+                    "limit": {"type": "integer", "description": "Max results (default 20)"},
+                },
             },
-            handler=server.search_ghl_contacts
+            handler=server.search_ghl_contacts,
         ),
-
         Tool(
             name="update_lead_score",
             description="Update lead score with AI-driven intelligence and factors. Integrates with predictive scoring and Claude analysis.",
@@ -558,15 +476,14 @@ def create_mcp_tools(server: GHLMCPServer) -> List[Tool]:
                     "score": {"type": "number", "description": "Lead score 0-100"},
                     "factors": {
                         "type": "object",
-                        "description": "Scoring factors (budget, timeline, engagement, etc.)"
+                        "description": "Scoring factors (budget, timeline, engagement, etc.)",
                     },
-                    "notes": {"type": "string", "description": "Optional notes"}
+                    "notes": {"type": "string", "description": "Optional notes"},
                 },
-                "required": ["contact_id", "score", "factors"]
+                "required": ["contact_id", "score", "factors"],
             },
-            handler=server.update_lead_score
+            handler=server.update_lead_score,
         ),
-
         Tool(
             name="trigger_ghl_workflow",
             description="Trigger a GoHighLevel workflow for a contact",
@@ -575,16 +492,12 @@ def create_mcp_tools(server: GHLMCPServer) -> List[Tool]:
                 "properties": {
                     "contact_id": {"type": "string", "description": "GHL contact ID"},
                     "workflow_id": {"type": "string", "description": "GHL workflow ID"},
-                    "custom_values": {
-                        "type": "object",
-                        "description": "Custom values to pass to workflow"
-                    }
+                    "custom_values": {"type": "object", "description": "Custom values to pass to workflow"},
                 },
-                "required": ["contact_id", "workflow_id"]
+                "required": ["contact_id", "workflow_id"],
             },
-            handler=server.trigger_ghl_workflow
+            handler=server.trigger_ghl_workflow,
         ),
-
         Tool(
             name="send_ghl_sms",
             description="Send SMS message to a contact via GoHighLevel",
@@ -596,14 +509,13 @@ def create_mcp_tools(server: GHLMCPServer) -> List[Tool]:
                     "message_type": {
                         "type": "string",
                         "enum": ["transactional", "marketing"],
-                        "description": "Message type (default: transactional)"
-                    }
+                        "description": "Message type (default: transactional)",
+                    },
                 },
-                "required": ["contact_id", "message"]
+                "required": ["contact_id", "message"],
             },
-            handler=server.send_ghl_sms
+            handler=server.send_ghl_sms,
         ),
-
         Tool(
             name="create_ghl_opportunity",
             description="Create an opportunity in GoHighLevel pipeline",
@@ -615,12 +527,12 @@ def create_mcp_tools(server: GHLMCPServer) -> List[Tool]:
                     "stage_id": {"type": "string", "description": "Pipeline stage ID"},
                     "name": {"type": "string", "description": "Opportunity name"},
                     "value": {"type": "number", "description": "Monetary value"},
-                    "notes": {"type": "string", "description": "Optional notes"}
+                    "notes": {"type": "string", "description": "Optional notes"},
                 },
-                "required": ["contact_id", "pipeline_id", "stage_id", "name"]
+                "required": ["contact_id", "pipeline_id", "stage_id", "name"],
             },
-            handler=server.create_ghl_opportunity
-        )
+            handler=server.create_ghl_opportunity,
+        ),
     ]
 
 

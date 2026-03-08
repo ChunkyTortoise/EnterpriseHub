@@ -267,7 +267,6 @@ def test_answer_includes_citation_markers(config):
 def test_hybrid_pipeline_ingest_and_query(config):
     """HybridRAGPipeline ingests and returns HybridRAGResponse."""
     from rag_pipeline import HybridRAGPipeline, HybridRAGResponse, HybridSourceChunk
-
     from rank_bm25 import BM25Okapi
 
     content = b"The quick brown fox jumps over the lazy dog. " * 80

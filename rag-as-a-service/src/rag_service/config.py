@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -51,7 +54,18 @@ class Settings(BaseSettings):
     business_storage_mb: int = 100_000
 
     # Auth
-    jwt_secret: str = "change-me-in-production"
+    jwt_secret: str = ""
+
+    @field_validator("jwt_secret")
+    @classmethod
+    def validate_jwt_secret(cls, v: str) -> str:
+        env = os.environ.get("ENVIRONMENT", "development").lower()
+        if env == "production" and not v:
+            raise ValueError(
+                "RAG_JWT_SECRET must be set in production. "
+                "Generate one with: openssl rand -hex 32"
+            )
+        return v or "dev-only-insecure-secret"
 
     # App
     debug: bool = False

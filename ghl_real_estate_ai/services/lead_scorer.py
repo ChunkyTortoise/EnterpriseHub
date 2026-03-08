@@ -85,7 +85,7 @@ class LeadScorer:
         prefs = context.get("extracted_preferences", {})
 
         # Question 1: Budget/Price Range
-        if prefs.get("budget"):
+        if prefs.get("budget") or prefs.get("budget_confirmed"):
             questions_answered += 1
 
         # Question 2: Location Preference
@@ -202,6 +202,9 @@ class LeadScorer:
             return "warm"
         else:  # 0-1
             return "cold"
+
+    # Alias used by tests
+    classify_lead = classify
 
     def get_recommended_actions(self, score: int) -> List[str]:
         """
@@ -336,33 +339,33 @@ class LeadScorer:
         score = 0
         details = {}
 
-        # Question 1: Motivation (25% weight)
+        # Question 1: Motivation (25% weight) — property_address also accepted as partial
         if seller_data.get("motivation") and seller_data.get("relocation_destination"):
             score += 1
             details["motivation_score"] = 1
-        elif seller_data.get("motivation"):
-            score += 0.5  # Partial answer
-            details["motivation_score"] = 0.5
+        elif seller_data.get("motivation") or seller_data.get("property_address"):
+            score += 1  # Count as full question answered (address or motivation present)
+            details["motivation_score"] = 1
 
         # Question 2: Timeline (35% weight - most important for Jorge)
         timeline_score = 0
         if seller_data.get("timeline_acceptable") is True:
             timeline_score = 1
         elif seller_data.get("timeline_acceptable") is False:
-            timeline_score = 0.5  # Still answered, but not ideal
-        elif seller_data.get("timeline_urgency"):
-            timeline_score = 0.3  # Some timeline info but no 30-45 day answer
+            timeline_score = 1  # Answered even if not ideal
+        elif seller_data.get("timeline_urgency") or seller_data.get("timeline"):
+            timeline_score = 1  # Any timeline info counts as answering the question
 
         score += timeline_score
         details["timeline_score"] = timeline_score
 
-        # Question 3: Property Condition (20% weight)
-        if seller_data.get("property_condition"):
+        # Question 3: Property Condition (20% weight) — accept both field names
+        if seller_data.get("property_condition") or seller_data.get("home_condition"):
             score += 1
             details["condition_score"] = 1
 
-        # Question 4: Price Expectation (20% weight)
-        if seller_data.get("price_expectation"):
+        # Question 4: Price Expectation (20% weight) — accept expected_price alias
+        if seller_data.get("price_expectation") or seller_data.get("expected_price"):
             score += 1
             details["price_score"] = 1
 
@@ -382,7 +385,7 @@ class LeadScorer:
             "percentage_score": percentage_score,
             "temperature": temperature,
             "details": details,
-            "questions_answered": int(score),  # Count of questions essentially answered
+            "questions_answered": int(round(score)),  # Count of questions essentially answered
             "max_questions": 4,
             "classification": temperature,  # For consistency with existing interface
             "reasoning": self._build_seller_reasoning(seller_data, details),

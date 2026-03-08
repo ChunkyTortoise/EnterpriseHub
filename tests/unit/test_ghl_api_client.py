@@ -61,13 +61,15 @@ def _error_response(status_code: int, body: dict | None = None) -> httpx.HTTPSta
 class TestGHLAPIClientInit:
     """Initialisation and validation tests."""
 
-    def test_requires_api_key(self, mock_httpx):
+    def test_requires_api_key(self, mock_httpx, monkeypatch):
+        monkeypatch.delenv("GHL_API_KEY", raising=False)
         from ghl_real_estate_ai.ghl_utils.ghl_api_client import GHLAPIClient
 
         with pytest.raises(ValueError, match="GHL_API_KEY is required"):
             GHLAPIClient(api_key=None, location_id="loc")
 
-    def test_requires_location_id(self, mock_httpx):
+    def test_requires_location_id(self, mock_httpx, monkeypatch):
+        monkeypatch.delenv("GHL_LOCATION_ID", raising=False)
         from ghl_real_estate_ai.ghl_utils.ghl_api_client import GHLAPIClient
 
         with pytest.raises(ValueError, match="GHL_LOCATION_ID is required"):

@@ -34,6 +34,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 @dataclass
 class BenchmarkResult:
     """Performance benchmark result"""
+
     test_name: str
     target_metric: str
     target_value: float
@@ -57,12 +58,12 @@ class PerformanceBenchmark:
 
         # Performance targets
         self.targets = {
-            'api_response_p95_ms': 100,
-            'api_response_p99_ms': 200,
-            'golden_lead_detection_ms': 50,
-            'cache_hit_rate_percent': 90,
-            'db_query_p95_ms': 50,
-            'throughput_req_per_sec': 1000,
+            "api_response_p95_ms": 100,
+            "api_response_p99_ms": 200,
+            "golden_lead_detection_ms": 50,
+            "cache_hit_rate_percent": 90,
+            "db_query_p95_ms": 50,
+            "throughput_req_per_sec": 1000,
         }
 
     async def setup(self):
@@ -123,28 +124,32 @@ class PerformanceBenchmark:
             print(f"  Response Times: Avg={avg:.2f}ms, P95={p95:.2f}ms, P99={p99:.2f}ms")
 
             # Record P95 result
-            self.results.append(BenchmarkResult(
-                test_name="API Response Time (P95)",
-                target_metric="p95_response_time",
-                target_value=self.targets['api_response_p95_ms'],
-                actual_value=p95,
-                unit="ms",
-                passed=p95 <= self.targets['api_response_p95_ms'],
-                samples=len(response_times),
-                timestamp=datetime.now().isoformat()
-            ))
+            self.results.append(
+                BenchmarkResult(
+                    test_name="API Response Time (P95)",
+                    target_metric="p95_response_time",
+                    target_value=self.targets["api_response_p95_ms"],
+                    actual_value=p95,
+                    unit="ms",
+                    passed=p95 <= self.targets["api_response_p95_ms"],
+                    samples=len(response_times),
+                    timestamp=datetime.now().isoformat(),
+                )
+            )
 
             # Record P99 result
-            self.results.append(BenchmarkResult(
-                test_name="API Response Time (P99)",
-                target_metric="p99_response_time",
-                target_value=self.targets['api_response_p99_ms'],
-                actual_value=p99,
-                unit="ms",
-                passed=p99 <= self.targets['api_response_p99_ms'],
-                samples=len(response_times),
-                timestamp=datetime.now().isoformat()
-            ))
+            self.results.append(
+                BenchmarkResult(
+                    test_name="API Response Time (P99)",
+                    target_metric="p99_response_time",
+                    target_value=self.targets["api_response_p99_ms"],
+                    actual_value=p99,
+                    unit="ms",
+                    passed=p99 <= self.targets["api_response_p99_ms"],
+                    samples=len(response_times),
+                    timestamp=datetime.now().isoformat(),
+                )
+            )
 
     async def benchmark_golden_lead_detection(self):
         """Benchmark Golden Lead Detection performance"""
@@ -163,13 +168,13 @@ class PerformanceBenchmark:
                     "budget": 750000,
                     "location": "Seattle downtown",
                     "timeline": "next month",
-                    "bedrooms": 3
+                    "bedrooms": 3,
                 },
                 "conversation_history": [
                     {"role": "user", "content": "Looking for a home"},
-                    {"role": "assistant", "content": "I can help!"}
-                ]
-            }
+                    {"role": "assistant", "content": "I can help!"},
+                ],
+            },
         }
 
         # Note: This test requires authentication - would need to implement JWT token
@@ -177,16 +182,18 @@ class PerformanceBenchmark:
         print("  ℹ️  In production, use authenticated requests with valid JWT token")
 
         # Placeholder result
-        self.results.append(BenchmarkResult(
-            test_name="Golden Lead Detection",
-            target_metric="detection_latency",
-            target_value=self.targets['golden_lead_detection_ms'],
-            actual_value=0,  # Would be actual measurement
-            unit="ms",
-            passed=False,  # Requires authentication
-            samples=0,
-            timestamp=datetime.now().isoformat()
-        ))
+        self.results.append(
+            BenchmarkResult(
+                test_name="Golden Lead Detection",
+                target_metric="detection_latency",
+                target_value=self.targets["golden_lead_detection_ms"],
+                actual_value=0,  # Would be actual measurement
+                unit="ms",
+                passed=False,  # Requires authentication
+                samples=0,
+                timestamp=datetime.now().isoformat(),
+            )
+        )
 
     async def benchmark_concurrent_throughput(self):
         """Benchmark concurrent request throughput"""
@@ -222,16 +229,18 @@ class PerformanceBenchmark:
         print(f"  Throughput: {throughput:.2f} req/sec")
         print(f"  Successful: {successful_requests}, Failed: {failed_requests}")
 
-        self.results.append(BenchmarkResult(
-            test_name="Concurrent Throughput",
-            target_metric="requests_per_second",
-            target_value=self.targets['throughput_req_per_sec'],
-            actual_value=throughput,
-            unit="req/sec",
-            passed=throughput >= self.targets['throughput_req_per_sec'],
-            samples=successful_requests + failed_requests,
-            timestamp=datetime.now().isoformat()
-        ))
+        self.results.append(
+            BenchmarkResult(
+                test_name="Concurrent Throughput",
+                target_metric="requests_per_second",
+                target_value=self.targets["throughput_req_per_sec"],
+                actual_value=throughput,
+                unit="req/sec",
+                passed=throughput >= self.targets["throughput_req_per_sec"],
+                samples=successful_requests + failed_requests,
+                timestamp=datetime.now().isoformat(),
+            )
+        )
 
     async def benchmark_cache_performance(self):
         """Benchmark cache hit rate"""
@@ -245,8 +254,8 @@ class PerformanceBenchmark:
         for _ in range(samples):
             try:
                 async with self.session.get(f"{self.base_url}{endpoint}") as resp:
-                    cache_status = resp.headers.get('X-Cache-Status', 'MISS')
-                    if cache_status in ('HIT', 'UPDATING'):
+                    cache_status = resp.headers.get("X-Cache-Status", "MISS")
+                    if cache_status in ("HIT", "UPDATING"):
                         cache_hits += 1
             except Exception:
                 pass
@@ -255,16 +264,18 @@ class PerformanceBenchmark:
 
         print(f"  Cache Hit Rate: {cache_hit_rate:.2f}%")
 
-        self.results.append(BenchmarkResult(
-            test_name="Cache Hit Rate",
-            target_metric="cache_hit_rate",
-            target_value=self.targets['cache_hit_rate_percent'],
-            actual_value=cache_hit_rate,
-            unit="%",
-            passed=cache_hit_rate >= self.targets['cache_hit_rate_percent'],
-            samples=samples,
-            timestamp=datetime.now().isoformat()
-        ))
+        self.results.append(
+            BenchmarkResult(
+                test_name="Cache Hit Rate",
+                target_metric="cache_hit_rate",
+                target_value=self.targets["cache_hit_rate_percent"],
+                actual_value=cache_hit_rate,
+                unit="%",
+                passed=cache_hit_rate >= self.targets["cache_hit_rate_percent"],
+                samples=samples,
+                timestamp=datetime.now().isoformat(),
+            )
+        )
 
     async def benchmark_database_queries(self):
         """Benchmark database query performance"""
@@ -276,16 +287,18 @@ class PerformanceBenchmark:
         print("  ℹ️  Database performance is indirectly measured via API response times")
 
         # Placeholder result
-        self.results.append(BenchmarkResult(
-            test_name="Database Query Performance",
-            target_metric="db_query_p95",
-            target_value=self.targets['db_query_p95_ms'],
-            actual_value=0,
-            unit="ms",
-            passed=False,  # Requires database access
-            samples=0,
-            timestamp=datetime.now().isoformat()
-        ))
+        self.results.append(
+            BenchmarkResult(
+                test_name="Database Query Performance",
+                target_metric="db_query_p95",
+                target_value=self.targets["db_query_p95_ms"],
+                actual_value=0,
+                unit="ms",
+                passed=False,  # Requires database access
+                samples=0,
+                timestamp=datetime.now().isoformat(),
+            )
+        )
 
     def _percentile(self, data: List[float], percentile: int) -> float:
         """Calculate percentile"""
@@ -301,17 +314,17 @@ class PerformanceBenchmark:
         total_tests = len(self.results)
 
         report = {
-            'summary': {
-                'total_tests': total_tests,
-                'passed': passed_tests,
-                'failed': total_tests - passed_tests,
-                'success_rate': (passed_tests / total_tests * 100) if total_tests > 0 else 0,
-                'timestamp': datetime.now().isoformat()
+            "summary": {
+                "total_tests": total_tests,
+                "passed": passed_tests,
+                "failed": total_tests - passed_tests,
+                "success_rate": (passed_tests / total_tests * 100) if total_tests > 0 else 0,
+                "timestamp": datetime.now().isoformat(),
             },
-            'targets': self.targets,
-            'results': [r.to_dict() for r in self.results],
-            'performance_grade': self._calculate_performance_grade(),
-            'recommendations': self._generate_recommendations()
+            "targets": self.targets,
+            "results": [r.to_dict() for r in self.results],
+            "performance_grade": self._calculate_performance_grade(),
+            "recommendations": self._generate_recommendations(),
         }
 
         return report
@@ -319,22 +332,22 @@ class PerformanceBenchmark:
     def _calculate_performance_grade(self) -> str:
         """Calculate overall performance grade"""
         if not self.results:
-            return 'N/A'
+            return "N/A"
 
         passed = sum(1 for r in self.results if r.passed)
         total = len(self.results)
         success_rate = (passed / total) * 100
 
         if success_rate >= 90:
-            return 'A+'
+            return "A+"
         elif success_rate >= 80:
-            return 'A'
+            return "A"
         elif success_rate >= 70:
-            return 'B'
+            return "B"
         elif success_rate >= 60:
-            return 'C'
+            return "C"
         else:
-            return 'D'
+            return "D"
 
     def _generate_recommendations(self) -> List[str]:
         """Generate performance recommendations"""
@@ -342,19 +355,19 @@ class PerformanceBenchmark:
 
         for result in self.results:
             if not result.passed:
-                if 'response_time' in result.target_metric.lower():
+                if "response_time" in result.target_metric.lower():
                     recommendations.append(
                         f"⚠️  {result.test_name}: Consider implementing additional caching "
                         f"or optimizing slow operations. Current: {result.actual_value:.2f}{result.unit}, "
                         f"Target: {result.target_value:.2f}{result.unit}"
                     )
-                elif 'cache' in result.target_metric.lower():
+                elif "cache" in result.target_metric.lower():
                     recommendations.append(
                         f"⚠️  {result.test_name}: Improve cache hit rate through TTL optimization "
                         f"or cache warming. Current: {result.actual_value:.2f}{result.unit}, "
                         f"Target: {result.target_value:.2f}{result.unit}"
                     )
-                elif 'throughput' in result.target_metric.lower():
+                elif "throughput" in result.target_metric.lower():
                     recommendations.append(
                         f"⚠️  {result.test_name}: Consider horizontal scaling or optimizing "
                         f"concurrent request handling. Current: {result.actual_value:.2f}{result.unit}, "
@@ -373,7 +386,7 @@ class PerformanceBenchmark:
         print("=" * 80)
 
         # Summary
-        summary = report['summary']
+        summary = report["summary"]
         print(f"\n📊 Summary")
         print(f"  Total Tests: {summary['total_tests']}")
         print(f"  Passed: {summary['passed']} ✓")
@@ -383,8 +396,8 @@ class PerformanceBenchmark:
 
         # Results
         print(f"\n📈 Detailed Results")
-        for result in report['results']:
-            status = "✓ PASS" if result['passed'] else "✗ FAIL"
+        for result in report["results"]:
+            status = "✓ PASS" if result["passed"] else "✗ FAIL"
             print(f"\n  {result['test_name']}: {status}")
             print(f"    Target: {result['target_value']:.2f} {result['unit']}")
             print(f"    Actual: {result['actual_value']:.2f} {result['unit']}")
@@ -392,7 +405,7 @@ class PerformanceBenchmark:
 
         # Recommendations
         print(f"\n💡 Recommendations")
-        for rec in report['recommendations']:
+        for rec in report["recommendations"]:
             print(f"  {rec}")
 
         print("\n" + "=" * 80)
@@ -420,8 +433,8 @@ class PerformanceBenchmark:
         self.print_report(report)
 
         # Save report to file
-        report_path = Path(__file__).parent.parent / 'performance_benchmark_report.json'
-        with open(report_path, 'w') as f:
+        report_path = Path(__file__).parent.parent / "performance_benchmark_report.json"
+        with open(report_path, "w") as f:
             json.dump(report, f, indent=2)
 
         print(f"\n📄 Full report saved to: {report_path}")
@@ -433,16 +446,17 @@ async def main():
     """Main benchmark entry point"""
     import argparse
 
-    parser = argparse.ArgumentParser(description='Performance Benchmark Suite')
-    parser.add_argument('--url', default='http://localhost:8000',
-                        help='Base URL of API to benchmark (default: http://localhost:8000)')
+    parser = argparse.ArgumentParser(description="Performance Benchmark Suite")
+    parser.add_argument(
+        "--url", default="http://localhost:8000", help="Base URL of API to benchmark (default: http://localhost:8000)"
+    )
     args = parser.parse_args()
 
     benchmark = PerformanceBenchmark(base_url=args.url)
     report = await benchmark.run_all_benchmarks()
 
     # Exit with error code if benchmarks failed
-    if report['summary']['failed'] > 0:
+    if report["summary"]["failed"] > 0:
         print("\n⚠️  Some benchmarks failed. Review recommendations above.")
         sys.exit(1)
     else:

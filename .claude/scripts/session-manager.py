@@ -17,6 +17,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Dict, Optional
 
+
 class SessionManager:
     """Manage Claude Code session health and token usage."""
 
@@ -42,10 +43,10 @@ class SessionManager:
         usage = {
             "system_prompt": 15_000,  # Base Claude Code prompt
             "project_instructions": 0,  # CLAUDE.md
-            "mcp_servers": 0,           # MCP server overhead
-            "context_files": 0,         # Loaded files
-            "conversation": 0,          # Conversation history
-            "total": 0
+            "mcp_servers": 0,  # MCP server overhead
+            "context_files": 0,  # Loaded files
+            "conversation": 0,  # Conversation history
+            "total": 0,
         }
 
         # Estimate CLAUDE.md size
@@ -58,17 +59,12 @@ class SessionManager:
         # Estimate MCP server overhead
         settings_file = self.claude_dir / "settings.json"
         if settings_file.exists():
-            with open(settings_file, 'r') as f:
+            with open(settings_file, "r") as f:
                 settings = json.load(f)
 
             # Count enabled MCP servers
             # Serena: ~4k, Context7: ~3k, Playwright: ~3k, Greptile: ~2k
-            mcp_overhead = {
-                "serena": 4_000,
-                "context7": 3_000,
-                "playwright": 3_000,
-                "greptile": 2_000
-            }
+            mcp_overhead = {"serena": 4_000, "context7": 3_000, "playwright": 3_000, "greptile": 2_000}
 
             allowed_tools = settings.get("permissions", {}).get("allowedTools", [])
             for tool in allowed_tools:
@@ -94,7 +90,7 @@ class SessionManager:
             return 0
 
         try:
-            with open(self.session_file, 'r') as f:
+            with open(self.session_file, "r") as f:
                 state = json.load(f)
             return state.get("iteration_count", 0)
         except (json.JSONDecodeError, FileNotFoundError):
@@ -105,7 +101,7 @@ class SessionManager:
         state = {}
         if self.session_file.exists():
             try:
-                with open(self.session_file, 'r') as f:
+                with open(self.session_file, "r") as f:
                     state = json.load(f)
             except json.JSONDecodeError:
                 pass
@@ -114,7 +110,7 @@ class SessionManager:
         state["last_updated"] = datetime.utcnow().isoformat()
 
         self.claude_dir.mkdir(exist_ok=True)
-        with open(self.session_file, 'w') as f:
+        with open(self.session_file, "w") as f:
             json.dump(state, f, indent=2)
 
     def check_session_health(self) -> Dict:
@@ -137,57 +133,69 @@ class SessionManager:
         # Check token usage
         if usage_pct >= self.CRITICAL_THRESHOLD:
             status = "critical"
-            recommendations.append({
-                "priority": "critical",
-                "action": "Context near exhaustion - use /compact or /clear immediately",
-                "detail": f"{usage['total']:,} / {self.MAX_CONTEXT_TOKENS:,} tokens ({usage_pct:.1%})"
-            })
+            recommendations.append(
+                {
+                    "priority": "critical",
+                    "action": "Context near exhaustion - use /compact or /clear immediately",
+                    "detail": f"{usage['total']:,} / {self.MAX_CONTEXT_TOKENS:,} tokens ({usage_pct:.1%})",
+                }
+            )
         elif usage_pct >= self.WARNING_THRESHOLD:
             status = "warning"
-            recommendations.append({
-                "priority": "warning",
-                "action": "High context usage - consider /compact",
-                "detail": f"{usage['total']:,} / {self.MAX_CONTEXT_TOKENS:,} tokens ({usage_pct:.1%})"
-            })
+            recommendations.append(
+                {
+                    "priority": "warning",
+                    "action": "High context usage - consider /compact",
+                    "detail": f"{usage['total']:,} / {self.MAX_CONTEXT_TOKENS:,} tokens ({usage_pct:.1%})",
+                }
+            )
 
         # Check iterations
         if iterations >= self.MAX_ITERATIONS_CRITICAL:
             status = "critical"
-            recommendations.append({
-                "priority": "critical",
-                "action": "Too many iterations - start new session",
-                "detail": f"{iterations} iterations (recommended max: {self.MAX_ITERATIONS_CRITICAL})"
-            })
+            recommendations.append(
+                {
+                    "priority": "critical",
+                    "action": "Too many iterations - start new session",
+                    "detail": f"{iterations} iterations (recommended max: {self.MAX_ITERATIONS_CRITICAL})",
+                }
+            )
         elif iterations >= self.MAX_ITERATIONS_WARNING:
             if status != "critical":
                 status = "warning"
-            recommendations.append({
-                "priority": "warning",
-                "action": "Many iterations - consider wrapping up",
-                "detail": f"{iterations} iterations (recommended max: {self.MAX_ITERATIONS_WARNING})"
-            })
+            recommendations.append(
+                {
+                    "priority": "warning",
+                    "action": "Many iterations - consider wrapping up",
+                    "detail": f"{iterations} iterations (recommended max: {self.MAX_ITERATIONS_WARNING})",
+                }
+            )
 
         # Optimization suggestions
         if usage["project_instructions"] > 8_000:
-            recommendations.append({
-                "priority": "info",
-                "action": "CLAUDE.md is large - consider moving content to reference files",
-                "detail": f"{usage['project_instructions']:,} tokens estimated"
-            })
+            recommendations.append(
+                {
+                    "priority": "info",
+                    "action": "CLAUDE.md is large - consider moving content to reference files",
+                    "detail": f"{usage['project_instructions']:,} tokens estimated",
+                }
+            )
 
         if usage["mcp_servers"] > 10_000:
-            recommendations.append({
-                "priority": "info",
-                "action": "High MCP overhead - use minimal-context or research profile",
-                "detail": f"{usage['mcp_servers']:,} tokens from MCP servers"
-            })
+            recommendations.append(
+                {
+                    "priority": "info",
+                    "action": "High MCP overhead - use minimal-context or research profile",
+                    "detail": f"{usage['mcp_servers']:,} tokens from MCP servers",
+                }
+            )
 
         return {
             "status": status,
             "usage": usage,
             "iterations": iterations,
             "recommendations": recommendations,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
 
     def print_health_report(self):
@@ -195,15 +203,11 @@ class SessionManager:
         health = self.check_session_health()
 
         # Status emoji
-        status_emoji = {
-            "healthy": "✅",
-            "warning": "⚠️",
-            "critical": "❌"
-        }
+        status_emoji = {"healthy": "✅", "warning": "⚠️", "critical": "❌"}
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  Claude Code Session Health Report")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # Status
         emoji = status_emoji.get(health["status"], "ℹ️")
@@ -217,8 +221,8 @@ class SessionManager:
         print(f"  MCP Servers:            {usage['mcp_servers']:>8,} tokens")
         print(f"  Context Files:          {usage['context_files']:>8,} tokens")
         print(f"  Conversation:           {usage['conversation']:>8,} tokens")
-        print(f"  {'─'*40}")
-        total_pct = usage['total'] / self.MAX_CONTEXT_TOKENS
+        print(f"  {'─' * 40}")
+        total_pct = usage["total"] / self.MAX_CONTEXT_TOKENS
         print(f"  Total:                  {usage['total']:>8,} tokens ({total_pct:.1%})")
         print(f"  Available:              {self.MAX_CONTEXT_TOKENS - usage['total']:>8,} tokens")
         print()
@@ -235,7 +239,8 @@ class SessionManager:
                 print(f"     {rec['detail']}")
             print()
 
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
+
 
 def main():
     """Main entry point."""
@@ -261,6 +266,7 @@ def main():
     else:
         # Default: show health report
         manager.print_health_report()
+
 
 if __name__ == "__main__":
     main()

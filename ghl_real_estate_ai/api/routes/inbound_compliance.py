@@ -20,11 +20,22 @@ from typing import Any, Dict, List, Tuple
 
 # ── TCPA opt-out ──────────────────────────────────────────────────────────────
 # Kept in sync with services/jorge/response_pipeline/stages/tcpa_opt_out.py
-_TCPA_OPT_OUT_PHRASES: frozenset[str] = frozenset({
-    "stop", "unsubscribe", "not interested", "opt out", "remove me",
-    "don't contact me", "dont contact me", "no more messages", "cancel",
-    "parar", "cancelar", "no más",
-})
+_TCPA_OPT_OUT_PHRASES: frozenset[str] = frozenset(
+    {
+        "stop",
+        "unsubscribe",
+        "not interested",
+        "opt out",
+        "remove me",
+        "don't contact me",
+        "dont contact me",
+        "no more messages",
+        "cancel",
+        "parar",
+        "cancelar",
+        "no más",
+    }
+)
 
 # Jorge spec §2.6 wording
 _TCPA_RESPONSE = "No problem at all, reach out whenever you're ready"

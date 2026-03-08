@@ -21,17 +21,18 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+
 # Color codes for terminal output
 class Colors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
 
 class SecurityValidator:
@@ -44,14 +45,20 @@ class SecurityValidator:
             "high": [],
             "medium": [],
             "low": [],
-            "info": []
+            "info": [],
         }
         self.passed_checks = 0
         self.total_checks = 0
 
-    def log_finding(self, severity: str, category: str, title: str,
-                   description: str, remediation: str = None,
-                   compliance_impact: List[str] = None):
+    def log_finding(
+        self,
+        severity: str,
+        category: str,
+        title: str,
+        description: str,
+        remediation: str = None,
+        compliance_impact: List[str] = None,
+    ):
         """Log a security finding."""
         finding = {
             "category": category,
@@ -59,15 +66,15 @@ class SecurityValidator:
             "description": description,
             "remediation": remediation,
             "compliance_impact": compliance_impact or [],
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
         self.findings[severity].append(finding)
 
     def print_section(self, title: str):
         """Print section header."""
-        print(f"\n{Colors.HEADER}{Colors.BOLD}{'='*80}{Colors.ENDC}")
+        print(f"\n{Colors.HEADER}{Colors.BOLD}{'=' * 80}{Colors.ENDC}")
         print(f"{Colors.HEADER}{Colors.BOLD}{title}{Colors.ENDC}")
-        print(f"{Colors.HEADER}{Colors.BOLD}{'='*80}{Colors.ENDC}\n")
+        print(f"{Colors.HEADER}{Colors.BOLD}{'=' * 80}{Colors.ENDC}\n")
 
     def print_check(self, check_name: str, passed: bool, details: str = ""):
         """Print individual check result."""
@@ -93,24 +100,18 @@ class SecurityValidator:
         # Check 1.1: JWT Secret Key Strength
         jwt_secret = os.getenv("JWT_SECRET_KEY")
         if not jwt_secret:
-            self.print_check(
-                "JWT Secret Key Configuration",
-                False,
-                "JWT_SECRET_KEY not set in environment"
-            )
+            self.print_check("JWT Secret Key Configuration", False, "JWT_SECRET_KEY not set in environment")
             self.log_finding(
                 "critical",
                 "Authentication",
                 "Missing JWT Secret Key",
                 "JWT_SECRET_KEY environment variable is not configured",
                 "Set a cryptographically secure JWT secret (minimum 64 characters)",
-                ["OWASP A02:2021", "SOC2 CC6.1"]
+                ["OWASP A02:2021", "SOC2 CC6.1"],
             )
         elif len(jwt_secret) < 32:
             self.print_check(
-                "JWT Secret Key Strength",
-                False,
-                f"Secret too short: {len(jwt_secret)} chars (minimum 32)"
+                "JWT Secret Key Strength", False, f"Secret too short: {len(jwt_secret)} chars (minimum 32)"
             )
             self.log_finding(
                 "high",
@@ -118,14 +119,10 @@ class SecurityValidator:
                 "Weak JWT Secret Key",
                 f"JWT secret is only {len(jwt_secret)} characters (minimum 32)",
                 "Generate a new JWT secret with at least 64 characters",
-                ["OWASP A02:2021"]
+                ["OWASP A02:2021"],
             )
         else:
-            self.print_check(
-                "JWT Secret Key Strength",
-                True,
-                f"Secret length: {len(jwt_secret)} chars"
-            )
+            self.print_check("JWT Secret Key Strength", True, f"Secret length: {len(jwt_secret)} chars")
 
         # Check 1.2: Enhanced JWT Implementation
         jwt_auth_file = self.project_root / "ghl_real_estate_ai/api/middleware/enhanced_auth.py"
@@ -135,25 +132,19 @@ class SecurityValidator:
             # Check for rate limiting
             has_rate_limiting = "check_rate_limit" in content
             self.print_check(
-                "JWT Rate Limiting",
-                has_rate_limiting,
-                "Rate limiting on authentication" if has_rate_limiting else ""
+                "JWT Rate Limiting", has_rate_limiting, "Rate limiting on authentication" if has_rate_limiting else ""
             )
 
             # Check for token blacklist
             has_blacklist = "blacklist_token" in content
             self.print_check(
-                "JWT Token Blacklist",
-                has_blacklist,
-                "Token revocation mechanism" if has_blacklist else ""
+                "JWT Token Blacklist", has_blacklist, "Token revocation mechanism" if has_blacklist else ""
             )
 
             # Check for proper token validation
             has_validation = "verify_token" in content and "aud" in content and "iss" in content
             self.print_check(
-                "JWT Claims Validation",
-                has_validation,
-                "Audience and issuer validation" if has_validation else ""
+                "JWT Claims Validation", has_validation, "Audience and issuer validation" if has_validation else ""
             )
         else:
             self.print_check("Enhanced JWT Implementation", False, "File not found")
@@ -162,7 +153,7 @@ class SecurityValidator:
                 "Authentication",
                 "Missing Enhanced JWT Implementation",
                 "enhanced_auth.py not found - may be using basic JWT only",
-                "Implement enhanced JWT with rate limiting and blacklist"
+                "Implement enhanced JWT with rate limiting and blacklist",
             )
 
         # Check 1.3: Multi-tenant Isolation
@@ -170,11 +161,7 @@ class SecurityValidator:
         if tenant_service_file.exists():
             content = tenant_service_file.read_text()
             has_isolation = "location_id" in content and "validate" in content.lower()
-            self.print_check(
-                "Multi-tenant Data Isolation",
-                has_isolation,
-                "Tenant validation implemented"
-            )
+            self.print_check("Multi-tenant Data Isolation", has_isolation, "Tenant validation implemented")
         else:
             self.print_check("Multi-tenant Isolation", False, "Tenant service not found")
 
@@ -189,7 +176,7 @@ class SecurityValidator:
         self.print_check(
             "Password Hashing Algorithm",
             has_bcrypt,
-            "bcrypt password hashing" if has_bcrypt else "Weak or missing password hashing"
+            "bcrypt password hashing" if has_bcrypt else "Weak or missing password hashing",
         )
 
         if not has_bcrypt:
@@ -199,7 +186,7 @@ class SecurityValidator:
                 "Weak Password Hashing",
                 "bcrypt password hashing not found in authentication modules",
                 "Implement bcrypt with appropriate cost factor (12+)",
-                ["OWASP A02:2021", "PCI DSS 8.2.1"]
+                ["OWASP A02:2021", "PCI DSS 8.2.1"],
             )
 
     # ========================================================================
@@ -218,7 +205,7 @@ class SecurityValidator:
             self.print_check(
                 "Database SSL/TLS Configuration",
                 has_db_ssl,
-                "SSL mode configured" if has_db_ssl else "No SSL configuration found"
+                "SSL mode configured" if has_db_ssl else "No SSL configuration found",
             )
 
             if not has_db_ssl:
@@ -228,7 +215,7 @@ class SecurityValidator:
                     "Database Connection Encryption Missing",
                     "Database connections may not be using SSL/TLS",
                     "Add ?sslmode=require to DATABASE_URL",
-                    ["GDPR Article 32", "HIPAA 164.312(e)(1)"]
+                    ["GDPR Article 32", "HIPAA 164.312(e)(1)"],
                 )
         else:
             self.print_check("Database Configuration Check", False, "Template not found")
@@ -244,7 +231,7 @@ class SecurityValidator:
             self.print_check(
                 "Redis Authentication",
                 has_redis_password,
-                "Password authentication configured" if has_redis_password else ""
+                "Password authentication configured" if has_redis_password else "",
             )
 
             if not has_redis_password:
@@ -254,7 +241,7 @@ class SecurityValidator:
                     "Redis Authentication Missing",
                     "Redis may not have password authentication configured",
                     "Configure Redis with requirepass and use authenticated connection",
-                    ["OWASP A01:2021"]
+                    ["OWASP A01:2021"],
                 )
 
         # Check 2.3: PII Field Encryption
@@ -262,11 +249,7 @@ class SecurityValidator:
         if security_framework_file.exists():
             content = security_framework_file.read_text()
             has_sanitization = "sanitize_input" in content
-            self.print_check(
-                "Input Sanitization Framework",
-                has_sanitization,
-                "Input sanitization implemented"
-            )
+            self.print_check("Input Sanitization Framework", has_sanitization, "Input sanitization implemented")
         else:
             self.print_check("Security Framework", False, "File not found")
             self.log_finding(
@@ -274,7 +257,7 @@ class SecurityValidator:
                 "Data Protection",
                 "Missing Security Framework",
                 "security_framework.py not found",
-                "Implement comprehensive security framework"
+                "Implement comprehensive security framework",
             )
 
         # Check 2.4: Sensitive Data in Logs
@@ -283,9 +266,7 @@ class SecurityValidator:
             content = logger_file.read_text()
             has_masking = "mask" in content.lower() or "redact" in content.lower()
             self.print_check(
-                "Log Data Masking",
-                has_masking,
-                "PII masking in logs" if has_masking else "No masking detected"
+                "Log Data Masking", has_masking, "PII masking in logs" if has_masking else "No masking detected"
             )
 
             if not has_masking:
@@ -295,7 +276,7 @@ class SecurityValidator:
                     "PII in Logs Risk",
                     "No PII masking detected in logging configuration",
                     "Implement log masking for sensitive fields (email, phone, etc.)",
-                    ["GDPR Article 25", "CCPA"]
+                    ["GDPR Article 25", "CCPA"],
                 )
 
         # Check 2.5: Backup Encryption
@@ -303,14 +284,14 @@ class SecurityValidator:
         self.print_check(
             "Backup Encryption Policy",
             False,  # Assume not implemented unless proven
-            "Manual verification required"
+            "Manual verification required",
         )
         self.log_finding(
             "info",
             "Data Protection",
             "Verify Backup Encryption",
             "Manual verification needed for backup encryption",
-            "Ensure all backups are encrypted at rest and in transit"
+            "Ensure all backups are encrypted at rest and in transit",
         )
 
     # ========================================================================
@@ -331,11 +312,7 @@ class SecurityValidator:
                     has_rate_limiting = True
                     break
 
-        self.print_check(
-            "API Rate Limiting Middleware",
-            has_rate_limiting,
-            "Rate limiting implemented"
-        )
+        self.print_check("API Rate Limiting Middleware", has_rate_limiting, "Rate limiting implemented")
 
         if not has_rate_limiting:
             self.log_finding(
@@ -344,7 +321,7 @@ class SecurityValidator:
                 "Missing Rate Limiting",
                 "No rate limiting middleware detected",
                 "Implement Redis-backed rate limiting",
-                ["OWASP API4:2023"]
+                ["OWASP API4:2023"],
             )
 
         # Check 3.2: Input Validation
@@ -357,11 +334,7 @@ class SecurityValidator:
                     has_pydantic = True
                     break
 
-        self.print_check(
-            "Input Validation (Pydantic)",
-            has_pydantic,
-            "Pydantic models for validation"
-        )
+        self.print_check("Input Validation (Pydantic)", has_pydantic, "Pydantic models for validation")
 
         # Check 3.3: SQL Injection Protection
         # Check for ORM usage (SQLAlchemy) vs raw SQL
@@ -378,7 +351,7 @@ class SecurityValidator:
         self.print_check(
             "SQL Injection Protection (ORM)",
             uses_orm,
-            "SQLAlchemy ORM detected" if uses_orm else "Manual SQL verification needed"
+            "SQLAlchemy ORM detected" if uses_orm else "Manual SQL verification needed",
         )
 
         # Check 3.4: CORS Configuration
@@ -388,16 +361,12 @@ class SecurityValidator:
             has_cors_config = "CORSMiddleware" in content
             has_origin_restriction = "allow_origins" in content and "localhost" not in content.lower()
 
-            self.print_check(
-                "CORS Configuration",
-                has_cors_config,
-                "CORS middleware configured"
-            )
+            self.print_check("CORS Configuration", has_cors_config, "CORS middleware configured")
 
             self.print_check(
                 "CORS Origin Restriction",
                 has_origin_restriction,
-                "Restricted origins in production" if has_origin_restriction else "May allow localhost in production"
+                "Restricted origins in production" if has_origin_restriction else "May allow localhost in production",
             )
 
             if not has_origin_restriction:
@@ -407,7 +376,7 @@ class SecurityValidator:
                     "Permissive CORS Configuration",
                     "CORS may allow localhost or overly permissive origins",
                     "Restrict CORS origins to production ontario_millss only",
-                    ["OWASP A05:2021"]
+                    ["OWASP A05:2021"],
                 )
 
         # Check 3.5: Security Headers
@@ -419,11 +388,7 @@ class SecurityValidator:
                     has_security_headers = True
                     break
 
-        self.print_check(
-            "Security Headers Middleware",
-            has_security_headers,
-            "Security headers configured"
-        )
+        self.print_check("Security Headers Middleware", has_security_headers, "Security headers configured")
 
         if not has_security_headers:
             self.log_finding(
@@ -432,7 +397,7 @@ class SecurityValidator:
                 "Missing Security Headers",
                 "Security headers middleware not detected",
                 "Implement security headers (CSP, X-Frame-Options, etc.)",
-                ["OWASP A05:2021"]
+                ["OWASP A05:2021"],
             )
 
         # Check 3.6: Webhook Signature Verification
@@ -442,9 +407,7 @@ class SecurityValidator:
             has_signature_verify = "signature" in content.lower() and "verify" in content.lower()
 
             self.print_check(
-                "Webhook Signature Verification",
-                has_signature_verify,
-                "Signature verification implemented"
+                "Webhook Signature Verification", has_signature_verify, "Signature verification implemented"
             )
 
             if not has_signature_verify:
@@ -454,7 +417,7 @@ class SecurityValidator:
                     "Missing Webhook Signature Verification",
                     "Webhooks may not verify signatures from external providers",
                     "Implement HMAC signature verification for all webhooks",
-                    ["OWASP API2:2023"]
+                    ["OWASP API2:2023"],
                 )
 
     # ========================================================================
@@ -471,23 +434,21 @@ class SecurityValidator:
             content = main_api_file.read_text()
             has_https_redirect = "HTTPSRedirectMiddleware" in content
 
-            self.print_check(
-                "HTTPS Enforcement",
-                has_https_redirect,
-                "HTTPS redirect middleware configured"
-            )
+            self.print_check("HTTPS Enforcement", has_https_redirect, "HTTPS redirect middleware configured")
         else:
             self.print_check("HTTPS Enforcement", False, "main.py not found")
 
         # Check 4.2: Secrets Management
         env_files_in_repo = list(self.project_root.glob(".env*"))
-        env_files_in_repo = [f for f in env_files_in_repo if not f.name.endswith('.template') and not f.name.endswith('.example')]
+        env_files_in_repo = [
+            f for f in env_files_in_repo if not f.name.endswith(".template") and not f.name.endswith(".example")
+        ]
 
         has_secret_exposure = len(env_files_in_repo) > 0
         self.print_check(
             "Secrets Not in Repository",
             not has_secret_exposure,
-            f"Found {len(env_files_in_repo)} .env files" if has_secret_exposure else "No .env files in repo"
+            f"Found {len(env_files_in_repo)} .env files" if has_secret_exposure else "No .env files in repo",
         )
 
         if has_secret_exposure:
@@ -497,33 +458,24 @@ class SecurityValidator:
                 "Secrets in Repository",
                 f"Found {len(env_files_in_repo)} .env files that may contain secrets",
                 "Remove .env files from repository and add to .gitignore",
-                ["OWASP A02:2021", "PCI DSS 6.3.1"]
+                ["OWASP A02:2021", "PCI DSS 6.3.1"],
             )
 
         # Check 4.3: Dependency Vulnerabilities (if safety is installed)
         try:
-            result = subprocess.run(
-                ["pip", "list", "--format=json"],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
+            result = subprocess.run(["pip", "list", "--format=json"], capture_output=True, text=True, timeout=10)
 
             if result.returncode == 0:
                 packages = json.loads(result.stdout)
                 package_count = len(packages)
-                self.print_check(
-                    "Dependency Inventory",
-                    True,
-                    f"{package_count} packages installed"
-                )
+                self.print_check("Dependency Inventory", True, f"{package_count} packages installed")
 
                 # Check for known vulnerable packages (simple check)
                 vulnerable_packages = []
                 for pkg in packages:
                     # This is a simplified check - use proper vulnerability scanning
-                    if pkg['version'].startswith('0.'):
-                        vulnerable_packages.append(pkg['name'])
+                    if pkg["version"].startswith("0."):
+                        vulnerable_packages.append(pkg["name"])
 
                 if vulnerable_packages:
                     self.log_finding(
@@ -531,7 +483,7 @@ class SecurityValidator:
                         "Infrastructure Security",
                         "Pre-1.0 Dependencies Detected",
                         f"Found {len(vulnerable_packages)} packages with version < 1.0",
-                        "Review pre-1.0 dependencies for security posture"
+                        "Review pre-1.0 dependencies for security posture",
                     )
         except Exception as e:
             self.print_check("Dependency Analysis", False, f"Error: {str(e)}")
@@ -544,9 +496,7 @@ class SecurityValidator:
             # Check for non-root user
             uses_nonroot = "USER" in content and "root" not in content.lower()
             self.print_check(
-                "Docker Non-Root User",
-                uses_nonroot,
-                "Non-root user configured" if uses_nonroot else "May run as root"
+                "Docker Non-Root User", uses_nonroot, "Non-root user configured" if uses_nonroot else "May run as root"
             )
 
             if not uses_nonroot:
@@ -556,16 +506,12 @@ class SecurityValidator:
                     "Docker Running as Root",
                     "Dockerfile may not configure non-root user",
                     "Add USER directive to run container as non-root",
-                    ["CIS Docker Benchmark"]
+                    ["CIS Docker Benchmark"],
                 )
 
             # Check for multi-stage build
             is_multistage = content.count("FROM") > 1
-            self.print_check(
-                "Docker Multi-Stage Build",
-                is_multistage,
-                "Multi-stage build reduces attack surface"
-            )
+            self.print_check("Docker Multi-Stage Build", is_multistage, "Multi-stage build reduces attack surface")
         else:
             self.print_check("Docker Configuration", False, "Dockerfile not found")
 
@@ -576,9 +522,7 @@ class SecurityValidator:
             has_structured_logging = "json" in content.lower() or "structured" in content.lower()
 
             self.print_check(
-                "Structured Logging",
-                has_structured_logging,
-                "JSON/structured logging for SIEM integration"
+                "Structured Logging", has_structured_logging, "JSON/structured logging for SIEM integration"
             )
         else:
             self.print_check("Logging Configuration", False, "logger.py not found")
@@ -598,7 +542,7 @@ class SecurityValidator:
         self.print_check(
             "Audit Logging Framework",
             has_audit_logging,
-            "Dedicated audit logger exists" if has_audit_logging else "No audit logger found"
+            "Dedicated audit logger exists" if has_audit_logging else "No audit logger found",
         )
 
         if not has_audit_logging:
@@ -608,7 +552,7 @@ class SecurityValidator:
                 "Missing Audit Logging",
                 "No dedicated audit logging framework detected",
                 "Implement comprehensive audit logging for security events",
-                ["GDPR Article 30", "HIPAA 164.308(a)(1)(ii)(D)", "SOC2 CC7.2"]
+                ["GDPR Article 30", "HIPAA 164.308(a)(1)(ii)(D)", "SOC2 CC7.2"],
             )
 
         # Check 5.2: Data Retention Policies
@@ -616,7 +560,7 @@ class SecurityValidator:
         self.print_check(
             "Data Retention Policy",
             False,  # Assume not implemented unless proven
-            "Manual verification required"
+            "Manual verification required",
         )
 
         self.log_finding(
@@ -624,7 +568,7 @@ class SecurityValidator:
             "Compliance",
             "Verify Data Retention Policies",
             "Manual verification needed for data retention policies",
-            "Document and implement data retention policies per compliance requirements"
+            "Document and implement data retention policies per compliance requirements",
         )
 
         # Check 5.3: GDPR Compliance Readiness
@@ -645,9 +589,7 @@ class SecurityValidator:
                 continue
 
         self.print_check(
-            "GDPR Compliance Indicators",
-            gdpr_indicators >= 2,
-            f"Found {gdpr_indicators} GDPR-related implementations"
+            "GDPR Compliance Indicators", gdpr_indicators >= 2, f"Found {gdpr_indicators} GDPR-related implementations"
         )
 
         # Check 5.4: Access Control Logging
@@ -657,9 +599,7 @@ class SecurityValidator:
             has_access_logging = "access" in content.lower() or "authorization" in content.lower()
 
         self.print_check(
-            "Access Control Audit Logging",
-            has_access_logging,
-            "Access events logged" if has_access_logging else ""
+            "Access Control Audit Logging", has_access_logging, "Access events logged" if has_access_logging else ""
         )
 
         # Check 5.5: Incident Response Documentation
@@ -669,7 +609,7 @@ class SecurityValidator:
         self.print_check(
             "Incident Response Plan",
             has_ir_plan,
-            f"Found {len(incident_response_docs)} IR documents" if has_ir_plan else "No IR plan found"
+            f"Found {len(incident_response_docs)} IR documents" if has_ir_plan else "No IR plan found",
         )
 
         if not has_ir_plan:
@@ -679,7 +619,7 @@ class SecurityValidator:
                 "Missing Incident Response Plan",
                 "No incident response documentation found",
                 "Create incident response plan with roles, procedures, and contacts",
-                ["SOC2 CC7.4", "ISO 27001 A.16"]
+                ["SOC2 CC7.4", "ISO 27001 A.16"],
             )
 
     # ========================================================================
@@ -693,10 +633,10 @@ class SecurityValidator:
 
         # Calculate risk score (0-100, lower is better)
         risk_score = (
-            len(self.findings["critical"]) * 25 +
-            len(self.findings["high"]) * 10 +
-            len(self.findings["medium"]) * 5 +
-            len(self.findings["low"]) * 2
+            len(self.findings["critical"]) * 25
+            + len(self.findings["high"]) * 10
+            + len(self.findings["medium"]) * 5
+            + len(self.findings["low"]) * 2
         )
         risk_score = min(100, risk_score)
 
@@ -721,7 +661,7 @@ class SecurityValidator:
                 "total_checks": self.total_checks,
                 "passed_checks": self.passed_checks,
                 "failed_checks": self.total_checks - self.passed_checks,
-                "pass_rate": f"{(self.passed_checks / self.total_checks * 100) if self.total_checks > 0 else 0:.1f}%"
+                "pass_rate": f"{(self.passed_checks / self.total_checks * 100) if self.total_checks > 0 else 0:.1f}%",
             },
             "findings_summary": {
                 "critical": len(self.findings["critical"]),
@@ -729,13 +669,13 @@ class SecurityValidator:
                 "medium": len(self.findings["medium"]),
                 "low": len(self.findings["low"]),
                 "info": len(self.findings["info"]),
-                "total": total_findings
+                "total": total_findings,
             },
             "risk_score": risk_score,
             "status": status,
             "findings": self.findings,
             "compliance_assessment": self.assess_compliance(),
-            "recommendations": self.generate_recommendations()
+            "recommendations": self.generate_recommendations(),
         }
 
         # Print summary
@@ -773,7 +713,8 @@ class SecurityValidator:
 
         # OWASP Top 10
         owasp_findings = sum(
-            1 for severity in self.findings.values()
+            1
+            for severity in self.findings.values()
             for finding in severity
             if any("OWASP" in impact for impact in finding.get("compliance_impact", []))
         )
@@ -781,7 +722,8 @@ class SecurityValidator:
 
         # GDPR
         gdpr_findings = sum(
-            1 for severity in self.findings.values()
+            1
+            for severity in self.findings.values()
             for finding in severity
             if any("GDPR" in impact for impact in finding.get("compliance_impact", []))
         )
@@ -789,7 +731,8 @@ class SecurityValidator:
 
         # PCI DSS
         pci_findings = sum(
-            1 for severity in self.findings.values()
+            1
+            for severity in self.findings.values()
             for finding in severity
             if any("PCI" in impact for impact in finding.get("compliance_impact", []))
         )
@@ -797,7 +740,8 @@ class SecurityValidator:
 
         # SOC2
         soc2_findings = sum(
-            1 for severity in self.findings.values()
+            1
+            for severity in self.findings.values()
             for finding in severity
             if any("SOC2" in impact for impact in finding.get("compliance_impact", []))
         )
@@ -817,9 +761,7 @@ class SecurityValidator:
 
         # High findings
         if len(self.findings["high"]) > 0:
-            recommendations.append(
-                f"HIGH PRIORITY: Resolve {len(self.findings['high'])} high-risk vulnerabilities"
-            )
+            recommendations.append(f"HIGH PRIORITY: Resolve {len(self.findings['high'])} high-risk vulnerabilities")
 
         # Specific recommendations based on common patterns
         categories = {}
@@ -830,33 +772,21 @@ class SecurityValidator:
 
         # Add category-specific recommendations
         if categories.get("Authentication", 0) > 2:
-            recommendations.append(
-                "Strengthen authentication framework - multiple issues detected"
-            )
+            recommendations.append("Strengthen authentication framework - multiple issues detected")
 
         if categories.get("Data Protection", 0) > 2:
-            recommendations.append(
-                "Enhance data protection measures - encryption and privacy concerns"
-            )
+            recommendations.append("Enhance data protection measures - encryption and privacy concerns")
 
         if categories.get("API Security", 0) > 2:
-            recommendations.append(
-                "Harden API security - implement rate limiting and input validation"
-            )
+            recommendations.append("Harden API security - implement rate limiting and input validation")
 
         if categories.get("Compliance", 0) > 2:
-            recommendations.append(
-                "Improve compliance readiness - audit logging and documentation needed"
-            )
+            recommendations.append("Improve compliance readiness - audit logging and documentation needed")
 
         # General recommendations
         if not recommendations:
-            recommendations.append(
-                "Maintain current security posture with regular audits"
-            )
-            recommendations.append(
-                "Implement automated security testing in CI/CD pipeline"
-            )
+            recommendations.append("Maintain current security posture with regular audits")
+            recommendations.append("Implement automated security testing in CI/CD pipeline")
 
         return recommendations
 
@@ -868,20 +798,20 @@ class SecurityValidator:
         report = self.generate_report()
 
         output_path = self.project_root / filename
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(report, f, indent=2)
 
         print(f"\n{Colors.OKGREEN}Report saved to: {output_path}{Colors.ENDC}")
 
         # Also save a summary markdown
-        md_filename = filename.replace('.json', '.md')
+        md_filename = filename.replace(".json", ".md")
         self.save_markdown_summary(md_filename, report)
 
     def save_markdown_summary(self, filename: str, report: Dict[str, Any]):
         """Save a human-readable markdown summary."""
         output_path = self.project_root / filename
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             f.write("# Enterprise Security Validation Report\n\n")
             f.write(f"**Generated:** {report['timestamp']}\n\n")
             f.write(f"**Project:** {report['project']}\n\n")
@@ -891,14 +821,14 @@ class SecurityValidator:
             f.write(f"**Risk Score:** {report['risk_score']}/100\n\n")
 
             f.write("## Validation Summary\n\n")
-            summary = report['validation_summary']
+            summary = report["validation_summary"]
             f.write(f"- Total Checks: {summary['total_checks']}\n")
             f.write(f"- Passed: {summary['passed_checks']}\n")
             f.write(f"- Failed: {summary['failed_checks']}\n")
             f.write(f"- Pass Rate: {summary['pass_rate']}\n\n")
 
             f.write("## Findings Summary\n\n")
-            findings_summary = report['findings_summary']
+            findings_summary = report["findings_summary"]
             f.write(f"- 🔴 Critical: {findings_summary['critical']}\n")
             f.write(f"- 🟠 High: {findings_summary['high']}\n")
             f.write(f"- 🟡 Medium: {findings_summary['medium']}\n")
@@ -906,27 +836,27 @@ class SecurityValidator:
             f.write(f"- ℹ️ Info: {findings_summary['info']}\n\n")
 
             f.write("## Compliance Assessment\n\n")
-            for standard, status in report['compliance_assessment'].items():
+            for standard, status in report["compliance_assessment"].items():
                 f.write(f"- **{standard}:** {status}\n")
             f.write("\n")
 
             f.write("## Top Recommendations\n\n")
-            for i, rec in enumerate(report['recommendations'], 1):
+            for i, rec in enumerate(report["recommendations"], 1):
                 f.write(f"{i}. {rec}\n")
             f.write("\n")
 
             # Detailed findings
             for severity in ["critical", "high", "medium", "low", "info"]:
-                findings = report['findings'][severity]
+                findings = report["findings"][severity]
                 if findings:
                     f.write(f"## {severity.upper()} Findings\n\n")
                     for i, finding in enumerate(findings, 1):
                         f.write(f"### {i}. {finding['title']}\n\n")
                         f.write(f"**Category:** {finding['category']}\n\n")
                         f.write(f"**Description:** {finding['description']}\n\n")
-                        if finding.get('remediation'):
+                        if finding.get("remediation"):
                             f.write(f"**Remediation:** {finding['remediation']}\n\n")
-                        if finding.get('compliance_impact'):
+                        if finding.get("compliance_impact"):
                             f.write(f"**Compliance Impact:** {', '.join(finding['compliance_impact'])}\n\n")
                         f.write("---\n\n")
 
@@ -936,10 +866,10 @@ class SecurityValidator:
 async def main():
     """Main execution function."""
     print(f"{Colors.HEADER}{Colors.BOLD}")
-    print("="*80)
+    print("=" * 80)
     print("ENTERPRISE SECURITY VALIDATION")
     print("Jorge's Revenue Acceleration Platform")
-    print("="*80)
+    print("=" * 80)
     print(f"{Colors.ENDC}\n")
 
     validator = SecurityValidator()
@@ -957,7 +887,7 @@ async def main():
 
     # Print final recommendations
     print(f"\n{Colors.HEADER}{Colors.BOLD}TOP RECOMMENDATIONS:{Colors.ENDC}")
-    for i, rec in enumerate(report['recommendations'], 1):
+    for i, rec in enumerate(report["recommendations"], 1):
         print(f"{i}. {rec}")
 
     print(f"\n{Colors.OKGREEN}✓ Security validation complete!{Colors.ENDC}\n")

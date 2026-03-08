@@ -183,7 +183,6 @@ async def lifespan(app: FastAPI):
 
     # START WEBSOCKET SERVICES (Real-time Integration)
 
-
     logger.info("Starting WebSocket and real-time services...")
 
     try:
@@ -231,7 +230,6 @@ async def lifespan(app: FastAPI):
 
     # START LEAD SEQUENCE SCHEDULER (Critical for Lead Bot automation)
 
-
     logger.info("Starting Lead Sequence Scheduler...")
 
     try:
@@ -251,7 +249,6 @@ async def lifespan(app: FastAPI):
 
     # JORGE BOT PERSISTENCE: Wire repository into services
 
-
     jorge_repository = None
     try:
         from ghl_real_estate_ai.repositories.jorge_metrics_repository import JorgeMetricsRepository
@@ -266,7 +263,6 @@ async def lifespan(app: FastAPI):
         logger.warning("Jorge metrics will operate in memory-only mode")
 
     # REDIS HANDOFF REPOSITORY (multi-worker safe history + locks)
-
 
     redis_handoff_repo = None
     try:
@@ -283,7 +279,6 @@ async def lifespan(app: FastAPI):
         redis_handoff_repo = None
 
     # JORGE BOT MONITORING: Periodic alerting background task
-
 
     alerting_task = None
     try:
@@ -358,8 +353,7 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning("Failed to start periodic alerting task: %s", e)
 
-    # LEAD ABANDONMENT RECOVERY 
-
+    # LEAD ABANDONMENT RECOVERY
 
     abandonment_task_started = False
     try:
@@ -398,8 +392,7 @@ async def lifespan(app: FastAPI):
         logger.error(f"â Failed to start Lead Abandonment Recovery: {e}")
         logger.warning("Abandonment recovery will not function automatically")
 
-    # LEAD SOURCE ROI ANALYTICS 
-
+    # LEAD SOURCE ROI ANALYTICS
 
     source_roi_task_started = False
     try:
@@ -428,7 +421,6 @@ async def lifespan(app: FastAPI):
         logger.warning("Source ROI metrics will not update automatically")
 
     # STARTUP ENV VAR VALIDATION (non-blocking warnings)
-
 
     _validate_critical_env_vars(logger)
     _validate_jorge_services_config(logger)
@@ -768,6 +760,7 @@ def _setup_routers(app: FastAPI):
 
     # Bot smoke-test endpoints (no auth / no DB required)
     from ghl_real_estate_ai.api.routes.test_bots import router as test_bots_router
+
     app.include_router(test_bots_router)  # /test/seller, /test/buyer
 
     # GHL Unified Webhook Integration (Lead/Seller/Buyer bot handlers)
@@ -844,7 +837,6 @@ async def enhanced_performance_middleware(request: Request, call_next):
 
     # ADVANCED CACHING STRATEGY
 
-
     if path.startswith("/static/") or path.endswith((".css", ".js", ".png", ".jpg", ".ico", ".woff", ".woff2")):
         # Static assets - aggressive caching with versioning
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"  # 1 year
@@ -874,7 +866,6 @@ async def enhanced_performance_middleware(request: Request, call_next):
 
     # COMPRESSION & OPTIMIZATION HEADERS
 
-
     # Add compression indicators
     response.headers["X-Content-Optimized"] = "true"
 
@@ -897,7 +888,6 @@ async def enhanced_performance_middleware(request: Request, call_next):
         response.headers["X-Performance"] = "slow"
 
     # SECURITY & OPTIMIZATION HEADERS
-
 
     # Security headers for performance
     response.headers["X-Frame-Options"] = "DENY"
@@ -924,7 +914,6 @@ async def enhanced_performance_middleware(request: Request, call_next):
             response.headers["X-Compression-Ratio"] = "~30%"
 
     # PERFORMANCE MONITORING & ALERTING
-
 
     # Enhanced logging for performance analysis
     if process_time > 0.5:  # Slow request threshold

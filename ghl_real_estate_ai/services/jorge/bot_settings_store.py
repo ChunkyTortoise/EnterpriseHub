@@ -52,6 +52,7 @@ def _get_redis() -> Optional[Any]:
         logger.warning(f"Bot settings Redis unavailable, using file fallback: {exc}")
     return _redis_client
 
+
 _DEFAULTS: dict[str, dict[str, Any]] = {
     "seller": {
         "system_prompt": "",

@@ -31,32 +31,32 @@ class CachingTransformer(ast.NodeTransformer):
 
     # Function naming patterns that should use @st.cache_data
     DATA_FUNCTION_PATTERNS = [
-        'load_',
-        'fetch_',
-        'get_',
-        'calculate_',
-        'aggregate_',
-        'transform_',
-        'generate_',
-        'query_',
-        'retrieve_',
+        "load_",
+        "fetch_",
+        "get_",
+        "calculate_",
+        "aggregate_",
+        "transform_",
+        "generate_",
+        "query_",
+        "retrieve_",
     ]
 
     # Function naming patterns that should use @st.cache_resource
     RESOURCE_FUNCTION_PATTERNS = [
-        'get_client',
-        'get_service',
-        'init_',
-        'create_connection',
-        'create_client',
-        'setup_',
+        "get_client",
+        "get_service",
+        "init_",
+        "create_connection",
+        "create_client",
+        "setup_",
     ]
 
     # Event handlers that should NEVER be cached
     EVENT_HANDLER_PATTERNS = [
-        'handle_',
-        'on_',
-        'render_',  # Render functions often have session state
+        "handle_",
+        "on_",
+        "render_",  # Render functions often have session state
     ]
 
     def __init__(self, dry_run: bool = False, verbose: bool = False):
@@ -70,75 +70,65 @@ class CachingTransformer(ast.NodeTransformer):
         for decorator in node.decorator_list:
             # Handle @st.cache_data or @st.cache_resource
             if isinstance(decorator, ast.Attribute):
-                if (isinstance(decorator.value, ast.Name) and
-                    decorator.value.id == 'st' and
-                    decorator.attr in ['cache_data', 'cache_resource']):
+                if (
+                    isinstance(decorator.value, ast.Name)
+                    and decorator.value.id == "st"
+                    and decorator.attr in ["cache_data", "cache_resource"]
+                ):
                     return True
             # Handle @st.cache_data(...) or @st.cache_resource
             elif isinstance(decorator, ast.Call):
                 if isinstance(decorator.func, ast.Attribute):
-                    if (isinstance(decorator.func.value, ast.Name) and
-                        decorator.func.value.id == 'st' and
-                        decorator.func.attr in ['cache_data', 'cache_resource']):
+                    if (
+                        isinstance(decorator.func.value, ast.Name)
+                        and decorator.func.value.id == "st"
+                        and decorator.func.attr in ["cache_data", "cache_resource"]
+                    ):
                         return True
         return False
 
     def _has_bypass_comment(self, node: ast.FunctionDef, source_lines: List[str]) -> bool:
         """Check if function has @cache-skip bypass comment."""
-        if not hasattr(node, 'lineno'):
+        if not hasattr(node, "lineno"):
             return False
 
         # Check docstring
-        if (node.body and isinstance(node.body[0], ast.Expr) and
-            isinstance(node.body[0].value, ast.Constant)):
+        if node.body and isinstance(node.body[0], ast.Expr) and isinstance(node.body[0].value, ast.Constant):
             docstring = node.body[0].value.value
-            if isinstance(docstring, str) and '@cache-skip' in docstring:
+            if isinstance(docstring, str) and "@cache-skip" in docstring:
                 return True
 
         # Check line before function definition
         line_idx = node.lineno - 2  # -1 for 0-index, -1 for line before
         if 0 <= line_idx < len(source_lines):
-            if '@cache-skip' in source_lines[line_idx]:
+            if "@cache-skip" in source_lines[line_idx]:
                 return True
 
         return False
 
     def _is_event_handler(self, function_name: str) -> bool:
         """Check if function is an event handler."""
-        return any(function_name.startswith(pattern)
-                   for pattern in self.EVENT_HANDLER_PATTERNS)
+        return any(function_name.startswith(pattern) for pattern in self.EVENT_HANDLER_PATTERNS)
 
     def _is_data_function(self, function_name: str) -> bool:
         """Check if function should use @st.cache_data."""
-        return any(function_name.startswith(pattern)
-                   for pattern in self.DATA_FUNCTION_PATTERNS)
+        return any(function_name.startswith(pattern) for pattern in self.DATA_FUNCTION_PATTERNS)
 
     def _is_resource_function(self, function_name: str) -> bool:
         """Check if function should use @st.cache_resource."""
-        return any(function_name.startswith(pattern)
-                   for pattern in self.RESOURCE_FUNCTION_PATTERNS)
+        return any(function_name.startswith(pattern) for pattern in self.RESOURCE_FUNCTION_PATTERNS)
 
     def _create_cache_data_decorator(self, ttl: int = 300) -> ast.Call:
         """Create @st.cache_data(ttl=300) decorator."""
         return ast.Call(
-            func=ast.Attribute(
-                value=ast.Name(id='st', ctx=ast.Load()),
-                attr='cache_data',
-                ctx=ast.Load()
-            ),
+            func=ast.Attribute(value=ast.Name(id="st", ctx=ast.Load()), attr="cache_data", ctx=ast.Load()),
             args=[],
-            keywords=[
-                ast.keyword(arg='ttl', value=ast.Constant(value=ttl))
-            ]
+            keywords=[ast.keyword(arg="ttl", value=ast.Constant(value=ttl))],
         )
 
     def _create_cache_resource_decorator(self) -> ast.Attribute:
         """Create @st.cache_resource decorator."""
-        return ast.Attribute(
-            value=ast.Name(id='st', ctx=ast.Load()),
-            attr='cache_resource',
-            ctx=ast.Load()
-        )
+        return ast.Attribute(value=ast.Name(id="st", ctx=ast.Load()), attr="cache_resource", ctx=ast.Load())
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.FunctionDef:
         """Visit function definition and add caching decorator if needed."""
@@ -160,56 +150,48 @@ class CachingTransformer(ast.NodeTransformer):
         if self._is_data_function(function_name):
             decorator = self._create_cache_data_decorator(ttl=300)
             node.decorator_list.insert(0, decorator)
-            self.modifications.append(
-                f"✅ {function_name}: Added @st.cache_data(ttl=300)"
-            )
+            self.modifications.append(f"✅ {function_name}: Added @st.cache_data(ttl=300)")
 
         # Add @st.cache_resource for resource functions
         elif self._is_resource_function(function_name):
             decorator = self._create_cache_resource_decorator()
             node.decorator_list.insert(0, decorator)
-            self.modifications.append(
-                f"✅ {function_name}: Added @st.cache_resource"
-            )
+            self.modifications.append(f"✅ {function_name}: Added @st.cache_resource")
 
         else:
             if self.verbose:
-                self.skipped.append(
-                    f"{function_name}: no pattern match (consider manual review)"
-                )
+                self.skipped.append(f"{function_name}: no pattern match (consider manual review)")
 
         return node
 
 
 def add_streamlit_import(source: str) -> str:
     """Ensure 'import streamlit as st' is present."""
-    if 'import streamlit as st' in source:
+    if "import streamlit as st" in source:
         return source
 
     # Find the first import statement and add before it
-    lines = source.split('\n')
+    lines = source.split("\n")
     for i, line in enumerate(lines):
-        if line.strip().startswith('import ') or line.strip().startswith('from '):
-            lines.insert(i, 'import streamlit as st')
-            return '\n'.join(lines)
+        if line.strip().startswith("import ") or line.strip().startswith("from "):
+            lines.insert(i, "import streamlit as st")
+            return "\n".join(lines)
 
     # No imports found, add at top after docstring
     for i, line in enumerate(lines):
-        if not (line.strip().startswith('#') or
-                line.strip().startswith('"""') or
-                line.strip().startswith("'''") or
-                line.strip() == ''):
-            lines.insert(i, 'import streamlit as st\n')
-            return '\n'.join(lines)
+        if not (
+            line.strip().startswith("#")
+            or line.strip().startswith('"""')
+            or line.strip().startswith("'''")
+            or line.strip() == ""
+        ):
+            lines.insert(i, "import streamlit as st\n")
+            return "\n".join(lines)
 
     return source
 
 
-def add_caching_to_file(
-    file_path: Path,
-    dry_run: bool = False,
-    verbose: bool = False
-) -> None:
+def add_caching_to_file(file_path: Path, dry_run: bool = False, verbose: bool = False) -> None:
     """Add caching decorators to a component file."""
 
     if not file_path.exists():
@@ -217,7 +199,7 @@ def add_caching_to_file(
         sys.exit(1)
 
     # Read source
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         source = f.read()
 
     # Parse AST
@@ -232,9 +214,9 @@ def add_caching_to_file(
     new_tree = transformer.visit(tree)
 
     # Report changes
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"File: {file_path}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
 
     if transformer.modifications:
         print(f"\n📝 Modifications ({len(transformer.modifications)}):")
@@ -257,12 +239,12 @@ def add_caching_to_file(
         new_source = add_streamlit_import(new_source)
 
         # Backup original
-        backup_path = file_path.with_suffix('.py.bak')
-        with open(backup_path, 'w', encoding='utf-8') as f:
+        backup_path = file_path.with_suffix(".py.bak")
+        with open(backup_path, "w", encoding="utf-8") as f:
             f.write(source)
 
         # Write modified version
-        with open(file_path, 'w', encoding='utf-8') as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             f.write(new_source)
 
         print(f"\n✅ File updated: {file_path}")
@@ -275,7 +257,7 @@ def add_caching_to_file(
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Add caching decorators to Streamlit component functions',
+        description="Add caching decorators to Streamlit component functions",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -292,35 +274,19 @@ Examples:
   for file in components/*.py; do
     python add-caching-decorators.py "$file"
   done
-        """
+        """,
     )
 
-    parser.add_argument(
-        'file',
-        type=Path,
-        help='Path to component file to process'
-    )
+    parser.add_argument("file", type=Path, help="Path to component file to process")
 
-    parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Preview changes without modifying files'
-    )
+    parser.add_argument("--dry-run", action="store_true", help="Preview changes without modifying files")
 
-    parser.add_argument(
-        '--verbose', '-v',
-        action='store_true',
-        help='Show detailed output including skipped functions'
-    )
+    parser.add_argument("--verbose", "-v", action="store_true", help="Show detailed output including skipped functions")
 
     args = parser.parse_args()
 
-    add_caching_to_file(
-        file_path=args.file,
-        dry_run=args.dry_run,
-        verbose=args.verbose
-    )
+    add_caching_to_file(file_path=args.file, dry_run=args.dry_run, verbose=args.verbose)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

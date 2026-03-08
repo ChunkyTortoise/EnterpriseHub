@@ -55,17 +55,32 @@ class BuyerIntentDecoder:
             cfg.intents.timeline.high
             if cfg and cfg.intents.timeline.high
             else [
-                "need to move", "lease ending", "lease expires", "must buy", "must move",
-                "urgent", "this month", "within 30 days", "within 60 days", "60 days",
-                "within 90 days", "asap", "immediately",
+                "need to move",
+                "lease ending",
+                "lease expires",
+                "must buy",
+                "must move",
+                "urgent",
+                "this month",
+                "within 30 days",
+                "within 60 days",
+                "60 days",
+                "within 90 days",
+                "asap",
+                "immediately",
             ]
         )
         self.medium_urgency = (
             cfg.intents.timeline.medium
             if cfg and cfg.intents.timeline.medium
             else [
-                "looking seriously", "want to move", "ready to buy",
-                "3 months", "within 6 months", "few months", "soon",
+                "looking seriously",
+                "want to move",
+                "ready to buy",
+                "3 months",
+                "within 6 months",
+                "few months",
+                "soon",
             ]
         )
         self.low_urgency = (

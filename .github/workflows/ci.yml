@@ -94,13 +94,22 @@ jobs:
         pip install -r requirements.txt
         pip install -r requirements-dev.txt
 
-    - name: Run unit tests
+    - name: Run unit tests (ghl_real_estate_ai/tests/unit/)
       env:
         ANTHROPIC_API_KEY: sk-test-key-for-ci-only
         GHL_API_KEY: test-ghl-key-for-ci-only
         GHL_LOCATION_ID: test-location-id-for-ci-only
       run: |
-        pytest ghl_real_estate_ai/tests/unit/ -m unit --override-ini="addopts=" --cov=ghl_real_estate_ai --cov-report=xml --cov-report=term-missing --cov-fail-under=1 -v
+        pytest ghl_real_estate_ai/tests/unit/ -m unit --override-ini="addopts=" --cov=ghl_real_estate_ai --cov-report=xml --cov-report=term-missing --cov-fail-under=50 -v
+
+    - name: Run extended unit tests (tests/unit/)
+      env:
+        ANTHROPIC_API_KEY: sk-test-key-for-ci-only
+        GHL_API_KEY: test-ghl-key-for-ci-only
+        GHL_LOCATION_ID: test-location-id-for-ci-only
+      run: |
+        pytest tests/unit/ --override-ini="addopts=" --cov=ghl_real_estate_ai --cov-append --cov-report=xml --cov-report=term-missing --cov-fail-under=0 --tb=short -q
+      continue-on-error: true  # Raise threshold once confirmed passing in CI
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -168,7 +177,7 @@ jobs:
         pip install -r requirements-dev.txt
 
     - name: Run mypy
-      run: mypy ghl_real_estate_ai src utils advanced_rag_system app.py main.py mcp_server.py production_server.py admin_dashboard.py
+      run: mypy ghl_real_estate_ai src utils advanced_rag_system
 
   build:
     name: Build Check

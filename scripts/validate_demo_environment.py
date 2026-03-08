@@ -15,10 +15,7 @@ import logging
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from ghl_real_estate_ai.services.client_demo_service import (
-    ClientDemoService,
-    DemoScenario
-)
+from ghl_real_estate_ai.services.client_demo_service import ClientDemoService, DemoScenario
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -50,7 +47,7 @@ class DemoEnvironmentValidator:
                     demo_env = await self.demo_service.create_demo_session(
                         scenario=scenario,
                         client_name=f"Test {scenario.value}",
-                        agency_name=f"Test Agency {scenario.value}"
+                        agency_name=f"Test Agency {scenario.value}",
                     )
 
                     # Validate demo environment
@@ -95,72 +92,84 @@ class DemoEnvironmentValidator:
         # Client profile validations
         if demo_env.client_profile:
             profile = demo_env.client_profile
-            validations.update({
-                "profile_has_name": bool(profile.name),
-                "profile_has_agency": bool(profile.agency_name),
-                "profile_has_monthly_leads": profile.monthly_leads > 0,
-                "profile_has_deal_size": profile.avg_deal_size > 0,
-                "profile_has_commission": 0 < profile.commission_rate < 1,
-                "profile_has_challenges": len(profile.current_challenges) > 0,
-                "profile_has_goals": len(profile.goals) > 0
-            })
+            validations.update(
+                {
+                    "profile_has_name": bool(profile.name),
+                    "profile_has_agency": bool(profile.agency_name),
+                    "profile_has_monthly_leads": profile.monthly_leads > 0,
+                    "profile_has_deal_size": profile.avg_deal_size > 0,
+                    "profile_has_commission": 0 < profile.commission_rate < 1,
+                    "profile_has_challenges": len(profile.current_challenges) > 0,
+                    "profile_has_goals": len(profile.goals) > 0,
+                }
+            )
 
         # Lead data validations
         if demo_env.demo_leads:
             sample_lead = demo_env.demo_leads[0]
-            validations.update({
-                "leads_have_names": bool(sample_lead.get("name")),
-                "leads_have_budgets": bool(sample_lead.get("budget_min")),
-                "leads_have_sources": bool(sample_lead.get("source")),
-                "leads_have_status": bool(sample_lead.get("qualification_status"))
-            })
+            validations.update(
+                {
+                    "leads_have_names": bool(sample_lead.get("name")),
+                    "leads_have_budgets": bool(sample_lead.get("budget_min")),
+                    "leads_have_sources": bool(sample_lead.get("source")),
+                    "leads_have_status": bool(sample_lead.get("qualification_status")),
+                }
+            )
 
         # Property validations
         if demo_env.demo_properties:
             sample_property = demo_env.demo_properties[0]
-            validations.update({
-                "properties_have_addresses": bool(sample_property.get("address")),
-                "properties_have_prices": bool(sample_property.get("price")),
-                "properties_have_features": bool(sample_property.get("features"))
-            })
+            validations.update(
+                {
+                    "properties_have_addresses": bool(sample_property.get("address")),
+                    "properties_have_prices": bool(sample_property.get("price")),
+                    "properties_have_features": bool(sample_property.get("features")),
+                }
+            )
 
         # ROI calculation validations
         if demo_env.roi_calculation:
             roi = demo_env.roi_calculation
-            validations.update({
-                "roi_has_summary": "summary" in roi,
-                "roi_has_traditional_costs": "traditional_costs" in roi,
-                "roi_has_jorge_costs": "jorge_costs" in roi,
-                "roi_has_benefits": "jorge_benefits" in roi
-            })
+            validations.update(
+                {
+                    "roi_has_summary": "summary" in roi,
+                    "roi_has_traditional_costs": "traditional_costs" in roi,
+                    "roi_has_jorge_costs": "jorge_costs" in roi,
+                    "roi_has_benefits": "jorge_benefits" in roi,
+                }
+            )
 
             if "summary" in roi:
                 summary = roi["summary"]
-                validations.update({
-                    "roi_has_net_savings": "net_savings" in summary,
-                    "roi_has_percentage": "roi_percentage" in summary,
-                    "roi_savings_positive": summary.get("net_savings", 0) > 0,
-                    "roi_percentage_positive": summary.get("roi_percentage", 0) > 0
-                })
+                validations.update(
+                    {
+                        "roi_has_net_savings": "net_savings" in summary,
+                        "roi_has_percentage": "roi_percentage" in summary,
+                        "roi_savings_positive": summary.get("net_savings", 0) > 0,
+                        "roi_percentage_positive": summary.get("roi_percentage", 0) > 0,
+                    }
+                )
 
         # Performance metrics validations
         if demo_env.performance_metrics:
             perf = demo_env.performance_metrics
-            validations.update({
-                "perf_has_response_times": "response_times" in perf,
-                "perf_has_conversion_rates": "conversion_rates" in perf,
-                "perf_has_accuracy": "accuracy_scores" in perf,
-                "perf_has_business_impact": "business_impact" in perf
-            })
+            validations.update(
+                {
+                    "perf_has_response_times": "response_times" in perf,
+                    "perf_has_conversion_rates": "conversion_rates" in perf,
+                    "perf_has_accuracy": "accuracy_scores" in perf,
+                    "perf_has_business_impact": "business_impact" in perf,
+                }
+            )
 
         return validations
 
     def _print_validation_summary(self, results: Dict[str, Any]):
         """Print comprehensive validation summary"""
 
-        print("\n" + "="*80)
+        print("\n" + "=" * 80)
         print("DEMO ENVIRONMENT VALIDATION SUMMARY")
-        print("="*80)
+        print("=" * 80)
 
         total_scenarios = 0
         passed_scenarios = 0
@@ -183,7 +192,7 @@ class DemoEnvironmentValidator:
                 print(f"\n❌ {scenario.upper()}: FAILED ({passed_validations}/{total_validations})")
                 print(f"   Failed checks: {', '.join(failed)}")
 
-        print(f"\n{'='*80}")
+        print(f"\n{'=' * 80}")
         print(f"OVERALL RESULTS: {passed_scenarios}/{total_scenarios} scenarios passed")
 
         if passed_scenarios == total_scenarios:
@@ -191,7 +200,7 @@ class DemoEnvironmentValidator:
         else:
             print(f"⚠️  {total_scenarios - passed_scenarios} scenarios need attention")
 
-        print("="*80)
+        print("=" * 80)
 
         return passed_scenarios == total_scenarios
 
@@ -210,10 +219,7 @@ async def main():
         logger.info("Validation results exported to demo_validation_results.json")
 
         # Determine exit code
-        if all(
-            isinstance(v, dict) and "error" not in v and all(v.values())
-            for v in results.values()
-        ):
+        if all(isinstance(v, dict) and "error" not in v and all(v.values()) for v in results.values()):
             logger.info("All validations passed!")
             sys.exit(0)
         else:

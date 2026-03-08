@@ -46,7 +46,7 @@ def add_job(url: str, title: str, rate: str, fit: int, keywords: Optional[str] =
         "keywords": keywords or "",
         "status": "starred",
         "added_date": datetime.now().isoformat(),
-        "notes": ""
+        "notes": "",
     }
 
     data["jobs"].append(job)
@@ -105,16 +105,16 @@ def show_job(job_id: int) -> None:
         return
 
     print(f"\nJob #{job['id']}: {job['title']}")
-    print(f"{'='*80}")
+    print(f"{'=' * 80}")
     print(f"URL:          {job['url']}")
     print(f"Rate:         {job['rate']}")
     print(f"Fit Score:    {job['fit_score']}/10")
     print(f"Keywords:     {job['keywords']}")
     print(f"Status:       {job['status']}")
     print(f"Added:        {job['added_date']}")
-    if job.get('updated_date'):
+    if job.get("updated_date"):
         print(f"Updated:      {job['updated_date']}")
-    if job.get('notes'):
+    if job.get("notes"):
         print(f"\nNotes:\n{job['notes']}")
 
 
@@ -145,11 +145,7 @@ if __name__ == "__main__":
                 i += 1
 
         add_job(
-            url,
-            args.get("title", "Untitled"),
-            args.get("rate", "TBD"),
-            int(args.get("fit", 5)),
-            args.get("keywords")
+            url, args.get("title", "Untitled"), args.get("rate", "TBD"), int(args.get("fit", 5)), args.get("keywords")
         )
 
     elif command == "list":

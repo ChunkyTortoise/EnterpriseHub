@@ -66,7 +66,7 @@ class DatabaseMigrator:
         local_urls = [
             "postgresql://postgres:password@localhost:5432/service6_leads",
             "postgresql://service6_user:service6_password@localhost:5432/service6_leads",
-            "postgresql://user:password@localhost:5432/postgres"  # Default
+            "postgresql://user:password@localhost:5432/postgres",  # Default
         ]
 
         for db_url in local_urls:
@@ -120,16 +120,16 @@ class DatabaseMigrator:
 
             # Check existing migrations
             existing = await conn.fetch("SELECT version FROM schema_migrations ORDER BY version")
-            existing_versions = [row['version'] for row in existing]
+            existing_versions = [row["version"] for row in existing]
             print(f"   📋 Existing migrations: {existing_versions}")
 
             # Apply Migration 006: Performance Critical Indexes
-            if '006' not in existing_versions:
+            if "006" not in existing_versions:
                 print("   🚀 Applying Migration 006: Performance Critical Indexes...")
                 migration_006 = project_root / "database" / "migrations" / "006_performance_critical_indexes.sql"
 
                 if migration_006.exists():
-                    with open(migration_006, 'r') as f:
+                    with open(migration_006, "r") as f:
                         migration_sql = f.read()
 
                     # Execute in a transaction
@@ -141,12 +141,12 @@ class DatabaseMigrator:
                 print("   ✅ Migration 006 already applied")
 
             # Apply Migration 007: Template Management System
-            if '007' not in existing_versions:
+            if "007" not in existing_versions:
                 print("   🚀 Applying Migration 007: Template Management System...")
                 migration_007 = project_root / "database" / "migrations" / "007_create_message_templates.sql"
 
                 if migration_007.exists():
-                    with open(migration_007, 'r') as f:
+                    with open(migration_007, "r") as f:
                         migration_sql = f.read()
 
                     # Execute in a transaction
@@ -164,10 +164,10 @@ class DatabaseMigrator:
                 ORDER BY table_name
             """)
 
-            table_names = [row['table_name'] for row in tables]
+            table_names = [row["table_name"] for row in tables]
             print(f"   📋 Created tables: {len(table_names)} tables")
 
-            for table in ['message_templates', 'template_performance', 'template_ab_tests']:
+            for table in ["message_templates", "template_performance", "template_ab_tests"]:
                 if table in table_names:
                     print(f"   ✅ {table}")
                 else:
@@ -214,7 +214,7 @@ class DatabaseMigrator:
             print(f"   📋 Existing migrations: {existing_versions}")
 
             # Apply simplified migrations for SQLite
-            if '006' not in existing_versions:
+            if "006" not in existing_versions:
                 print("   🚀 Applying Migration 006: Basic Indexes (SQLite compatible)...")
                 self._apply_sqlite_indexes(cursor)
 
@@ -224,7 +224,7 @@ class DatabaseMigrator:
                 """)
                 print("   ✅ Migration 006 applied (SQLite compatible)")
 
-            if '007' not in existing_versions:
+            if "007" not in existing_versions:
                 print("   🚀 Applying Migration 007: Template Tables (SQLite compatible)...")
                 self._apply_sqlite_template_system(cursor)
 
@@ -255,11 +255,9 @@ class DatabaseMigrator:
             # Basic lead scoring indexes
             "CREATE INDEX IF NOT EXISTS idx_leads_temperature ON leads(temperature);",
             "CREATE INDEX IF NOT EXISTS idx_leads_score ON leads(lead_score);",
-
             # Communication indexes
             "CREATE INDEX IF NOT EXISTS idx_communications_channel ON communications(channel);",
             "CREATE INDEX IF NOT EXISTS idx_communications_status ON communications(status);",
-
             # Agent routing indexes
             "CREATE INDEX IF NOT EXISTS idx_agents_active ON agents(is_active);",
             "CREATE INDEX IF NOT EXISTS idx_agents_capacity ON agents(capacity);",

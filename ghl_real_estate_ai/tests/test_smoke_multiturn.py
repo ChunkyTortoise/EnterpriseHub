@@ -4,14 +4,15 @@ Tests fixes for:
   - buyer bot repeating hot-path tour question on every turn
   - ai_valuation_price showing lead-pricing mock instead of seller's price_expectation
 """
+
 from __future__ import annotations
 
 import asyncio
 import os
-import pytest
 from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 
 # ── Seller smoke test via _StubConversationManager ─────────────────────────
 
@@ -43,8 +44,7 @@ class _StubConversationManager:
     async def get_conversation_history(self, *a: Any, **kw: Any) -> List:
         return list(self._history)
 
-    async def update_context(self, contact_id: str, user_message: str, ai_response: str,
-                              *a: Any, **kw: Any) -> None:
+    async def update_context(self, contact_id: str, user_message: str, ai_response: str, *a: Any, **kw: Any) -> None:
         self._history.append({"role": "user", "content": user_message})
         self._history.append({"role": "assistant", "content": ai_response})
         ed = kw.get("extracted_data")
@@ -74,6 +74,7 @@ async def test_seller_valuation_field_uses_price_expectation_not_lead_pricing() 
     Tests the exact change made to jorge_seller_engine._create_seller_actions.
     """
     from types import SimpleNamespace
+
     from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
     cm = _StubConversationManager()
@@ -110,18 +111,15 @@ async def test_seller_valuation_field_uses_price_expectation_not_lead_pricing() 
     assert valuation_actions, "Expected an ai_valuation_price action"
 
     val = str(valuation_actions[0]["value"])
-    assert "750" in val, (
-        f"ai_valuation_price should use seller's price_expectation (750,000), got: {val}"
-    )
-    assert "2.0" not in val, (
-        f"ai_valuation_price must NOT contain lead-pricing mock value 2.0, got: {val}"
-    )
+    assert "750" in val, f"ai_valuation_price should use seller's price_expectation (750,000), got: {val}"
+    assert "2.0" not in val, f"ai_valuation_price must NOT contain lead-pricing mock value 2.0, got: {val}"
 
 
 @pytest.mark.asyncio
 async def test_seller_valuation_field_omitted_when_no_price_expectation() -> None:
     """When seller hasn't given a price yet, ai_valuation_price should not be written."""
     from types import SimpleNamespace
+
     from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
     cm = _StubConversationManager()
@@ -180,14 +178,10 @@ async def test_buyer_multiturn_advances_past_tour_question() -> None:
     r2 = await run_turn("mornings work great")
     resp2 = r2.get("response_content", "")
     # Should NOT repeat the same tour question
-    assert "mornings or afternoons" not in resp2.lower(), (
-        f"Turn 2 should NOT repeat tour question, got: {resp2}"
-    )
+    assert "mornings or afternoons" not in resp2.lower(), f"Turn 2 should NOT repeat tour question, got: {resp2}"
 
     # Turn 3: user gives property preferences — bot should ask something different
     r3 = await run_turn("3 bed 2 bath single family in Rancho Cucamonga")
     resp3 = r3.get("response_content", "")
     assert resp3.strip(), "Turn 3 should have a non-empty response"
-    assert "mornings or afternoons" not in resp3.lower(), (
-        f"Turn 3 should NOT ask tour question again, got: {resp3}"
-    )
+    assert "mornings or afternoons" not in resp3.lower(), f"Turn 3 should NOT ask tour question again, got: {resp3}"

@@ -86,6 +86,37 @@
         "title": "AppointmentDetailedState",
         "type": "object"
       },
+      "AuditEvent": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "details": {
+            "title": "Details",
+            "type": "object"
+          },
+          "engagement_id": {
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "engagement_id",
+          "id"
+        ],
+        "title": "AuditEvent",
+        "type": "object"
+      },
       "DeckResponse": {
         "properties": {
           "deck": {
@@ -138,6 +169,16 @@
         ],
         "title": "DetailedStateSnapshot",
         "type": "object"
+      },
+      "EngagementStatus": {
+        "enum": [
+          "active",
+          "delivered",
+          "draft",
+          "validating"
+        ],
+        "title": "EngagementStatus",
+        "type": "string"
       },
       "GHLDetailedState": {
         "properties": {
@@ -259,6 +300,177 @@
           "status"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "IntakeContext": {
+        "properties": {
+          "channels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "crm_system": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crm System"
+          },
+          "event_volume_14d": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Event Volume 14D",
+            "type": "integer"
+          },
+          "metrics": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Metrics",
+            "type": "object"
+          }
+        },
+        "title": "IntakeContext",
+        "type": "object"
+      },
+      "IntakeDiagnoseRequest": {
+        "properties": {
+          "client_name": {
+            "minLength": 2,
+            "title": "Client Name",
+            "type": "string"
+          },
+          "context": {
+            "$ref": "#/components/schemas/IntakeContext"
+          },
+          "engagement_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Engagement Id"
+          },
+          "goals": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Goals",
+            "type": "array"
+          },
+          "vertical_profile": {
+            "$ref": "#/components/schemas/VerticalProfile"
+          }
+        },
+        "required": [
+          "client_name",
+          "goals",
+          "vertical_profile"
+        ],
+        "title": "IntakeDiagnoseRequest",
+        "type": "object"
+      },
+      "IntakeDiagnosisResponse": {
+        "properties": {
+          "audit_id": {
+            "title": "Audit Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "next_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next Steps",
+            "type": "array"
+          },
+          "readiness_score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Readiness Score",
+            "type": "integer"
+          },
+          "recommended_template": {
+            "title": "Recommended Template",
+            "type": "string"
+          },
+          "risks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Risks",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EngagementStatus"
+          },
+          "vertical_profile": {
+            "$ref": "#/components/schemas/VerticalProfile"
+          }
+        },
+        "required": [
+          "audit_id",
+          "engagement_id",
+          "readiness_score",
+          "recommended_template",
+          "status",
+          "vertical_profile"
+        ],
+        "title": "IntakeDiagnosisResponse",
+        "type": "object"
+      },
+      "IntegrationBlueprint": {
+        "properties": {
+          "automation_sequence": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Automation Sequence",
+            "type": "array"
+          },
+          "channels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "crm_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Crm Fields",
+            "type": "array"
+          },
+          "escalation_rules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Escalation Rules",
+            "type": "array"
+          },
+          "triggers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Triggers",
+            "type": "array"
+          }
+        },
+        "title": "IntegrationBlueprint",
         "type": "object"
       },
       "Interaction": {
@@ -394,6 +606,201 @@
           "timestamp"
         ],
         "title": "InventoryInteractionSnapshot",
+        "type": "object"
+      },
+      "ProofPack": {
+        "properties": {
+          "baseline_kpis": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Baseline Kpis",
+            "type": "object"
+          },
+          "current_kpis": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Current Kpis",
+            "type": "object"
+          },
+          "delta_kpis": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Delta Kpis",
+            "type": "object"
+          },
+          "engagement_id": {
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "executive_summary": {
+            "title": "Executive Summary",
+            "type": "string"
+          },
+          "generated_at": {
+            "title": "Generated At",
+            "type": "string"
+          },
+          "lookback_days": {
+            "title": "Lookback Days",
+            "type": "integer"
+          },
+          "recommendations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recommendations",
+            "type": "array"
+          },
+          "risks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Risks",
+            "type": "array"
+          },
+          "roi_estimate": {
+            "title": "Roi Estimate",
+            "type": "number"
+          },
+          "sla_adherence": {
+            "title": "Sla Adherence",
+            "type": "number"
+          },
+          "vertical_profile": {
+            "$ref": "#/components/schemas/VerticalProfile"
+          }
+        },
+        "required": [
+          "baseline_kpis",
+          "current_kpis",
+          "delta_kpis",
+          "engagement_id",
+          "executive_summary",
+          "lookback_days",
+          "roi_estimate",
+          "sla_adherence",
+          "vertical_profile"
+        ],
+        "title": "ProofPack",
+        "type": "object"
+      },
+      "ProofPackFetchResponse": {
+        "properties": {
+          "audit_trail": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEvent"
+            },
+            "title": "Audit Trail",
+            "type": "array"
+          },
+          "engagement_id": {
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "proof_pack": {
+            "$ref": "#/components/schemas/ProofPack"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EngagementStatus"
+          }
+        },
+        "required": [
+          "engagement_id",
+          "proof_pack",
+          "status"
+        ],
+        "title": "ProofPackFetchResponse",
+        "type": "object"
+      },
+      "ProofPackGenerationRequest": {
+        "properties": {
+          "baseline_kpis": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Baseline Kpis",
+            "type": "object"
+          },
+          "current_kpis": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Current Kpis",
+            "type": "object"
+          },
+          "engagement_id": {
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "event_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Event Count",
+            "type": "integer"
+          },
+          "lookback_days": {
+            "default": 14,
+            "maximum": 30.0,
+            "minimum": 7.0,
+            "title": "Lookback Days",
+            "type": "integer"
+          },
+          "missing_sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Sources",
+            "type": "array"
+          },
+          "partial_telemetry": {
+            "default": false,
+            "title": "Partial Telemetry",
+            "type": "boolean"
+          },
+          "vertical_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerticalProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "engagement_id"
+        ],
+        "title": "ProofPackGenerationRequest",
+        "type": "object"
+      },
+      "ProofPackGenerationResponse": {
+        "properties": {
+          "audit_id": {
+            "title": "Audit Id",
+            "type": "string"
+          },
+          "engagement_id": {
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "proof_pack": {
+            "$ref": "#/components/schemas/ProofPack"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EngagementStatus"
+          }
+        },
+        "required": [
+          "audit_id",
+          "engagement_id",
+          "proof_pack",
+          "status"
+        ],
+        "title": "ProofPackGenerationResponse",
         "type": "object"
       },
       "PropertyCard": {
@@ -692,6 +1099,103 @@
         ],
         "title": "VapiToolResult",
         "type": "object"
+      },
+      "VerticalProfile": {
+        "enum": [
+          "ecommerce_voice",
+          "professional_services",
+          "real_estate"
+        ],
+        "title": "VerticalProfile",
+        "type": "string"
+      },
+      "WorkflowBootstrapRequest": {
+        "properties": {
+          "channels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Channels",
+            "type": "array"
+          },
+          "crm_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Crm Fields",
+            "type": "array"
+          },
+          "delivery_window_days": {
+            "default": 14,
+            "maximum": 30.0,
+            "minimum": 7.0,
+            "title": "Delivery Window Days",
+            "type": "integer"
+          },
+          "engagement_id": {
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "escalation_rules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Escalation Rules",
+            "type": "array"
+          },
+          "triggers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Triggers",
+            "type": "array"
+          },
+          "vertical_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VerticalProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "engagement_id"
+        ],
+        "title": "WorkflowBootstrapRequest",
+        "type": "object"
+      },
+      "WorkflowBootstrapResponse": {
+        "properties": {
+          "audit_id": {
+            "title": "Audit Id",
+            "type": "string"
+          },
+          "blueprint": {
+            "$ref": "#/components/schemas/IntegrationBlueprint"
+          },
+          "engagement_id": {
+            "title": "Engagement Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EngagementStatus"
+          },
+          "vertical_profile": {
+            "$ref": "#/components/schemas/VerticalProfile"
+          }
+        },
+        "required": [
+          "audit_id",
+          "blueprint",
+          "engagement_id",
+          "status",
+          "vertical_profile"
+        ],
+        "title": "WorkflowBootstrapResponse",
+        "type": "object"
       }
     }
   },
@@ -844,6 +1348,295 @@
         "summary": "Get Demo State Details",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/api/v2/intake/diagnose": {
+      "post": {
+        "operationId": "diagnose_intake_api_v2_intake_diagnose_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeDiagnoseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntakeDiagnosisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "API key missing or invalid"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Diagnose Intake",
+        "tags": [
+          "integration-accelerator"
+        ]
+      }
+    },
+    "/api/v2/reports/proof-pack": {
+      "post": {
+        "operationId": "generate_proof_pack_api_v2_reports_proof_pack_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProofPackGenerationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProofPackGenerationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid report request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "API key missing or invalid"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Engagement not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate Proof Pack",
+        "tags": [
+          "integration-accelerator"
+        ]
+      }
+    },
+    "/api/v2/reports/{engagement_id}": {
+      "get": {
+        "operationId": "get_proof_pack_api_v2_reports__engagement_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "engagement_id",
+            "required": true,
+            "schema": {
+              "title": "Engagement Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProofPackFetchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Report not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Proof Pack",
+        "tags": [
+          "integration-accelerator"
+        ]
+      }
+    },
+    "/api/v2/workflows/bootstrap": {
+      "post": {
+        "operationId": "bootstrap_workflow_api_v2_workflows_bootstrap_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-API-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowBootstrapRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowBootstrapResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "API key missing or invalid"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            },
+            "description": "Engagement not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Bootstrap Workflow",
+        "tags": [
+          "integration-accelerator"
         ]
       }
     },

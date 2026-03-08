@@ -11,10 +11,11 @@ Based on spec: End-to-End Bot Test Spec — Phone 3109204920
 Critical path: CalendarBookingService, jorge_seller_engine HOT actions,
                jorge_buyer_bot HOT tagging, webhook tag routing
 """
+
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -88,9 +89,7 @@ class _StubConversationManager:
         if extracted and isinstance(extracted, dict):
             self._seller_data.update(extracted)
 
-    async def extract_seller_data(
-        self, user_message: str, current: Dict, *a: Any, **kw: Any
-    ) -> Dict:
+    async def extract_seller_data(self, user_message: str, current: Dict, *a: Any, **kw: Any) -> Dict:
         return current
 
     def set_pending_appointment(self, data: Dict) -> None:
@@ -107,11 +106,13 @@ def _make_mock_ghl_client() -> AsyncMock:
     client.apply_actions = AsyncMock(return_value={"success": True})
     client.add_tags = AsyncMock(return_value={"success": True})
     client.update_contact = AsyncMock(return_value={"success": True})
-    client.get_free_slots = AsyncMock(return_value=[
-        {"start": "2026-03-10T09:00:00-08:00", "end": "2026-03-10T09:30:00-08:00", "date": "2026-03-10"},
-        {"start": "2026-03-10T11:00:00-08:00", "end": "2026-03-10T11:30:00-08:00", "date": "2026-03-10"},
-        {"start": "2026-03-11T14:00:00-08:00", "end": "2026-03-11T14:30:00-08:00", "date": "2026-03-11"},
-    ])
+    client.get_free_slots = AsyncMock(
+        return_value=[
+            {"start": "2026-03-10T09:00:00-08:00", "end": "2026-03-10T09:30:00-08:00", "date": "2026-03-10"},
+            {"start": "2026-03-10T11:00:00-08:00", "end": "2026-03-10T11:30:00-08:00", "date": "2026-03-10"},
+            {"start": "2026-03-11T14:00:00-08:00", "end": "2026-03-11T14:30:00-08:00", "date": "2026-03-11"},
+        ]
+    )
     client.create_appointment = AsyncMock(return_value={"id": "appt_test_001", "status": "confirmed"})
     return client
 
@@ -195,8 +196,9 @@ class TestSellerFlow:
         This tests the GHL state that would be set after Q5 (price given) with
         scheduling_step=confirmed.
         """
-        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
         from types import SimpleNamespace
+
+        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
         cm = _StubConversationManager()
         ghl = _make_mock_ghl_client()
@@ -231,9 +233,7 @@ class TestSellerFlow:
         action_types = [(a.get("type"), a.get("tag")) for a in actions]
 
         # Must add HOT seller tags
-        assert ("add_tag", "Hot-Seller") in action_types, (
-            f"Hot-Seller tag must be added. Actions: {action_types}"
-        )
+        assert ("add_tag", "Hot-Seller") in action_types, f"Hot-Seller tag must be added. Actions: {action_types}"
         assert ("add_tag", "Seller-Qualified") in action_types, (
             f"Seller-Qualified tag must be added. Actions: {action_types}"
         )
@@ -257,16 +257,15 @@ class TestSellerFlow:
         HOT_SELLER_WORKFLOW_ID must only trigger when scheduling_step == 'confirmed'.
         Before booking, no workflow trigger should appear in actions.
         """
-        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
         from types import SimpleNamespace
+
+        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
         cm = _StubConversationManager()
         ghl = _make_mock_ghl_client()
         engine = JorgeSellerEngine(cm, ghl)
 
-        pricing_mock = SimpleNamespace(
-            final_price=650000.0, tier="hot", expected_roi=14.0, justification="test"
-        )
+        pricing_mock = SimpleNamespace(final_price=650000.0, tier="hot", expected_roi=14.0, justification="test")
 
         with patch.dict(
             "os.environ",
@@ -287,10 +286,7 @@ class TestSellerFlow:
                 pricing_result=pricing_mock,
             )
             wf_pre = [a for a in actions_pre if a.get("type") == "trigger_workflow"]
-            assert not wf_pre, (
-                "Workflow must NOT fire before scheduling is confirmed. "
-                f"Got: {wf_pre}"
-            )
+            assert not wf_pre, f"Workflow must NOT fire before scheduling is confirmed. Got: {wf_pre}"
 
             # After booking confirmed — workflow fires
             actions_post = await engine._create_seller_actions(
@@ -308,8 +304,7 @@ class TestSellerFlow:
             )
             wf_post = [a for a in actions_post if a.get("type") == "trigger_workflow"]
             assert wf_post, (
-                "Workflow MUST fire after scheduling_step=confirmed. "
-                f"Actions: {[a.get('type') for a in actions_post]}"
+                f"Workflow MUST fire after scheduling_step=confirmed. Actions: {[a.get('type') for a in actions_post]}"
             )
             assert wf_post[0]["workflow_id"] == TEST_HOT_SELLER_WORKFLOW_ID
 
@@ -320,8 +315,9 @@ class TestSellerFlow:
         price expectation, and PCS score must all appear in the actions dict
         when a seller is HOT.
         """
-        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
         from types import SimpleNamespace
+
+        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
         cm = _StubConversationManager()
         ghl = _make_mock_ghl_client()
@@ -335,15 +331,16 @@ class TestSellerFlow:
             "price_expectation": "650000",
             "scheduling_step": "confirmed",
         }
-        pricing_mock = SimpleNamespace(
-            final_price=650000.0, tier="hot", expected_roi=14.0, justification="test"
-        )
+        pricing_mock = SimpleNamespace(final_price=650000.0, tier="hot", expected_roi=14.0, justification="test")
 
-        with patch.dict("os.environ", {
-            "CUSTOM_FIELD_SELLER_TEMPERATURE": "fld_seller_temp",
-            "CUSTOM_FIELD_SELLER_MOTIVATION": "fld_seller_motivation",
-            "CUSTOM_FIELD_PRICE_EXPECTATION": "fld_price_exp",
-        }):
+        with patch.dict(
+            "os.environ",
+            {
+                "CUSTOM_FIELD_SELLER_TEMPERATURE": "fld_seller_temp",
+                "CUSTOM_FIELD_SELLER_MOTIVATION": "fld_seller_motivation",
+                "CUSTOM_FIELD_PRICE_EXPECTATION": "fld_price_exp",
+            },
+        ):
             actions = await engine._create_seller_actions(
                 contact_id=TEST_CONTACT_ID,
                 location_id=TEST_LOCATION_ID,
@@ -370,31 +367,33 @@ class TestSellerFlow:
         engine = JorgeSellerEngine(cm, ghl)
 
         # All 4 answered but timeline rejected → NOT hot
-        result_no_timeline = await engine._calculate_seller_temperature({
-            "questions_answered": 4,
-            "response_quality": 1.0,
-            "timeline_acceptable": False,
-        })
-        assert result_no_timeline["temperature"] != "hot", (
-            "Should not be HOT when timeline is rejected"
+        result_no_timeline = await engine._calculate_seller_temperature(
+            {
+                "questions_answered": 4,
+                "response_quality": 1.0,
+                "timeline_acceptable": False,
+            }
         )
+        assert result_no_timeline["temperature"] != "hot", "Should not be HOT when timeline is rejected"
 
         # Timeline accepted but only 3 questions → NOT hot
-        result_3q = await engine._calculate_seller_temperature({
-            "questions_answered": 3,
-            "response_quality": 1.0,
-            "timeline_acceptable": True,
-        })
-        assert result_3q["temperature"] != "hot", (
-            "Should not be HOT with only 3 questions answered"
+        result_3q = await engine._calculate_seller_temperature(
+            {
+                "questions_answered": 3,
+                "response_quality": 1.0,
+                "timeline_acceptable": True,
+            }
         )
+        assert result_3q["temperature"] != "hot", "Should not be HOT with only 3 questions answered"
 
         # All 4 + timeline accepted → HOT
-        result_hot = await engine._calculate_seller_temperature({
-            "questions_answered": 4,
-            "response_quality": 1.0,
-            "timeline_acceptable": True,
-        })
+        result_hot = await engine._calculate_seller_temperature(
+            {
+                "questions_answered": 4,
+                "response_quality": 1.0,
+                "timeline_acceptable": True,
+            }
+        )
         assert result_hot["temperature"] == "hot", (
             f"Should be HOT with 4 questions + timeline. Got: {result_hot['temperature']}"
         )
@@ -405,8 +404,9 @@ class TestSellerFlow:
         ai_valuation_price field must use the seller's stated price_expectation (650000),
         not the lead-pricing model value.
         """
-        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
         from types import SimpleNamespace
+
+        from ghl_real_estate_ai.services.jorge.jorge_seller_engine import JorgeSellerEngine
 
         cm = _StubConversationManager()
         ghl = _make_mock_ghl_client()
@@ -431,12 +431,8 @@ class TestSellerFlow:
         valuation_actions = [a for a in actions if "valuation" in str(a.get("field", ""))]
         if valuation_actions:
             val = str(valuation_actions[0]["value"])
-            assert "650" in val, (
-                f"ai_valuation_price should reflect seller's $650,000, got: {val}"
-            )
-            assert "2.0" not in val, (
-                f"ai_valuation_price must NOT use pricing model mock value 2.0, got: {val}"
-            )
+            assert "650" in val, f"ai_valuation_price should reflect seller's $650,000, got: {val}"
+            assert "2.0" not in val, f"ai_valuation_price must NOT use pricing model mock value 2.0, got: {val}"
 
 
 # ---------------------------------------------------------------------------
@@ -502,9 +498,7 @@ class TestBuyerFlow:
 
         # Verify the final result includes expected qualification keys
         final = r4
-        assert "response_content" in final or "message" in final, (
-            "Buyer result must contain a response message"
-        )
+        assert "response_content" in final or "message" in final, "Buyer result must contain a response message"
 
     @pytest.mark.asyncio
     async def test_buyer_workflow_tags_applied_on_hot(_self, _mock_buyer_deps) -> None:
@@ -563,17 +557,13 @@ class TestBuyerFlow:
         # Turn 2: user answers tour → bot must advance
         r2 = await run_turn("mornings work great")
         resp2 = r2.get("response_content", "")
-        assert "mornings or afternoons" not in resp2.lower(), (
-            f"Turn 2 must not repeat tour question, got: {resp2}"
-        )
+        assert "mornings or afternoons" not in resp2.lower(), f"Turn 2 must not repeat tour question, got: {resp2}"
 
         # Turn 3: preferences given → bot asks something new
         r3 = await run_turn("3 bed 2 bath single family in Rancho Cucamonga")
         resp3 = r3.get("response_content", "")
         assert resp3.strip(), "Turn 3 should produce a non-empty response"
-        assert "mornings or afternoons" not in resp3.lower(), (
-            f"Turn 3 must not re-ask tour question, got: {resp3}"
-        )
+        assert "mornings or afternoons" not in resp3.lower(), f"Turn 3 must not re-ask tour question, got: {resp3}"
 
 
 # ---------------------------------------------------------------------------
@@ -841,6 +831,7 @@ class TestWebhookSmoke:
         must be '/api' to get the canonical path /api/ghl/webhook.
         """
         from fastapi import FastAPI
+
         from ghl_real_estate_ai.api.routes import webhook as wh_module
 
         test_app = FastAPI()
@@ -860,9 +851,7 @@ class TestWebhookSmoke:
         )
         # 422 = Unprocessable Entity (missing required fields)
         # 401/403 = signature validation fails before schema parse
-        assert resp.status_code in (400, 401, 403, 422), (
-            f"Empty payload should fail with 4xx, got {resp.status_code}"
-        )
+        assert resp.status_code in (400, 401, 403, 422), f"Empty payload should fail with 4xx, got {resp.status_code}"
 
     def test_tag_routing_inbound_message_seller_path(self) -> None:
         """

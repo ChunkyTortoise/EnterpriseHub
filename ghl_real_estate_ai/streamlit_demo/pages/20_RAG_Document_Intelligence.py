@@ -20,9 +20,7 @@ st.set_page_config(
 inject_elite_css()
 
 st.title("RAG DOCUMENT INTELLIGENCE")
-st.markdown(
-    "### Hybrid BM25 + Dense Retrieval | Cross-Encoder Reranking | Source Attribution"
-)
+st.markdown("### Hybrid BM25 + Dense Retrieval | Cross-Encoder Reranking | Source Attribution")
 
 render_rag_demo_dashboard()
 

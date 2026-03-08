@@ -23,6 +23,7 @@ import sys
 try:
     import numpy as np
     from scipy import stats
+
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
@@ -33,6 +34,7 @@ except ImportError:
 @dataclass
 class ComparisonResult:
     """Results of comparing two benchmark values."""
+
     metric_name: str
     current_value: float
     baseline_value: float
@@ -54,46 +56,59 @@ class BenchmarkComparator:
             # Performance metrics (higher = worse)
             "latency": {
                 "significant": 0.15,  # 15% increase
-                "minor": 0.05,        # 5% increase
-                "absolute_min": 5.0   # 5ms minimum change
+                "minor": 0.05,  # 5% increase
+                "absolute_min": 5.0,  # 5ms minimum change
             },
             # Quality metrics (lower = worse)
             "quality": {
                 "significant": -0.10,  # 10% decrease
-                "minor": -0.03,        # 3% decrease
-                "absolute_min": 0.01   # 0.01 minimum change
+                "minor": -0.03,  # 3% decrease
+                "absolute_min": 0.01,  # 0.01 minimum change
             },
             # Throughput metrics (lower = worse)
             "throughput": {
                 "significant": -0.20,  # 20% decrease
-                "minor": -0.05,        # 5% decrease
-                "absolute_min": 50.0   # 50 req/min minimum change
-            }
+                "minor": -0.05,  # 5% decrease
+                "absolute_min": 50.0,  # 50 req/min minimum change
+            },
         }
 
         # Metric categorization
         self.metric_categories = {
             "latency": [
-                "api_p50", "api_p95", "api_p99",
-                "embedding", "dense_retrieval", "hybrid_retrieval",
-                "query_latency", "latency", "response_time"
+                "api_p50",
+                "api_p95",
+                "api_p99",
+                "embedding",
+                "dense_retrieval",
+                "hybrid_retrieval",
+                "query_latency",
+                "latency",
+                "response_time",
             ],
             "quality": [
-                "recall_at_5", "recall_at_10", "ndcg_at_10",
-                "answer_relevance", "faithfulness", "context_precision",
-                "context_recall", "accuracy", "precision", "f1_score"
+                "recall_at_5",
+                "recall_at_10",
+                "ndcg_at_10",
+                "answer_relevance",
+                "faithfulness",
+                "context_precision",
+                "context_recall",
+                "accuracy",
+                "precision",
+                "f1_score",
             ],
             "throughput": [
-                "requests_per_minute", "requests_per_second", "throughput",
-                "queries_per_second", "concurrent_users"
-            ]
+                "requests_per_minute",
+                "requests_per_second",
+                "throughput",
+                "queries_per_second",
+                "concurrent_users",
+            ],
         }
 
     def compare_benchmarks(
-        self,
-        current_file: str,
-        baseline_file: str,
-        output_file: Optional[str] = None
+        self, current_file: str, baseline_file: str, output_file: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Compare current benchmark results against baseline.
@@ -134,7 +149,7 @@ class BenchmarkComparator:
             return None
 
         try:
-            with path.open('r') as f:
+            with path.open("r") as f:
                 return json.load(f)
         except json.JSONDecodeError as e:
             print(f"Error parsing JSON file {file_path}: {e}")
@@ -143,11 +158,7 @@ class BenchmarkComparator:
             print(f"Error loading file {file_path}: {e}")
             return None
 
-    def _perform_comparison(
-        self,
-        current: Dict[str, Any],
-        baseline: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _perform_comparison(self, current: Dict[str, Any], baseline: Dict[str, Any]) -> Dict[str, Any]:
         """Perform detailed comparison between current and baseline results."""
         comparison = {
             "metadata": {
@@ -160,12 +171,12 @@ class BenchmarkComparator:
                 "regressions": 0,
                 "improvements": 0,
                 "no_change": 0,
-                "significant_changes": 0
+                "significant_changes": 0,
             },
             "results": [],
             "regressions": [],
             "improvements": [],
-            "analysis": {}
+            "analysis": {},
         }
 
         # Extract metrics for comparison
@@ -250,9 +261,7 @@ class BenchmarkComparator:
         is_improvement = self._is_improvement(percent_change, absolute_change, category)
 
         # Determine significance
-        significance, confidence = self._assess_significance(
-            percent_change, absolute_change, category
-        )
+        significance, confidence = self._assess_significance(percent_change, absolute_change, category)
 
         return ComparisonResult(
             metric_name=metric_name,
@@ -263,7 +272,7 @@ class BenchmarkComparator:
             is_regression=is_regression,
             is_improvement=is_improvement,
             significance=significance,
-            confidence=confidence
+            confidence=confidence,
         )
 
     def _get_metric_category(self, metric_name: str) -> str:
@@ -290,12 +299,14 @@ class BenchmarkComparator:
 
         if category == "latency":
             # For latency, increases are bad
-            return (percent_change > abs(thresholds["minor"]) * 100 and
-                    absolute_change > thresholds.get("absolute_min", 0))
+            return percent_change > abs(thresholds["minor"]) * 100 and absolute_change > thresholds.get(
+                "absolute_min", 0
+            )
         else:
             # For quality/throughput, decreases are bad
-            return (percent_change < thresholds["minor"] * 100 and
-                    abs(absolute_change) > thresholds.get("absolute_min", 0))
+            return percent_change < thresholds["minor"] * 100 and abs(absolute_change) > thresholds.get(
+                "absolute_min", 0
+            )
 
     def _is_improvement(self, percent_change: float, absolute_change: float, category: str) -> bool:
         """Determine if a change represents an improvement."""
@@ -303,19 +314,16 @@ class BenchmarkComparator:
 
         if category == "latency":
             # For latency, decreases are good
-            return (percent_change < -abs(thresholds["minor"]) * 100 and
-                    abs(absolute_change) > thresholds.get("absolute_min", 0))
+            return percent_change < -abs(thresholds["minor"]) * 100 and abs(absolute_change) > thresholds.get(
+                "absolute_min", 0
+            )
         else:
             # For quality/throughput, increases are good
-            return (percent_change > abs(thresholds["minor"]) * 100 and
-                    absolute_change > thresholds.get("absolute_min", 0))
+            return percent_change > abs(thresholds["minor"]) * 100 and absolute_change > thresholds.get(
+                "absolute_min", 0
+            )
 
-    def _assess_significance(
-        self,
-        percent_change: float,
-        absolute_change: float,
-        category: str
-    ) -> Tuple[str, float]:
+    def _assess_significance(self, percent_change: float, absolute_change: float, category: str) -> Tuple[str, float]:
         """Assess the significance of a change."""
         thresholds = self.regression_thresholds.get(category, self.regression_thresholds["latency"])
 
@@ -323,13 +331,11 @@ class BenchmarkComparator:
         abs_absolute = abs(absolute_change)
 
         # Check for significant change
-        if (abs_percent > abs(thresholds["significant"]) * 100 and
-                abs_absolute > thresholds.get("absolute_min", 0) * 2):
+        if abs_percent > abs(thresholds["significant"]) * 100 and abs_absolute > thresholds.get("absolute_min", 0) * 2:
             return "significant", 0.95
 
         # Check for minor change
-        elif (abs_percent > abs(thresholds["minor"]) * 100 and
-              abs_absolute > thresholds.get("absolute_min", 0)):
+        elif abs_percent > abs(thresholds["minor"]) * 100 and abs_absolute > thresholds.get("absolute_min", 0):
             return "minor", 0.80
 
         # Insignificant change
@@ -347,7 +353,7 @@ class BenchmarkComparator:
             "minor_regressions": 0,
             "significant_improvements": 0,
             "most_impacted_metrics": [],
-            "recommendations": []
+            "recommendations": [],
         }
 
         # Categorize regressions by significance
@@ -375,9 +381,7 @@ class BenchmarkComparator:
         # Find most impacted metrics
         significant_changes = [r for r in results if r.significance == "significant"]
         analysis["most_impacted_metrics"] = sorted(
-            significant_changes,
-            key=lambda x: abs(x.change_percent),
-            reverse=True
+            significant_changes, key=lambda x: abs(x.change_percent), reverse=True
         )[:5]
 
         # Generate recommendations
@@ -385,11 +389,7 @@ class BenchmarkComparator:
 
         return analysis
 
-    def _generate_recommendations(
-        self,
-        analysis: Dict[str, Any],
-        comparison: Dict[str, Any]
-    ) -> List[str]:
+    def _generate_recommendations(self, analysis: Dict[str, Any], comparison: Dict[str, Any]) -> List[str]:
         """Generate actionable recommendations based on comparison results."""
         recommendations = []
 
@@ -400,16 +400,13 @@ class BenchmarkComparator:
             )
 
         if analysis["minor_regressions"] > 3:
-            recommendations.append(
-                "⚠️ **Multiple Minor Regressions**: Consider comprehensive performance review"
-            )
+            recommendations.append("⚠️ **Multiple Minor Regressions**: Consider comprehensive performance review")
 
         # Specific metric recommendations
         for metric in analysis["most_impacted_metrics"][:3]:
             if metric.is_regression:
                 recommendations.append(
-                    f"🔍 **Investigate {metric.metric_name}**: "
-                    f"{metric.change_percent:+.1f}% change from baseline"
+                    f"🔍 **Investigate {metric.metric_name}**: {metric.change_percent:+.1f}% change from baseline"
                 )
 
         if analysis["significant_improvements"] > 0:
@@ -419,9 +416,7 @@ class BenchmarkComparator:
             )
 
         if analysis["overall_status"] == "stable":
-            recommendations.append(
-                "🟢 **Stable Performance**: No significant regressions detected"
-            )
+            recommendations.append("🟢 **Stable Performance**: No significant regressions detected")
 
         return recommendations
 
@@ -456,7 +451,7 @@ class BenchmarkComparator:
                     "is_regression": r.is_regression,
                     "is_improvement": r.is_improvement,
                     "significance": r.significance,
-                    "confidence": r.confidence
+                    "confidence": r.confidence,
                 }
                 for r in results_list
             ]
@@ -472,7 +467,7 @@ class BenchmarkComparator:
             )
 
         output_path = Path(output_file)
-        with output_path.open('w') as f:
+        with output_path.open("w") as f:
             json.dump(serializable_comparison, f, indent=2)
 
         print(f"Comparison results saved to: {output_file}")
@@ -483,25 +478,20 @@ class BenchmarkComparator:
         summary = comparison["summary"]
 
         # Status emoji mapping
-        status_emoji = {
-            "critical_regression": "🔴",
-            "minor_regression": "🟡",
-            "stable": "🟢",
-            "improved": "⭐"
-        }
+        status_emoji = {"critical_regression": "🔴", "minor_regression": "🟡", "stable": "🟢", "improved": "⭐"}
 
         report = f"""
 # Benchmark Comparison Report
 
-**Status**: {status_emoji.get(analysis['overall_status'], '⚪')} {analysis['overall_status'].replace('_', ' ').title()}
-**Generated**: {comparison['metadata']['comparison_timestamp']}
+**Status**: {status_emoji.get(analysis["overall_status"], "⚪")} {analysis["overall_status"].replace("_", " ").title()}
+**Generated**: {comparison["metadata"]["comparison_timestamp"]}
 
 ## Summary
 
-- **Total Comparisons**: {summary['total_comparisons']}
-- **Regressions**: {summary['regressions']} ({analysis['critical_regressions']} critical, {analysis['minor_regressions']} minor)
-- **Improvements**: {summary['improvements']} ({analysis['significant_improvements']} significant)
-- **No Change**: {summary['no_change']}
+- **Total Comparisons**: {summary["total_comparisons"]}
+- **Regressions**: {summary["regressions"]} ({analysis["critical_regressions"]} critical, {analysis["minor_regressions"]} minor)
+- **Improvements**: {summary["improvements"]} ({analysis["significant_improvements"]} significant)
+- **No Change**: {summary["no_change"]}
 
 ## Critical Issues
 """
@@ -537,7 +527,9 @@ def main():
     parser.add_argument("--baseline", required=True, help="Baseline benchmark results file")
     parser.add_argument("--output", help="Output file for comparison results (JSON)")
     parser.add_argument("--report", help="Output file for text report")
-    parser.add_argument("--fail-on-regression", action="store_true", help="Exit with error code if regressions detected")
+    parser.add_argument(
+        "--fail-on-regression", action="store_true", help="Exit with error code if regressions detected"
+    )
 
     args = parser.parse_args()
 
@@ -546,15 +538,13 @@ def main():
 
     try:
         comparison = comparator.compare_benchmarks(
-            current_file=args.current,
-            baseline_file=args.baseline,
-            output_file=args.output
+            current_file=args.current, baseline_file=args.baseline, output_file=args.output
         )
 
         # Generate text report
         if args.report:
             text_report = comparator.generate_text_report(comparison)
-            with Path(args.report).open('w') as f:
+            with Path(args.report).open("w") as f:
                 f.write(text_report)
             print(f"Text report saved to: {args.report}")
 
