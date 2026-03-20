@@ -161,6 +161,18 @@ async def lifespan(app: FastAPI):
         extra={"environment": settings.environment, "model": settings.claude_model},
     )
 
+    # Production safety guards — fail fast before any services start
+    if settings.ghl_allow_unsigned_webhooks and settings.environment in ("production", "prod"):
+        raise RuntimeError(
+            "GHL_ALLOW_UNSIGNED_WEBHOOKS=true is blocked in production — "
+            "set GHL_ALLOW_UNSIGNED_WEBHOOKS=false or remove this env var"
+        )
+    if settings.environment in ("production", "prod") and not os.getenv("STRIPE_WEBHOOK_SECRET"):
+        raise RuntimeError(
+            "STRIPE_WEBHOOK_SECRET is required in production — "
+            "set this env var to your Stripe webhook signing secret"
+        )
+
     # Initialize OpenTelemetry (reads from OTEL_ENABLED env var)
     otel_ok = setup_observability()
     if otel_ok:
@@ -749,7 +761,8 @@ def _setup_routers(app: FastAPI):
     app.include_router(revenue_v2.router)
     app.include_router(export_engine.router)
     app.include_router(commission_forecast.router)
-    app.include_router(billing.router, prefix="/api", dependencies=[Depends(get_current_user)])
+    app.include_router(billing.router, prefix="/api")  # JWT auth enforced at router level
+    app.include_router(billing.stripe_webhook_router, prefix="/api")  # Stripe sig verification, no JWT
     app.include_router(checkout.router, prefix="/api")  # No auth â public checkout
 
     # Concierge Admin (multi-tenant management + hot-reload)

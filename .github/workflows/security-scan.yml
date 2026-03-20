@@ -94,10 +94,9 @@ jobs:
           pip install bandit[toml]
           bandit -r ghl_real_estate_ai/ -f json -o bandit-report.json \
             -s B101 \
-            --exclude "*/tests/*" || true
-          # Text summary (non-blocking — report artifact has full details)
-          bandit -r ghl_real_estate_ai/ -s B101 --exclude "*/tests/*" \
-            -ll || true  # Only show MEDIUM+ severity
+            --exclude "*/tests/*"
+          # Text summary — MEDIUM+ severity, blocking
+          bandit -r ghl_real_estate_ai/ -s B101 --exclude "*/tests/*" -ll
 
       - name: Upload Bandit report
         uses: actions/upload-artifact@v4
@@ -123,8 +122,8 @@ jobs:
         run: |
           pip install pip-audit
           pip install -r requirements.txt
-          pip-audit --format json --output pip-audit-report.json || true
-          pip-audit || echo "Vulnerabilities found — review required"
+          pip-audit --format json --output pip-audit-report.json
+          pip-audit
 
       - name: Upload audit report
         uses: actions/upload-artifact@v4
@@ -156,6 +155,13 @@ jobs:
           if grep -rn '\.format(.*execute' ghl_real_estate_ai/ --include="*.py" \
               --exclude-dir=__pycache__ | grep -v test_; then
             echo "::warning::format() with execute() found"
+            FOUND=1
+          fi
+
+          # f-string SQL — direct injection vector
+          if grep -rn 'session\.execute(f' ghl_real_estate_ai/ --include="*.py" \
+              --exclude-dir=__pycache__; then
+            echo "::error::f-string SQL found in session.execute() — parameterize with text()+bindparams"
             FOUND=1
           fi
 

@@ -421,8 +421,7 @@ class BillingService:
             True if signature is valid, False otherwise
         """
         if not self.webhook_secret:
-            logger.warning("Webhook signature verification disabled - no secret configured")
-            return True
+            raise ValueError("STRIPE_WEBHOOK_SECRET is required — cannot verify webhook signatures")
 
         try:
             stripe.Webhook.construct_event(payload, signature, self.webhook_secret)

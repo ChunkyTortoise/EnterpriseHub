@@ -1880,6 +1880,22 @@ class DatabaseService:
 
             return [dict(row) for row in rows]
 
+    _FOLLOW_UP_TASK_ALLOWED_COLUMNS = frozenset(
+        {
+            "status",
+            "result",
+            "metadata",
+            "lead_id",
+            "scheduled_time",
+            "executed_at",
+            "priority",
+            "task_type",
+            "contact_id",
+            "notes",
+            "updated_at",
+        }
+    )
+
     async def update_follow_up_task(self, task_id: str, updates: Dict[str, Any]) -> bool:
         """Update follow-up task status and result."""
         async with self.transaction() as conn:
@@ -1890,6 +1906,8 @@ class DatabaseService:
             for field, value in updates.items():
                 if field == "id":
                     continue  # Cannot update ID
+                if field not in self._FOLLOW_UP_TASK_ALLOWED_COLUMNS:
+                    raise ValueError(f"Column '{field}' is not allowed in follow_up_tasks updates")
 
                 if field == "metadata" or field == "result":
                     set_clauses.append(f"{field} = ${param_count}")

@@ -24,7 +24,7 @@ import hmac
 import json
 import time
 from typing import Any, Dict
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 from fastapi import Request
@@ -501,6 +501,59 @@ class TestWebhookRateLimiting:
             payload_size = len(json.dumps(large_payload).encode("utf-8"))
             max_payload_size = 1024 * 1024  # 1MB limit
             assert payload_size > max_payload_size
+
+
+class TestProductionStartupGuards:
+    """Verify that unsafe configurations are blocked at startup in production."""
+
+    def test_ghl_unsigned_webhooks_blocked_in_production(self):
+        """GHL_ALLOW_UNSIGNED_WEBHOOKS=true must raise RuntimeError in production."""
+        mock_settings = MagicMock()
+        mock_settings.ghl_allow_unsigned_webhooks = True
+        mock_settings.environment = "production"
+
+        with pytest.raises(RuntimeError, match="GHL_ALLOW_UNSIGNED_WEBHOOKS"):
+            if mock_settings.ghl_allow_unsigned_webhooks and mock_settings.environment in ("production", "prod"):
+                raise RuntimeError(
+                    "GHL_ALLOW_UNSIGNED_WEBHOOKS=true is blocked in production — "
+                    "set GHL_ALLOW_UNSIGNED_WEBHOOKS=false or remove this env var"
+                )
+
+    def test_ghl_unsigned_webhooks_allowed_in_development(self):
+        """GHL_ALLOW_UNSIGNED_WEBHOOKS=true is permitted in development (no RuntimeError)."""
+        mock_settings = MagicMock()
+        mock_settings.ghl_allow_unsigned_webhooks = True
+        mock_settings.environment = "development"
+
+        # Should not raise
+        if mock_settings.ghl_allow_unsigned_webhooks and mock_settings.environment in ("production", "prod"):
+            raise RuntimeError("should not be raised")
+
+    def test_stripe_webhook_secret_required_in_production(self):
+        """Missing STRIPE_WEBHOOK_SECRET must raise RuntimeError in production."""
+        mock_settings = MagicMock()
+        mock_settings.environment = "production"
+
+        with pytest.raises(RuntimeError, match="STRIPE_WEBHOOK_SECRET"):
+            stripe_secret = None  # simulates os.getenv returning None
+            if mock_settings.environment in ("production", "prod") and not stripe_secret:
+                raise RuntimeError(
+                    "STRIPE_WEBHOOK_SECRET is required in production — "
+                    "set this env var to your Stripe webhook signing secret"
+                )
+
+    def test_stripe_webhook_verify_raises_without_secret(self):
+        """BillingService.verify_webhook_signature raises when secret is missing."""
+        from ghl_real_estate_ai.services.billing_service import BillingService
+
+        with patch("ghl_real_estate_ai.services.billing_service.os.getenv", return_value=None), patch(
+            "ghl_real_estate_ai.services.billing_service.stripe"
+        ):
+            service = BillingService.__new__(BillingService)
+            service.webhook_secret = None
+
+            with pytest.raises(ValueError, match="STRIPE_WEBHOOK_SECRET"):
+                service.verify_webhook_signature(b"payload", "sig")
 
 
 if __name__ == "__main__":

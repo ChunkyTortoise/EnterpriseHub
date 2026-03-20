@@ -25,6 +25,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
+
 pytestmark = pytest.mark.unit
 
 
@@ -56,8 +58,14 @@ skip_if_no_billing = pytest.mark.skipif(
 # ---------------------------------------------------------------------------
 
 
-def _make_billing_client(billing_service=None, subscription_manager=None):
-    """Create a TestClient with just the billing router, deps mocked."""
+def _make_billing_client(billing_service=None, subscription_manager=None, authenticated=True):
+    """Create a TestClient with just the billing router, deps mocked.
+
+    Args:
+        authenticated: When True (default), override get_current_user so JWT
+            validation is bypassed and existing tests stay green. When False,
+            the real dependency runs and unauthenticated requests return 401.
+    """
     mock_billing = billing_service or MagicMock()
     mock_sub_mgr = subscription_manager or MagicMock()
 
@@ -70,6 +78,15 @@ def _make_billing_client(billing_service=None, subscription_manager=None):
 
     test_app = FastAPI()
     test_app.include_router(billing_module.router)
+    # Stripe webhook lives on the unauthenticated router
+    test_app.include_router(billing_module.stripe_webhook_router)
+
+    if authenticated:
+        mock_user = MagicMock()
+        mock_user.id = 1
+        mock_user.is_active = True
+        test_app.dependency_overrides[get_current_user] = lambda: mock_user
+
     return TestClient(test_app, raise_server_exceptions=False), mock_billing, mock_sub_mgr
 
 
@@ -553,3 +570,54 @@ class TestTierDistribution:
         resp = client.get("/billing/analytics/tiers")
 
         assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Auth enforcement: unauthenticated requests must return 401
+# ---------------------------------------------------------------------------
+
+
+@skip_if_no_billing
+class TestBillingAuthEnforcement:
+    """Verify that billing routes enforce JWT auth and Stripe webhook does not."""
+
+    def test_unauthenticated_create_subscription_returns_401(self):
+        """POST /billing/subscriptions without a token returns 401."""
+        client, _, _ = _make_billing_client(authenticated=False)
+        resp = client.post("/billing/subscriptions", json={})
+        assert resp.status_code == 401
+
+    def test_unauthenticated_get_subscription_returns_401(self):
+        """GET /billing/subscriptions/{id} without a token returns 401."""
+        client, _, _ = _make_billing_client(authenticated=False)
+        resp = client.get("/billing/subscriptions/1")
+        assert resp.status_code == 401
+
+    def test_unauthenticated_revenue_analytics_returns_401(self):
+        """GET /billing/analytics/revenue without a token returns 401."""
+        client, _, _ = _make_billing_client(authenticated=False)
+        resp = client.get("/billing/analytics/revenue")
+        assert resp.status_code == 401
+
+    def test_authenticated_subscription_request_proceeds(self):
+        """Authenticated request reaches the route handler (not blocked by auth)."""
+        mock_billing = MagicMock()
+        mock_billing.create_subscription = AsyncMock(side_effect=Exception("db error"))
+        client, _, _ = _make_billing_client(billing_service=mock_billing, authenticated=True)
+        resp = client.post(
+            "/billing/subscriptions",
+            json={"location_id": "loc1", "tier": "starter", "email": "a@b.com"},
+        )
+        # Reaches handler — auth passed, gets a 500 from mocked db error (not 401)
+        assert resp.status_code != 401
+
+    def test_stripe_webhook_accessible_without_jwt(self):
+        """Stripe webhook endpoint does not require JWT auth (uses Stripe sig instead)."""
+        client, _, _ = _make_billing_client(authenticated=False)
+        resp = client.post(
+            "/billing/webhooks/stripe",
+            content=b'{"type": "invoice.paid"}',
+            headers={"Content-Type": "application/json"},
+        )
+        # No JWT — but Stripe sig check runs. Missing sig → 400, not 401.
+        assert resp.status_code == 400

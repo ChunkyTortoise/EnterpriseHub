@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -442,14 +442,16 @@ class TransactionService:
         async with self.SessionLocal() as session:
             try:
                 # Use optimized view
-                result = await session.execute(f"""
-                    SELECT * FROM milestone_timeline_view 
-                    WHERE transaction_id = (
-                        SELECT id FROM real_estate_transactions 
-                        WHERE transaction_id = '{transaction_id}'
-                    )
-                    ORDER BY order_sequence
-                """)
+                result = await session.execute(
+                    text(
+                        "SELECT * FROM milestone_timeline_view "
+                        "WHERE transaction_id = ("
+                        "SELECT id FROM real_estate_transactions "
+                        "WHERE transaction_id = :tx_id) "
+                        "ORDER BY order_sequence"
+                    ),
+                    {"tx_id": transaction_id},
+                )
 
                 milestones = result.fetchall()
 
@@ -492,15 +494,17 @@ class TransactionService:
                         # Check if celebration is pending
                         if not timeline_data["celebration_pending"]:
                             # Check if this milestone had a celebration triggered
-                            celebration_check = await session.execute(f"""
-                                SELECT COUNT(*) FROM transaction_celebrations 
-                                WHERE transaction_id = (
-                                    SELECT id FROM real_estate_transactions 
-                                    WHERE transaction_id = '{transaction_id}'
-                                )
-                                AND milestone_type = '{milestone[1]}'
-                                AND triggered_at >= NOW() - INTERVAL '1 hour'
-                            """)
+                            celebration_check = await session.execute(
+                                text(
+                                    "SELECT COUNT(*) FROM transaction_celebrations "
+                                    "WHERE transaction_id = ("
+                                    "SELECT id FROM real_estate_transactions "
+                                    "WHERE transaction_id = :tx_id) "
+                                    "AND milestone_type = :m_type "
+                                    "AND triggered_at >= NOW() - INTERVAL '1 hour'"
+                                ),
+                                {"tx_id": transaction_id, "m_type": milestone[1]},
+                            )
                             recent_celebration = celebration_check.scalar()
                             if recent_celebration > 0:
                                 timeline_data["celebration_pending"] = True
