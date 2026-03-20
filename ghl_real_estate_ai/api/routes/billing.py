@@ -15,10 +15,11 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Request, BackgroundTasks, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks, Query, status
 from fastapi.responses import JSONResponse
 import stripe
 
+from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.billing_service import BillingService, BillingServiceError
@@ -44,7 +45,9 @@ from ghl_real_estate_ai.api.schemas.billing import (
 )
 
 logger = get_logger(__name__)
-router = APIRouter(prefix="/billing", tags=["billing"])
+router = APIRouter(prefix="/billing", tags=["billing"], dependencies=[Depends(get_current_user)])
+# Separate router for Stripe webhook — uses Stripe signature verification, not JWT
+stripe_webhook_router = APIRouter(prefix="/billing", tags=["billing"])
 
 # Initialize services (singletons)
 billing_service = BillingService()
@@ -1185,7 +1188,7 @@ async def get_billing_history(customer_id: str):
 # ===================================================================
 
 
-@router.post("/webhooks/stripe", response_model=WebhookProcessingResult)
+@stripe_webhook_router.post("/webhooks/stripe", response_model=WebhookProcessingResult)
 async def handle_stripe_webhook(request: Request, background_tasks: BackgroundTasks):
     """
     Handle Stripe webhook events.
