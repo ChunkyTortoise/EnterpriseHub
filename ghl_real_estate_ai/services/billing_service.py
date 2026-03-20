@@ -497,7 +497,7 @@ class BillingService:
     # Invoice Management
     # ===================================================================
 
-    async def get_customer_invoices(self, customer_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_customer_invoices(self, customer_id: str, limit: int = 100) -> List[Any]:
         """
         Retrieve invoices for a customer.
 

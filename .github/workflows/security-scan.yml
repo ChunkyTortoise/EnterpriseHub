@@ -105,6 +105,32 @@ jobs:
           name: bandit-report
           path: bandit-report.json
 
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Run Semgrep
+        run: |
+          pip install semgrep
+          semgrep --config .semgrep.yml --error ghl_real_estate_ai/ || true
+          semgrep --config .semgrep.yml ghl_real_estate_ai/ --json > semgrep-report.json || true
+
+      - name: Upload Semgrep report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: semgrep-report
+          path: semgrep-report.json
+
   dependency-audit:
     name: Dependency Audit
     runs-on: ubuntu-latest
@@ -235,6 +261,7 @@ jobs:
     needs:
       - secrets-detection
       - python-security
+      - semgrep
       - dependency-audit
       - sql-injection-check
       - infrastructure-security
@@ -250,15 +277,17 @@ jobs:
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Secrets Detection | ${{ needs.secrets-detection.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Static Analysis (Bandit) | ${{ needs.python-security.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Semgrep SAST | ${{ needs.semgrep.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Dependency Audit | ${{ needs.dependency-audit.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| SQL Injection | ${{ needs.sql-injection-check.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Infrastructure Config | ${{ needs.infrastructure-security.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Compliance | ${{ needs.compliance-check.result == 'success' && 'Pass' || 'Fail' }} |" >> $GITHUB_STEP_SUMMARY
 
-          TOTAL=6
+          TOTAL=7
           PASSED=0
           [ "${{ needs.secrets-detection.result }}" == "success" ] && PASSED=$((PASSED + 1))
           [ "${{ needs.python-security.result }}" == "success" ] && PASSED=$((PASSED + 1))
+          [ "${{ needs.semgrep.result }}" == "success" ] && PASSED=$((PASSED + 1))
           [ "${{ needs.dependency-audit.result }}" == "success" ] && PASSED=$((PASSED + 1))
           [ "${{ needs.sql-injection-check.result }}" == "success" ] && PASSED=$((PASSED + 1))
           [ "${{ needs.infrastructure-security.result }}" == "success" ] && PASSED=$((PASSED + 1))

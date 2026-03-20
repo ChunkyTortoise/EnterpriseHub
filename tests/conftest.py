@@ -517,6 +517,18 @@ class _FakeRedis:
 
 @pytest.fixture(autouse=True)
 def disable_redis(mocker):
+    """Use FakeRedis mock unless a real Redis is reachable (e.g., in CI with service containers)."""
+    redis_url = os.getenv("REDIS_URL")
+    if redis_url:
+        try:
+            import redis as _redis_sync
+            _r = _redis_sync.Redis.from_url(redis_url, socket_timeout=1)
+            _r.ping()
+            yield  # Real Redis available — skip the mock
+            return
+        except Exception:
+            pass
+    # Fall back to FakeRedis
     mocker.patch(
         "ghl_real_estate_ai.services.security_framework.SecurityFramework._get_redis",
         new=AsyncMock(return_value=_FakeRedis()),

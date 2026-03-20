@@ -10,18 +10,16 @@ Provides REST endpoints for:
 Supports $240K ARR foundation with usage-based billing integration.
 """
 
-import os
 import asyncio
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+import os
+from datetime import datetime
+from typing import Any, Dict, List
 
-from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks, Query, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
 import stripe
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.services.billing_service import BillingService, BillingServiceError
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager, SubscriptionManagerError
 from ghl_real_estate_ai.services.monitoring_service import MonitoringService, AlertSeverity
@@ -49,30 +47,46 @@ router = APIRouter(prefix="/billing", tags=["billing"], dependencies=[Depends(ge
 # Separate router for Stripe webhook — uses Stripe signature verification, not JWT
 stripe_webhook_router = APIRouter(prefix="/billing", tags=["billing"])
 
-# Initialize services (singletons)
-billing_service = BillingService()
-subscription_manager = SubscriptionManager()
-monitoring_service = MonitoringService()
+# Dependency providers — lazy initialization avoids blocking the event loop at import time
+def get_billing_service() -> BillingService:
+    return BillingService()
+
+
+def get_subscription_manager() -> SubscriptionManager:
+    return SubscriptionManager()
+
+
+def get_monitoring_service() -> MonitoringService:
+    return MonitoringService()
 
 
 # Revenue Protection: Retry logic with exponential backoff
 async def retry_with_exponential_backoff(
-    func, max_retries: int = 3, base_delay: float = 1.0, max_delay: float = 60.0, *args, **kwargs
+    func,
+    *args,
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+    max_delay: float = 60.0,
+    monitoring: MonitoringService | None = None,
+    **kwargs,
 ):
     """
     Retry function with exponential backoff for revenue protection.
 
     Args:
         func: Async function to retry
+        *args: Positional arguments forwarded to func
         max_retries: Maximum number of retry attempts
         base_delay: Base delay in seconds for first retry
         max_delay: Maximum delay between retries
-        *args, **kwargs: Arguments for the function
+        monitoring: MonitoringService for alert escalation
+        **kwargs: Keyword arguments forwarded to func
 
     Returns:
         Function result or raises final exception
     """
-    last_exception = None
+    last_exception: Exception = RuntimeError("Unexpected: retry loop exited without exception")
+    _monitoring = monitoring or MonitoringService()
 
     for attempt in range(max_retries + 1):
         try:
@@ -81,9 +95,10 @@ async def retry_with_exponential_backoff(
             last_exception = e
             if not e.recoverable or attempt == max_retries:
                 # Non-recoverable error or final attempt
-                await monitoring_service.create_alert(
+                await _monitoring.create_alert(
                     service_name="billing_api",
                     severity=AlertSeverity.CRITICAL,
+                    title="Billing operation failed",
                     message=f"Billing operation failed after {attempt + 1} attempts: {e.message}",
                     metadata={
                         "function": func.__name__,
@@ -107,9 +122,10 @@ async def retry_with_exponential_backoff(
         except Exception as e:
             # Unexpected error - don't retry, escalate immediately
             last_exception = e
-            await monitoring_service.create_alert(
+            await _monitoring.create_alert(
                 service_name="billing_api",
                 severity=AlertSeverity.CRITICAL,
+                title="Unexpected billing system error",
                 message=f"Unexpected billing system error: {str(e)}",
                 metadata={"function": func.__name__, "attempt": attempt + 1, "error_type": type(e).__name__},
             )
@@ -125,7 +141,11 @@ async def retry_with_exponential_backoff(
 
 
 @router.post("/subscriptions", response_model=SubscriptionResponse)
-async def create_subscription(request: CreateSubscriptionRequest, background_tasks: BackgroundTasks):
+async def create_subscription(
+    request: CreateSubscriptionRequest,
+    background_tasks: BackgroundTasks,
+    subscription_mgr: SubscriptionManager = Depends(get_subscription_manager),
+):
     """
     Create a new subscription for a location.
 
@@ -153,7 +173,7 @@ async def create_subscription(request: CreateSubscriptionRequest, background_tas
         )
 
         # Initialize subscription through subscription manager
-        subscription = await subscription_manager.initialize_subscription(request)
+        subscription = await subscription_mgr.initialize_subscription(request)
 
         # Track subscription creation event in background
         background_tasks.add_task(
@@ -339,7 +359,10 @@ async def get_subscription(subscription_id: int):
 
 @router.put("/subscriptions/{subscription_id}", response_model=SubscriptionResponse)
 async def update_subscription(
-    subscription_id: int, request: ModifySubscriptionRequest, background_tasks: BackgroundTasks
+    subscription_id: int,
+    request: ModifySubscriptionRequest,
+    background_tasks: BackgroundTasks,
+    subscription_mgr: SubscriptionManager = Depends(get_subscription_manager),
 ):
     """
     Update an existing subscription.
@@ -405,7 +428,7 @@ async def update_subscription(
 
         # Handle tier change if requested
         if request.tier:
-            subscription = await subscription_manager.handle_tier_change(subscription_id, request.tier)
+            subscription = await subscription_mgr.handle_tier_change(subscription_id, request.tier)
             background_tasks.add_task(
                 _track_billing_event,
                 "subscription_modified",
@@ -533,6 +556,7 @@ async def cancel_subscription(
     subscription_id: int,
     background_tasks: BackgroundTasks,
     immediate: bool = Query(False, description="Cancel immediately vs at period end"),
+    billing_svc: BillingService = Depends(get_billing_service),
 ):
     """
     Cancel a subscription.
@@ -649,7 +673,7 @@ async def cancel_subscription(
 
         # Now proceed to cancel in Stripe
         try:
-            stripe_result = await billing_service.cancel_subscription(stripe_subscription_id, immediate)
+            stripe_result = await billing_svc.cancel_subscription(stripe_subscription_id, immediate)
             logger.info(
                 f"Successfully canceled Stripe subscription {stripe_subscription_id}",
                 extra={
@@ -734,7 +758,12 @@ async def cancel_subscription(
 
 
 @router.post("/usage", response_model=Dict[str, Any])
-async def record_usage(request: UsageRecordRequest, background_tasks: BackgroundTasks):
+async def record_usage(
+    request: UsageRecordRequest,
+    background_tasks: BackgroundTasks,
+    billing_svc: BillingService = Depends(get_billing_service),
+    monitoring_svc: MonitoringService = Depends(get_monitoring_service),
+):
     """
     Record usage event for billing.
 
@@ -763,11 +792,12 @@ async def record_usage(request: UsageRecordRequest, background_tasks: Background
 
         # Record usage through billing service with retry logic for revenue protection
         stripe_usage_record = await retry_with_exponential_backoff(
-            billing_service.add_usage_record,
+            billing_svc.add_usage_record,
             request,
             max_retries=3,
             base_delay=1.0,
             max_delay=10.0,
+            monitoring=monitoring_svc,
         )
 
         # ROADMAP-011: Store usage records in local database for analytics and audit
@@ -866,7 +896,10 @@ async def record_usage(request: UsageRecordRequest, background_tasks: Background
 
 
 @router.get("/usage/{subscription_id}", response_model=UsageSummary)
-async def get_usage_data(subscription_id: int):
+async def get_usage_data(
+    subscription_id: int,
+    subscription_mgr: SubscriptionManager = Depends(get_subscription_manager),
+):
     """
     Get usage data for a subscription.
 
@@ -886,7 +919,7 @@ async def get_usage_data(subscription_id: int):
         logger.info(f"Retrieving usage data for subscription {subscription_id}")
 
         # Get usage summary from subscription manager
-        usage_summary = await subscription_manager.get_usage_summary(f"location_{subscription_id}")
+        usage_summary = await subscription_mgr.get_usage_summary(f"location_{subscription_id}")
 
         if not usage_summary:
             raise HTTPException(
@@ -1019,6 +1052,7 @@ async def process_payment(invoice_id: str, background_tasks: BackgroundTasks):
 async def list_invoices(
     customer_id: str = Query(..., description="Stripe customer ID"),
     limit: int = Query(default=10, le=100, description="Maximum number of invoices"),
+    billing_svc: BillingService = Depends(get_billing_service),
 ):
     """
     List invoices for a customer.
@@ -1037,7 +1071,7 @@ async def list_invoices(
         logger.info(f"Listing invoices for customer {customer_id}", extra={"customer_id": customer_id, "limit": limit})
 
         # Get invoices from billing service
-        invoices = await billing_service.get_customer_invoices(customer_id, limit)
+        invoices = await billing_svc.get_customer_invoices(customer_id, limit)
 
         # Convert to response format
         invoice_details = []
@@ -1047,7 +1081,7 @@ async def list_invoices(
                 stripe_invoice_id=invoice.id,
                 subscription_id=1,  # Placeholder - lookup from database
                 amount_due=invoice.amount_due / 100,
-                amount_paid=invoice.amount_paid / 100 if invoice.amount_paid else 0,
+                amount_paid=invoice.amount_paid / 100 if invoice.amount_paid else 0,  # type: ignore[arg-type]
                 status=invoice.status,
                 period_start=datetime.fromtimestamp(invoice.period_start),
                 period_end=datetime.fromtimestamp(invoice.period_end),
@@ -1077,7 +1111,10 @@ async def list_invoices(
 
 
 @router.get("/billing-history/{customer_id}", response_model=BillingHistoryResponse)
-async def get_billing_history(customer_id: str):
+async def get_billing_history(
+    customer_id: str,
+    billing_svc: BillingService = Depends(get_billing_service),
+):
     """
     Get complete billing history for a customer.
 
@@ -1097,7 +1134,7 @@ async def get_billing_history(customer_id: str):
         logger.info(f"Retrieving billing history for customer {customer_id}")
 
         # Get invoices and calculate totals
-        invoices = await billing_service.get_customer_invoices(customer_id, 100)
+        invoices = await billing_svc.get_customer_invoices(customer_id, 100)
 
         # Calculate total spent
         total_spent = sum(invoice.amount_paid / 100 if invoice.amount_paid else 0 for invoice in invoices)
@@ -1110,7 +1147,7 @@ async def get_billing_history(customer_id: str):
                 stripe_invoice_id=invoice.id,
                 subscription_id=1,  # Placeholder
                 amount_due=invoice.amount_due / 100,
-                amount_paid=invoice.amount_paid / 100 if invoice.amount_paid else 0,
+                amount_paid=invoice.amount_paid / 100 if invoice.amount_paid else 0,  # type: ignore[arg-type]
                 status=invoice.status,
                 period_start=datetime.fromtimestamp(invoice.period_start),
                 period_end=datetime.fromtimestamp(invoice.period_end),
@@ -1126,7 +1163,7 @@ async def get_billing_history(customer_id: str):
         # Get customer payment methods
         customer = stripe.Customer.retrieve(customer_id, expand=["sources"])
         payment_methods = []
-        for source in customer.sources.data:
+        for source in customer.sources.data:  # type: ignore[union-attr]
             payment_methods.append(
                 {
                     "id": source.id,
@@ -1161,7 +1198,7 @@ async def get_billing_history(customer_id: str):
         billing_history = BillingHistoryResponse(
             location_id=resolved_location_id,
             invoices=invoice_details,
-            total_spent=total_spent,
+            total_spent=total_spent,  # type: ignore[arg-type]
             period_start=period_start,
             period_end=period_end,
             payment_methods=payment_methods,
@@ -1189,7 +1226,11 @@ async def get_billing_history(customer_id: str):
 
 
 @stripe_webhook_router.post("/webhooks/stripe", response_model=WebhookProcessingResult)
-async def handle_stripe_webhook(request: Request, background_tasks: BackgroundTasks):
+async def handle_stripe_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    billing_svc: BillingService = Depends(get_billing_service),
+):
     """
     Handle Stripe webhook events.
 
@@ -1215,7 +1256,7 @@ async def handle_stripe_webhook(request: Request, background_tasks: BackgroundTa
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing Stripe signature header")
 
         # Verify webhook signature
-        if not billing_service.verify_webhook_signature(payload, signature):
+        if not billing_svc.verify_webhook_signature(payload, signature):
             logger.error("Invalid Stripe webhook signature")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid webhook signature")
 
@@ -1228,7 +1269,7 @@ async def handle_stripe_webhook(request: Request, background_tasks: BackgroundTa
 
         # Process webhook event
         start_time = datetime.now()
-        processing_result = await billing_service.process_webhook_event(event_data)
+        processing_result = await billing_svc.process_webhook_event(event_data)
         processing_time = (datetime.now() - start_time).total_seconds() * 1000
 
         # Store webhook event in database (background task)
@@ -1397,7 +1438,9 @@ async def get_revenue_analytics():
 
 
 @router.get("/analytics/tiers", response_model=TierDistribution)
-async def get_tier_distribution():
+async def get_tier_distribution(
+    subscription_mgr: SubscriptionManager = Depends(get_subscription_manager),
+):
     """
     Get subscription tier distribution analytics.
 
@@ -1413,7 +1456,7 @@ async def get_tier_distribution():
     try:
         logger.info("Calculating tier distribution analytics")
 
-        tier_distribution = await subscription_manager.get_tier_distribution()
+        tier_distribution = await subscription_mgr.get_tier_distribution()
 
         logger.info(
             f"Tier distribution: {tier_distribution.total_subscriptions} total subscriptions",

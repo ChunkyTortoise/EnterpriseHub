@@ -141,7 +141,7 @@ class JWTAuth:
                 extra={"security_event": "token_refreshed", "user_id": user_id, "event_id": "JWT_007"},
             )
 
-            return new_access_token
+            return new_access_token  # type: ignore[return-value]
 
         except jwt.ExpiredSignatureError:
             logger.warning(
