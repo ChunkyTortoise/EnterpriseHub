@@ -37,12 +37,7 @@ pytestmark = pytest.mark.unit
 
 _BILLING_IMPORT_ERROR = None
 try:
-    with (
-        patch("ghl_real_estate_ai.api.routes.billing.billing_service", MagicMock()),
-        patch("ghl_real_estate_ai.api.routes.billing.subscription_manager", MagicMock()),
-        patch("ghl_real_estate_ai.api.routes.billing.monitoring_service", MagicMock()),
-    ):
-        from ghl_real_estate_ai.api.routes.billing import router as billing_router
+    from ghl_real_estate_ai.api.routes.billing import router as billing_router
 except Exception as exc:
     _BILLING_IMPORT_ERROR = str(exc)
     billing_router = None
@@ -59,7 +54,7 @@ skip_if_no_billing = pytest.mark.skipif(
 
 
 def _make_billing_client(billing_service=None, subscription_manager=None, authenticated=True):
-    """Create a TestClient with just the billing router, deps mocked.
+    """Create a TestClient with just the billing router, deps overridden via FastAPI.
 
     Args:
         authenticated: When True (default), override get_current_user so JWT
@@ -68,18 +63,24 @@ def _make_billing_client(billing_service=None, subscription_manager=None, authen
     """
     mock_billing = billing_service or MagicMock()
     mock_sub_mgr = subscription_manager or MagicMock()
+    mock_monitoring = MagicMock()
 
     from ghl_real_estate_ai.api.routes import billing as billing_module
-
-    # Keep patched singletons active for the entire request lifecycle.
-    billing_module.billing_service = mock_billing
-    billing_module.subscription_manager = mock_sub_mgr
-    billing_module.monitoring_service = MagicMock()
+    from ghl_real_estate_ai.api.routes.billing import (
+        get_billing_service,
+        get_monitoring_service,
+        get_subscription_manager,
+    )
 
     test_app = FastAPI()
     test_app.include_router(billing_module.router)
     # Stripe webhook lives on the unauthenticated router
     test_app.include_router(billing_module.stripe_webhook_router)
+
+    # Use FastAPI dependency_overrides instead of module-level patching
+    test_app.dependency_overrides[get_billing_service] = lambda: mock_billing
+    test_app.dependency_overrides[get_subscription_manager] = lambda: mock_sub_mgr
+    test_app.dependency_overrides[get_monitoring_service] = lambda: mock_monitoring
 
     if authenticated:
         mock_user = MagicMock()

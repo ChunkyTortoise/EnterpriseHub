@@ -117,6 +117,27 @@ module = [
 ]
 ignore_errors = true
 
+[[tool.mypy.overrides]]
+# Wave 1: type-checked modules — ignore_errors=false takes precedence over the wildcard above
+module = [
+    "ghl_real_estate_ai.api.routes.billing",
+    "ghl_real_estate_ai.api.middleware.jwt_auth",
+]
+ignore_errors = false
+
+[[tool.mypy.overrides]]
+# Wave 1: transaction_service — enable checking, suppress SQLAlchemy ORM Column typing noise
+module = ["ghl_real_estate_ai.services.transaction_service"]
+ignore_errors = false
+disable_error_code = ["arg-type", "attr-defined", "assignment", "call-overload", "misc"]
+
+[[tool.mypy.overrides]]
+# Wave 1: billing_service — enable checking but suppress Stripe SDK typing noise
+# Stripe's strict type stubs don't match the dict-unpacking call pattern used here
+module = ["ghl_real_estate_ai.services.billing_service"]
+ignore_errors = false
+disable_error_code = ["arg-type", "attr-defined", "assignment", "return-value", "call-arg"]
+
 [tool.pyright]
 pythonVersion = "3.12"
 typeCheckingMode = "basic"

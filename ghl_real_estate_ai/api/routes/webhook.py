@@ -110,94 +110,72 @@ LLM_FALLBACK_MSG = (
     "I'm having a brief connection issue — I'll follow up with you shortly. You can also reach Jorge directly."
 )
 
-# Initialize services for internal use and testing
-conversation_manager = ConversationManager()
-tenant_service = TenantService()
-ghl_client_default = GHLClient()
-lead_scorer = LeadScorer()
-analytics_service = AnalyticsService()
-pricing_optimizer = DynamicPricingOptimizer()
-calendar_scheduler = CalendarScheduler()
-lead_source_tracker = LeadSourceTracker()
-attribution_analytics = AttributionAnalytics()
-subscription_manager = SubscriptionManager()
-handoff_service = JorgeHandoffService(analytics_service=analytics_service)
-hitl_gate = HITLGate()
-mls_client = MLSClient()
-
-# FastAPI dependency injection - using @lru_cache for singleton behavior
+# FastAPI dependency injection - lazy singletons via @lru_cache (no import-time blocking)
 
 
 @lru_cache(maxsize=1)
 def _get_conversation_manager() -> ConversationManager:
-    """Get ConversationManager singleton instance."""
-    return conversation_manager
+    return ConversationManager()
 
 
 @lru_cache(maxsize=1)
 def _get_ghl_client_default() -> GHLClient:
-    """Get GHLClient default singleton instance."""
-    return ghl_client_default
+    return GHLClient()
 
 
 @lru_cache(maxsize=1)
 def _get_lead_scorer() -> LeadScorer:
-    """Get LeadScorer singleton instance."""
-    return lead_scorer
+    return LeadScorer()
 
 
 @lru_cache(maxsize=1)
 def _get_tenant_service() -> TenantService:
-    """Get TenantService singleton instance."""
-    return tenant_service
+    return TenantService()
 
 
 @lru_cache(maxsize=1)
 def _get_analytics_service() -> AnalyticsService:
-    """Get AnalyticsService singleton instance."""
-    return analytics_service
+    return AnalyticsService()
 
 
 @lru_cache(maxsize=1)
 def _get_pricing_optimizer() -> DynamicPricingOptimizer:
-    """Get DynamicPricingOptimizer singleton instance."""
-    return pricing_optimizer
+    return DynamicPricingOptimizer()
 
 
 @lru_cache(maxsize=1)
 def _get_calendar_scheduler() -> CalendarScheduler:
-    """Get CalendarScheduler singleton instance."""
-    return calendar_scheduler
+    return CalendarScheduler()
 
 
 @lru_cache(maxsize=1)
 def _get_lead_source_tracker() -> LeadSourceTracker:
-    """Get LeadSourceTracker singleton instance."""
-    return lead_source_tracker
+    return LeadSourceTracker()
 
 
 @lru_cache(maxsize=1)
 def _get_attribution_analytics() -> AttributionAnalytics:
-    """Get AttributionAnalytics singleton instance."""
-    return attribution_analytics
+    return AttributionAnalytics()
 
 
 @lru_cache(maxsize=1)
 def _get_subscription_manager() -> SubscriptionManager:
-    """Get SubscriptionManager singleton instance."""
-    return subscription_manager
+    return SubscriptionManager()
 
 
 @lru_cache(maxsize=1)
 def _get_handoff_service() -> JorgeHandoffService:
-    """Get JorgeHandoffService singleton instance."""
-    return handoff_service
+    return JorgeHandoffService(analytics_service=_get_analytics_service())
+
+
+@lru_cache(maxsize=1)
+def _get_hitl_gate() -> HITLGate:
+    return HITLGate()
 
 
 @lru_cache(maxsize=1)
 def _get_mls_client() -> MLSClient:
-    """Get MLSClient singleton instance."""
-    return mls_client
+    return MLSClient()
 
 
 # Safe wrappers for background tasks to prevent silent delivery failures
@@ -1231,7 +1209,7 @@ async def handle_ghl_webhook(
 
             # --- HITL GATE: High-Value Human-in-the-Loop ---
             property_value = seller_result.get("estimated_value") or seller_result.get("property_value")
-            if hitl_gate.evaluate(seller_result, property_value):
+            if _get_hitl_gate().evaluate(seller_result, property_value):
                 draft_msg = (
                     f"DRAFT RESPONSE:\n{seller_result.get('response_content', final_seller_msg)}\n\n"
                     f"FRS={seller_result.get('frs_score', 0):.0f} "
@@ -1603,7 +1581,7 @@ async def handle_ghl_webhook(
 
             # --- HITL GATE: High-Value Human-in-the-Loop ---
             buyer_property_value = buyer_result.get("estimated_value") or buyer_result.get("property_value")
-            if hitl_gate.evaluate(buyer_result, buyer_property_value):
+            if _get_hitl_gate().evaluate(buyer_result, buyer_property_value):
                 draft_msg = (
                     f"DRAFT RESPONSE:\n{buyer_result.get('response_content', final_buyer_msg)}\n\n"
                     f"Financial Readiness={buyer_result.get('financial_readiness', 0):.0f} "

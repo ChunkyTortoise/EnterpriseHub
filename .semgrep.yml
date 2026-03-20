@@ -1,0 +1,34 @@
+rules:
+  - id: no-pickle-loads
+    pattern: pickle.loads(...)
+    message: "pickle.loads is unsafe — use orjson/msgpack or add HMAC verification"
+    severity: WARNING
+    languages: [python]
+    paths:
+      exclude:
+        - tests/
+
+  - id: no-eval-exec
+    patterns:
+      - pattern-either:
+          - pattern: eval(...)
+          - pattern: exec(...)
+    message: "eval/exec is forbidden — use ast.literal_eval for safe parsing"
+    severity: ERROR
+    languages: [python]
+    paths:
+      exclude:
+        - tests/
+
+  - id: no-yaml-unsafe-load
+    pattern: yaml.load(...)
+    fix: yaml.safe_load(...)
+    message: "Use yaml.safe_load() instead of yaml.load()"
+    severity: ERROR
+    languages: [python]
+
+  - id: no-verify-false
+    pattern: requests.$METHOD(..., verify=False, ...)
+    message: "Do not disable TLS verification"
+    severity: ERROR
+    languages: [python]

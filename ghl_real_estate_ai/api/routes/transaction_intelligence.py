@@ -23,6 +23,7 @@ Business Impact:
 
 import json
 import logging
+import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -48,11 +49,40 @@ logger = logging.getLogger(__name__)
 # Create router
 router = APIRouter(prefix="/api/v1/transactions", tags=["Transaction Intelligence"])
 
-# Dependency injection (in production, these would be properly configured)
-transaction_service = TransactionService("postgresql://localhost/transactions")
-event_bus = TransactionEventBus()
-intelligence_engine = TransactionIntelligenceEngine()
-celebration_engine = CelebrationEngine()
+# Lazy singleton accessors — no import-time blocking
+_transaction_service: TransactionService | None = None
+_event_bus: TransactionEventBus | None = None
+_intelligence_engine: TransactionIntelligenceEngine | None = None
+_celebration_engine: CelebrationEngine | None = None
+
+
+def _get_transaction_service() -> TransactionService:
+    global _transaction_service
+    if _transaction_service is None:
+        dsn = os.getenv("DATABASE_URL", "postgresql://localhost/transactions")
+        _transaction_service = TransactionService(dsn)
+    return _transaction_service
+
+
+def _get_event_bus() -> TransactionEventBus:
+    global _event_bus
+    if _event_bus is None:
+        _event_bus = TransactionEventBus()
+    return _event_bus
+
+
+def _get_intelligence_engine() -> TransactionIntelligenceEngine:
+    global _intelligence_engine
+    if _intelligence_engine is None:
+        _intelligence_engine = TransactionIntelligenceEngine()
+    return _intelligence_engine
+
+
+def _get_celebration_engine() -> CelebrationEngine:
+    global _celebration_engine
+    if _celebration_engine is None:
+        _celebration_engine = CelebrationEngine()
+    return _celebration_engine
 
 # ============================================================================
 # PYDANTIC MODELS
@@ -227,17 +257,17 @@ async def create_transaction(transaction_data: TransactionCreateRequest) -> Dict
         )
 
         # Create transaction
-        transaction_id = await transaction_service.create_transaction(create_data)
+        transaction_id = await _get_transaction_service().create_transaction(create_data)
 
         # Get full transaction details
-        transaction_details = await transaction_service.get_transaction(transaction_id)
+        transaction_details = await _get_transaction_service().get_transaction(transaction_id)
 
         if not transaction_details:
             raise HTTPException(status_code=500, detail="Failed to retrieve created transaction")
 
         # Trigger welcome celebration
-        if celebration_engine:
-            await celebration_engine.trigger_custom_celebration(
+        if _get_celebration_engine():
+            await _get_celebration_engine().trigger_custom_celebration(
                 transaction_details["transaction"],
                 {
                     "title": "🎉 Welcome to Your Home Journey!",
@@ -272,19 +302,19 @@ async def get_transaction(transaction_id: str = Path(..., description="Transacti
     with real-time progress tracking and predictive insights.
     """
     try:
-        transaction_data = await transaction_service.get_transaction(transaction_id)
+        transaction_data = await _get_transaction_service().get_transaction(transaction_id)
 
         if not transaction_data:
             raise HTTPException(status_code=404, detail="Transaction not found")
 
         # Get additional analytics
-        timeline_data = await transaction_service.get_milestone_timeline(transaction_id)
+        timeline_data = await _get_transaction_service().get_milestone_timeline(transaction_id)
 
         # Get AI predictions
         predictions = None
-        if intelligence_engine:
+        if _get_intelligence_engine():
             try:
-                predictions = await intelligence_engine.predict_transaction_delays(
+                predictions = await _get_intelligence_engine().predict_transaction_delays(
                     transaction_data["transaction"], transaction_data["milestones"]
                 )
             except Exception as e:
@@ -321,7 +351,7 @@ async def list_transactions(
     progress percentages, health scores, and risk levels.
     """
     try:
-        summaries = await transaction_service.get_dashboard_summary(
+        summaries = await _get_transaction_service().get_dashboard_summary(
             agent_id=agent_id, status_filter=status, limit=limit
         )
 
@@ -358,13 +388,13 @@ async def update_milestone(
         )
 
         # Update milestone
-        success = await transaction_service.update_milestone_status(milestone_update.milestone_id, update_data, user_id)
+        success = await _get_transaction_service().update_milestone_status(milestone_update.milestone_id, update_data, user_id)
 
         if not success:
             raise HTTPException(status_code=404, detail="Milestone not found")
 
         # Get updated transaction data
-        transaction_data = await transaction_service.get_transaction(transaction_id)
+        transaction_data = await _get_transaction_service().get_transaction(transaction_id)
 
         # Broadcast real-time update
         await manager.broadcast_transaction_update(
@@ -422,7 +452,7 @@ async def websocket_transaction_updates(
 
     try:
         # Send initial transaction state
-        transaction_data = await transaction_service.get_transaction(transaction_id)
+        transaction_data = await _get_transaction_service().get_transaction(transaction_id)
         if transaction_data:
             await websocket.send_json(
                 {
@@ -476,17 +506,17 @@ async def get_transaction_predictions(
     """
     try:
         # Get transaction data
-        transaction_data = await transaction_service.get_transaction(transaction_id)
+        transaction_data = await _get_transaction_service().get_transaction(transaction_id)
         if not transaction_data:
             raise HTTPException(status_code=404, detail="Transaction not found")
 
         # Get AI predictions
         if prediction_type == "delay_probability":
-            prediction = await intelligence_engine.predict_transaction_delays(
+            prediction = await _get_intelligence_engine().predict_transaction_delays(
                 transaction_data["transaction"], transaction_data["milestones"]
             )
         elif prediction_type == "closing_date":
-            prediction = await intelligence_engine.predict_closing_date(
+            prediction = await _get_intelligence_engine().predict_closing_date(
                 transaction_data["transaction"], transaction_data["milestones"]
             )
         else:
@@ -520,12 +550,12 @@ async def get_health_analysis(transaction_id: str) -> Dict[str, Any]:
     """
     try:
         # Get transaction data
-        transaction_data = await transaction_service.get_transaction(transaction_id)
+        transaction_data = await _get_transaction_service().get_transaction(transaction_id)
         if not transaction_data:
             raise HTTPException(status_code=404, detail="Transaction not found")
 
         # Get health analysis
-        health_analysis = await intelligence_engine.analyze_health_score_factors(
+        health_analysis = await _get_intelligence_engine().analyze_health_score_factors(
             transaction_data["transaction"], transaction_data["milestones"]
         )
 
@@ -553,12 +583,12 @@ async def trigger_celebration(transaction_id: str, celebration_request: Celebrat
     """
     try:
         # Get transaction data
-        transaction_data = await transaction_service.get_transaction(transaction_id)
+        transaction_data = await _get_transaction_service().get_transaction(transaction_id)
         if not transaction_data:
             raise HTTPException(status_code=404, detail="Transaction not found")
 
         # Trigger celebration
-        celebration_result = await celebration_engine.trigger_custom_celebration(
+        celebration_result = await _get_celebration_engine().trigger_custom_celebration(
             transaction_data["transaction"],
             {
                 "title": celebration_request.title,
@@ -650,7 +680,7 @@ async def get_transaction_analytics(
     """
     try:
         # Get transaction data
-        transaction_data = await transaction_service.get_transaction(transaction_id)
+        transaction_data = await _get_transaction_service().get_transaction(transaction_id)
         if not transaction_data:
             raise HTTPException(status_code=404, detail="Transaction not found")
 
@@ -771,10 +801,10 @@ async def get_system_status() -> Dict[str, Any]:
 async def initialize_services():
     """Initialize all services on startup."""
     try:
-        await transaction_service.initialize() if hasattr(transaction_service, "initialize") else None
-        await event_bus.initialize() if hasattr(event_bus, "initialize") else None
-        await intelligence_engine.initialize() if hasattr(intelligence_engine, "initialize") else None
-        await celebration_engine.initialize() if hasattr(celebration_engine, "initialize") else None
+        await _get_transaction_service().initialize() if hasattr(_get_transaction_service(), "initialize") else None
+        await _get_event_bus().initialize() if hasattr(_get_event_bus(), "initialize") else None
+        await _get_intelligence_engine().initialize() if hasattr(_get_intelligence_engine(), "initialize") else None
+        await _get_celebration_engine().initialize() if hasattr(_get_celebration_engine(), "initialize") else None
         logger.info("Transaction Intelligence API services initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize services: {e}")
@@ -784,10 +814,10 @@ async def initialize_services():
 async def cleanup_services():
     """Clean up services on shutdown."""
     try:
-        await transaction_service.close() if hasattr(transaction_service, "close") else None
-        await event_bus.close() if hasattr(event_bus, "close") else None
-        await intelligence_engine.close() if hasattr(intelligence_engine, "close") else None
-        await celebration_engine.close() if hasattr(celebration_engine, "close") else None
+        await _get_transaction_service().close() if hasattr(_get_transaction_service(), "close") else None
+        await _get_event_bus().close() if hasattr(_get_event_bus(), "close") else None
+        await _get_intelligence_engine().close() if hasattr(_get_intelligence_engine(), "close") else None
+        await _get_celebration_engine().close() if hasattr(_get_celebration_engine(), "close") else None
         logger.info("Transaction Intelligence API services cleaned up successfully")
     except Exception as e:
         logger.error(f"Error during service cleanup: {e}")
