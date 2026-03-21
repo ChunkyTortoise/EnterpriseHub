@@ -556,6 +556,194 @@ class TestProductionStartupGuards:
                 service.verify_webhook_signature(b"payload", "sig")
 
 
+class TestGHLReplayProtection:
+    """Test replay attack prevention via X-GHL-Timestamp header."""
+
+    def _make_request(self, headers: dict) -> "Mock":
+        req = Mock()
+        req.headers = headers
+        req.client = Mock()
+        req.client.host = "127.0.0.1"
+        return req
+
+    def _make_framework(self, secret: str = "test_secret_abc123") -> "SecurityFramework":
+        from ghl_real_estate_ai.services.security_framework import SecurityFramework
+        sf = SecurityFramework.__new__(SecurityFramework)
+        from ghl_real_estate_ai.services.security_framework import SecurityConfig
+        sf.config = SecurityConfig.model_construct(
+            webhook_signing_secrets={"ghl": secret}
+        )
+        return sf
+
+    def _make_hmac_sig(self, body: bytes, secret: str) -> str:
+        return hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+
+    def test_recent_timestamp_accepted(self):
+        """Requests with a recent timestamp pass replay check."""
+        from fastapi import HTTPException
+        sf = self._make_framework()
+        body = b'{"type":"test"}'
+        sig = self._make_hmac_sig(body, "test_secret_abc123")
+        ts = str(int(time.time()))
+        req = self._make_request({"X-GHL-Signature": sig, "X-GHL-Timestamp": ts})
+        with patch("ghl_real_estate_ai.services.security_framework.settings") as mock_settings:
+            mock_settings.ghl_allow_unsigned_webhooks = False
+            mock_settings.ghl_webhook_public_key = None
+            mock_settings.environment = "test"
+            result = sf._verify_ghl_signature(req, body)
+        assert result is True
+
+    def test_old_timestamp_rejected(self):
+        """Requests with a timestamp > 5 minutes old are rejected as replays."""
+        from fastapi import HTTPException
+        sf = self._make_framework()
+        body = b'{"type":"test"}'
+        sig = self._make_hmac_sig(body, "test_secret_abc123")
+        old_ts = str(int(time.time()) - 400)  # 6+ minutes ago
+        req = self._make_request({"X-GHL-Signature": sig, "X-GHL-Timestamp": old_ts})
+        with patch("ghl_real_estate_ai.services.security_framework.settings") as mock_settings:
+            mock_settings.ghl_allow_unsigned_webhooks = False
+            mock_settings.ghl_webhook_public_key = None
+            mock_settings.environment = "test"
+            with pytest.raises(HTTPException) as exc_info:
+                sf._verify_ghl_signature(req, body)
+        assert exc_info.value.status_code == 403
+        assert "replay" in exc_info.value.detail.lower()
+
+    def test_missing_timestamp_accepted(self):
+        """Requests without X-GHL-Timestamp are accepted (older GHL integrations)."""
+        sf = self._make_framework()
+        body = b'{"type":"test"}'
+        sig = self._make_hmac_sig(body, "test_secret_abc123")
+        req = self._make_request({"X-GHL-Signature": sig})  # no timestamp
+        with patch("ghl_real_estate_ai.services.security_framework.settings") as mock_settings:
+            mock_settings.ghl_allow_unsigned_webhooks = False
+            mock_settings.ghl_webhook_public_key = None
+            mock_settings.environment = "test"
+            result = sf._verify_ghl_signature(req, body)
+        assert result is True
+
+    def test_malformed_timestamp_accepted_with_valid_sig(self):
+        """Malformed timestamp header does not block a valid signature."""
+        sf = self._make_framework()
+        body = b'{"type":"test"}'
+        sig = self._make_hmac_sig(body, "test_secret_abc123")
+        req = self._make_request({"X-GHL-Signature": sig, "X-GHL-Timestamp": "not-a-number"})
+        with patch("ghl_real_estate_ai.services.security_framework.settings") as mock_settings:
+            mock_settings.ghl_allow_unsigned_webhooks = False
+            mock_settings.ghl_webhook_public_key = None
+            mock_settings.environment = "test"
+            result = sf._verify_ghl_signature(req, body)
+        assert result is True
+
+    def test_exactly_at_boundary_accepted(self):
+        """Timestamp at exactly 299 seconds old is accepted."""
+        sf = self._make_framework()
+        body = b'{"type":"test"}'
+        sig = self._make_hmac_sig(body, "test_secret_abc123")
+        ts = str(int(time.time()) - 299)
+        req = self._make_request({"X-GHL-Signature": sig, "X-GHL-Timestamp": ts})
+        with patch("ghl_real_estate_ai.services.security_framework.settings") as mock_settings:
+            mock_settings.ghl_allow_unsigned_webhooks = False
+            mock_settings.ghl_webhook_public_key = None
+            mock_settings.environment = "test"
+            result = sf._verify_ghl_signature(req, body)
+        assert result is True
+
+
+class TestGHLEd25519Verification:
+    """Test Ed25519 signature verification (GHL Marketplace path)."""
+
+    def _make_ed25519_keypair(self):
+        """Generate a test Ed25519 key pair."""
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        private_key = Ed25519PrivateKey.generate()
+        public_key = private_key.public_key()
+        from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+        pub_bytes = public_key.public_bytes(Encoding.Raw, PublicFormat.Raw)
+        return private_key, pub_bytes.hex()
+
+    def _sign_body(self, private_key, body: bytes) -> str:
+        return private_key.sign(body).hex()
+
+    def _make_framework(self) -> "SecurityFramework":
+        from ghl_real_estate_ai.services.security_framework import SecurityFramework, SecurityConfig
+        sf = SecurityFramework.__new__(SecurityFramework)
+        sf.config = SecurityConfig.model_construct(webhook_signing_secrets={})
+        return sf
+
+    def _make_request(self, headers: dict) -> "Mock":
+        req = Mock()
+        req.headers = headers
+        req.client = Mock()
+        req.client.host = "127.0.0.1"
+        return req
+
+    def test_valid_ed25519_signature_accepted(self):
+        """Valid Ed25519 signature with correct public key is accepted."""
+        private_key, pub_hex = self._make_ed25519_keypair()
+        sf = self._make_framework()
+        body = b'{"type":"ContactCreate"}'
+        sig_hex = self._sign_body(private_key, body)
+        ts = str(int(time.time()))
+        req = self._make_request({"X-GHL-Signature": sig_hex, "X-GHL-Timestamp": ts})
+        with patch("ghl_real_estate_ai.services.security_framework.settings") as mock_settings:
+            mock_settings.ghl_allow_unsigned_webhooks = False
+            mock_settings.ghl_webhook_public_key = pub_hex
+            mock_settings.environment = "test"
+            result = sf._verify_ghl_signature(req, body)
+        assert result is True
+
+    def test_wrong_key_ed25519_rejected(self):
+        """Ed25519 signature verified against wrong public key is rejected."""
+        private_key, _ = self._make_ed25519_keypair()
+        _, wrong_pub_hex = self._make_ed25519_keypair()  # different key
+        sf = self._make_framework()
+        body = b'{"type":"ContactCreate"}'
+        sig_hex = self._sign_body(private_key, body)
+        req = self._make_request({"X-GHL-Signature": sig_hex})
+        with patch("ghl_real_estate_ai.services.security_framework.settings") as mock_settings:
+            mock_settings.ghl_allow_unsigned_webhooks = False
+            mock_settings.ghl_webhook_public_key = wrong_pub_hex
+            mock_settings.environment = "test"
+            result = sf._verify_ghl_signature(req, body)
+        assert result is False
+
+    def test_tampered_body_ed25519_rejected(self):
+        """Ed25519 signature over different body is rejected."""
+        private_key, pub_hex = self._make_ed25519_keypair()
+        sf = self._make_framework()
+        original_body = b'{"type":"ContactCreate"}'
+        tampered_body = b'{"type":"ContactDelete"}'
+        sig_hex = self._sign_body(private_key, original_body)
+        req = self._make_request({"X-GHL-Signature": sig_hex})
+        with patch("ghl_real_estate_ai.services.security_framework.settings") as mock_settings:
+            mock_settings.ghl_allow_unsigned_webhooks = False
+            mock_settings.ghl_webhook_public_key = pub_hex
+            mock_settings.environment = "test"
+            result = sf._verify_ghl_signature(req, tampered_body)
+        assert result is False
+
+    def test_no_public_key_falls_back_to_hmac(self):
+        """Without GHL_WEBHOOK_PUBLIC_KEY, HMAC path is used."""
+        from ghl_real_estate_ai.services.security_framework import SecurityFramework, SecurityConfig
+        sf = SecurityFramework.__new__(SecurityFramework)
+        secret = "hmac_fallback_secret"
+        sf.config = SecurityConfig.model_construct(webhook_signing_secrets={"ghl": secret})
+        body = b'{"type":"test"}'
+        sig = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+        req = Mock()
+        req.headers = {"X-GHL-Signature": sig}
+        req.client = Mock()
+        req.client.host = "127.0.0.1"
+        with patch("ghl_real_estate_ai.services.security_framework.settings") as mock_settings:
+            mock_settings.ghl_allow_unsigned_webhooks = False
+            mock_settings.ghl_webhook_public_key = None
+            mock_settings.environment = "test"
+            result = sf._verify_ghl_signature(req, body)
+        assert result is True
+
+
 if __name__ == "__main__":
     # Run security tests
     pytest.main([__file__, "-v", "--tb=short", "-k", "test_webhook"])

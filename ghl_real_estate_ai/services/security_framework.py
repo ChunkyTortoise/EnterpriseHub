@@ -333,7 +333,19 @@ class SecurityFramework:
         return hmac.compare_digest(provided_secret, configured_secret)
 
     def _verify_ghl_signature(self, request: Request, body: bytes) -> bool:
-        """Verify GoHighLevel webhook signature."""
+        """
+        Verify GoHighLevel webhook signature.
+
+        Supports two modes (selected by configuration):
+        - Ed25519 (GHL_WEBHOOK_PUBLIC_KEY set): GHL Marketplace apps use Ed25519
+          asymmetric signatures with the public key from the GHL developer console.
+        - HMAC-SHA256 (default): GHL Custom Webhook actions and older integrations
+          use a shared secret. Also accepts the raw secret as a fallback for
+          workflow Custom Webhook actions.
+
+        Replay protection: if X-GHL-Timestamp is present, requests older than
+        5 minutes are rejected to prevent replay attacks.
+        """
         if settings.ghl_allow_unsigned_webhooks:
             logger.warning(
                 "GHL webhook signature check bypassed via GHL_ALLOW_UNSIGNED_WEBHOOKS",
@@ -341,15 +353,76 @@ class SecurityFramework:
             )
             return True
 
+        # --- Replay protection ---
+        timestamp_header = request.headers.get("X-GHL-Timestamp")
+        if timestamp_header:
+            try:
+                ts = int(timestamp_header)
+                age_seconds = abs(time.time() - ts)
+                if age_seconds > 300:  # 5-minute window
+                    logger.warning(
+                        "GHL webhook replay detected — timestamp too old",
+                        extra={
+                            "client_ip": self._get_client_ip(request),
+                            "error_id": "WEBHOOK_REPLAY_DETECTED",
+                            "age_seconds": int(age_seconds),
+                        },
+                    )
+                    raise HTTPException(status_code=403, detail="Webhook replay detected")
+            except HTTPException:
+                raise
+            except (ValueError, TypeError):
+                logger.warning(
+                    "GHL webhook has malformed X-GHL-Timestamp header",
+                    extra={"client_ip": self._get_client_ip(request), "timestamp_value": timestamp_header},
+                )
+        else:
+            logger.debug(
+                "GHL webhook missing X-GHL-Timestamp — replay protection skipped",
+                extra={"client_ip": self._get_client_ip(request)},
+            )
+
         signature = request.headers.get("X-GHL-Signature")
         if not signature:
             logger.error(
                 "GHL webhook signature missing - potential unauthorized access attempt",
                 extra={"client_ip": self._get_client_ip(request), "error_id": "WEBHOOK_SIGNATURE_MISSING"},
             )
-            # SECURITY FIX: Raise exception instead of returning False to prevent bypass
             raise HTTPException(status_code=401, detail="Webhook signature required")
 
+        # --- Ed25519 path (GHL Marketplace apps) ---
+        public_key_hex = getattr(settings, "ghl_webhook_public_key", None)
+        if public_key_hex:
+            try:
+                from cryptography.exceptions import InvalidSignature
+                from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+                public_key = Ed25519PublicKey.from_public_bytes(bytes.fromhex(public_key_hex))
+                try:
+                    public_key.verify(bytes.fromhex(signature), body)
+                    return True
+                except (InvalidSignature, ValueError):
+                    logger.warning(
+                        "GHL webhook Ed25519 signature verification failed",
+                        extra={
+                            "client_ip": self._get_client_ip(request),
+                            "error_id": "WEBHOOK_ED25519_INVALID",
+                        },
+                    )
+                    return False
+            except ImportError:
+                logger.error(
+                    "cryptography package not available for Ed25519 verification — falling back to HMAC",
+                    extra={"error_id": "WEBHOOK_ED25519_IMPORT_ERROR"},
+                )
+            except Exception as e:
+                logger.error(
+                    f"GHL webhook Ed25519 verification error: {type(e).__name__}: {e}",
+                    extra={"error_id": "WEBHOOK_ED25519_ERROR", "client_ip": self._get_client_ip(request)},
+                )
+                raise HTTPException(status_code=500, detail="Webhook verification failed")
+
+        # --- HMAC-SHA256 path (default / Custom Webhook actions) ---
         secret = self.config.webhook_signing_secrets.get("ghl")
         if not secret:
             logger.error(
@@ -359,13 +432,11 @@ class SecurityFramework:
                     "environment": getattr(settings, "environment", "unknown"),
                 },
             )
-            # SECURITY FIX: Configuration errors should prevent execution
             raise HTTPException(status_code=500, detail="Webhook authentication not configured")
 
         try:
             expected_signature = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
 
-            # SECURITY FIX: Use constant-time comparison
             is_valid = hmac.compare_digest(signature, expected_signature)
 
             # Fallback: GHL Custom Webhook actions send a static shared
@@ -387,13 +458,14 @@ class SecurityFramework:
 
             return is_valid
 
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(
                 f"Webhook signature verification error: {type(e).__name__}: {e}",
                 extra={"error_id": "WEBHOOK_SIGNATURE_ERROR", "client_ip": self._get_client_ip(request)},
                 exc_info=True,
             )
-            # SECURITY FIX: Unexpected errors should reject the webhook
             raise HTTPException(status_code=500, detail="Webhook verification failed")
 
     def _verify_apollo_signature(self, request: Request, body: bytes) -> bool:
