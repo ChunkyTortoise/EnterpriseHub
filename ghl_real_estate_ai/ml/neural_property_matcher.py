@@ -24,10 +24,18 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import torch
-import torch.nn as nn
 from sklearn.preprocessing import StandardScaler
-from transformers import BertModel, BertTokenizer, CLIPModel, CLIPProcessor
+
+try:
+    import torch  # type: ignore[import]
+    import torch.nn as nn  # type: ignore[import]
+    from transformers import BertModel, BertTokenizer, CLIPModel, CLIPProcessor  # type: ignore[import]
+    _TORCH_AVAILABLE = True
+except ImportError:
+    torch = None  # type: ignore[assignment]
+    nn = None  # type: ignore[assignment]
+    BertModel = BertTokenizer = CLIPModel = CLIPProcessor = None  # type: ignore[assignment]
+    _TORCH_AVAILABLE = False
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.ml.feature_engineering import ConversationFeatures, FeatureEngineer
@@ -38,9 +46,10 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 logger = get_logger(__name__)
 cache = get_cache_service()
 
-# Configure PyTorch for optimal performance
-torch.set_num_threads(4)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Configure PyTorch for optimal performance — skipped when torch is not installed
+if _TORCH_AVAILABLE:
+    torch.set_num_threads(4)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if _TORCH_AVAILABLE else None
 
 
 class MatchingTaskType(Enum):

@@ -35,7 +35,12 @@ from dataclasses import asdict
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from sentence_transformers import SentenceTransformer
+try:
+    from sentence_transformers import SentenceTransformer  # type: ignore[import]
+    _SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SentenceTransformer = None  # type: ignore[assignment]
+    _SENTENCE_TRANSFORMERS_AVAILABLE = False
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.ai_concierge_models import (

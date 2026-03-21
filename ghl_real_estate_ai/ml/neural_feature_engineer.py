@@ -28,14 +28,25 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-import PIL.Image as Image
-import spacy
-import torch
-import torch.nn as nn
-import torchvision.transforms as transforms
 from sklearn.preprocessing import RobustScaler, StandardScaler
 from textblob import TextBlob
-from transformers import BertModel, BertTokenizer, CLIPModel, CLIPProcessor
+
+try:
+    import PIL.Image as Image  # type: ignore[import]
+    import spacy  # type: ignore[import]
+    import torch  # type: ignore[import]
+    import torch.nn as nn  # type: ignore[import]
+    import torchvision.transforms as transforms  # type: ignore[import]
+    from transformers import BertModel, BertTokenizer, CLIPModel, CLIPProcessor  # type: ignore[import]
+    _TORCH_AVAILABLE = True
+except ImportError:
+    Image = None  # type: ignore[assignment]
+    spacy = None  # type: ignore[assignment]
+    torch = None  # type: ignore[assignment]
+    nn = None  # type: ignore[assignment]
+    transforms = None  # type: ignore[assignment]
+    BertModel = BertTokenizer = CLIPModel = CLIPProcessor = None  # type: ignore[assignment]
+    _TORCH_AVAILABLE = False
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
@@ -45,16 +56,18 @@ from ghl_real_estate_ai.services.cache_service import get_cache_service
 logger = get_logger(__name__)
 cache = get_cache_service()
 
-# Configure device
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Configure device — None when torch is not installed
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if _TORCH_AVAILABLE else None
 
 # Load spaCy model for advanced NLP
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    # Fallback if spaCy model not installed
+if _TORCH_AVAILABLE and spacy is not None:
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        nlp = None
+        logger.warning("spaCy model 'en_core_web_sm' not found. Some NLP features will be limited.")
+else:
     nlp = None
-    logger.warning("spaCy model 'en_core_web_sm' not found. Some NLP features will be limited.")
 
 
 class FeatureType(Enum):
