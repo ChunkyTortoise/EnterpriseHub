@@ -121,7 +121,7 @@ jobs:
       - name: Run Semgrep
         run: |
           pip install semgrep
-          semgrep --config .semgrep.yml --error ghl_real_estate_ai/ || true
+          semgrep --config .semgrep.yml --error --severity ERROR ghl_real_estate_ai/
           semgrep --config .semgrep.yml ghl_real_estate_ai/ --json > semgrep-report.json || true
 
       - name: Upload Semgrep report
@@ -151,12 +151,21 @@ jobs:
           pip-audit --format json --output pip-audit-report.json
           pip-audit
 
+      - name: Run Safety check
+        run: |
+          pip install safety
+          safety check --output json > safety-report.json || true
+          safety check
+        continue-on-error: true
+
       - name: Upload audit report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: dependency-audit
-          path: pip-audit-report.json
+          path: |
+            pip-audit-report.json
+            safety-report.json
 
   sql-injection-check:
     name: SQL Injection Detection
