@@ -86,6 +86,7 @@ def _make_billing_client(billing_service=None, subscription_manager=None, authen
         mock_user = MagicMock()
         mock_user.id = 1
         mock_user.is_active = True
+        mock_user.location_id = "loc-123"
         test_app.dependency_overrides[get_current_user] = lambda: mock_user
 
     return TestClient(test_app, raise_server_exceptions=False), mock_billing, mock_sub_mgr
@@ -381,7 +382,12 @@ class TestUpdateSubscription:
     def test_update_subscription_no_changes_returns_400(self):
         """Rejects update requests with no mutation payload."""
         client, _, _ = _make_billing_client()
-        resp = client.put("/billing/subscriptions/1", json={})
+        mock_db = _FakeDatabase({"id": 1, "location_id": "loc-123"})
+        with patch(
+            "ghl_real_estate_ai.services.database_service.get_database",
+            AsyncMock(return_value=mock_db),
+        ):
+            resp = client.put("/billing/subscriptions/1", json={})
         assert resp.status_code == 400
 
 
@@ -656,6 +662,36 @@ def _make_no_location_client(billing_service=None, subscription_manager=None):
     no_loc_user.is_active = True
     no_loc_user.location_id = None
     test_app.dependency_overrides[get_current_user] = lambda: no_loc_user
+
+    return TestClient(test_app, raise_server_exceptions=False), mock_billing, mock_sub_mgr
+
+
+def _make_wrong_location_client(billing_service=None, subscription_manager=None):
+    """Create a TestClient where the authenticated user belongs to a DIFFERENT location than the subscription."""
+    from ghl_real_estate_ai.api.routes import billing as billing_module
+    from ghl_real_estate_ai.api.routes.billing import (
+        get_billing_service,
+        get_monitoring_service,
+        get_subscription_manager,
+    )
+
+    mock_billing = billing_service or MagicMock()
+    mock_sub_mgr = subscription_manager or MagicMock()
+    mock_monitoring = MagicMock()
+
+    test_app = FastAPI()
+    test_app.include_router(billing_module.router)
+    test_app.include_router(billing_module.stripe_webhook_router)
+
+    test_app.dependency_overrides[get_billing_service] = lambda: mock_billing
+    test_app.dependency_overrides[get_subscription_manager] = lambda: mock_sub_mgr
+    test_app.dependency_overrides[get_monitoring_service] = lambda: mock_monitoring
+
+    wrong_loc_user = MagicMock()
+    wrong_loc_user.id = 77
+    wrong_loc_user.is_active = True
+    wrong_loc_user.location_id = "loc-wrong"
+    test_app.dependency_overrides[get_current_user] = lambda: wrong_loc_user
 
     return TestClient(test_app, raise_server_exceptions=False), mock_billing, mock_sub_mgr
 
@@ -1013,3 +1049,120 @@ class TestUsageAlerts:
         )
         assert result["actions_taken"] == []
         assert result["threshold_level"] == "normal"
+
+
+# ---------------------------------------------------------------------------
+# P2.6: TestNoLocationGuard — newly-guarded endpoints return 403 without location
+# ---------------------------------------------------------------------------
+
+
+@skip_if_no_billing
+class TestNoLocationGuard:
+    """Newly-guarded endpoints block users who have no location_id."""
+
+    def test_get_subscription_without_location_returns_403(self):
+        """GET /billing/subscriptions/{id} with no location_id → 403."""
+        client, _, _ = _make_no_location_client()
+        resp = client.get("/billing/subscriptions/1")
+        assert resp.status_code == 403
+
+    def test_record_usage_without_location_returns_403(self):
+        """POST /billing/usage with no location_id → 403."""
+        client, _, _ = _make_no_location_client()
+        resp = client.post(
+            "/billing/usage",
+            json={
+                "subscription_id": 1,
+                "lead_id": "lead-001",
+                "contact_id": "contact-001",
+                "amount": "0.01",
+                "tier": "starter",
+                "billing_period_start": datetime.now().isoformat(),
+                "billing_period_end": (datetime.now() + timedelta(days=30)).isoformat(),
+            },
+        )
+        assert resp.status_code == 403
+
+    def test_list_invoices_without_location_returns_403(self):
+        """GET /billing/invoices with no location_id → 403."""
+        client, _, _ = _make_no_location_client()
+        resp = client.get("/billing/invoices?customer_id=cus_test")
+        assert resp.status_code == 403
+
+    def test_billing_history_without_location_returns_403(self):
+        """GET /billing/billing-history/{customer_id} with no location_id → 403."""
+        client, _, _ = _make_no_location_client()
+        resp = client.get("/billing/billing-history/cus_test")
+        assert resp.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# P2.6: TestIDORSubscriptionOwnership — cross-location subscription access blocked
+# ---------------------------------------------------------------------------
+
+
+@skip_if_no_billing
+class TestIDORSubscriptionOwnership:
+    """IDOR protection: users from loc-wrong cannot access subscriptions belonging to loc-123."""
+
+    def test_wrong_location_on_get_subscription_returns_403(self):
+        """User loc-wrong cannot GET subscription belonging to loc-123."""
+        client, _, _ = _make_wrong_location_client()
+        mock_db = _FakeDatabase({"id": 1, "location_id": "loc-123"})
+        with patch(
+            "ghl_real_estate_ai.services.database_service.get_database",
+            AsyncMock(return_value=mock_db),
+        ):
+            resp = client.get("/billing/subscriptions/1")
+        assert resp.status_code == 403
+
+    def test_wrong_location_on_update_subscription_returns_403(self):
+        """User loc-wrong cannot PUT subscription belonging to loc-123."""
+        client, _, _ = _make_wrong_location_client()
+        mock_db = _FakeDatabase({"id": 1, "location_id": "loc-123"})
+        with patch(
+            "ghl_real_estate_ai.services.database_service.get_database",
+            AsyncMock(return_value=mock_db),
+        ):
+            resp = client.put("/billing/subscriptions/1", json={"tier": "starter"})
+        assert resp.status_code == 403
+
+    def test_wrong_location_on_cancel_subscription_returns_403(self):
+        """User loc-wrong cannot DELETE subscription belonging to loc-123."""
+        client, _, _ = _make_wrong_location_client()
+        mock_db = _FakeDatabase({"id": 1, "location_id": "loc-123"})
+        with patch(
+            "ghl_real_estate_ai.services.database_service.get_database",
+            AsyncMock(return_value=mock_db),
+        ):
+            resp = client.delete("/billing/subscriptions/1")
+        assert resp.status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# P2.6: TestJWTLocationClaim — JWT payload includes location_id
+# ---------------------------------------------------------------------------
+
+
+@skip_if_no_billing
+class TestJWTLocationClaim:
+    """AuthService.create_token() embeds location_id in the JWT payload."""
+
+    def test_auth_service_includes_location_id_in_jwt(self):
+        """create_token() includes location_id claim for downstream use."""
+        import jwt as pyjwt
+
+        from ghl_real_estate_ai.services.auth_service import AuthService, User, UserRole
+
+        service = AuthService()
+        user = User(
+            id=1,
+            username="testuser",
+            email="test@example.com",
+            role=UserRole.AGENT,
+            is_active=True,
+            location_id="loc-jwt-test",
+        )
+        token = service.create_token(user)
+        payload = pyjwt.decode(token, service.secret_key, algorithms=[service.algorithm])
+        assert payload.get("location_id") == "loc-jwt-test"
