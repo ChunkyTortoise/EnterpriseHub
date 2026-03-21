@@ -15,32 +15,33 @@ import os
 from datetime import datetime
 from typing import Any, Dict, List
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
 import stripe
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
 
+from ghl_real_estate_ai.api.dependencies.billing_auth import get_billing_location
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-from ghl_real_estate_ai.services.billing_service import BillingService, BillingServiceError
-from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager, SubscriptionManagerError
-from ghl_real_estate_ai.services.monitoring_service import MonitoringService, AlertSeverity
 from ghl_real_estate_ai.api.schemas.billing import (
+    BillingError,
+    BillingHistoryResponse,
     CreateSubscriptionRequest,
+    InvoiceDetails,
     ModifySubscriptionRequest,
+    RevenueAnalytics,
+    StripeWebhookEvent,
     SubscriptionResponse,
+    SubscriptionStatus,
     SubscriptionSummary,
+    SubscriptionTier,
+    TierDistribution,
     UsageRecordRequest,
     UsageRecordResponse,
     UsageSummary,
-    InvoiceDetails,
-    BillingHistoryResponse,
-    StripeWebhookEvent,
     WebhookProcessingResult,
-    RevenueAnalytics,
-    TierDistribution,
-    BillingError,
-    SubscriptionTier,
-    SubscriptionStatus,
 )
+from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.services.billing_service import BillingService, BillingServiceError
+from ghl_real_estate_ai.services.monitoring_service import AlertSeverity, MonitoringService
+from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager, SubscriptionManagerError
 
 logger = get_logger(__name__)
 router = APIRouter(prefix="/billing", tags=["billing"], dependencies=[Depends(get_current_user)])
@@ -362,6 +363,7 @@ async def update_subscription(
     subscription_id: int,
     request: ModifySubscriptionRequest,
     background_tasks: BackgroundTasks,
+    location_id: str = Depends(get_billing_location),
     subscription_mgr: SubscriptionManager = Depends(get_subscription_manager),
 ):
     """
@@ -381,6 +383,18 @@ async def update_subscription(
         HTTPException: If update fails or subscription not found
     """
     try:
+        # Guard: Reject requests with no mutation fields
+        if request.tier is None and request.payment_method_id is None and request.cancel_at_period_end is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "error_code": "no_changes_requested",
+                    "error_message": "No changes specified in request",
+                    "error_type": "validation",
+                    "recoverable": True,
+                },
+            )
+
         logger.info(
             f"Updating subscription {subscription_id}",
             extra={
@@ -556,6 +570,7 @@ async def cancel_subscription(
     subscription_id: int,
     background_tasks: BackgroundTasks,
     immediate: bool = Query(False, description="Cancel immediately vs at period end"),
+    location_id: str = Depends(get_billing_location),
     billing_svc: BillingService = Depends(get_billing_service),
 ):
     """
@@ -805,12 +820,13 @@ async def record_usage(
 
         db = await get_database()
         async with db.get_connection() as conn:
-            await conn.execute(
+            usage_row = await conn.fetchrow(
                 """
                 INSERT INTO usage_records (
                     subscription_id, stripe_usage_record_id, lead_id, contact_id,
                     quantity, amount, tier, billing_period_start, billing_period_end
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                RETURNING id
                 """,
                 request.subscription_id,
                 stripe_usage_record.id,
@@ -822,6 +838,7 @@ async def record_usage(
                 request.billing_period_start,
                 request.billing_period_end,
             )
+            db_record_id = usage_row["id"] if usage_row else None
             await conn.execute(
                 "UPDATE subscriptions SET usage_current = usage_current + 1 WHERE id = $1",
                 request.subscription_id,
@@ -843,6 +860,7 @@ async def record_usage(
 
         return {
             "success": True,
+            "usage_record_id": db_record_id,
             "stripe_usage_record_id": stripe_usage_record.id,
             "subscription_id": request.subscription_id,
             "amount_billed": float(request.amount),
@@ -1381,13 +1399,15 @@ async def get_revenue_analytics():
                 """
             )
 
-        monthly_revenue = mrr_row["mrr"] if mrr_row else 0
+        mrr_base = float(mrr_row["mrr"]) if mrr_row else 0.0
+        usage_rev = float(usage_row["usage_revenue"]) if usage_row else 0.0
+        # monthly_revenue includes both subscription MRR and usage overages
+        monthly_revenue = mrr_base + usage_rev
         total_subscriptions = mrr_row["active_count"] if mrr_row else 0
         enterprise_count = mrr_row["enterprise_count"] if mrr_row else 0
-        usage_rev = usage_row["usage_revenue"] if usage_row else 0
 
         total_arr = monthly_revenue * 12
-        average_arpu = monthly_revenue / total_subscriptions if total_subscriptions > 0 else 0
+        average_arpu = monthly_revenue / total_subscriptions if total_subscriptions > 0 else 0.0
 
         # Churn rate as percentage
         churn_total = churn_row["total"] if churn_row and churn_row["total"] else 1
@@ -1397,9 +1417,8 @@ async def get_revenue_analytics():
         upgrade_total = upgrade_row["total"] if upgrade_row and upgrade_row["total"] else 1
         upgrade_rate = (upgrade_row["upgrades"] / upgrade_total * 100) if upgrade_row else 0.0
 
-        # Usage revenue as percentage of total
-        total_rev = float(monthly_revenue) + float(usage_rev)
-        usage_revenue_percentage = (float(usage_rev) / total_rev * 100) if total_rev > 0 else 0.0
+        # Usage revenue as percentage of combined monthly revenue
+        usage_revenue_percentage = (usage_rev / monthly_revenue * 100) if monthly_revenue > 0 else 0.0
 
         revenue_analytics = RevenueAnalytics(
             total_arr=total_arr,

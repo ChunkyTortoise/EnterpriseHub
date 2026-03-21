@@ -327,6 +327,8 @@ class SubscriptionManager:
         """
         Monitor usage thresholds and trigger alerts/actions.
 
+        Threshold levels (ascending): 75% warning → 80% alert → 90% critical → 100% overage.
+
         Args:
             location_id: GHL location ID
             current_usage: Current period usage count
@@ -340,8 +342,9 @@ class SubscriptionManager:
 
             # Define threshold levels
             thresholds = {
-                "warning": 75,  # 75% usage warning
-                "critical": 90,  # 90% usage alert
+                "warning": 75,   # 75% usage warning
+                "alert_80": 80,  # 80% usage alert (new)
+                "critical": 90,  # 90% usage critical alert
                 "overage": 100,  # Usage overage
             }
 
@@ -356,8 +359,12 @@ class SubscriptionManager:
                 # Critical threshold - alert customer and admin
                 actions_taken.append("critical_usage_alert_sent")
 
+            elif usage_percentage >= thresholds["alert_80"]:
+                # 80% threshold - alert customer
+                actions_taken.append("usage_80pct_alert_sent")
+
             elif usage_percentage >= thresholds["warning"]:
-                # Warning threshold - notify customer
+                # 75% warning threshold - notify customer
                 actions_taken.append("usage_warning_sent")
 
             # Log threshold status
@@ -383,14 +390,39 @@ class SubscriptionManager:
 
     def _get_threshold_level(self, usage_percentage: float, thresholds: Dict[str, float]) -> str:
         """Determine current threshold level based on usage percentage."""
-        if usage_percentage >= thresholds["overage"]:
+        if usage_percentage >= thresholds.get("overage", 100):
             return "overage"
-        elif usage_percentage >= thresholds["critical"]:
+        elif usage_percentage >= thresholds.get("critical", 90):
             return "critical"
-        elif usage_percentage >= thresholds["warning"]:
+        elif usage_percentage >= thresholds.get("alert_80", 80):
+            return "alert_80"
+        elif usage_percentage >= thresholds.get("warning", 75):
             return "warning"
         else:
             return "normal"
+
+    async def report_meter_event(self, customer_id: str, event_name: str, value: int) -> None:
+        """
+        Report a meter event to Stripe Billing Meters.
+
+        Args:
+            customer_id: Stripe customer ID
+            event_name: Stripe meter event name
+            value: Quantity to report
+        """
+        try:
+            import stripe
+
+            stripe.billing.MeterEvent.create(
+                event_name=event_name,
+                payload={"stripe_customer_id": customer_id, "value": str(value)},
+            )
+            logger.info(
+                "Stripe meter event reported",
+                extra={"customer_id": customer_id, "event_name": event_name, "value": value},
+            )
+        except Exception as e:
+            logger.error(f"Failed to report meter event {event_name} for customer {customer_id}: {e}")
 
     async def calculate_overage_cost(self, subscription_id: int, overage_count: int) -> Decimal:
         """

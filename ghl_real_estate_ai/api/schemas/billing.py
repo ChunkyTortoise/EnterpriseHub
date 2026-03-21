@@ -5,6 +5,7 @@ Defines request/response schemas for subscription management,
 usage tracking, and Stripe webhook processing.
 """
 
+import os
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
@@ -20,9 +21,10 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_seriali
 class SubscriptionTier(str, Enum):
     """Subscription tier options with usage allowances."""
 
-    STARTER = "starter"  # $99/month, 50 leads
-    PROFESSIONAL = "professional"  # $249/month, 150 leads
-    ENTERPRISE = "enterprise"  # $499/month, 500 leads
+    STARTER = "starter"        # $297/month, 500 leads
+    GROWTH = "growth"          # $597/month, 2,500 leads
+    PROFESSIONAL = "professional"  # Legacy tier (DB rows pre-migration); maps to growth pricing
+    ENTERPRISE = "enterprise"  # $1,497/month, unlimited
 
 
 class SubscriptionStatus(str, Enum):
@@ -330,13 +332,21 @@ class TierConfiguration(BaseModel):
     overage_rate: Decimal
     features: List[str]
     stripe_price_id: str
+    trial_days: int = 14
     currency: str = "usd"
 
-    @field_validator("price_monthly", "overage_rate")
+    @field_validator("price_monthly")
     @classmethod
     def validate_positive_price(cls, v):
         if v <= 0:
             raise ValueError("Price must be positive")
+        return v
+
+    @field_validator("overage_rate")
+    @classmethod
+    def validate_non_negative_overage(cls, v):
+        if v < 0:
+            raise ValueError("Overage rate must be non-negative")
         return v
 
 
@@ -344,32 +354,46 @@ class TierConfiguration(BaseModel):
 SUBSCRIPTION_TIERS = {
     SubscriptionTier.STARTER: TierConfiguration(
         name="Starter",
-        price_monthly=Decimal("99.00"),
-        usage_allowance=50,
-        overage_rate=Decimal("1.00"),
-        features=["Basic lead scoring", "Email support", "Standard analytics"],
-        stripe_price_id="price_starter_monthly",
+        price_monthly=Decimal("297.00"),
+        usage_allowance=500,
+        overage_rate=Decimal("0.50"),
+        features=["1 AI bot", "Basic lead scoring", "Email support", "Standard analytics"],
+        stripe_price_id=os.getenv("STRIPE_STARTER_PRICE_ID", "price_starter_monthly"),
+        trial_days=14,
     ),
+    SubscriptionTier.GROWTH: TierConfiguration(
+        name="Growth",
+        price_monthly=Decimal("597.00"),
+        usage_allowance=2500,
+        overage_rate=Decimal("0.30"),
+        features=["3 AI bots", "Advanced lead scoring", "Phone support", "Real-time analytics", "Custom integrations"],
+        stripe_price_id=os.getenv("STRIPE_GROWTH_PRICE_ID", "price_growth_monthly"),
+        trial_days=14,
+    ),
+    # PROFESSIONAL is the legacy name for GROWTH; kept for backward compat with pre-migration DB rows
     SubscriptionTier.PROFESSIONAL: TierConfiguration(
-        name="Professional",
-        price_monthly=Decimal("249.00"),
-        usage_allowance=150,
-        overage_rate=Decimal("1.50"),
-        features=["Advanced lead scoring", "Phone support", "Real-time analytics", "Custom integrations"],
-        stripe_price_id="price_professional_monthly",
+        name="Growth (Professional)",
+        price_monthly=Decimal("597.00"),
+        usage_allowance=2500,
+        overage_rate=Decimal("0.30"),
+        features=["3 AI bots", "Advanced lead scoring", "Phone support", "Real-time analytics", "Custom integrations"],
+        stripe_price_id=os.getenv("STRIPE_GROWTH_PRICE_ID", "price_growth_monthly"),
+        trial_days=14,
     ),
     SubscriptionTier.ENTERPRISE: TierConfiguration(
         name="Enterprise",
-        price_monthly=Decimal("499.00"),
-        usage_allowance=500,
-        overage_rate=Decimal("0.75"),
+        price_monthly=Decimal("1497.00"),
+        usage_allowance=999999,
+        overage_rate=Decimal("0.00"),
         features=[
+            "Custom AI bots",
             "Premium lead scoring",
             "24/7 support",
             "Advanced analytics",
             "White-label options",
             "Priority processing",
         ],
-        stripe_price_id="price_enterprise_monthly",
+        stripe_price_id=os.getenv("STRIPE_ENTERPRISE_PRICE_ID", "price_enterprise_monthly"),
+        trial_days=30,
     ),
 }
