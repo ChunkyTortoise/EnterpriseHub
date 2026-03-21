@@ -430,7 +430,7 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 4,937 automated tests
+├── tests/                        # 1,553+ integration tests
 ├── app.py                        # FastAPI entry point
 ├── admin_dashboard.py            # Streamlit BI dashboard
 └── docker-compose.yml            # Container orchestration
