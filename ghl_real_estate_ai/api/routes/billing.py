@@ -18,7 +18,7 @@ from typing import Any, Dict, List
 import stripe
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
 
-from ghl_real_estate_ai.api.dependencies.billing_auth import get_billing_location
+from ghl_real_estate_ai.api.dependencies.billing_auth import get_billing_location, verify_subscription_ownership
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 from ghl_real_estate_ai.api.schemas.billing import (
     BillingError,
@@ -235,7 +235,11 @@ async def create_subscription(
 
 
 @router.get("/subscriptions/{subscription_id}", response_model=SubscriptionResponse)
-async def get_subscription(subscription_id: int):
+async def get_subscription(
+    subscription_id: int,
+    location_id: str = Depends(get_billing_location),
+    _ownership: int = Depends(verify_subscription_ownership),
+):
     """
     Get subscription details by ID.
 
@@ -364,6 +368,7 @@ async def update_subscription(
     request: ModifySubscriptionRequest,
     background_tasks: BackgroundTasks,
     location_id: str = Depends(get_billing_location),
+    _ownership: int = Depends(verify_subscription_ownership),
     subscription_mgr: SubscriptionManager = Depends(get_subscription_manager),
 ):
     """
@@ -571,6 +576,7 @@ async def cancel_subscription(
     background_tasks: BackgroundTasks,
     immediate: bool = Query(False, description="Cancel immediately vs at period end"),
     location_id: str = Depends(get_billing_location),
+    _ownership: int = Depends(verify_subscription_ownership),
     billing_svc: BillingService = Depends(get_billing_service),
 ):
     """
@@ -776,6 +782,7 @@ async def cancel_subscription(
 async def record_usage(
     request: UsageRecordRequest,
     background_tasks: BackgroundTasks,
+    location_id: str = Depends(get_billing_location),
     billing_svc: BillingService = Depends(get_billing_service),
     monitoring_svc: MonitoringService = Depends(get_monitoring_service),
 ):
@@ -1070,6 +1077,7 @@ async def process_payment(invoice_id: str, background_tasks: BackgroundTasks):
 async def list_invoices(
     customer_id: str = Query(..., description="Stripe customer ID"),
     limit: int = Query(default=10, le=100, description="Maximum number of invoices"),
+    location_id: str = Depends(get_billing_location),
     billing_svc: BillingService = Depends(get_billing_service),
 ):
     """
@@ -1131,6 +1139,7 @@ async def list_invoices(
 @router.get("/billing-history/{customer_id}", response_model=BillingHistoryResponse)
 async def get_billing_history(
     customer_id: str,
+    location_id: str = Depends(get_billing_location),
     billing_svc: BillingService = Depends(get_billing_service),
 ):
     """

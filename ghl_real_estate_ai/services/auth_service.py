@@ -115,9 +115,16 @@ class AuthService:
                         role TEXT NOT NULL,
                         is_active INTEGER DEFAULT 1,
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        last_login DATETIME
+                        last_login DATETIME,
+                        location_id TEXT
                     )
                 """)
+
+                # Add location_id to existing databases that pre-date this column
+                try:
+                    await db.execute("ALTER TABLE users ADD COLUMN location_id TEXT")
+                except Exception:
+                    pass  # Column already exists
 
                 await db.execute("""
                     CREATE TABLE IF NOT EXISTS user_sessions (
@@ -145,7 +152,8 @@ class AuthService:
             await self.init_database()
 
     async def create_user(
-        self, username: str, email: str, password: str, role: UserRole = UserRole.VIEWER
+        self, username: str, email: str, password: str, role: UserRole = UserRole.VIEWER,
+        location_id: Optional[str] = None
     ) -> Optional[User]:
         """Create a new user."""
         await self._ensure_initialized()
@@ -164,10 +172,10 @@ class AuthService:
                 # Create new user
                 await db.execute(
                     """
-                    INSERT INTO users (username, email, password_hash, role)
-                    VALUES (?, ?, ?, ?)
+                    INSERT INTO users (username, email, password_hash, role, location_id)
+                    VALUES (?, ?, ?, ?, ?)
                     """,
-                    (username, email, password_hash, role.value),
+                    (username, email, password_hash, role.value, location_id),
                 )
                 await db.commit()
 
@@ -218,6 +226,7 @@ class AuthService:
             is_active=bool(row[5]),
             created_at=datetime.fromisoformat(row[6]) if row[6] else None,
             last_login=datetime.fromisoformat(row[7]) if row[7] else None,
+            location_id=row[8] if len(row) > 8 else None,
         )
 
     def create_token(self, user: User) -> str:
@@ -226,6 +235,7 @@ class AuthService:
             "user_id": user.id,
             "username": user.username,
             "role": user.role.value,
+            "location_id": user.location_id,
             "exp": datetime.now(timezone.utc) + timedelta(hours=self.token_expire_hours),
             "iat": datetime.now(timezone.utc),
         }
@@ -301,13 +311,13 @@ class AuthService:
         await self._ensure_initialized()
 
         default_users = [
-            ("admin", "admin@jorgeai.com", "admin123", UserRole.ADMIN),
-            ("jorge", "jorge@realtor.com", "jorge123", UserRole.AGENT),
-            ("viewer", "viewer@jorgeai.com", "viewer123", UserRole.VIEWER),
+            ("admin", "admin@jorgeai.com", "admin123", UserRole.ADMIN, "loc-admin"),
+            ("jorge", "jorge@realtor.com", "jorge123", UserRole.AGENT, "loc-jorge"),
+            ("viewer", "viewer@jorgeai.com", "viewer123", UserRole.VIEWER, None),
         ]
 
-        for username, email, password, role in default_users:
-            user = await self.create_user(username, email, password, role)
+        for username, email, password, role, location_id in default_users:
+            user = await self.create_user(username, email, password, role, location_id=location_id)
             if user:
                 logger.info(f"Created default user: {username} ({role.value})")
             else:
