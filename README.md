@@ -91,30 +91,6 @@ EnterpriseHub is an AI-powered real estate platform that transforms lead managem
 - **Disconnected tools** -- Qualification results, CRM updates, and analytics live in one platform instead of spreadsheets + separate dashboards
 - **No visibility into pipeline health** -- Streamlit BI dashboard surfaces lead flow, conversion rates, commission tracking, and bot performance metrics
 
-## Service Mapping
-
-EnterpriseHub demonstrates four core services from the portfolio catalog:
-
-| Service ID | Service Name | Category | Description | Proof |
-|------------|--------------|----------|-------------|-------|
-| **S04** | Multi-Agent Workflows | Agentic AI | Design and implement multi-agent AI systems with proper handoff orchestration, context management, and monitoring. Features 22 specialized agents with capability routing and audit trails. | [Architecture Docs](ARCHITECTURE.md) • [Agent Mesh](ghl_real_estate_ai/services/agent_mesh_coordinator.py) |
-| **S06** | Automation & Workflow Engineering | Agentic AI | End-to-end workflow automation with AI agents, API integrations, error handling, and monitoring. Integrates with GoHighLevel CRM for real-time lead sync and temperature tag publishing. | [GHL Client](ghl_real_estate_ai/services/enhanced_ghl_client.py) • [Demo](https://ct-enterprise-ai.streamlit.app) |
-| **S08** | Interactive BI Dashboards | Data/BI | Real-time interactive BI dashboards with auto-profiling, KPI tracking, and scheduled reporting. Features Monte Carlo simulations, sentiment analysis, and churn detection. | [Streamlit Demo](streamlit_demo/) • [Live Demo](https://ct-enterprise-ai.streamlit.app) |
-| **S10** | Predictive Analytics & Lead Scoring | Data/BI | Machine learning-powered lead scoring and predictive analytics to prioritize high-value prospects. Uses Q0-Q4 qualification framework with 92% accuracy. | [Lead Scoring](ghl_real_estate_ai/models/lead_scoring.py) • [Case Study](#business-impact) |
-
-## Certification Mapping
-
-EnterpriseHub applies expertise from multiple industry certifications:
-
-| Certification | Provider | Category | Positioning | Client Impact |
-|---------------|----------|----------|-------------|---------------|
-| **C001** | Google Data Analytics Certificate | Data/BI | Expertise in data analysis, SQL, R programming, and visualization for business intelligence | Enables robust BI dashboards with SQL-based data pipelines and KPI tracking |
-| **C003** | Microsoft Generative AI for Data Analysis | GenAI | AI-enhanced data analysis with GenAI for cleaning, visualization, and code generation | Powers intelligent data profiling and automated insight generation |
-| **C005** | DeepLearning.AI AI For Everyone | AI/ML | AI fundamentals, project building, and business strategy for non-technical stakeholders | Ensures AI solutions align with business goals and stakeholder needs |
-| **C008** | Google Digital Marketing & E-commerce | Marketing | Digital marketing strategy, email marketing, e-commerce, and analytics | Informs lead nurturing workflows and conversion optimization strategies |
-| **C011** | Vanderbilt Prompt Engineering | GenAI | Prompt engineering, custom GPTs, and automation with Zapier for personal productivity | Drives 89% token cost reduction through optimized prompt design |
-| **C017** | IBM RAG and Agentic AI | GenAI | RAG with LangChain, vector databases, multi-agent systems, and AG2 frameworks | Enables advanced RAG pipeline with hybrid retrieval (BM25 + dense vectors) |
-
 ## Business Impact
 
 EnterpriseHub delivers quantified outcomes based on production deployment (Case Study CS001):
@@ -218,18 +194,6 @@ graph TB
     RAG --> VS
     HO -->|"Bot Transfer"| Clients
 ```
-
-## Key Metrics
-
-| Metric | Value |
-|--------|-------|
-| Test Suite | 181 CI tests + 1,553+ integration tests |
-| LLM Cost Reduction | 89% via 3-tier Redis caching |
-| Orchestration Overhead | <200ms per request |
-| API P95 Latency | <300ms under 10 req/sec |
-| Cache Hit Rate | >85% for repeated queries |
-| CRM Integrations | 3 (GoHighLevel, HubSpot, Salesforce) |
-| Bot Handoff Accuracy | 0.7 confidence threshold |
 
 ## Quick Start
 
@@ -516,70 +480,9 @@ See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Related Projects
 
-- [EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) -- Flagship real estate AI platform with 181 CI tests + 1,553+ integration tests and BI dashboards
-- [jorge_real_estate_bots](https://github.com/ChunkyTortoise/jorge_real_estate_bots) -- Three-bot lead qualification system (Lead, Buyer, Seller)
-- [ai-orchestrator](https://github.com/ChunkyTortoise/ai-orchestrator) -- AgentForge: unified async LLM interface (Claude, Gemini, OpenAI, Perplexity)
-- [Revenue-Sprint](https://github.com/ChunkyTortoise/Revenue-Sprint) -- AI-powered freelance pipeline: job scanning and proposal generation
-- [insight-engine](https://github.com/ChunkyTortoise/insight-engine) -- Upload CSV/Excel, get instant dashboards and predictive models
-- [docqa-engine](https://github.com/ChunkyTortoise/docqa-engine) -- RAG document Q&A with hybrid retrieval and prompt engineering lab
-- [mcp-toolkit](https://github.com/ChunkyTortoise/mcp-toolkit) -- 6 MCP servers for enterprise AI integration
-- [scrape-and-serve](https://github.com/ChunkyTortoise/scrape-and-serve) -- Web scraping, SEO tools, and Excel-to-web apps
-- [llm-integration-starter](https://github.com/ChunkyTortoise/llm-integration-starter) -- Educational starter kit for LLM applications
-- [prompt-engineering-lab](https://github.com/ChunkyTortoise/prompt-engineering-lab) -- A/B testing and cost optimization for prompts
-- [Portfolio](https://chunkytortoise.github.io) -- Project showcase and services
-
-## For Potential Clients
-
-Ready to transform your real estate lead management? Choose the package that fits your needs:
-
-| Package | Price | What's Included |
-|---------|-------|------------------|
-| **Lead Audit** | $1,500 | Complete analysis of your current lead flow, identification of conversion gaps, and actionable recommendations for 5-minute response SLA compliance |
-| **Jorge Bot Lite** | $5,000 | Single bot deployment (Lead, Buyer, or Seller), basic CRM integration, and dashboard access |
-| **Jorge Bot Pro** | $10,000 | Full three-bot system (Lead + Buyer + Seller), GoHighLevel CRM sync, A/B testing, and performance analytics |
-| **Revenue Engine** | $15,000 | Complete EnterpriseHub platform, predictive lead scoring, custom workflows, dedicated support, and quarterly strategy reviews |
-
-### Why These Prices?
-
-- **Proven Results**: 133% conversion increase, 89% cost reduction, 92% accuracy
-- **Production-Ready**: 181 CI tests + 1,553+ integration tests, enterprise architecture, SOC-ready
-- **Fast Deployment**: Lite in 1 week, Pro in 2 weeks, Revenue Engine in 4 weeks
-
-[Book a Discovery Call](https://calendly.com/caymanroden/discovery-call) — Free 30-minute consultation
-
----
-
-## Hire Me
-
-I'm available for consulting engagements and contract work. This repository demonstrates my approach to production AI systems—every project ships with tests, documentation, and monitoring.
-
-### Service Offerings
-
-| Service | Rate | Timeline | Best For |
-|---------|------|----------|----------|
-| **Multi-Agent Workflows** | $10,000-$15,000 | 3-4 weeks | Custom agent architectures with handoff logic and CRM integration |
-| **RAG & Document Q&A** | $8,000-$12,000 | 2-3 weeks | Hybrid retrieval systems with citation tracking |
-| **Interactive BI Dashboards** | $5,000-$10,000 | 2-3 weeks | Streamlit dashboards with predictive analytics |
-| **LLM Integration & LLMOps** | $6,000-$15,000 | 3-5 weeks | Provider-agnostic LLM orchestration with cost optimization |
-| **Hourly Consulting** | $85-$150/hr | Ongoing | Advisory, code review, architecture guidance |
-| **Fractional AI Leadership** | $5,000-$15,000/mo | Ongoing | Strategic AI initiatives for growing teams |
-
-### What's Included
-
-Every engagement includes:
-- ✅ Production-ready code with automated tests
-- ✅ Documentation and deployment guides
-- ✅ CI/CD pipeline configuration
-- ✅ 30-day post-delivery support
-
-**See what clients say**: [Client Testimonials](TESTIMONIALS.md)
-
-### Get in Touch
-
-- **Email**: [caymanroden@gmail.com](mailto:caymanroden@gmail.com)
-- **LinkedIn**: [linkedin.com/in/caymanroden](https://www.linkedin.com/in/caymanroden)
-- **Upwork**: Available for fixed-price and hourly contracts
-- **Portfolio**: [chunkytortoise.github.io](https://chunkytortoise.github.io)
+- [jorge_real_estate_bots](https://github.com/ChunkyTortoise/jorge_real_estate_bots) -- Three-bot lead qualification system (Lead, Buyer, Seller) - live production
+- [docextract](https://github.com/ChunkyTortoise/docextract) -- Production RAG pipeline: PDF upload, async processing, pgvector hybrid search, citation-aware answers
+- [mcp-server-toolkit](https://github.com/ChunkyTortoise/mcp-server-toolkit) -- 9 MCP servers for LLM tool integration, published to PyPI
 
 ## Security
 
