@@ -19,7 +19,7 @@ import time
 from datetime import datetime, timedelta
 from enum import Enum
 from functools import wraps
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 import jwt
 import redis.asyncio as aioredis
@@ -101,11 +101,11 @@ class SecurityFramework:
     rate limiting, JWT authentication, and comprehensive audit logging.
     """
 
-    def __init__(self, redis_url: str = None):
+    def __init__(self, redis_url: Optional[str] = None):
         """Initialize security framework."""
         self.config = SecurityConfig()
-        self.redis_url = redis_url or settings.redis_url
-        self._redis_pool = None
+        self.redis_url = redis_url or settings.redis_url or ""
+        self._redis_pool: Optional[aioredis.ConnectionPool] = None
         self.security_bearer = HTTPBearer(auto_error=False)
 
     async def _get_redis(self) -> aioredis.Redis:
@@ -197,7 +197,7 @@ class SecurityFramework:
         # Log successful authentication
         await self._audit_log(
             event="authentication_success",
-            user_id=token_payload.get("sub"),
+            user_id=str(token_payload.get("sub") or "anonymous"),
             details={"role": user_role, "endpoint": str(request.url.path), "method": request.method},
             request=request,
         )

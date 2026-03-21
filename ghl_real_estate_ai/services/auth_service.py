@@ -184,6 +184,7 @@ class AuthService:
                     row = await cursor.fetchone()
                     if row:
                         return self._row_to_user(row)
+                    return None
 
         except Exception as e:
             logger.error(f"Error creating user: {e}")
