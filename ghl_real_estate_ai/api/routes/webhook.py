@@ -38,6 +38,7 @@ from ghl_real_estate_ai.api.schemas.ghl import (
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.core.llm_client import LLMCircuitOpenError, LLMTimeoutError
 from ghl_real_estate_ai.ghl_utils.config import settings
+from ghl_real_estate_ai.ghl_utils.jorge_config import JorgeEnvironmentSettings
 from ghl_real_estate_ai.ghl_utils.jorge_config import settings as jorge_settings
 from ghl_real_estate_ai.ghl_utils.jorge_rancho_config import rancho_config
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -635,7 +636,7 @@ async def handle_ghl_webhook(
     try:
         raw_body = await request.body()
         logger.debug(
-            f"GHL webhook raw payload (first 500 chars): {raw_body[:500]}",
+            f"GHL webhook raw payload (first 500 chars): {raw_body[:500].decode('utf-8', errors='replace')}",
             extra={"endpoint": "/api/ghl/webhook"},
         )
     except Exception:
