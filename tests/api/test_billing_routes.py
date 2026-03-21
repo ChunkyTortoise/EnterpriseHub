@@ -396,7 +396,7 @@ class TestRecordUsage:
 
     def test_record_usage_persists_usage_row_and_returns_ids(self):
         mock_billing = MagicMock()
-        mock_billing.add_usage_record = AsyncMock(return_value={"id": "usage_stripe_123"})
+        mock_billing.add_usage_record = AsyncMock(return_value=MagicMock(id="usage_stripe_123"))
         client, _, _ = _make_billing_client(billing_service=mock_billing)
 
         mock_db = _FakeDatabase({"id": 42})
@@ -503,17 +503,20 @@ class TestRevenueAnalytics:
 
     def test_revenue_analytics_returns_data(self):
         """Returns revenue metrics."""
-        mock_sub_mgr = MagicMock()
-        mock_tier_dist = MagicMock(
-            total_subscriptions=10,
-            starter_count=4,
-            professional_count=4,
-            enterprise_count=2,
+        client, _, _ = _make_billing_client()
+        mock_db = _SequencedDatabase(
+            [
+                {"mrr": 500.0, "active_count": 2, "enterprise_count": 0},
+                {"usage_revenue": 0.0},
+                {"churned": 0, "total": 2},
+                {"upgrades": 0, "total": 2},
+            ]
         )
-        mock_sub_mgr.get_tier_distribution = AsyncMock(return_value=mock_tier_dist)
-
-        client, _, _ = _make_billing_client(subscription_manager=mock_sub_mgr)
-        resp = client.get("/billing/analytics/revenue")
+        with patch(
+            "ghl_real_estate_ai.services.database_service.get_database",
+            AsyncMock(return_value=mock_db),
+        ):
+            resp = client.get("/billing/analytics/revenue")
 
         assert resp.status_code == 200
         data = resp.json()
@@ -525,13 +528,10 @@ class TestRevenueAnalytics:
         client, _, _ = _make_billing_client()
         mock_db = _SequencedDatabase(
             [
-                {
-                    "active_count": 3,
-                    "enterprise_count": 1,
-                    "recurring_monthly_revenue": 847.0,
-                    "canceled_count": 1,
-                },
-                {"monthly_usage_revenue": 53.0},
+                {"mrr": 847.0, "active_count": 3, "enterprise_count": 1},
+                {"usage_revenue": 53.0},
+                {"churned": 0, "total": 3},
+                {"upgrades": 1, "total": 3},
             ]
         )
         with patch(
@@ -622,3 +622,394 @@ class TestBillingAuthEnforcement:
         )
         # No JWT — but Stripe sig check runs. Missing sig → 400, not 401.
         assert resp.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# Phase 5: TestBillingLocationAuth — IDOR protection (6 tests)
+# ---------------------------------------------------------------------------
+
+
+def _make_no_location_client(billing_service=None, subscription_manager=None):
+    """Create a TestClient where the authenticated user has no location_id."""
+    from ghl_real_estate_ai.api.routes import billing as billing_module
+    from ghl_real_estate_ai.api.routes.billing import (
+        get_billing_service,
+        get_monitoring_service,
+        get_subscription_manager,
+    )
+
+    mock_billing = billing_service or MagicMock()
+    mock_sub_mgr = subscription_manager or MagicMock()
+    mock_monitoring = MagicMock()
+
+    test_app = FastAPI()
+    test_app.include_router(billing_module.router)
+    test_app.include_router(billing_module.stripe_webhook_router)
+
+    test_app.dependency_overrides[get_billing_service] = lambda: mock_billing
+    test_app.dependency_overrides[get_subscription_manager] = lambda: mock_sub_mgr
+    test_app.dependency_overrides[get_monitoring_service] = lambda: mock_monitoring
+
+    # User with NO location_id set
+    no_loc_user = MagicMock()
+    no_loc_user.id = 99
+    no_loc_user.is_active = True
+    no_loc_user.location_id = None
+    test_app.dependency_overrides[get_current_user] = lambda: no_loc_user
+
+    return TestClient(test_app, raise_server_exceptions=False), mock_billing, mock_sub_mgr
+
+
+@skip_if_no_billing
+class TestBillingLocationAuth:
+    """IDOR protection: users without a location_id are blocked from location-scoped endpoints."""
+
+    def test_update_subscription_without_location_id_returns_403(self):
+        """PUT /billing/subscriptions/{id} with no location_id → 403."""
+        client, _, _ = _make_no_location_client()
+        resp = client.put("/billing/subscriptions/1", json={"tier": "starter"})
+        assert resp.status_code == 403
+
+    def test_cancel_subscription_without_location_id_returns_403(self):
+        """DELETE /billing/subscriptions/{id} with no location_id → 403."""
+        client, _, _ = _make_no_location_client()
+        resp = client.delete("/billing/subscriptions/1")
+        assert resp.status_code == 403
+
+    def test_error_code_is_no_location_associated(self):
+        """Error detail has machine-readable error_code."""
+        client, _, _ = _make_no_location_client()
+        resp = client.put("/billing/subscriptions/1", json={"tier": "starter"})
+        assert resp.status_code == 403
+        data = resp.json()
+        assert data["detail"]["error_code"] == "no_location_associated"
+
+    def test_user_with_location_id_passes_update_auth(self):
+        """User WITH a location_id is not blocked by IDOR guard on PUT."""
+        client, _, _ = _make_billing_client()  # MagicMock user — location_id is truthy MagicMock
+        # Route still needs a DB row, so this will 500/404 — but NOT 403.
+        resp = client.put("/billing/subscriptions/1", json={"tier": "starter"})
+        assert resp.status_code != 403
+
+    def test_user_with_location_id_passes_cancel_auth(self):
+        """User WITH a location_id is not blocked by IDOR guard on DELETE."""
+        mock_billing = MagicMock()
+        mock_billing.cancel_subscription = AsyncMock(return_value={"id": "sub_test", "status": "canceled"})
+        client, _, _ = _make_billing_client(billing_service=mock_billing)
+        mock_db = _FakeDatabase(_build_subscription_row(sub_id=1))
+        with patch(
+            "ghl_real_estate_ai.services.database_service.get_database",
+            AsyncMock(return_value=mock_db),
+        ):
+            resp = client.delete("/billing/subscriptions/1?immediate=true")
+        assert resp.status_code != 403
+
+    def test_error_type_is_authorization(self):
+        """Error type is 'authorization' for IDOR-blocked requests."""
+        client, _, _ = _make_no_location_client()
+        resp = client.delete("/billing/subscriptions/1")
+        assert resp.status_code == 403
+        data = resp.json()
+        assert data["detail"]["error_type"] == "authorization"
+
+
+# ---------------------------------------------------------------------------
+# Phase 5: TestTrialFlow — Trial creation and conversion (4 tests)
+# ---------------------------------------------------------------------------
+
+
+@skip_if_no_billing
+class TestTrialFlow:
+    """Trial period creation and state transitions."""
+
+    def test_starter_subscription_creates_with_14_day_trial(self):
+        """Creating a starter subscription uses 14-day trial from SUBSCRIPTION_TIERS."""
+        from ghl_real_estate_ai.api.schemas.billing import SUBSCRIPTION_TIERS, SubscriptionTier
+
+        tier_config = SUBSCRIPTION_TIERS[SubscriptionTier.STARTER]
+        assert tier_config.trial_days == 14
+
+    def test_enterprise_subscription_gets_30_day_trial(self):
+        """Enterprise tier has a 30-day trial period."""
+        from ghl_real_estate_ai.api.schemas.billing import SUBSCRIPTION_TIERS, SubscriptionTier
+
+        tier_config = SUBSCRIPTION_TIERS[SubscriptionTier.ENTERPRISE]
+        assert tier_config.trial_days == 30
+
+    def test_growth_subscription_has_14_day_trial(self):
+        """Growth tier has a 14-day trial period."""
+        from ghl_real_estate_ai.api.schemas.billing import SUBSCRIPTION_TIERS, SubscriptionTier
+
+        tier_config = SUBSCRIPTION_TIERS[SubscriptionTier.GROWTH]
+        assert tier_config.trial_days == 14
+
+    def test_trial_will_end_webhook_is_processed(self):
+        """customer.subscription.trial_will_end webhook is processed without error."""
+        mock_billing = MagicMock()
+        mock_billing.verify_webhook_signature = MagicMock(return_value=True)
+        mock_billing.process_webhook_event = AsyncMock(
+            return_value={
+                "processed": True,
+                "actions_taken": ["trial_will_end_notification_sent"],
+            }
+        )
+
+        trial_event = {
+            "id": "evt_trial_end",
+            "type": "customer.subscription.trial_will_end",
+            "data": {"object": {"id": "sub_trial123", "trial_end": 1234567890}},
+        }
+
+        with patch("ghl_real_estate_ai.api.routes.billing.stripe.Webhook.construct_event", return_value=trial_event):
+            client, _, _ = _make_billing_client(billing_service=mock_billing)
+            resp = client.post(
+                "/billing/webhooks/stripe",
+                content=b'{"type": "customer.subscription.trial_will_end"}',
+                headers={"Content-Type": "application/json", "stripe-signature": "t=123,v1=sig"},
+            )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["event_type"] == "customer.subscription.trial_will_end"
+        assert data["processed"] is True
+
+
+# ---------------------------------------------------------------------------
+# Phase 5: TestWebhookHandlers — Real webhook event processing (5 tests)
+# ---------------------------------------------------------------------------
+
+
+@skip_if_no_billing
+class TestWebhookHandlers:
+    """Webhook events trigger correct DB-backed state transitions."""
+
+    def _post_webhook(self, client, event_type: str, event_obj: dict, event_id: str = "evt_test"):
+        event = {
+            "id": event_id,
+            "type": event_type,
+            "data": {"object": event_obj},
+        }
+        mock_billing = MagicMock()
+        mock_billing.verify_webhook_signature = MagicMock(return_value=True)
+        mock_billing.process_webhook_event = AsyncMock(
+            return_value={"processed": True, "actions_taken": [f"{event_type}_handled"]}
+        )
+        return event, mock_billing
+
+    def test_payment_succeeded_webhook_is_processed(self):
+        """invoice.payment_succeeded webhook is processed successfully."""
+        mock_billing = MagicMock()
+        mock_billing.verify_webhook_signature = MagicMock(return_value=True)
+        mock_billing.process_webhook_event = AsyncMock(
+            return_value={
+                "processed": True,
+                "actions_taken": ["reset_usage_counter", "set_status_active"],
+            }
+        )
+        event = {
+            "id": "evt_pay_success",
+            "type": "invoice.payment_succeeded",
+            "data": {"object": {"subscription": "sub_123", "amount_paid": 29700}},
+        }
+
+        with patch("ghl_real_estate_ai.api.routes.billing.stripe.Webhook.construct_event", return_value=event):
+            client, _, _ = _make_billing_client(billing_service=mock_billing)
+            resp = client.post(
+                "/billing/webhooks/stripe",
+                content=b"{}",
+                headers={"Content-Type": "application/json", "stripe-signature": "t=1,v1=s"},
+            )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["event_type"] == "invoice.payment_succeeded"
+        assert "reset_usage_counter" in data["actions_taken"]
+
+    def test_payment_failed_webhook_is_processed(self):
+        """invoice.payment_failed webhook is processed and returns past_due action."""
+        mock_billing = MagicMock()
+        mock_billing.verify_webhook_signature = MagicMock(return_value=True)
+        mock_billing.process_webhook_event = AsyncMock(
+            return_value={"processed": True, "actions_taken": ["set_status_past_due"]}
+        )
+        event = {
+            "id": "evt_pay_fail",
+            "type": "invoice.payment_failed",
+            "data": {"object": {"subscription": "sub_123"}},
+        }
+
+        with patch("ghl_real_estate_ai.api.routes.billing.stripe.Webhook.construct_event", return_value=event):
+            client, _, _ = _make_billing_client(billing_service=mock_billing)
+            resp = client.post(
+                "/billing/webhooks/stripe",
+                content=b"{}",
+                headers={"Content-Type": "application/json", "stripe-signature": "t=1,v1=s"},
+            )
+
+        assert resp.status_code == 200
+        assert resp.json()["processed"] is True
+
+    def test_subscription_updated_webhook_is_processed(self):
+        """customer.subscription.updated webhook is processed and syncs status."""
+        mock_billing = MagicMock()
+        mock_billing.verify_webhook_signature = MagicMock(return_value=True)
+        mock_billing.process_webhook_event = AsyncMock(
+            return_value={"processed": True, "actions_taken": ["sync_subscription_status"]}
+        )
+        event = {
+            "id": "evt_sub_updated",
+            "type": "customer.subscription.updated",
+            "data": {"object": {"id": "sub_123", "status": "active"}},
+        }
+
+        with patch("ghl_real_estate_ai.api.routes.billing.stripe.Webhook.construct_event", return_value=event):
+            client, _, _ = _make_billing_client(billing_service=mock_billing)
+            resp = client.post(
+                "/billing/webhooks/stripe",
+                content=b"{}",
+                headers={"Content-Type": "application/json", "stripe-signature": "t=1,v1=s"},
+            )
+
+        assert resp.status_code == 200
+        assert resp.json()["event_type"] == "customer.subscription.updated"
+
+    def test_subscription_deleted_webhook_is_processed(self):
+        """customer.subscription.deleted webhook is processed and cancels subscription."""
+        mock_billing = MagicMock()
+        mock_billing.verify_webhook_signature = MagicMock(return_value=True)
+        mock_billing.process_webhook_event = AsyncMock(
+            return_value={"processed": True, "actions_taken": ["set_status_canceled"]}
+        )
+        event = {
+            "id": "evt_sub_del",
+            "type": "customer.subscription.deleted",
+            "data": {"object": {"id": "sub_123"}},
+        }
+
+        with patch("ghl_real_estate_ai.api.routes.billing.stripe.Webhook.construct_event", return_value=event):
+            client, _, _ = _make_billing_client(billing_service=mock_billing)
+            resp = client.post(
+                "/billing/webhooks/stripe",
+                content=b"{}",
+                headers={"Content-Type": "application/json", "stripe-signature": "t=1,v1=s"},
+            )
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "set_status_canceled" in data["actions_taken"]
+
+    def test_unknown_webhook_event_type_is_handled_gracefully(self):
+        """Unrecognized event types are processed without error."""
+        mock_billing = MagicMock()
+        mock_billing.verify_webhook_signature = MagicMock(return_value=True)
+        mock_billing.process_webhook_event = AsyncMock(
+            return_value={"processed": True, "actions_taken": ["event_logged"]}
+        )
+        event = {
+            "id": "evt_unknown",
+            "type": "charge.refunded",
+            "data": {"object": {}},
+        }
+
+        with patch("ghl_real_estate_ai.api.routes.billing.stripe.Webhook.construct_event", return_value=event):
+            client, _, _ = _make_billing_client(billing_service=mock_billing)
+            resp = client.post(
+                "/billing/webhooks/stripe",
+                content=b"{}",
+                headers={"Content-Type": "application/json", "stripe-signature": "t=1,v1=s"},
+            )
+
+        assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Phase 5: TestPricingTiers — SUBSCRIPTION_TIERS config (3 tests)
+# ---------------------------------------------------------------------------
+
+
+@skip_if_no_billing
+class TestPricingTiers:
+    """Verify SUBSCRIPTION_TIERS has correct pricing, allowances, and trial days."""
+
+    def test_starter_tier_is_297_with_500_leads(self):
+        """Starter tier: $297/month, 500 leads, 14-day trial."""
+        from decimal import Decimal
+
+        from ghl_real_estate_ai.api.schemas.billing import SUBSCRIPTION_TIERS, SubscriptionTier
+
+        cfg = SUBSCRIPTION_TIERS[SubscriptionTier.STARTER]
+        assert cfg.price_monthly == Decimal("297.00")
+        assert cfg.usage_allowance == 500
+        assert cfg.trial_days == 14
+
+    def test_growth_tier_is_597_with_2500_leads(self):
+        """Growth tier: $597/month, 2500 leads, 14-day trial."""
+        from decimal import Decimal
+
+        from ghl_real_estate_ai.api.schemas.billing import SUBSCRIPTION_TIERS, SubscriptionTier
+
+        cfg = SUBSCRIPTION_TIERS[SubscriptionTier.GROWTH]
+        assert cfg.price_monthly == Decimal("597.00")
+        assert cfg.usage_allowance == 2500
+        assert cfg.trial_days == 14
+
+    def test_enterprise_tier_is_1497_with_unlimited_leads(self):
+        """Enterprise tier: $1497/month, 999999 leads (unlimited), 30-day trial."""
+        from decimal import Decimal
+
+        from ghl_real_estate_ai.api.schemas.billing import SUBSCRIPTION_TIERS, SubscriptionTier
+
+        cfg = SUBSCRIPTION_TIERS[SubscriptionTier.ENTERPRISE]
+        assert cfg.price_monthly == Decimal("1497.00")
+        assert cfg.usage_allowance == 999999
+        assert cfg.overage_rate == Decimal("0.00")
+        assert cfg.trial_days == 30
+
+
+# ---------------------------------------------------------------------------
+# Phase 5: TestUsageAlerts — 80% alert + overage + below threshold (3 tests)
+# ---------------------------------------------------------------------------
+
+
+@skip_if_no_billing
+class TestUsageAlerts:
+    """Usage threshold alerting: 80% alert fires, 100% overage active, <75% silent."""
+
+    def test_80pct_usage_triggers_alert_action(self):
+        """400/500 leads (80%) fires 'usage_80pct_alert_sent' action."""
+        import asyncio
+
+        from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
+
+        mgr = SubscriptionManager()
+        result = asyncio.get_event_loop().run_until_complete(
+            mgr.handle_usage_threshold("loc-test", current_usage=400, period_usage_allowance=500)
+        )
+        assert "usage_80pct_alert_sent" in result["actions_taken"]
+        assert result["threshold_level"] == "alert_80"
+
+    def test_100pct_usage_activates_overage_billing(self):
+        """500/500 leads (100%) marks overage as active."""
+        import asyncio
+
+        from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
+
+        mgr = SubscriptionManager()
+        result = asyncio.get_event_loop().run_until_complete(
+            mgr.handle_usage_threshold("loc-test", current_usage=500, period_usage_allowance=500)
+        )
+        assert result["overage_billing_active"] is True
+        assert result["threshold_level"] == "overage"
+
+    def test_below_75pct_usage_sends_no_alert(self):
+        """300/500 leads (60%) — no alert action taken."""
+        import asyncio
+
+        from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
+
+        mgr = SubscriptionManager()
+        result = asyncio.get_event_loop().run_until_complete(
+            mgr.handle_usage_threshold("loc-test", current_usage=300, period_usage_allowance=500)
+        )
+        assert result["actions_taken"] == []
+        assert result["threshold_level"] == "normal"

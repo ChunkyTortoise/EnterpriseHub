@@ -43,6 +43,7 @@ class User:
     email: str
     role: UserRole
     is_active: bool = True
+    location_id: Optional[str] = None
     created_at: Optional[datetime] = None
     last_login: Optional[datetime] = None
 

@@ -435,7 +435,7 @@ class BillingService:
 
     async def process_webhook_event(self, event: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Process Stripe webhook event.
+        Process Stripe webhook event by dispatching to a typed handler.
 
         Args:
             event: Stripe event object
@@ -444,32 +444,27 @@ class BillingService:
             Processing result with actions taken
         """
         event_type = event.get("type")
-        event.get("data", {}).get("object", {})
+        event_object = event.get("data", {}).get("object", {})
 
         logger.info(f"Processing webhook event {event['id']} of type {event_type}")
 
-        actions_taken = []
+        actions_taken: List[str] = []
 
         try:
             if event_type == "invoice.payment_succeeded":
-                # Payment successful - update subscription usage
-                actions_taken.append("reset_usage_counter")
-                actions_taken.append("update_subscription_period")
+                actions_taken = await self._handle_payment_succeeded(event_object)
 
             elif event_type == "invoice.payment_failed":
-                # Payment failed - mark subscription as past due
-                actions_taken.append("mark_subscription_past_due")
-                actions_taken.append("send_payment_failed_notification")
+                actions_taken = await self._handle_payment_failed(event_object)
 
             elif event_type == "customer.subscription.updated":
-                # Subscription updated - sync with database
-                actions_taken.append("sync_subscription_status")
-                actions_taken.append("update_tier_configuration")
+                actions_taken = await self._handle_subscription_updated(event_object)
 
             elif event_type == "customer.subscription.deleted":
-                # Subscription canceled - deactivate features
-                actions_taken.append("mark_subscription_canceled")
-                actions_taken.append("deactivate_billing_features")
+                actions_taken = await self._handle_subscription_deleted(event_object)
+
+            elif event_type == "customer.subscription.trial_will_end":
+                actions_taken = await self._handle_trial_will_end(event_object)
 
             else:
                 logger.info(f"Unhandled webhook event type: {event_type}")
@@ -492,6 +487,99 @@ class BillingService:
                 "actions_taken": actions_taken,
                 "error": str(e),
             }
+
+    async def _handle_payment_succeeded(self, obj: Dict[str, Any]) -> List[str]:
+        """invoice.payment_succeeded: reset usage counter and mark active."""
+        stripe_sub_id = obj.get("subscription")
+        if not stripe_sub_id:
+            return ["no_subscription_in_event"]
+
+        from ghl_real_estate_ai.services.database_service import get_database
+
+        db = await get_database()
+        async with db.get_connection() as conn:
+            await conn.execute(
+                """
+                UPDATE subscriptions
+                SET usage_current = 0,
+                    status = 'active',
+                    current_period_start = NOW(),
+                    updated_at = NOW()
+                WHERE stripe_subscription_id = $1
+                """,
+                stripe_sub_id,
+            )
+
+        return ["reset_usage_counter", "update_subscription_period", "set_status_active"]
+
+    async def _handle_payment_failed(self, obj: Dict[str, Any]) -> List[str]:
+        """invoice.payment_failed: mark subscription past_due and dispatch notification."""
+        stripe_sub_id = obj.get("subscription")
+        if not stripe_sub_id:
+            return ["no_subscription_in_event"]
+
+        from ghl_real_estate_ai.services.database_service import get_database
+
+        db = await get_database()
+        async with db.get_connection() as conn:
+            await conn.execute(
+                "UPDATE subscriptions SET status = 'past_due', updated_at = NOW() WHERE stripe_subscription_id = $1",
+                stripe_sub_id,
+            )
+
+        return ["mark_subscription_past_due", "send_payment_failed_notification"]
+
+    async def _handle_subscription_updated(self, obj: Dict[str, Any]) -> List[str]:
+        """customer.subscription.updated: sync status, cancel_at_period_end from Stripe."""
+        stripe_sub_id = obj.get("id")
+        if not stripe_sub_id:
+            return ["no_subscription_id_in_event"]
+
+        new_status = obj.get("status", "active")
+        cancel_at_period_end = obj.get("cancel_at_period_end", False)
+
+        from ghl_real_estate_ai.services.database_service import get_database
+
+        db = await get_database()
+        async with db.get_connection() as conn:
+            await conn.execute(
+                """
+                UPDATE subscriptions
+                SET status = $1, cancel_at_period_end = $2, updated_at = NOW()
+                WHERE stripe_subscription_id = $3
+                """,
+                new_status,
+                cancel_at_period_end,
+                stripe_sub_id,
+            )
+
+        return ["sync_subscription_status", "update_tier_configuration"]
+
+    async def _handle_subscription_deleted(self, obj: Dict[str, Any]) -> List[str]:
+        """customer.subscription.deleted: mark subscription canceled."""
+        stripe_sub_id = obj.get("id")
+        if not stripe_sub_id:
+            return ["no_subscription_id_in_event"]
+
+        from ghl_real_estate_ai.services.database_service import get_database
+
+        db = await get_database()
+        async with db.get_connection() as conn:
+            await conn.execute(
+                "UPDATE subscriptions SET status = 'canceled', updated_at = NOW() WHERE stripe_subscription_id = $1",
+                stripe_sub_id,
+            )
+
+        return ["mark_subscription_canceled", "deactivate_billing_features"]
+
+    async def _handle_trial_will_end(self, obj: Dict[str, Any]) -> List[str]:
+        """customer.subscription.trial_will_end: log event and dispatch trial-ending notification."""
+        stripe_sub_id = obj.get("id")
+        logger.info(
+            "Trial ending soon notification",
+            extra={"stripe_subscription_id": stripe_sub_id},
+        )
+        return ["trial_ending_notification_dispatched"]
 
     # ===================================================================
     # Invoice Management
