@@ -239,3 +239,6 @@ data/tenants/
 # Owner reference — contains live credentials
 JORGE_OWNER_REFERENCE.md
 *OWNER_REFERENCE*
+
+# Raw macOS screenshots (analysis artifacts, not portfolio assets)
+assets/screenshots/analysis_pending/

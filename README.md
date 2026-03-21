@@ -14,7 +14,7 @@
 
 | | |
 |--|--|
-| **Dashboard** | https://ct-enterprise-ai.streamlit.app *(update URL after Render deploy)* |
+| **Dashboard** | https://ct-enterprise-ai.streamlit.app |
 | **API Docs** | `<api-url>/docs` — Swagger UI with 40+ routes |
 | **Demo login** | `demo_user` / `Demo1234!` |
 | **Admin login** | `admin` / `Admin1234!` |
@@ -34,17 +34,6 @@
 | LLM Cost Reduction | 89% via 3-tier Redis caching |
 
 > Latency values from [BENCHMARKS.md](BENCHMARKS.md) using synthetic load (no live LLM inference). See [Methodology](PERFORMANCE_BENCHMARK_REPORT.md#9-methodology) for details.
-
----
-
-## Business Impact
-
-| Metric | Value | Impact |
-|--------|-------|--------|
-| **Cost Reduction** | 89% | Token savings via 3-tier caching |
-| **Response Time** | 95% faster | 45min → 2min qualification |
-| **Conversion Increase** | 133% | 12% → 28% lead-to-customer |
-| **Lead Score Accuracy** | 92% | Q0-Q4 framework precision |
 
 ---
 
@@ -72,18 +61,6 @@ EnterpriseHub is an AI-powered real estate platform that transforms lead managem
 ![Demo Snapshot](assets/demo.png)
 
 ![Platform Overview](assets/screenshots/platform-overview.png)
-
-## 🎥 Demo Video
-
-> **Watch the Platform Walkthrough** — Complete video tour of lead qualification, CRM integration, and BI dashboards.
-
-[EnterpriseHub Walkthrough](content/video/enterprisehub-walkthrough-script.md) — Full script and video link
-
-### Video Chapters:
-- **Platform Overview** (2 min) — End-to-end walkthrough of the lead management workflow
-- **Lead Bot Demo** (3 min) — Watch AI qualify leads in real-time using the Q0-Q4 framework
-- **BI Dashboard Tour** (2 min) — Explore analytics, KPIs, and commission tracking
-- **CRM Integration** (2 min) — See GoHighLevel sync in action
 
 ## What This Solves
 
@@ -133,15 +110,15 @@ EnterpriseHub delivers quantified outcomes based on production deployment (Case 
 - **Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md) — Monorepo layout, test organization, AI orchestration diagrams
 - **System Diagram**: [assets/diagrams/arete_architecture.svg](assets/diagrams/arete_architecture.svg) — Visual architecture
 
-<details>
-<summary>Screenshots</summary>
+### Screenshots
 
-![Platform Overview](assets/screenshots/platform-overview.png)
-![Market Pulse](assets/screenshots/market-pulse.png)
-![Bot Dashboard](assets/screenshots/jorge_dashboard_01.png)
-![Design System](assets/screenshots/design-system.png)
+| Executive Command Center | Lead Intelligence |
+|--------------------------|------------------|
+| ![Platform Overview](assets/screenshots/platform-overview.png) | ![Lead Intelligence](assets/screenshots/lead-intelligence.png) |
 
-</details>
+**3-Tier Cache Performance — 89% token cost reduction (93K → 7.8K tokens/workflow)**
+
+![Cache Performance](assets/screenshots/cache-performance.png)
 
 ## Architecture
 
