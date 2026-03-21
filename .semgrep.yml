@@ -32,3 +32,21 @@ rules:
     message: "Do not disable TLS verification"
     severity: ERROR
     languages: [python]
+
+  - id: no-f-string-bytes
+    pattern: f"...{$BYTES[:$N]}..."
+    message: "Bytes in f-string — decode first: .decode('utf-8', errors='replace')"
+    severity: WARNING
+    languages: [python]
+    paths:
+      exclude:
+        - tests/
+
+  - id: no-shell-true
+    pattern: subprocess.$FUNC(..., shell=True, ...)
+    message: "shell=True enables command injection — use list args instead"
+    severity: ERROR
+    languages: [python]
+    paths:
+      exclude:
+        - tests/
