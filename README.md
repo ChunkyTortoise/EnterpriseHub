@@ -1,7 +1,8 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-181_in_CI-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-6%2C200%2B-brightgreen)](tests/)
+[![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
 [![Security](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/security-scan.yml?label=security)](https://github.com/ChunkyTortoise/EnterpriseHub/actions/workflows/security-scan.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
@@ -27,8 +28,8 @@
 
 | Metric | Value |
 |--------|-------|
-| CI Tests | 181 unit tests (no external deps) |
-| Integration Tests | 1,553+ tests (require PostgreSQL + Redis) |
+| Total Tests | 6,200+ (unit + integration + security + compliance + e2e) |
+| CI Tests | 181 unit tests run without external deps; full suite requires PostgreSQL + Redis |
 | API P95 Latency | < 2 seconds |
 | Cache Hit Rate | 88% (L1 59% + L2 21% + L3 8%) |
 | LLM Cost Reduction | 89% via 3-tier Redis caching |
@@ -386,6 +387,11 @@ Production-ready infrastructure with observability built in:
 | [ADR-0003](docs/adr/0003-jorge-handoff-architecture.md) | Jorge Handoff Architecture | Accepted |
 | [ADR-0004](docs/adr/0004-agent-mesh-coordinator.md) | Agent Mesh Coordinator | Accepted |
 | [ADR-0005](docs/adr/0005-pydantic-v2-migration.md) | Pydantic V2 Migration | Accepted |
+| [ADR-0006](docs/adr/0006-security-framework-consolidation.md) | Security Framework Consolidation | Accepted |
+| [ADR-0007](docs/adr/0007-compliance-response-pipeline.md) | 7-Stage Compliance Response Pipeline | Accepted |
+| [ADR-0008](docs/adr/0008-multi-llm-orchestration.md) | Multi-LLM Orchestration Strategy | Accepted |
+| [ADR-0009](docs/adr/0009-webhook-signature-verification.md) | Dual-Mode Webhook Signature Verification | Accepted |
+| [ADR-0010](docs/adr/0010-structured-logging-structlog.md) | Structured Logging with structlog | Accepted |
 
 ## Benchmarks
 
