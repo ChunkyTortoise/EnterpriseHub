@@ -14,13 +14,15 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
 
+import structlog
+
 from ghl_real_estate_ai.models.orchestrator_types import (
     LeadAnalysisContext,
     MemoryContext,
     OrchestratorContext,
 )
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, TaskComplexity
 from ghl_real_estate_ai.services.market_context_injector import MarketContextInjector
@@ -284,7 +286,7 @@ class ClaudeOrchestrator:
             response, expiry = entry
             if time.time() < expiry:
                 self._response_cache_hits += 1
-                logger.debug(f"Response cache HIT ({self._response_cache_hits} total hits)")
+                logger.debug("cache_hit", cache_hits=self._response_cache_hits, cache_key=cache_key[:16])
                 return response
             # Expired, remove it
             del self._response_cache[cache_key]
@@ -445,7 +447,7 @@ class ClaudeOrchestrator:
                     structured_response,
                     time.time() + self._response_cache_ttl,
                 )
-                logger.debug(f"Response cache MISS - stored (total misses: {self._response_cache_misses})")
+                logger.debug("cache_miss_stored", cache_misses=self._response_cache_misses, cache_key=cache_key[:16])
 
             return structured_response
 
@@ -484,7 +486,7 @@ class ClaudeOrchestrator:
                 yield chunk
 
         except Exception as e:
-            logger.error(f"Error in streaming Claude request: {e}")
+            logger.error("streaming_error", error=str(e), error_type=type(e).__name__)
             yield f"Error: {str(e)}"
 
     async def _get_tools_for_request(self, categories: Optional[List[SkillCategory]] = None) -> List[Dict[str, Any]]:

@@ -119,6 +119,7 @@ from ghl_real_estate_ai.api.routes import (
 # Import WebSocket and Socket.IO integration services
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.logging_config import configure_structlog
 from ghl_real_estate_ai.observability import setup_observability
 from ghl_real_estate_ai.services.event_publisher import get_event_publisher
 from ghl_real_estate_ai.services.system_health_monitor import (
@@ -153,6 +154,7 @@ class OptimizedJSONResponse(JSONResponse):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for FastAPI."""
+    configure_structlog()
     # Startup logic
     logger = get_logger(__name__)
     logger.info(
@@ -161,7 +163,7 @@ async def lifespan(app: FastAPI):
     )
 
     # Production safety guards — fail fast before any services start
-    if settings.ghl_allow_unsigned_webhooks and settings.environment in ("production", "prod"):
+    if settings.ghl_allow_unsigned_webhooks and settings.environment.lower() in ("production", "prod"):
         raise RuntimeError(
             "GHL_ALLOW_UNSIGNED_WEBHOOKS=true is blocked in production — "
             "set GHL_ALLOW_UNSIGNED_WEBHOOKS=false or remove this env var"
