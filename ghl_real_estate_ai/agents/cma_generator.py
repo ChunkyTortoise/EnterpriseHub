@@ -3,19 +3,18 @@ from typing import Any, Dict, List
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.models.cma import CMAProperty, CMAReport, Comparable, MarketContext
-from ghl_real_estate_ai.services.zillow_defense_service import get_zillow_defense_service
 
 logger = get_logger(__name__)
 
 
 class CMAGenerator:
     """
-    Generates Zillow-Defense CMAs by aggregating property data,
+    Generates CMAs by aggregating property data,
     fetching comparables (mocked), and using LLM for narrative generation.
     """
 
     def __init__(self):
-        self.defense_service = get_zillow_defense_service()
+        pass
 
     async def generate_report(self, address: str, zestimate: float = 0.0) -> CMAReport:
         """
@@ -110,17 +109,17 @@ class CMAGenerator:
         avg_comp_val = sum(c.adjusted_value for c in comps) / len(comps)
         estimated_val = round(avg_comp_val, -3)  # Round to nearest 1k
 
-        # VANGUARD 5: Zillow Defense Integration
-        defense = self.defense_service.analyze_variance(estimated_val, market.zillow_zestimate)
+        variance_abs = abs(estimated_val - market.zillow_zestimate)
+        variance_percent = (variance_abs / market.zillow_zestimate * 100) if market.zillow_zestimate else 0.0
 
         return {
             "estimated_value": estimated_val,
             "value_range_low": estimated_val * 0.95,
             "value_range_high": estimated_val * 1.05,
             "confidence_score": 88,
-            "zillow_variance_abs": defense.variance_abs,
-            "zillow_variance_percent": defense.variance_percent,
-            "zillow_explanation": defense.recommended_script,
+            "zillow_variance_abs": variance_abs,
+            "zillow_variance_percent": variance_percent,
+            "zillow_explanation": "Our CMA is based on recent comparable sales and local market data.",
             "market_narrative": (
                 "The Rancho Cucamonga market is tightening. While inventory has ticked up to 1,450 units, "
                 "properties in the 2,800sqft range with recent updates are moving 15% faster "

@@ -57,8 +57,6 @@ from ghl_real_estate_ai.ml.neural_property_matcher import NeuralMatchingConfig, 
 from ghl_real_estate_ai.ml.privacy_preserving_pipeline import PrivacyPreservingMLPipeline
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.neural_inference_engine import NeuralInferenceEngine
-from ghl_real_estate_ai.services.vr_ar_analytics_engine import VRARAnalyticsEngine
-
 logger = get_logger(__name__)
 cache = get_cache_service()
 
@@ -162,7 +160,6 @@ class NeuralMLIntegrator:
         self.neural_feature_engineer = NeuralFeatureEngineer() if NEURAL_AVAILABLE else None
         self.neural_inference_engine = NeuralInferenceEngine() if NEURAL_AVAILABLE else None
         self.privacy_pipeline = PrivacyPreservingMLPipeline() if NEURAL_AVAILABLE else None
-        self.vr_ar_analytics = VRARAnalyticsEngine()
 
         # Neural model registry
         self.neural_models: Dict[str, torch.nn.Module] = {}
@@ -623,10 +620,6 @@ class NeuralMLIntegrator:
     async def get_neural_inference_engine(self) -> NeuralInferenceEngine:
         """Get neural inference engine for real-time predictions."""
         return self.neural_inference_engine
-
-    async def get_vr_ar_analytics_engine(self) -> VRARAnalyticsEngine:
-        """Get VR/AR analytics engine for spatial interaction tracking."""
-        return self.vr_ar_analytics
 
     def supports_neural_model_type(self, model_type: str) -> bool:
         """Check if neural model type is supported."""

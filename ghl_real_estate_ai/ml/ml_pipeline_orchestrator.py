@@ -704,12 +704,6 @@ class MLPipelineOrchestrator:
             return None
         return await self.neural_integrator.get_neural_inference_engine()
 
-    async def get_vr_ar_analytics_engine(self):
-        """Get VR/AR analytics engine for spatial interaction tracking."""
-        if not self.supports_neural_models():
-            return None
-        return await self.neural_integrator.get_vr_ar_analytics_engine()
-
     def supports_model_type(self, model_type: str) -> bool:
         """Check if a model type is supported (including neural models)."""
 
