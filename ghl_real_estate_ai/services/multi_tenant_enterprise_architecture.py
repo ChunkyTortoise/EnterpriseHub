@@ -742,15 +742,10 @@ class MultiTenantEnterpriseArchitecture:
             raise ValueError(f"Invalid schema name derived from tenant_id: {tenant.tenant_id!r}")
 
         async with self.database_service.get_connection() as conn:
-            # Create schema (safe: schema_name validated above)
-            await conn.execute(f"""
-                CREATE SCHEMA IF NOT EXISTS {schema_name};
-            """)
-
-            # Set up row-level security (safe: schema_name validated above)
-            await conn.execute(f"""
-                ALTER SCHEMA {schema_name} OWNER TO current_user;
-            """)
+            # DDL identifiers cannot use $1 parameters in PostgreSQL; schema_name is
+            # validated by the regex above (alphanumeric + underscore, starts with letter).
+            await conn.execute(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
+            await conn.execute(f"ALTER SCHEMA {schema_name} OWNER TO current_user")
 
             # Record schema
             await conn.execute(
