@@ -172,6 +172,98 @@ graph TB
     HO -->|"Bot Transfer"| Clients
 ```
 
+## Architecture Tour: 5 Systems Worth Reviewing
+
+A guide for technical reviewers with 5 minutes. Each entry names the file, explains the problem it solves, and points to the key pattern.
+
+---
+
+### 1. Agent Mesh Coordinator
+
+**File:** `ghl_real_estate_ai/services/agent_mesh_coordinator.py` (725 lines)
+
+**Problem:** When multiple AI agents (lead qualification, property matching, CMA generation, document processing) run concurrently, you need a governance layer that prevents runaway costs, enforces SLAs, and routes tasks to the cheapest capable agent.
+
+**Key classes:** `AgentMeshCoordinator`, `MeshAgent`, `AgentTask`, `AgentMetrics`
+
+**Pattern:** Each agent registers with a `cost_per_token` and `sla_response_time`. Task routing uses a weighted scoring function across four dimensions: success rate (40%), current load (25%), cost efficiency (20%), and average response time (15%). Emergency tasks get a 1.5x score multiplier. Four background coroutines run continuously: health monitor (30s heartbeat), cost monitor (5min), performance monitor (2min), and cleanup. If hourly spend crosses `$50`, mesh activity is throttled; at `$100`, `emergency_shutdown()` cancels all active tasks and sets every agent to `MAINTENANCE`.
+
+**Outcome:** 22 registered agents across the platform with per-agent P50/P95 tracking and automatic load rebalancing when queue time exceeds 30 seconds.
+
+---
+
+### 2. 3-Tier LLM Cache
+
+**Files:** `ghl_real_estate_ai/services/claude_orchestrator.py` (1,935 lines), `ghl_real_estate_ai/services/cache_service.py`, ADR: `docs/adr/0001-three-tier-redis-caching.md`
+
+**Problem:** A single lead qualification workflow without caching consumes ~93K tokens. With hundreds of concurrent conversations referencing the same property data and market context, the cost compounds quickly.
+
+**Pattern:**
+- **L1 (in-memory LRU):** `MemoryCache` with 1,000-item capacity and LRU eviction. Sub-1ms access. Handles repeated lookups within the same active qualification session.
+- **L2 (Redis):** Shared across all FastAPI workers. Under 5ms access. Default 15-minute TTL for conversation context, 1 hour for market data. Handles cross-request deduplication.
+- **L3 (PostgreSQL):** Persistent, under 20ms access. Stores historical results for analytics and A/B comparisons. Cache keys incorporate `conversation_id + message_hash + model_version` to prevent stale reads after model upgrades.
+
+A background task promotes frequently accessed L1 keys to L2.
+
+**Outcome:** 89% token cost reduction (93K to 7.8K tokens per workflow); 88% overall hit rate (L1 59% + L2 21% + L3 8%). P95 latency for cached queries drops from 800ms to under 200ms.
+
+---
+
+### 3. Compliance Response Pipeline
+
+**Files:** `ghl_real_estate_ai/services/jorge/response_pipeline/pipeline.py` (78 lines), `ghl_real_estate_ai/services/jorge/response_pipeline/factory.py`
+
+**Problem:** Every outbound bot message must pass through TCPA opt-out detection, FHA/RESPA compliance, AI disclosure rules, language mirroring, and SMS length constraints before it leaves the system. These are independent concerns that fail differently.
+
+**Pattern:** `ResponsePostProcessor` chains `ResponseProcessorStage` instances. Each stage receives a `ProcessedResponse` and returns one with an updated `action`. If any stage sets `ProcessingAction.SHORT_CIRCUIT`, the remaining stages are skipped. The default pipeline (created by `create_default_pipeline()`) runs 7 stages in order:
+
+1. `LanguageMirrorProcessor` — detects contact language, sets `context.detected_language`
+2. `TCPAOptOutProcessor` — pattern-matches opt-out phrases, short-circuits with acknowledgment, applies `TCPA-Opt-Out` and `AI-Off` GHL tags
+3. `ConversationRepairProcessor` — detects conversation breakdown, graduated repair ladder
+4. `ComplianceCheckProcessor` — FHA/RESPA enforcement via `ComplianceMiddleware.enforce()`, replaces blocked response with a safe fallback
+5. `AIDisclosureProcessor` — no-op stub; disclosure triggers only when a lead explicitly asks
+6. `ResponseTranslationProcessor` — mirrors user language for fixed qualification and scheduling messages
+7. `SMSTruncationProcessor` — enforces 320-character SMS limit, truncates at sentence boundaries
+
+**Outcome:** Every bot message is compliance-checked before delivery. Stage failures are caught per-stage and logged without dropping the message.
+
+---
+
+### 4. Cross-Bot Handoff with Performance Routing
+
+**Files:** `ghl_real_estate_ai/services/jorge/jorge_handoff_service.py` (1,660 lines), `ghl_real_estate_ai/services/jorge/handoff_router.py`
+
+**Problem:** A lead who starts with the Lead Bot and reveals buyer or seller intent needs to transfer to the right specialist bot without losing conversation context or creating infinite handoff loops.
+
+**Key classes:** `JorgeHandoffService`, `HandoffDecision`, `EnrichedHandoffContext`, `HandoffRouter`
+
+**Pattern:**
+- **Confidence thresholds per direction:** Lead-to-Buyer/Seller at 0.7; Buyer-to-Seller at 0.8; Seller-to-Buyer at 0.6
+- **Circular prevention:** Same source-to-target pair is blocked within a 30-minute window
+- **Rate limiting:** 3 handoffs per hour, 10 per day per contact
+- **Pattern learning:** `JorgeHandoffService` adjusts thresholds dynamically after at least 10 outcome data points per route (`MIN_LEARNING_SAMPLES = 10`)
+- **Performance routing:** `HandoffRouter.should_defer_handoff()` defers the transfer when target bot P95 exceeds 120% of its SLA or error rate exceeds 10%. Deferred handoffs retry after a 30-minute cooldown with a maximum of 3 attempts.
+
+The `EnrichedHandoffContext` dataclass carries qualification score, budget range, CMA summary, and urgency level so the receiving bot can skip re-qualification.
+
+**Outcome:** `blocked_by_performance` and `blocked_by_circular` tracked as named analytics fields. Handoff success rate and processing time are available via `get_analytics_summary()`.
+
+---
+
+### 5. A/B Testing Service
+
+**File:** `ghl_real_estate_ai/services/jorge/ab_testing_service.py` (849 lines)
+
+**Problem:** Comparing bot prompt variants or response tone strategies without deterministic assignment produces inconsistent experiences: the same contact could see different variants across sessions.
+
+**Key classes:** `ABTestingService` (singleton), `VariantStats`, `ExperimentResult`, `StatisticalAnalyzer` (in `ab_testing_framework.py`)
+
+**Pattern:** Variant assignment hashes `experiment_id + contact_id` (SHA-256) and maps the result to a bucket. The same contact always gets the same variant. Significance is evaluated with a two-proportion z-test: `StatisticalAnalyzer.calculate_statistical_significance()` computes a pooled standard error and z-score, then approximates a two-tailed p-value using `math.erf`. Minimum sample size is calculated before an experiment starts using configurable `significance_level` (default 0.05) and `statistical_power` (default 0.8). Four pre-built experiment identifiers cover response tone, follow-up timing, CTA style, and greeting style. An optional `ABTestingRepository` provides write-through PostgreSQL persistence without blocking the in-memory caller.
+
+**Outcome:** Experiments run with no risk of variant drift per contact. Results surface `is_significant`, `p_value`, and `winner` in `ExperimentResult`.
+
+---
+
 ## Quick Start
 
 ```bash
