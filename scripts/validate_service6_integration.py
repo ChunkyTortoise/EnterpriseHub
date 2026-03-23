@@ -107,7 +107,7 @@ class Service6Validator:
             required_tables = ["message_templates", "template_performance"]
             existing_tables = []
             for table in required_tables:
-                cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table}'")
+                cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,))
                 if cursor.fetchone():
                     existing_tables.append(table)
 

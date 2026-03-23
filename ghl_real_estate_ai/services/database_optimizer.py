@@ -11,6 +11,7 @@ Provides automated database optimization and maintenance:
 
 import asyncio
 import json
+import re
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -470,7 +471,9 @@ class DatabaseOptimizer:
         """Optimize SQLite configuration settings."""
         try:
             # Set cache size for better performance
-            await db.execute(f"PRAGMA cache_size = {self.cache_size_pages}")
+            # Cast to int explicitly — PRAGMA values cannot be parameterized in SQLite
+            cache_pages = int(self.cache_size_pages)
+            await db.execute(f"PRAGMA cache_size = {cache_pages}")
 
             # Enable Write-Ahead Logging for better concurrency
             await db.execute("PRAGMA journal_mode = WAL")
@@ -499,6 +502,10 @@ class DatabaseOptimizer:
 
             for table in tables:
                 table_name = table[0]
+                # Validate identifier — table_name comes from sqlite_master, not user input,
+                # but validate defensively before use in DDL
+                if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", table_name):
+                    continue
                 await db.execute(f"ANALYZE {table_name}")
 
             results["operations"].append(f"Analyzed {len(tables)} tables")
