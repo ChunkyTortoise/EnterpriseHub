@@ -5,7 +5,6 @@ This module contains SQLAlchemy models for tracking sentiment analysis
 across conversations and escalation events.
 """
 
-from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -23,7 +22,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from ghl_real_estate_ai.models.base import Base
+from ghl_real_estate_ai.models.base import Base, utcnow
 
 
 class ConversationSentiment(Base):
@@ -54,7 +53,7 @@ class ConversationSentiment(Base):
     intensity = Column(Decimal(3, 2), default=0.5)
     key_phrases = Column(JSONB, default=list)
     escalation_level = Column(String(50), default="none", index=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     # Relationships
     conversation = relationship("Conversation", back_populates="sentiments")
@@ -93,7 +92,7 @@ class SentimentEscalation(Base):
     resolved = Column(Boolean, default=False, nullable=False)
     resolved_at = Column(DateTime(timezone=True), nullable=True)
     resolved_by = Column(String(100), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     # Relationships
     conversation = relationship("Conversation", back_populates="escalations")
