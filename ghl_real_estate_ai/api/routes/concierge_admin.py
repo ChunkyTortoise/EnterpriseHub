@@ -1,8 +1,6 @@
 """
 Concierge Admin API Routes
 Provides tenant management and hot-reload endpoints for the Claude Concierge system.
-
-# TODO: Add admin role check middleware once auth system supports it.
 """
 
 from typing import Any, Dict, List
