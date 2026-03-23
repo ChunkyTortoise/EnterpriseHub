@@ -84,7 +84,6 @@ from ghl_real_estate_ai.api.routes import (
     fha_respa_compliance,
     golden_lead_detection,
     health,
-    heygen_video,
     jorge_advanced,
     jorge_followup,
     # Week 5-8 ROI Enhancement Routes
@@ -754,7 +753,6 @@ def _setup_routers(app: FastAPI):
     app.include_router(fha_respa_compliance.router)
     app.include_router(voice_intelligence.router)
     app.include_router(propensity_scoring.router)
-    app.include_router(heygen_video.router)
     app.include_router(sentiment_analysis.router)
     app.include_router(channel_routing.router)
     app.include_router(rc_market_intelligence.router)
