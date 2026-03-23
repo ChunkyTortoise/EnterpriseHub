@@ -5,7 +5,6 @@ This module contains SQLAlchemy models for tracking churn risk assessments,
 recovery actions, and recovery outcomes.
 """
 
-from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -22,7 +21,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
-from ghl_real_estate_ai.models.base import Base
+from ghl_real_estate_ai.models.base import Base, utcnow
 
 
 class ChurnRiskAssessment(Base):
@@ -52,8 +51,8 @@ class ChurnRiskAssessment(Base):
     last_activity = Column(DateTime(timezone=True), nullable=False)
     days_inactive = Column(Integer, nullable=False)
     recommended_action = Column(String(100), nullable=True)
-    assessed_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False, index=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    assessed_at = Column(DateTime(timezone=True), default=utcnow, nullable=False, index=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     # Relationships
     contact = relationship("Contact", back_populates="churn_assessments")
@@ -104,7 +103,7 @@ class RecoveryAction(Base):
     status = Column(String(50), default="pending", nullable=False, index=True)
     result = Column(Text, nullable=True)
     ghl_message_id = Column(String(255), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     # Relationships
     contact = relationship("Contact", back_populates="recovery_actions")
@@ -144,7 +143,7 @@ class RecoveryOutcome(Base):
     outcome = Column(String(50), nullable=False, index=True)
     response_time_hours = Column(Decimal(10, 2), nullable=True)
     next_action = Column(String(100), nullable=True)
-    outcome_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    outcome_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     # Relationships
     action = relationship("RecoveryAction", back_populates="outcomes")

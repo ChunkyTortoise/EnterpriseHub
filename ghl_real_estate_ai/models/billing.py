@@ -5,8 +5,6 @@ ORM models for subscription management, customer tracking,
 usage recording, and billing event audit trail.
 """
 
-from datetime import datetime
-
 from sqlalchemy import (
     Boolean,
     Column,
@@ -19,7 +17,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
-from ghl_real_estate_ai.models.base import Base
+from ghl_real_estate_ai.models.base import Base, utcnow
 
 
 class Subscription(Base):
@@ -47,8 +45,8 @@ class Subscription(Base):
     current_period_start = Column(DateTime(timezone=True), nullable=True)
     current_period_end = Column(DateTime(timezone=True), nullable=True)
     currency = Column(String(8), nullable=False, default="usd")
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=True)
 
     usage_records = relationship("UsageRecord", back_populates="subscription", cascade="all, delete-orphan")
 
@@ -71,8 +69,8 @@ class StripeCustomer(Base):
     stripe_customer_id = Column(String(128), nullable=False, unique=True, index=True)
     email = Column(String(256), nullable=True)
     name = Column(String(256), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow, nullable=True)
 
     def __repr__(self) -> str:
         return (
@@ -103,7 +101,7 @@ class UsageRecord(Base):
     tier = Column(String(64), nullable=True)
     billing_period_start = Column(DateTime(timezone=True), nullable=True)
     billing_period_end = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     subscription = relationship("Subscription", back_populates="usage_records")
 
@@ -127,7 +125,7 @@ class BillingEvent(Base):
     event_data = Column(JSONB, nullable=True)
     processing_result = Column(JSONB, nullable=True)
     processed_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     def __repr__(self) -> str:
         return f"<BillingEvent(id={self.id}, event_id={self.event_id!r}, event_type={self.event_type!r})>"
