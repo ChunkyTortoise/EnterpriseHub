@@ -612,7 +612,6 @@ class JorgePropertyMatchingService:
     ) -> float:
         """Calculate neural network-based matching score."""
         try:
-            # TODO: Integrate with actual neural matcher when available
             if self.neural_matcher:
                 # Use neural matcher for sophisticated scoring
                 score = await self.neural_matcher.predict_match_score(property.dict(), lead_data)
