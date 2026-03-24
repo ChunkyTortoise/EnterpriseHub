@@ -12,6 +12,7 @@ version: "3.8"
 #   OTEL_ENDPOINT=http://localhost:4317
 #
 # Jaeger UI: http://localhost:16686
+# Grafana UI: http://localhost:3000 (admin/admin)
 # OTel Collector metrics: http://localhost:8888/metrics
 # =============================================================================
 
@@ -46,6 +47,27 @@ services:
         condition: service_healthy
     networks:
       - otel
+
+  grafana:
+    image: grafana/grafana:10.3.1
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/enterprisehub-overview.json
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - otel-collector
+    networks:
+      - otel
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 networks:
   otel:
