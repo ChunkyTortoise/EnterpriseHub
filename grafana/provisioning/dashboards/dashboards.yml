@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: EnterpriseHub
+    orgId: 1
+    folder: EnterpriseHub
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false
