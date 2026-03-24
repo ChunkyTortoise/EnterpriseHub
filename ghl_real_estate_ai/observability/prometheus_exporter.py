@@ -105,6 +105,44 @@ class JorgePrometheusExporter:
             **reg_kwargs,
         )
 
+        # -- HTTP request metrics -----------------------------------------------
+        self.http_request_duration_seconds = Histogram(
+            "http_request_duration_seconds",
+            "HTTP request duration in seconds",
+            ["method", "endpoint", "status_code"],
+            buckets=(0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0),
+            **reg_kwargs,
+        )
+
+        self.http_requests_total = Counter(
+            "http_requests_total",
+            "Total HTTP requests",
+            ["method", "endpoint", "status_code"],
+            **reg_kwargs,
+        )
+
+        # -- LLM token metrics --------------------------------------------------
+        self.llm_tokens_used_total = Counter(
+            "llm_tokens_used_total",
+            "Total LLM tokens consumed",
+            ["model", "direction"],  # direction: input/output
+            **reg_kwargs,
+        )
+
+        self.llm_cost_usd_total = Counter(
+            "llm_cost_usd_total",
+            "Total LLM API cost in USD",
+            ["model"],
+            **reg_kwargs,
+        )
+
+        self.llm_requests_total = Counter(
+            "llm_requests_total",
+            "Total LLM API requests",
+            ["model", "status"],  # status: success/error/cache_hit
+            **reg_kwargs,
+        )
+
         logger.info("JorgePrometheusExporter initialized")
 
     # -- Convenience methods -------------------------------------------------
@@ -143,6 +181,28 @@ class JorgePrometheusExporter:
         """Record a PCS score observation."""
         if self._enabled:
             self.pcs_score.observe(score)
+
+    def observe_http_request(
+        self, method: str, endpoint: str, status_code: int, duration_seconds: float
+    ) -> None:
+        """Record an HTTP request observation."""
+        if self._enabled:
+            self.http_request_duration_seconds.labels(
+                method=method, endpoint=endpoint, status_code=str(status_code)
+            ).observe(duration_seconds)
+            self.http_requests_total.labels(
+                method=method, endpoint=endpoint, status_code=str(status_code)
+            ).inc()
+
+    def observe_llm_usage(
+        self, model: str, input_tokens: int, output_tokens: int, cost_usd: float, status: str = "success"
+    ) -> None:
+        """Record LLM API usage."""
+        if self._enabled:
+            self.llm_tokens_used_total.labels(model=model, direction="input").inc(input_tokens)
+            self.llm_tokens_used_total.labels(model=model, direction="output").inc(output_tokens)
+            self.llm_cost_usd_total.labels(model=model).inc(cost_usd)
+            self.llm_requests_total.labels(model=model, status=status).inc()
 
     def collect(self) -> bytes:
         """Generate Prometheus exposition format output.
