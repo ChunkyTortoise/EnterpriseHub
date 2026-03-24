@@ -33,13 +33,12 @@ nest-asyncio>=1.5.8,<2.0
 # Data Visualization
 # ==============================================================================
 plotly==5.18.0
-geopy>=2.4.0,<3.0
+# geopy — removed (not imported in production code)
 
 # ==============================================================================
 # Market Data & Technical Analysis
 # ==============================================================================
-yfinance==0.2.33
-ta==0.11.0
+# yfinance, ta — removed (unused, were for market data features not yet implemented)
 
 # ==============================================================================
 # AI & NLP (lightweight — heavy ML deps use lazy imports)
@@ -71,15 +70,15 @@ passlib[bcrypt]>=1.7.4,<2.0
 python-multipart>=0.0.6,<1.0
 apscheduler>=3.10.0,<4.0
 bleach>=6.0.0,<7.0
-twilio>=9.0.0,<10.0
+# twilio — removed (not imported in production code, only referenced in test fixture strings)
 sendgrid>=6.11.0,<7.0
-SpeechRecognition>=3.10.0,<4.0
+# SpeechRecognition — removed (not imported anywhere)
 
 # ==============================================================================
 # Utilities
 # ==============================================================================
 python-dotenv==1.0.0
-openpyxl==3.1.2
+# openpyxl — removed (not imported in production code)
 redis>=5.0.0,<6.0
 PyYAML>=6.0,<7.0
 Jinja2>=3.1.0,<4.0
@@ -134,7 +133,7 @@ stripe>=8.0.0,<12.0
 aioboto3>=12.3.0,<14.0
 boto3>=1.34.0,<2.0
 botocore>=1.34.0,<2.0
-cloudpickle>=3.0.0,<4.0
+# cloudpickle — removed (not imported anywhere)
 hiredis>=2.2.3,<4.0
 msgpack>=1.0.7,<2.0
 orjson>=3.9.10,<4.0
