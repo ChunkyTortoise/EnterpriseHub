@@ -730,7 +730,7 @@ def render_inventory_analytics_section(api_client: JorgePropertyMatchingAPIClien
             color_continuous_scale="Blues",
         )
 
-        fig_price.update_layout(, showlegend=False
+        fig_price.update_layout( showlegend=False
         )
 
         fig_price = style_obsidian_chart(fig_price)

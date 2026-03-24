@@ -516,7 +516,7 @@ def render_scenario_analysis(params: Dict, scenarios: List[InvestmentScenario]):
         # Add break-even line
         fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.7)
 
-        fig.update_layout(, font_family="Inter"
+        fig.update_layout(font_family="Inter"
         )
 
         fig = style_obsidian_chart(fig)
@@ -603,7 +603,7 @@ def render_channel_optimization(params: Dict, channels: List[ChannelInvestment])
             color_discrete_map={"Current": "#64748b", "Optimized": "#22c55e"},
         )
 
-        fig.update_layout(,
+        fig.update_layout(
             font_family="Inter",
             yaxis=dict(tickformat=".1%"),
         )
@@ -635,7 +635,7 @@ def render_channel_optimization(params: Dict, channels: List[ChannelInvestment])
             title="Channel ROI Projections (%)",
         )
 
-        fig.update_layout(, font_family="Inter"
+        fig.update_layout(font_family="Inter"
         )
 
         fig = style_obsidian_chart(fig)

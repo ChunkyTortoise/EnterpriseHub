@@ -15,6 +15,8 @@ from typing import Any, Dict, Optional
 import plotly.express as px
 import streamlit as st
 
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.voice_ai_service import (
     VoiceInteractionType,
@@ -319,7 +321,6 @@ class VoiceAIInterface:
 
             # Select appropriate response (simplified logic)
             import random
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
             ai_response = random.choice(ai_responses)
 
