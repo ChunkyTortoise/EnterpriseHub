@@ -33,8 +33,11 @@ from ghl_real_estate_ai.services.tenant_service import TenantService
 
 logger = logging.getLogger(__name__)
 
-# Initialize services
-tenant_service = TenantService()
+
+@lru_cache(maxsize=1)
+def _get_tenant_service() -> TenantService:
+    return TenantService()
+
 
 # Create router
 router = APIRouter(prefix="/api/golden-leads", tags=["golden-leads"])

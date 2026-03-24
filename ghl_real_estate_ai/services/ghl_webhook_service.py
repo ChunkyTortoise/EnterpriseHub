@@ -74,8 +74,16 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Initialize Anthropic client
-anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+# Lazy Anthropic client — avoids import-time failure when ANTHROPIC_API_KEY is missing
+_anthropic_client = None
+
+
+def get_anthropic_client() -> anthropic.Anthropic:
+    """Get or create the Anthropic client (lazy singleton)."""
+    global _anthropic_client
+    if _anthropic_client is None:
+        _anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    return _anthropic_client
 
 # Configuration
 GHL_WEBHOOK_SECRET = os.getenv("GHL_WEBHOOK_SECRET", "")
@@ -199,7 +207,7 @@ Keep responses SHORT (1-2 sentences max). This is SMS, not email.
     )
 
     try:
-        response = anthropic_client.messages.create(
+        response = get_anthropic_client().messages.create(
             model="claude-sonnet-4-20250514",
             max_tokens=150,
             system=system_prompt,

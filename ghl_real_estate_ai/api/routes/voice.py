@@ -2,7 +2,9 @@
 Voice API Routes for GHL Real Estate AI.
 """
 
-from fastapi import APIRouter, BackgroundTasks, Request, Response
+from functools import lru_cache
+
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
 
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -12,9 +14,20 @@ from ghl_real_estate_ai.services.voice_service import VoiceService
 logger = get_logger(__name__)
 router = APIRouter(prefix="/voice", tags=["voice"])
 
-voice_service = VoiceService()
-conversation_manager = ConversationManager()
-ghl_client = GHLClient()
+
+@lru_cache(maxsize=1)
+def _get_voice_service() -> VoiceService:
+    return VoiceService()
+
+
+@lru_cache(maxsize=1)
+def _get_conversation_manager() -> ConversationManager:
+    return ConversationManager()
+
+
+@lru_cache(maxsize=1)
+def _get_ghl_client() -> GHLClient:
+    return GHLClient()
 
 
 @router.post("/incoming")
@@ -33,7 +46,12 @@ async def handle_incoming_call(request: Request):
 
 
 @router.post("/process")
-async def process_voice_input(request: Request, background_tasks: BackgroundTasks):
+async def process_voice_input(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    voice_service: VoiceService = Depends(_get_voice_service),
+    conversation_manager: ConversationManager = Depends(_get_conversation_manager),
+):
     """
     Process recorded voice input.
     """
