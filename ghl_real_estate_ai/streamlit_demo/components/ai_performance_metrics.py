@@ -146,12 +146,10 @@ def create_response_time_chart(daily_data: List[Dict[str, Any]]) -> go.Figure:
         title=None,
         xaxis_title="Day of Week",
         yaxis_title="Response Time (seconds)",
-        template="plotly_white",
         height=250,
         margin=dict(l=40, r=20, t=20, b=40),
-        font=dict(size=11),
         hovermode="x unified",
     )
-    fig.update_xaxes(showgrid=False)
-    fig.update_yaxes(gridcolor="#f1f5f9", range=[0, max(times) * 1.2])
+    fig.update_yaxes(range=[0, max(times) * 1.2])
+    fig = style_obsidian_chart(fig)
     return fig

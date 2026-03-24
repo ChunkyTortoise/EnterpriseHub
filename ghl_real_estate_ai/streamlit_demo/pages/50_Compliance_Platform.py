@@ -16,6 +16,7 @@ import streamlit as st
 from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Page configuration
 st.set_page_config(
@@ -932,10 +933,6 @@ def inject_custom_css():
 def style_plotly_chart(fig, title: str = None):
     """Apply premium dark theme to Plotly charts"""
     fig.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter, sans-serif", color="#e2e8f0", size=12),
         title=dict(
             text=title, font=dict(family="Space Grotesk, sans-serif", size=18, color="#ffffff"), x=0, xanchor="left"
         )
@@ -1141,9 +1138,6 @@ def render_compliance_gauge(score: float, title: str = "Compliance Score"):
     )
 
     fig.update_layout(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter"),
         height=280,
         margin=dict(l=30, r=30, t=60, b=30),
     )
@@ -1988,6 +1982,7 @@ def main():
                 fig = style_plotly_chart(fig)
                 fig.update_layout(height=300)
 
+                fig = style_obsidian_chart(fig)
                 st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
         with col2:

@@ -13,7 +13,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import inject_elite_css
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import inject_elite_css, style_obsidian_chart
 
 st.set_page_config(
     page_title="Agent Trace Viewer | EnterpriseHub",
@@ -97,15 +97,13 @@ with col_left:
         marker_color="#ef4444",
     ))
     fig_latency.update_layout(
-        barmode="overlay",
-        template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        barmode="overlay"
         height=400,
         margin=dict(l=140, r=20, t=20, b=40),
         xaxis_title="Latency (ms)",
         legend=dict(orientation="h", y=-0.12),
     )
+    fig_latency = style_obsidian_chart(fig_latency)
     st.plotly_chart(fig_latency, use_container_width=True)
 
 with col_right:
@@ -117,12 +115,10 @@ with col_right:
         hole=0.4,
     )
     fig_volume.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
         height=400,
         margin=dict(l=20, r=20, t=20, b=40),
     )
+    fig_volume = style_obsidian_chart(fig_volume)
     st.plotly_chart(fig_volume, use_container_width=True)
 
 # ── Execution Trace ──────────────────────────────────────────────────────
@@ -144,15 +140,13 @@ fig_confidence.add_trace(go.Scatter(
 fig_confidence.add_hline(y=0.70, line_dash="dash", line_color="#f59e0b",
                           annotation_text="Handoff Threshold (0.70)")
 fig_confidence.update_layout(
-    template="plotly_dark",
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(0,0,0,0)",
     height=250,
     margin=dict(l=40, r=20, t=20, b=40),
     xaxis_title="Step",
     yaxis_title="Confidence",
     yaxis=dict(range=[0, 1.0]),
 )
+fig_confidence = style_obsidian_chart(fig_confidence)
 st.plotly_chart(fig_confidence, use_container_width=True)
 
 # Step-by-step trace table

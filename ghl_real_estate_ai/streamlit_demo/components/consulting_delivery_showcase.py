@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.services.consulting_delivery_service import (
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
     ConsultingDeliveryService,
     EngagementStatus,
     EngagementTier,
@@ -266,6 +267,7 @@ class ConsultingDeliveryShowcase:
             )
 
             fig_progress.update_layout(height=250, margin=dict(l=20, r=20, t=40, b=20))
+            fig_progress = style_obsidian_chart(fig_progress)
             st.plotly_chart(fig_progress, use_container_width=True)
 
             # Key metrics
@@ -325,6 +327,7 @@ class ConsultingDeliveryShowcase:
             selector=dict(mode="markers"),
         )
 
+        fig_roi = style_obsidian_chart(fig_roi)
         st.plotly_chart(fig_roi, use_container_width=True)
 
         # Revenue impact timeline
@@ -348,6 +351,7 @@ class ConsultingDeliveryShowcase:
         )
 
         fig_timeline.update_traces(line=dict(color="green", width=4))
+        fig_timeline = style_obsidian_chart(fig_timeline)
         st.plotly_chart(fig_timeline, use_container_width=True)
 
     def _render_delivery_methodology(self):

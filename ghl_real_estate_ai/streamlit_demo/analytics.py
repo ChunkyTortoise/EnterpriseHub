@@ -21,6 +21,7 @@ if str(project_root) not in sys.path:
 
 # Import services
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Import campaign analytics
 try:
@@ -282,11 +283,8 @@ def create_lead_score_distribution_chart(conversations: List[Dict]) -> go.Figure
         xaxis_title="Lead Score",
         yaxis_title="Count",
         showlegend=False,
-        height=300,
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=20, r=20, t=60, b=20),
-        font=dict(color=COLORS["text"]),
+        height=300
+        margin=dict(l=20, r=20, t=60, b=20)
         xaxis=dict(gridcolor=COLORS["grid"]),
         yaxis=dict(gridcolor=COLORS["grid"]),
     )
@@ -318,10 +316,8 @@ def create_classification_pie_chart(conversations: List[Dict]) -> go.Figure:
 
     fig.update_layout(
         title="<b>Lead Classification Breakdown</b>",
-        height=300,
-        paper_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=20, r=20, t=60, b=20),
-        font=dict(color=COLORS["text"]),
+        height=300
+        margin=dict(l=20, r=20, t=60, b=20)
         legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
     )
 
@@ -361,11 +357,8 @@ def create_conversation_timeline(conversations: List[Dict]) -> go.Figure:
         xaxis_title="Date",
         yaxis_title="Volume",
         showlegend=False,
-        height=300,
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=20, r=20, t=60, b=20),
-        font=dict(color=COLORS["text"]),
+        height=300
+        margin=dict(l=20, r=20, t=60, b=20)
         xaxis=dict(gridcolor=COLORS["grid"]),
         yaxis=dict(gridcolor=COLORS["grid"]),
     )
@@ -401,11 +394,8 @@ def create_response_time_chart(conversations: List[Dict]) -> go.Figure:
         xaxis_title="Lead Type",
         yaxis_title="Seconds",
         showlegend=False,
-        height=300,
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=20, r=20, t=60, b=20),
-        font=dict(color=COLORS["text"]),
+        height=300
+        margin=dict(l=20, r=20, t=60, b=20)
         xaxis=dict(gridcolor=COLORS["grid"]),
         yaxis=dict(gridcolor=COLORS["grid"]),
     )
@@ -440,11 +430,8 @@ def create_intent_breakdown(conversations: List[Dict]) -> go.Figure:
         xaxis_title="Intent Type",
         yaxis_title="Count",
         showlegend=False,
-        height=300,
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=20, r=20, t=60, b=20),
-        font=dict(color=COLORS["text"]),
+        height=300
+        margin=dict(l=20, r=20, t=60, b=20)
         xaxis=dict(gridcolor=COLORS["grid"]),
         yaxis=dict(gridcolor=COLORS["grid"]),
     )
@@ -614,10 +601,12 @@ def main():
 
             with col1:
                 timeline_chart = create_conversation_timeline(filtered_conversations)
+                timeline_chart = style_obsidian_chart(timeline_chart)
                 st.plotly_chart(timeline_chart, use_container_width=True)
 
             with col2:
                 pie_chart = create_classification_pie_chart(filtered_conversations)
+                pie_chart = style_obsidian_chart(pie_chart)
                 st.plotly_chart(pie_chart, use_container_width=True)
 
             # Row 2: Score Distribution + Response Time
@@ -625,14 +614,17 @@ def main():
 
             with col1:
                 score_chart = create_lead_score_distribution_chart(filtered_conversations)
+                score_chart = style_obsidian_chart(score_chart)
                 st.plotly_chart(score_chart, use_container_width=True)
 
             with col2:
                 response_chart = create_response_time_chart(filtered_conversations)
+                response_chart = style_obsidian_chart(response_chart)
                 st.plotly_chart(response_chart, use_container_width=True)
 
             # Row 3: Intent Breakdown
             intent_chart = create_intent_breakdown(filtered_conversations)
+            intent_chart = style_obsidian_chart(intent_chart)
             st.plotly_chart(intent_chart, use_container_width=True)
         else:
             st.info(
@@ -714,10 +706,12 @@ def main():
                     col1, col2 = st.columns(2)
                     with col1:
                         score_chart = create_lead_score_distribution_chart(tenant_convs_filtered)
+                        score_chart = style_obsidian_chart(score_chart)
                         st.plotly_chart(score_chart, use_container_width=True)
 
                     with col2:
                         intent_chart = create_intent_breakdown(tenant_convs_filtered)
+                        intent_chart = style_obsidian_chart(intent_chart)
                         st.plotly_chart(intent_chart, use_container_width=True)
 
                     # Recent conversations table
@@ -979,6 +973,7 @@ def main():
                                 showlegend=True,
                             )
 
+                            fig_roi = style_obsidian_chart(fig_roi)
                             st.plotly_chart(fig_roi, use_container_width=True)
 
                             # ROI metrics table
@@ -1014,6 +1009,7 @@ def main():
                                 height=350,
                             )
 
+                            fig_funnel = style_obsidian_chart(fig_funnel)
                             st.plotly_chart(fig_funnel, use_container_width=True)
 
                             # Funnel conversion rates
@@ -1098,6 +1094,7 @@ def main():
                                 showlegend=True,
                             )
 
+                            fig_trend = style_obsidian_chart(fig_trend)
                             st.plotly_chart(fig_trend, use_container_width=True)
 
                         # Campaign Actions
@@ -1141,6 +1138,7 @@ def main():
                                 title="Leads by Channel", xaxis_title="Channel", yaxis_title="Total Leads", height=300
                             )
 
+                            fig_channel_leads = style_obsidian_chart(fig_channel_leads)
                             st.plotly_chart(fig_channel_leads, use_container_width=True)
 
                         with col2:
@@ -1152,6 +1150,7 @@ def main():
                                 title="ROI by Channel (%)", xaxis_title="Channel", yaxis_title="ROI (%)", height=300
                             )
 
+                            fig_channel_roi = style_obsidian_chart(fig_channel_roi)
                             st.plotly_chart(fig_channel_roi, use_container_width=True)
 
     # Lead Lifecycle Tab (if available)
@@ -1223,6 +1222,7 @@ def main():
 
                         fig_funnel.update_layout(title="Lead Progression Funnel", height=400)
 
+                        fig_funnel = style_obsidian_chart(fig_funnel)
                         st.plotly_chart(fig_funnel, use_container_width=True)
 
                     # Funnel Metrics
@@ -1742,6 +1742,7 @@ def main():
                             title="Operations by Type", xaxis_title="Operation Type", yaxis_title="Count", height=300
                         )
 
+                        fig_types = style_obsidian_chart(fig_types)
                         st.plotly_chart(fig_types, use_container_width=True)
 
                     with col2:
@@ -1759,6 +1760,7 @@ def main():
 
                             fig_status.update_layout(title="Operations by Status", height=300)
 
+                            fig_status = style_obsidian_chart(fig_status)
                             st.plotly_chart(fig_status, use_container_width=True)
 
                 # Message Templates Management

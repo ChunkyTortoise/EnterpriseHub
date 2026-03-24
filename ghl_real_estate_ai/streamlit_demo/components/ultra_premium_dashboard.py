@@ -202,6 +202,7 @@ class UltraPremiumDashboard:
     def _generate_client_portfolio(self) -> pd.DataFrame:
         """Generate UHNW client portfolio data"""
         import random
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         clients = []
         wealth_tiers = list(self.config.wealth_tiers.keys())
@@ -284,12 +285,14 @@ class UltraPremiumDashboard:
                 luxury_inventory, x="price", color="tier", title="Luxury Property Price Distribution", nbins=20
             )
             fig_price_dist.update_layout(xaxis_title="Property Value ($)", yaxis_title="Count", showlegend=True)
+            fig_price_dist = style_obsidian_chart(fig_price_dist)
             st.plotly_chart(fig_price_dist, use_container_width=True)
 
         with col2:
             # Tier breakdown
             tier_counts = luxury_inventory["tier"].value_counts()
             fig_tier = px.pie(values=tier_counts.values, names=tier_counts.index, title="Market Tier Distribution")
+            fig_tier = style_obsidian_chart(fig_tier)
             st.plotly_chart(fig_tier, use_container_width=True)
 
         # Luxury market trends
@@ -333,6 +336,7 @@ class UltraPremiumDashboard:
         )
 
         fig_trends.update_layout(height=600, showlegend=False)
+        fig_trends = style_obsidian_chart(fig_trends)
         st.plotly_chart(fig_trends, use_container_width=True)
 
         # AI-powered market insights
@@ -419,6 +423,7 @@ class UltraPremiumDashboard:
                 title="Client Wealth vs Portfolio Value",
             )
             fig_wealth.update_layout(xaxis_title="Net Worth ($)", yaxis_title="Portfolio Value ($)")
+            fig_wealth = style_obsidian_chart(fig_wealth)
             st.plotly_chart(fig_wealth, use_container_width=True)
 
         with col2:
@@ -432,6 +437,7 @@ class UltraPremiumDashboard:
                 color_continuous_scale="Greens",
             )
             fig_satisfaction.update_layout(yaxis_title="Satisfaction Score")
+            fig_satisfaction = style_obsidian_chart(fig_satisfaction)
             st.plotly_chart(fig_satisfaction, use_container_width=True)
 
         # Top clients table
@@ -464,6 +470,7 @@ class UltraPremiumDashboard:
                 title="Luxury Market Share",
                 color_discrete_sequence=px.colors.qualitative.Set3,
             )
+            fig_market_share = style_obsidian_chart(fig_market_share)
             st.plotly_chart(fig_market_share, use_container_width=True)
 
         with col2:
@@ -478,6 +485,7 @@ class UltraPremiumDashboard:
             )
             fig_commission.update_layout(xaxis_tickangle=-45)
             fig_commission.update_yaxis(tickformat=".1%")
+            fig_commission = style_obsidian_chart(fig_commission)
             st.plotly_chart(fig_commission, use_container_width=True)
 
         # Competitive positioning

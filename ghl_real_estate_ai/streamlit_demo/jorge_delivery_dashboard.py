@@ -12,6 +12,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+
 # ---------------------------------------------------------------------------
 # Data layer: try real services, fall back to sample data
 # ---------------------------------------------------------------------------
@@ -261,9 +263,8 @@ def _render_lead_pipeline():
     fig.update_layout(
         margin=dict(l=20, r=20, t=10, b=10),
         height=350,
-        paper_bgcolor="white",
-        plot_bgcolor="white",
     )
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -349,9 +350,9 @@ def _render_temperature_map():
     fig_donut.update_layout(
         margin=dict(l=20, r=20, t=10, b=10),
         height=320,
-        paper_bgcolor="white",
         legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5),
     )
+    fig_donut = style_obsidian_chart(fig_donut)
 
     # Trend line chart
     trend_df = _sample_temperature_trend()
@@ -364,11 +365,10 @@ def _render_temperature_map():
     fig_trend.update_layout(
         margin=dict(l=20, r=20, t=10, b=30),
         height=320,
-        paper_bgcolor="white",
-        plot_bgcolor="white",
         yaxis_title="Leads",
         legend_title_text="",
     )
+    fig_trend = style_obsidian_chart(fig_trend)
 
     col_left, col_right = st.columns(2)
     with col_left:

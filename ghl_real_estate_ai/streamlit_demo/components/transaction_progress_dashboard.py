@@ -526,10 +526,10 @@ class TransactionProgressDashboard:
             )
         )
 
-        fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={"color": "white", "size": 14}, height=250
+        fig.update_layout(, font={"color": "white", "size": 14}, height=250
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Health insights
@@ -742,6 +742,7 @@ class TransactionProgressDashboard:
                 time_ago = self._time_ago(event_time)
             except Exception as e:
                 import logging
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
                 logging.getLogger(__name__).debug(f"Activity feed timestamp parsing error: {e}")
                 time_ago = "recently"

@@ -25,6 +25,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Page configuration
 st.set_page_config(
@@ -343,6 +344,7 @@ class MarketIntelligenceDashboard:
         )
 
         fig.update_layout(height=500, showlegend=False, title_text="90-Day Market Intelligence Trends")
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Trend predictions
@@ -394,6 +396,7 @@ class MarketIntelligenceDashboard:
             showlegend=False,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Jorge's competitive advantages
@@ -439,6 +442,7 @@ class MarketIntelligenceDashboard:
             height=300,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Market balance interpretation
@@ -469,6 +473,7 @@ class MarketIntelligenceDashboard:
             height=300,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Price forecasting insights
@@ -528,6 +533,7 @@ class MarketIntelligenceDashboard:
             showlegend=False,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Detailed opportunity analysis
@@ -595,6 +601,7 @@ class MarketIntelligenceDashboard:
                 title="90-Day Price Forecast", xaxis_title="Date", yaxis_title="Median Price ($)", height=350
             )
 
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -672,6 +679,7 @@ class MarketIntelligenceDashboard:
             height=400,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def _render_strategic_recommendations(self, data):

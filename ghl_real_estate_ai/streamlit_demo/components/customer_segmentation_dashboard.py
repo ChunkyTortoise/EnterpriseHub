@@ -37,6 +37,7 @@ from typing import Any, Dict, List
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 class CustomerSegmentationDashboard:
@@ -537,8 +538,9 @@ class CustomerSegmentationDashboard:
             ]
         )
 
-        fig.update_layout(height=400, showlegend=True, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=400, showlegend=True)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -569,10 +571,9 @@ class CustomerSegmentationDashboard:
             height=400,
             xaxis_title="Customer Segment",
             yaxis_title="Average CLV ($)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -604,10 +605,9 @@ class CustomerSegmentationDashboard:
             height=350,
             xaxis_title="Customer Segment",
             yaxis_title="Engagement Score (%)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -639,10 +639,9 @@ class CustomerSegmentationDashboard:
             height=350,
             xaxis_title="Customer Segment",
             yaxis_title="Churn Risk (%)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -725,8 +724,9 @@ class CustomerSegmentationDashboard:
             )
         )
 
-        fig.update_layout(height=350, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=350)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -753,9 +753,10 @@ class CustomerSegmentationDashboard:
         )
 
         fig.update_layout(
-            height=350, xaxis_title="Frequency (%)", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)"
+            height=350, xaxis_title="Frequency (%)"
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -893,10 +894,9 @@ class CustomerSegmentationDashboard:
             height=400,
             xaxis_title="First Principal Component",
             yaxis_title="Second Principal Component",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 

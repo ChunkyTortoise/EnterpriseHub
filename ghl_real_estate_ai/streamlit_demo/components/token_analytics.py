@@ -27,6 +27,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 DEMO_MODE = os.getenv("DEMO_MODE", "").lower() in ("true", "1")
 
@@ -349,6 +350,7 @@ class TokenAnalytics:
                     height=300,
                     margin=dict(t=10, b=10),
                 )
+                fig_bot = style_obsidian_chart(fig_bot)
                 st.plotly_chart(fig_bot, use_container_width=True)
 
         with col_right:
@@ -368,6 +370,7 @@ class TokenAnalytics:
                     height=300,
                     margin=dict(t=10, b=10),
                 )
+                fig_provider = style_obsidian_chart(fig_provider)
                 st.plotly_chart(fig_provider, use_container_width=True)
 
         # Daily trend chart
@@ -389,4 +392,5 @@ class TokenAnalytics:
                 height=300,
                 margin=dict(t=10, b=10),
             )
+            fig_trend = style_obsidian_chart(fig_trend)
             st.plotly_chart(fig_trend, use_container_width=True)

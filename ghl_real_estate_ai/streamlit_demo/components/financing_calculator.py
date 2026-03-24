@@ -1,6 +1,7 @@
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_financing_calculator():
@@ -68,6 +69,7 @@ def render_financing_calculator():
     df = df[df["Amount"] > 0]  # Only show components with values
 
     fig = px.pie(df, values="Amount", names="Component", title="Monthly Payment Breakdown")
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     # Affordability analysis

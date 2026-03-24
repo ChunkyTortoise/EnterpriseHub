@@ -12,6 +12,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+
 # Page configuration
 st.set_page_config(
     page_title="EnterpriseHub BI Dashboard", page_icon="🏠", layout="wide", initial_sidebar_state="expanded"
@@ -321,8 +323,8 @@ def show_forecast():
         title="30-Day Revenue Forecast with Confidence Intervals",
         xaxis_title="Date",
         yaxis_title="Projected Revenue ($)",
-        template="plotly_white",
     )
+    fig = style_obsidian_chart(fig)
 
     st.plotly_chart(fig, use_container_width=True)
 

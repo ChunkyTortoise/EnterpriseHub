@@ -10,6 +10,7 @@ import plotly.express as px
 import streamlit as st
 
 from ghl_real_estate_ai.services.roi_engine import roi_engine
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_profit_center():
@@ -71,6 +72,7 @@ def render_profit_center():
         fig = px.area(df, x="Date", y="Value", title="Value Generated Over Time")
         fig.update_traces(line_color="#38ef7d")
         fig.update_layout(height=400)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -87,6 +89,7 @@ def render_profit_center():
             color_discrete_sequence=px.colors.sequential.Greens_r,
         )
         fig_agents.update_layout(height=400)
+        fig_agents = style_obsidian_chart(fig_agents)
         st.plotly_chart(fig_agents, use_container_width=True)
 
     # Detailed Breakdown

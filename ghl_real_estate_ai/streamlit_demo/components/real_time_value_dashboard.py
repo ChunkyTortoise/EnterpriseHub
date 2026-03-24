@@ -43,6 +43,7 @@ from ghl_real_estate_ai.services.dynamic_value_justification_engine import (
     get_dynamic_value_justification_engine,
 )
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 logger = logging.getLogger(__name__)
 
@@ -365,6 +366,7 @@ class RealTimeValueDashboard:
             )
             fig.update_traces(textposition="inside", textinfo="percent+label")
             fig.update_layout(height=400)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Value dimension details
@@ -456,6 +458,7 @@ class RealTimeValueDashboard:
                 color_continuous_scale=["#FF6B6B", "#FFD93D", "#6BCF7F"],
             )
             fig.update_layout(height=300)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Competitive advantage details
@@ -538,6 +541,7 @@ class RealTimeValueDashboard:
             legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def _render_roi_metrics(self, roi_calculation) -> None:

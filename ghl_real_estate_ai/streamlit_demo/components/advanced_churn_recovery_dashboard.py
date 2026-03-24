@@ -25,6 +25,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Configure page if running standalone
 if __name__ == "__main__":
@@ -376,10 +377,8 @@ def render_market_overview(markets: List[MarketMetrics]):
             color_continuous_scale="RdYlGn_r",
         )
 
-        fig.update_layout(
-            paper_bgcolor="rgba(255,255,255,0.95)", plot_bgcolor="rgba(255,255,255,0.95)", font_family="Inter"
-        )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -423,12 +422,10 @@ def render_recovery_pipeline(pipeline_data: pd.DataFrame):
         )
 
         fig.update_layout(
-            title="Recovery Funnel - Real-time",
-            paper_bgcolor="rgba(255,255,255,0.95)",
-            plot_bgcolor="rgba(255,255,255,0.95)",
-            font_family="Inter",
+            title="Recovery Funnel - Real-time"
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -470,12 +467,10 @@ def render_campaign_performance(campaign_data: pd.DataFrame):
         )
 
         fig.update_layout(
-            paper_bgcolor="rgba(255,255,255,0.95)",
-            plot_bgcolor="rgba(255,255,255,0.95)",
-            font_family="Inter",
             xaxis_tickangle=45,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -517,14 +512,12 @@ def render_campaign_performance(campaign_data: pd.DataFrame):
         )
 
         fig.update_layout(
-            title="Conversion Rates by Channel (%)",
-            paper_bgcolor="rgba(255,255,255,0.95)",
-            plot_bgcolor="rgba(255,255,255,0.95)",
-            font_family="Inter",
+            title="Conversion Rates by Channel (%)"
             xaxis_tickangle=45,
             yaxis_title="Rate (%)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     # Channel performance cards
@@ -573,8 +566,9 @@ def render_geographic_heatmap(geo_data: pd.DataFrame):
             title="Churn Intensity by Market",
         )
 
-        fig.update_layout(mapbox_style="open-street-map", paper_bgcolor="rgba(255,255,255,0.95)", font_family="Inter")
+        fig.update_layout(mapbox_style="open-street-map")
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -661,10 +655,8 @@ def render_roi_insights():
             color_continuous_scale="Blues",
         )
 
-        fig.update_layout(
-            paper_bgcolor="rgba(255,255,255,0.95)", plot_bgcolor="rgba(255,255,255,0.95)", font_family="Inter"
-        )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:

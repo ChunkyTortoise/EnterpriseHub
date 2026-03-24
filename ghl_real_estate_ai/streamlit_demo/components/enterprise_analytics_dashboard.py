@@ -236,6 +236,7 @@ def load_real_time_metrics():
         return run_async(engines["revenue_attribution"].get_real_time_metrics())
     except Exception as e:
         import logging
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         logging.getLogger(__name__).error(f"Error loading real-time metrics: {e}")
         return {}
@@ -602,6 +603,7 @@ def render_executive_overview(real_time_metrics, attribution_report, clv_report,
 
         fig_trend.update_layout(title="30-Day Revenue Trend", xaxis_title="Date", yaxis_title="Revenue ($)", height=350)
 
+        fig_trend = style_obsidian_chart(fig_trend)
         st.plotly_chart(fig_trend, use_container_width=True)
 
     with col2:
@@ -623,6 +625,7 @@ def render_executive_overview(real_time_metrics, attribution_report, clv_report,
 
         fig_funnel.update_layout(title="Customer Acquisition Funnel", height=350)
 
+        fig_funnel = style_obsidian_chart(fig_funnel)
         st.plotly_chart(fig_funnel, use_container_width=True)
 
     # Strategic Recommendations
@@ -692,6 +695,7 @@ def render_revenue_intelligence(attribution_report, real_time_metrics):
             height=400,
         )
 
+        fig_comparison = style_obsidian_chart(fig_comparison)
         st.plotly_chart(fig_comparison, use_container_width=True)
 
     # Channel performance analysis
@@ -715,6 +719,7 @@ def render_revenue_intelligence(attribution_report, real_time_metrics):
 
             fig_revenue.update_layout(title="Revenue Distribution by Channel", height=400)
 
+            fig_revenue = style_obsidian_chart(fig_revenue)
             st.plotly_chart(fig_revenue, use_container_width=True)
 
         with col2:
@@ -735,6 +740,7 @@ def render_revenue_intelligence(attribution_report, real_time_metrics):
 
             fig_roi.update_layout(title="ROI by Channel", xaxis_title="Channel", yaxis_title="ROI (x)", height=400)
 
+            fig_roi = style_obsidian_chart(fig_roi)
             st.plotly_chart(fig_roi, use_container_width=True)
 
     # Real-time channel metrics
@@ -849,6 +855,7 @@ def render_customer_analytics(clv_report):
 
             fig_segments.update_layout(title="Customer Segment Distribution", height=400)
 
+            fig_segments = style_obsidian_chart(fig_segments)
             st.plotly_chart(fig_segments, use_container_width=True)
 
         with col2:
@@ -882,6 +889,7 @@ def render_customer_analytics(clv_report):
 
             fig_clv.update_layout(title="Average CLV by Segment", xaxis_title="Average CLV ($)", height=400)
 
+            fig_clv = style_obsidian_chart(fig_clv)
             st.plotly_chart(fig_clv, use_container_width=True)
 
     # Churn risk analysis
@@ -911,6 +919,7 @@ def render_customer_analytics(clv_report):
                 title="Churn Risk Distribution", xaxis_title="Risk Level", yaxis_title="Customer Count", height=300
             )
 
+            fig_risk = style_obsidian_chart(fig_risk)
             st.plotly_chart(fig_risk, use_container_width=True)
 
         with col2:
@@ -1006,6 +1015,7 @@ def render_competitive_intelligence(competitive_data):
 
             fig_market.update_layout(title="Market Share Distribution", height=400)
 
+            fig_market = style_obsidian_chart(fig_market)
             st.plotly_chart(fig_market, use_container_width=True)
 
         with col2:
@@ -1184,6 +1194,7 @@ def render_predictive_insights(attribution_report, clv_report):
             title="12-Month Revenue Forecast", xaxis_title="Month", yaxis_title="Revenue ($)", height=400
         )
 
+        fig_forecast = style_obsidian_chart(fig_forecast)
         st.plotly_chart(fig_forecast, use_container_width=True)
 
     with col2:
@@ -1255,6 +1266,7 @@ def render_predictive_insights(attribution_report, clv_report):
             title="Customer Growth Forecast", xaxis_title="Months Ahead", yaxis_title="Total Customers", height=350
         )
 
+        fig_customers = style_obsidian_chart(fig_customers)
         st.plotly_chart(fig_customers, use_container_width=True)
 
     with col2:

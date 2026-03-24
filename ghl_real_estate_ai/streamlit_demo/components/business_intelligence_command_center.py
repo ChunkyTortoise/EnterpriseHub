@@ -14,6 +14,7 @@ from typing import Dict, List, Optional
 
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 try:
     from ghl_real_estate_ai.intelligence.business_intelligence_dashboard import (
@@ -288,6 +289,7 @@ class BusinessIntelligenceCommandCenter:
                 title="Revenue Forecast - Next 3 Months", xaxis_title="Month", yaxis_title="Revenue ($)", height=400
             )
 
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Deal pipeline
@@ -301,6 +303,7 @@ class BusinessIntelligenceCommandCenter:
             fig = go.Figure(go.Funnel(y=pipeline_stages, x=pipeline_values, textinfo="value+percent initial"))
 
             fig.update_layout(title="Jorge's Deal Pipeline", height=400)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
     def _render_conversation_analytics(self, conversation_data: Dict):
@@ -355,6 +358,7 @@ class BusinessIntelligenceCommandCenter:
             )
 
             fig.update_layout(height=300)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # A/B testing results
@@ -545,6 +549,7 @@ class BusinessIntelligenceCommandCenter:
                 height=400,
             )
 
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
     def _render_action_dashboard(self, action_data: Dict):

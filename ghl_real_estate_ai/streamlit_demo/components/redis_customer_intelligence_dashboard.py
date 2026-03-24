@@ -318,6 +318,7 @@ class RedisCustomerIntelligenceDashboard:
                     st.success("Cache cleared, data will refresh")
                 except Exception as e:
                     import logging
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
                     logging.getLogger(__name__).error(f"Error clearing cache: {e}")
                     st.info("Data refresh initiated")
@@ -479,6 +480,7 @@ class RedisCustomerIntelligenceDashboard:
 
         fig.update_layout(height=600, showlegend=True, title_text="📈 Real-Time Metrics Trends", title_x=0.5)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def _render_customer_segmentation(self):
@@ -525,6 +527,7 @@ class RedisCustomerIntelligenceDashboard:
                     annotations=[dict(text="Customers", x=0.5, y=0.5, font_size=16, showarrow=False)],
                 )
 
+                fig_pie = style_obsidian_chart(fig_pie)
                 st.plotly_chart(fig_pie, use_container_width=True)
 
             with col2:
@@ -548,6 +551,7 @@ class RedisCustomerIntelligenceDashboard:
                     title="Segment Score Distributions", yaxis_title="Score", xaxis_title="Segment Type"
                 )
 
+                fig_box = style_obsidian_chart(fig_box)
                 st.plotly_chart(fig_box, use_container_width=True)
 
             # Segment details table
@@ -610,6 +614,7 @@ class RedisCustomerIntelligenceDashboard:
                     title="Customers by Journey Stage", xaxis_title="Journey Stage", yaxis_title="Customer Count"
                 )
 
+                fig_bar = style_obsidian_chart(fig_bar)
                 st.plotly_chart(fig_bar, use_container_width=True)
 
             with col2:
@@ -638,6 +643,7 @@ class RedisCustomerIntelligenceDashboard:
                     yaxis_tickformat=".0%",
                 )
 
+                fig_conv = style_obsidian_chart(fig_conv)
                 st.plotly_chart(fig_conv, use_container_width=True)
 
             # Journey progression analysis
@@ -671,6 +677,7 @@ class RedisCustomerIntelligenceDashboard:
                 )
 
                 fig_sankey.update_layout(title_text="Customer Journey Flow", font_size=12)
+                fig_sankey = style_obsidian_chart(fig_sankey)
                 st.plotly_chart(fig_sankey, use_container_width=True)
 
             # Bottleneck analysis
@@ -700,6 +707,7 @@ class RedisCustomerIntelligenceDashboard:
                     title="Top Bottleneck Factors", xaxis_title="Frequency", yaxis_title="Bottleneck Factor", height=400
                 )
 
+                fig_bottlenecks = style_obsidian_chart(fig_bottlenecks)
                 st.plotly_chart(fig_bottlenecks, use_container_width=True)
             else:
                 st.info("No bottleneck data available")
@@ -753,6 +761,7 @@ class RedisCustomerIntelligenceDashboard:
                         title="CLV Distribution", xaxis_title="Predicted CLV ($)", yaxis_title="Customer Count"
                     )
 
+                    fig_clv = style_obsidian_chart(fig_clv)
                     st.plotly_chart(fig_clv, use_container_width=True)
 
             # Next Best Actions
@@ -780,6 +789,7 @@ class RedisCustomerIntelligenceDashboard:
                             annotations=[dict(text="Actions", x=0.5, y=0.5, font_size=14, showarrow=False)],
                         )
 
+                        fig_actions = style_obsidian_chart(fig_actions)
                         st.plotly_chart(fig_actions, use_container_width=True)
 
                     with col2:
@@ -794,7 +804,7 @@ class RedisCustomerIntelligenceDashboard:
                                         size=10, color=nba_df["expected_impact"], colorscale="Viridis", showscale=True
                                     ),
                                     text=nba_df["action"],
-                                    hovertemplate="Action: %{text}<br>Confidence: %{x:.2%}<br>Impact: %{y:.2%}",
+                                    hover,
                                 )
                             ]
                         )
@@ -807,6 +817,7 @@ class RedisCustomerIntelligenceDashboard:
                             yaxis_tickformat=".0%",
                         )
 
+                        fig_impact = style_obsidian_chart(fig_impact)
                         st.plotly_chart(fig_impact, use_container_width=True)
 
                     # Top recommendations table
@@ -902,6 +913,7 @@ class RedisCustomerIntelligenceDashboard:
                         barmode="group",
                     )
 
+                    fig = style_obsidian_chart(fig)
                     st.plotly_chart(fig, use_container_width=True)
 
             else:

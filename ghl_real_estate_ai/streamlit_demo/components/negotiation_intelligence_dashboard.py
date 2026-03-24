@@ -15,6 +15,7 @@ import streamlit as st
 
 from ghl_real_estate_ai.api.schemas.negotiation import NegotiationAnalysisRequest
 from ghl_real_estate_ai.services.ai_negotiation_partner import get_ai_negotiation_partner
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 @st.cache_resource
@@ -262,6 +263,7 @@ class NegotiationIntelligenceDashboard:
                 color="Avg Win Probability",
                 color_continuous_scale="viridis",
             )
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Recent analysis trends (simulated data)
@@ -369,6 +371,7 @@ class NegotiationIntelligenceDashboard:
                 data=go.Bar(x=scores_data["Score"], y=scores_data["Factor"], orientation="h", marker_color="lightblue")
             )
             fig.update_layout(title="Seller Psychology Scores", xaxis_title="Score (0-100)", height=300)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Primary concerns and hot buttons
@@ -416,6 +419,7 @@ class NegotiationIntelligenceDashboard:
                 range_r=[0, 100],
                 title="Market Leverage Factors",
             )
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Inventory levels
@@ -479,6 +483,7 @@ class NegotiationIntelligenceDashboard:
                 )
             )
             fig.update_layout(height=300)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -493,6 +498,7 @@ class NegotiationIntelligenceDashboard:
                 )
 
                 fig = px.bar(factors_df, x="Weight", y="Factor", orientation="h", title="Factor Importance")
+                fig = style_obsidian_chart(fig)
                 st.plotly_chart(fig, use_container_width=True)
 
         # Success drivers and risk factors
@@ -547,6 +553,7 @@ class NegotiationIntelligenceDashboard:
             height=200,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def render_scenario_analysis(self, win_probability):
@@ -571,6 +578,7 @@ class NegotiationIntelligenceDashboard:
             color_continuous_scale="viridis",
         )
         fig.update_xaxis(tickangle=45)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def render_coaching_response(self, coaching_response):
@@ -649,6 +657,7 @@ class NegotiationIntelligenceDashboard:
             height=400,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     @st.cache_data

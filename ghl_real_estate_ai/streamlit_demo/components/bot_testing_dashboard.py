@@ -19,6 +19,7 @@ from typing import Any, Dict
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Import bot services for testing
 try:
@@ -689,6 +690,7 @@ def render_performance_analytics():
         height=400,
     )
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 

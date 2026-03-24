@@ -14,6 +14,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.services.cache_service import CacheService
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 class PerformanceOptimizer:
@@ -129,9 +130,6 @@ def create_optimized_chart(chart_type: str, data_hash: str, config: Dict[str, An
 
     # Apply Obsidian theme optimizations
     fig.update_layout(
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        font_color="#E6EDF3",
         title_font_color="#FFFFFF",
         margin=dict(l=20, r=20, t=40, b=20),
     )
@@ -215,15 +213,18 @@ class OptimizedChartRenderer:
         with col_chart1:
             # Lead score distribution
             score_fig = create_optimized_chart("lead_scores", filter_hash, chart_config)
+            score_fig = style_obsidian_chart(score_fig)
             st.plotly_chart(score_fig, use_container_width=True)
 
         with col_chart2:
             # Temperature breakdown
             temp_fig = create_optimized_chart("temperature_breakdown", filter_hash, chart_config)
+            temp_fig = style_obsidian_chart(temp_fig)
             st.plotly_chart(temp_fig, use_container_width=True)
 
         # Sector performance
         sector_fig = create_optimized_chart("sector_performance", filter_hash, chart_config)
+        sector_fig = style_obsidian_chart(sector_fig)
         st.plotly_chart(sector_fig, use_container_width=True)
 
         # Performance insights

@@ -12,6 +12,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_bot_performance_gauge(bot_name: str, score: float, target: float = 85.0):
@@ -36,6 +37,7 @@ def render_bot_performance_gauge(bot_name: str, score: float, target: float = 85
         )
     )
     fig.update_layout(height=300)
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -61,6 +63,7 @@ def render_conversation_flow_chart(conversations: List[Dict[str, Any]]):
     )
 
     fig.update_layout(title="Conversation Flow Analysis", height=400)
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -94,6 +97,7 @@ def render_response_time_heatmap(response_times: Dict[str, List[float]]):
             title="Average Response Time by Hour/Day", xaxis_title="Hour of Day", yaxis_title="Day of Week", height=300
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -111,6 +115,7 @@ def render_sentiment_timeline(conversations: List[Dict[str, Any]]):
         df = pd.DataFrame(sentiment_data)
 
         fig = px.line(df, x="Date", y=["Positive", "Neutral", "Negative"], title="Conversation Sentiment Over Time")
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -133,6 +138,7 @@ def render_lead_scoring_distribution(scores: List[float], bot_type: str = "Bot")
         title=f"{bot_type} Lead Score Distribution", xaxis_title="Lead Score", yaxis_title="Frequency", height=300
     )
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -170,6 +176,7 @@ def render_bot_comparison_radar(bot_metrics: Dict[str, Dict[str, float]]):
         height=400,
     )
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -223,6 +230,7 @@ def render_activity_calendar(activities: List[Dict[str, Any]]):
 
     fig.update_layout(title="Bot Activity Calendar (January 2026)", height=300)
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -317,6 +325,7 @@ def render_performance_dashboard(bot_name: str, metrics: Dict[str, float]):
             )
         )
         fig.update_layout(height=250)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col_trend:
@@ -335,6 +344,7 @@ def render_performance_dashboard(bot_name: str, metrics: Dict[str, float]):
                 height=250,
             )
 
+            fig_radar = style_obsidian_chart(fig_radar)
             st.plotly_chart(fig_radar, use_container_width=True)
 
 
@@ -446,4 +456,5 @@ def render_performance_comparison_table(bot_data: Dict[str, Dict[str, float]]):
         height=400,
     )
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)

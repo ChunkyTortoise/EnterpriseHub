@@ -33,6 +33,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Core services - with graceful imports
 try:
@@ -402,6 +403,7 @@ def render_advanced_analytics(analytics_data: pd.DataFrame, settings: Dict[str, 
 
         fig.update_layout(height=600, showlegend=False, title_text="Performance Metrics Trends (Last 30 Days)")
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Performance insights
@@ -461,6 +463,7 @@ def render_advanced_analytics(analytics_data: pd.DataFrame, settings: Dict[str, 
                     showlegend=False,
                 )
 
+                fig_risk = style_obsidian_chart(fig_risk)
                 st.plotly_chart(fig_risk, use_container_width=True)
 
             with col2:
@@ -487,6 +490,7 @@ def render_advanced_analytics(analytics_data: pd.DataFrame, settings: Dict[str, 
                     annotations=[dict(text="Lead<br>Scores", x=0.5, y=0.5, font_size=16, showarrow=False)],
                 )
 
+                fig_score = style_obsidian_chart(fig_score)
                 st.plotly_chart(fig_score, use_container_width=True)
 
             # Predictive recommendations
@@ -557,6 +561,7 @@ def render_advanced_analytics(analytics_data: pd.DataFrame, settings: Dict[str, 
             legend=dict(x=0.01, y=0.99),
         )
 
+        fig_segment = style_obsidian_chart(fig_segment)
         st.plotly_chart(fig_segment, use_container_width=True)
 
         # Segment details
@@ -619,6 +624,7 @@ def render_advanced_analytics(analytics_data: pd.DataFrame, settings: Dict[str, 
             barmode="group",
         )
 
+        fig_channels = style_obsidian_chart(fig_channels)
         st.plotly_chart(fig_channels, use_container_width=True)
 
         # Recent communication log
@@ -824,6 +830,7 @@ def render_customer_details(customer_data: pd.DataFrame, settings: Dict[str, Any
             showlegend=True,
         )
 
+        fig_timeline = style_obsidian_chart(fig_timeline)
         st.plotly_chart(fig_timeline, use_container_width=True)
 
 

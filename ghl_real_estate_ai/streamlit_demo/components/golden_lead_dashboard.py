@@ -18,6 +18,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Note: Golden Lead Detector would be imported here when fully integrated
 # from ghl_real_estate_ai.services.golden_lead_detector import GoldenLeadDetector
@@ -374,6 +375,7 @@ def render_detection_tab(summary_data: Dict, behavioral_data: Dict):
             legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5),
         )
 
+        fig_tier = style_obsidian_chart(fig_tier)
         st.plotly_chart(fig_tier, use_container_width=True)
 
     with col2:
@@ -519,6 +521,7 @@ def render_insights_tab(behavioral_data: Dict, summary_data: Dict):
             height=400,
         )
 
+        fig_radar = style_obsidian_chart(fig_radar)
         st.plotly_chart(fig_radar, use_container_width=True)
 
     with col2:
@@ -543,6 +546,7 @@ def render_insights_tab(behavioral_data: Dict, summary_data: Dict):
             xaxis_tickangle=-45,
         )
 
+        fig_freq = style_obsidian_chart(fig_freq)
         st.plotly_chart(fig_freq, use_container_width=True)
 
     # Detailed signal analysis
@@ -613,6 +617,7 @@ def render_insights_tab(behavioral_data: Dict, summary_data: Dict):
         barmode="group",
     )
 
+    fig_patterns = style_obsidian_chart(fig_patterns)
     st.plotly_chart(fig_patterns, use_container_width=True)
 
 
@@ -690,6 +695,7 @@ def render_signals_tab(behavioral_data: Dict):
                 xaxis_tickangle=-45,
             )
 
+            fig_strength = style_obsidian_chart(fig_strength)
             st.plotly_chart(fig_strength, use_container_width=True)
 
         with col2:
@@ -713,6 +719,7 @@ def render_signals_tab(behavioral_data: Dict):
                 xaxis_tickangle=-45,
             )
 
+            fig_frequency = style_obsidian_chart(fig_frequency)
             st.plotly_chart(fig_frequency, use_container_width=True)
 
     # Signal correlation matrix
@@ -731,7 +738,7 @@ def render_signals_tab(behavioral_data: Dict):
             colorscale="RdYlBu",
             reversescale=True,
             text=np.round(correlation_matrix, 2),
-            texttemplate="%{text}",
+            text,
             textfont={"size": 10},
             colorbar=dict(title="Correlation"),
         )
@@ -739,6 +746,7 @@ def render_signals_tab(behavioral_data: Dict):
 
     fig_corr.update_layout(title="Behavioral Signal Correlations", height=500)
 
+    fig_corr = style_obsidian_chart(fig_corr)
     st.plotly_chart(fig_corr, use_container_width=True)
 
 
@@ -861,6 +869,7 @@ def render_performance_tab(performance_data: Dict, summary_data: Dict):
             title="Detection Time Distribution", xaxis_title="Detection Time (ms)", yaxis_title="Frequency", height=300
         )
 
+        fig_dist = style_obsidian_chart(fig_dist)
         st.plotly_chart(fig_dist, use_container_width=True)
 
     # Performance recommendations
@@ -965,6 +974,7 @@ def render_analysis_tab(summary_data: Dict, tenant_id: str):
                 height=300,
             )
 
+            fig_intel = style_obsidian_chart(fig_intel)
             st.plotly_chart(fig_intel, use_container_width=True)
 
         # Recommendations

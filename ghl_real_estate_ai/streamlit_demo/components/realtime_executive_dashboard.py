@@ -13,6 +13,8 @@ import streamlit as st
 
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.streamlit_demo.components.primitives import MetricConfig, render_obsidian_metric
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 @dataclass
@@ -324,10 +326,7 @@ class RealTimeExecutiveDashboard:
             fig_attribution.update_layout(
                 title="Revenue by Source (%)",
                 title_font_size=16,
-                title_font_color="#FFFFFF",
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#FFFFFF"),
+                title_font_color="#FFFFFF"
                 showlegend=True,
                 legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.1),
                 height=300,
@@ -343,6 +342,7 @@ class RealTimeExecutiveDashboard:
                 showarrow=False,
             )
 
+            fig_attribution = style_obsidian_chart(fig_attribution)
             st.plotly_chart(fig_attribution, use_container_width=True)
 
         with col2:
@@ -422,10 +422,7 @@ class RealTimeExecutiveDashboard:
         fig_forecast.update_layout(
             title="Revenue Projection (Next 5 Months)",
             title_font_size=18,
-            title_font_color="#FFFFFF",
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#FFFFFF"),
+            title_font_color="#FFFFFF"
             showlegend=True,
             legend=dict(x=0, y=1),
             height=400,
@@ -433,68 +430,33 @@ class RealTimeExecutiveDashboard:
             xaxis=dict(title="Month", gridcolor="rgba(255,255,255,0.1)", title_font_color="#8B949E"),
         )
 
+        fig_forecast = style_obsidian_chart(fig_forecast)
         st.plotly_chart(fig_forecast, use_container_width=True)
 
         # Forecast insights
         col1, col2, col3 = st.columns(3)
 
         with col1:
-            st.markdown(
-                f"""
-            <div style='
-                background: rgba(16, 185, 129, 0.1);
-                padding: 1rem;
-                border-radius: 8px;
-                border: 1px solid rgba(16, 185, 129, 0.2);
-                text-align: center;
-            '>
-                <div style='font-size: 1.8rem; font-weight: 700; color: #10B981; margin-bottom: 0.5rem;'>
-                    ${forecast[-1]:.1f}M
-                </div>
-                <div style='color: #E6EDF3; font-size: 0.9rem;'>Projected May Revenue</div>
-            </div>
-            """,
-                unsafe_allow_html=True,
+            render_obsidian_metric(
+                value=f"${forecast[-1]:.1f}M",
+                label="Projected May Revenue",
+                config=MetricConfig(variant="success", trend="up", size="small"),
             )
 
         with col2:
             growth_rate = ((forecast[-1] - forecast[0]) / forecast[0]) * 100
-            st.markdown(
-                f"""
-            <div style='
-                background: rgba(245, 158, 11, 0.1);
-                padding: 1rem;
-                border-radius: 8px;
-                border: 1px solid rgba(245, 158, 11, 0.2);
-                text-align: center;
-            '>
-                <div style='font-size: 1.8rem; font-weight: 700; color: #F59E0B; margin-bottom: 0.5rem;'>
-                    +{growth_rate:.0f}%
-                </div>
-                <div style='color: #E6EDF3; font-size: 0.9rem;'>Growth Trajectory</div>
-            </div>
-            """,
-                unsafe_allow_html=True,
+            render_obsidian_metric(
+                value=f"+{growth_rate:.0f}%",
+                label="Growth Trajectory",
+                config=MetricConfig(variant="warning", trend="up", size="small"),
             )
 
         with col3:
             confidence_score = 87  # AI confidence in prediction
-            st.markdown(
-                f"""
-            <div style='
-                background: rgba(139, 92, 246, 0.1);
-                padding: 1rem;
-                border-radius: 8px;
-                border: 1px solid rgba(139, 92, 246, 0.2);
-                text-align: center;
-            '>
-                <div style='font-size: 1.8rem; font-weight: 700; color: #8B5CF6; margin-bottom: 0.5rem;'>
-                    {confidence_score}%
-                </div>
-                <div style='color: #E6EDF3; font-size: 0.9rem;'>AI Confidence</div>
-            </div>
-            """,
-                unsafe_allow_html=True,
+            render_obsidian_metric(
+                value=f"{confidence_score}%",
+                label="AI Confidence",
+                config=MetricConfig(variant="premium", size="small"),
             )
 
     def render_market_intelligence_heatmap(self):
@@ -534,14 +496,13 @@ class RealTimeExecutiveDashboard:
             fig_heatmap.update_layout(
                 title="Lead Density by Area (Last 24h)",
                 title_font_size=16,
-                title_font_color="#FFFFFF",
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
+                title_font_color="#FFFFFF"
                 height=300,
                 xaxis=dict(showticklabels=False),
                 yaxis=dict(showticklabels=False),
             )
 
+            fig_heatmap = style_obsidian_chart(fig_heatmap)
             st.plotly_chart(fig_heatmap, use_container_width=True)
 
         with col2:
@@ -616,10 +577,8 @@ class RealTimeExecutiveDashboard:
                 )
             )
 
-            fig_gauge.update_layout(
-                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font={"color": "#FFFFFF"}, height=250
-            )
 
+            fig_gauge = style_obsidian_chart(fig_gauge)
             st.plotly_chart(fig_gauge, use_container_width=True)
 
         with col2:

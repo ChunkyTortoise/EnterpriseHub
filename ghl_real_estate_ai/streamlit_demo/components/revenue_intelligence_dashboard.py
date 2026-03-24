@@ -28,6 +28,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 logger = logging.getLogger(__name__)
 
@@ -277,7 +278,7 @@ def create_deal_probability_distribution() -> go.Figure:
                 size=12, color=probabilities, colorscale="RdYlGn", showscale=True, colorbar=dict(title="Probability %")
             ),
             text=[f"Deal ${v:,.0f}<br>Prob: {p:.1f}%" for p, v in zip(probabilities, deal_values)],
-            hovertemplate="<b>%{text}</b><extra></extra>",
+            hover,
             name="Active Deals",
         )
     )
@@ -459,6 +460,7 @@ def main():
 
     with col1:
         forecast_chart = create_revenue_forecast_chart(forecast_data)
+        forecast_chart = style_obsidian_chart(forecast_chart)
         st.plotly_chart(forecast_chart, use_container_width=True)
 
     with col2:
@@ -499,6 +501,7 @@ def main():
     # Time series forecast
     st.markdown("### 📊 18-Month Revenue Trajectory")
     time_series_chart = create_time_series_forecast()
+    time_series_chart = style_obsidian_chart(time_series_chart)
     st.plotly_chart(time_series_chart, use_container_width=True)
 
     # Pipeline Analysis Section
@@ -509,6 +512,7 @@ def main():
     with col1:
         # Pipeline health gauge
         pipeline_gauge = create_pipeline_analysis_chart(pipeline_data)
+        pipeline_gauge = style_obsidian_chart(pipeline_gauge)
         st.plotly_chart(pipeline_gauge, use_container_width=True)
 
         # Pipeline metrics
@@ -520,6 +524,7 @@ def main():
     with col2:
         # Deal probability distribution
         probability_chart = create_deal_probability_distribution()
+        probability_chart = style_obsidian_chart(probability_chart)
         st.plotly_chart(probability_chart, use_container_width=True)
 
     # Jorge Methodology Performance

@@ -1,5 +1,6 @@
 import plotly.express as px
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_roi_calculator(selected_lead):
@@ -30,4 +31,5 @@ def render_roi_calculator(selected_lead):
 def render_revenue_funnel():
     data = dict(number=[156, 47, 23, 12, 5], stage=["Conversations", "Active Leads", "Hot Leads", "Tours", "Contracts"])
     fig = px.funnel(data, x="number", y="stage", color_discrete_sequence=["#2563eb"])
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)

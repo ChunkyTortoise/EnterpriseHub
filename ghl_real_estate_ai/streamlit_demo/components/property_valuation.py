@@ -1,5 +1,6 @@
 import plotly.express as px
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_property_valuation_engine():
@@ -179,11 +180,13 @@ def render_property_valuation_engine():
 
                     fig = px.line(x=months, y=median_prices, title="Neighborhood Median Prices")
                     fig.update_layout(yaxis_title="Price ($)", xaxis_title="Month")
+                    fig = style_obsidian_chart(fig)
                     st.plotly_chart(fig, use_container_width=True)
 
                     st.markdown("**Price Per Square Foot Trends**")
                     price_per_sqft = [245, 250, 255, 258, 260, 263]
                     fig2 = px.bar(x=months, y=price_per_sqft, title="Price Per Sq Ft")
+                    fig2 = style_obsidian_chart(fig2)
                     st.plotly_chart(fig2, use_container_width=True)
 
             with tab3:

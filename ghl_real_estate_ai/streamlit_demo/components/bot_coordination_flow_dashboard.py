@@ -18,6 +18,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 # Create sample data for bot coordination flows
@@ -157,6 +158,7 @@ def create_flow_diagram():
 
     fig.update_layout(title_text="Jorge's Three-Bot Coordination Flow", font_size=12, height=500)
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     # Flow statistics
@@ -334,6 +336,7 @@ def render_real_time_flows():
 
         fig_pie.update_layout(title="Current Bot Distribution", height=300, showlegend=True)
 
+        fig_pie = style_obsidian_chart(fig_pie)
         st.plotly_chart(fig_pie, use_container_width=True)
 
         # Status breakdown
@@ -423,6 +426,7 @@ def render_handoff_performance():
     fig.update_yaxes(title_text="Time (seconds)", row=2, col=1)
     fig.update_xaxes(title_text="Time", row=2, col=1)
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 

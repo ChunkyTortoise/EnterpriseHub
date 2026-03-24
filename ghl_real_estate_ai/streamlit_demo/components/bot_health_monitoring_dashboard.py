@@ -19,6 +19,7 @@ from typing import Any, Dict, List
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Import existing bot services for health checks
 try:
@@ -300,6 +301,7 @@ def render_performance_analytics():
     fig.update_yaxes(title_text="Success Rate (%)", row=2, col=1, range=[90, 100])
     fig.update_xaxes(title_text="Time", row=2, col=1)
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     # Key Performance Indicators
@@ -578,6 +580,7 @@ def render_bot_coordination():
 
         fig.update_layout(title="Bot Handoffs Today", yaxis_title="Number of Handoffs", showlegend=False, height=300)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:

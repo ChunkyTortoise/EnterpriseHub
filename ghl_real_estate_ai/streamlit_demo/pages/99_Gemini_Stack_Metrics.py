@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 st.set_page_config(page_title="Gemini Stack Metrics", layout="wide")
 
@@ -57,6 +58,7 @@ else:
             hole=0.4,
             color_discrete_sequence=px.colors.sequential.Emerald,
         )
+        fig_cost = style_obsidian_chart(fig_cost)
         st.plotly_chart(fig_cost, use_container_width=True)
 
     with row1_col2:
@@ -64,6 +66,7 @@ else:
         calls_by_model = df["model"].value_counts().reset_index()
         calls_by_model.columns = ["model", "count"]
         fig_models = px.bar(calls_by_model, x="model", y="count", color="count", color_continuous_scale="Viridis")
+        fig_models = style_obsidian_chart(fig_models)
         st.plotly_chart(fig_models, use_container_width=True)
 
     st.divider()
@@ -78,6 +81,7 @@ else:
         daily_metrics, x="date", y="cost_usd", markers=True, title="Daily Spend (USD)", labels={"cost_usd": "Cost ($)"}
     )
     fig_daily.update_traces(line_color="#10B981")
+    fig_daily = style_obsidian_chart(fig_daily)
     st.plotly_chart(fig_daily, use_container_width=True)
 
     # --- Data Table ---

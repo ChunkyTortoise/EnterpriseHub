@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 class EnterpriseTenantDashboard:
@@ -688,10 +689,9 @@ class EnterpriseTenantDashboard:
             height=350,
             xaxis_title="Date",
             yaxis_title="Revenue ($)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -719,10 +719,9 @@ class EnterpriseTenantDashboard:
             height=350,
             xaxis_title="Month",
             yaxis_title="Active Customers",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -742,8 +741,9 @@ class EnterpriseTenantDashboard:
             ]
         )
 
-        fig.update_layout(height=350, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=350)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -771,10 +771,9 @@ class EnterpriseTenantDashboard:
             height=350,
             xaxis_title="Department",
             yaxis_title="Performance Score (%)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -919,10 +918,9 @@ class EnterpriseTenantDashboard:
             height=400,
             xaxis_title="Tenant",
             yaxis_title="Monthly Revenue ($)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -954,13 +952,14 @@ class EnterpriseTenantDashboard:
                 y=tenant_names,
                 colorscale="RdYlGn",
                 text=[[f"{val:.1f}" for val in row] for row in performance_matrix],
-                texttemplate="%{text}",
+                text,
                 textfont={"size": 10},
             )
         )
 
-        fig.update_layout(height=400, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=400)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 

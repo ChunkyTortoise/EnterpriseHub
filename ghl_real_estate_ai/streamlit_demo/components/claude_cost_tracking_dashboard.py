@@ -17,6 +17,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Import our optimization services
 try:
@@ -271,6 +272,7 @@ class CostTrackingDashboard:
             showlegend=True,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def render_optimization_breakdown(self):
@@ -291,6 +293,7 @@ class CostTrackingDashboard:
                 color_discrete_sequence=px.colors.qualitative.Set3,
             )
             fig_pie.update_traces(textposition="inside", textinfo="percent+label")
+            fig_pie = style_obsidian_chart(fig_pie)
             st.plotly_chart(fig_pie, use_container_width=True)
 
         with col2:
@@ -304,6 +307,7 @@ class CostTrackingDashboard:
                 color_continuous_scale="Viridis",
             )
             fig_bar.update_layout(showlegend=False, height=300)
+            fig_bar = style_obsidian_chart(fig_bar)
             st.plotly_chart(fig_bar, use_container_width=True)
 
     def render_performance_metrics(self, metrics: CostMetrics):
@@ -334,6 +338,7 @@ class CostTrackingDashboard:
                 )
             )
             fig_gauge.update_layout(height=250, margin=dict(l=20, r=20, t=40, b=20))
+            fig_gauge = style_obsidian_chart(fig_gauge)
             st.plotly_chart(fig_gauge, use_container_width=True)
 
         with col2:
@@ -356,6 +361,7 @@ class CostTrackingDashboard:
                 )
             )
             fig_db.update_layout(height=250, margin=dict(l=20, r=20, t=40, b=20))
+            fig_db = style_obsidian_chart(fig_db)
             st.plotly_chart(fig_db, use_container_width=True)
 
     def render_alerts_and_insights(self, insights: OptimizationInsights):
@@ -405,6 +411,7 @@ class CostTrackingDashboard:
             color_discrete_map={"Used ($)": "#ff7f0e", "Remaining ($)": "#2ca02c"},
             height=350,
         )
+        fig_budget = style_obsidian_chart(fig_budget)
         st.plotly_chart(fig_budget, use_container_width=True)
 
         # Budget details table

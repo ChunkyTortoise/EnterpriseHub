@@ -220,6 +220,7 @@ class JorgeAnalyticsAPIClient:
     async def get_funnel_analysis(self) -> Dict[str, Any]:
         """Get detailed conversion funnel analysis."""
         import random
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         return {
             "current_period": {
@@ -660,11 +661,9 @@ def render_revenue_forecasting_section(api_client: JorgeAnalyticsAPIClient):
                 yaxis_title="Daily Revenue ($)",
                 height=400,
                 showlegend=True,
-                plot_bgcolor="rgba(0,0,0,0)",
-                paper_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="white"),
             )
 
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         else:
@@ -793,11 +792,9 @@ def render_conversion_funnel_section(api_client: JorgeAnalyticsAPIClient):
             yaxis_title="Conversion Rate (%)",
             height=300,
             showlegend=True,
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="white"),
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -863,11 +860,9 @@ def render_geographic_analytics_section(api_client: JorgeAnalyticsAPIClient):
         fig.update_layout(
             height=600,
             showlegend=False,
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="white"),
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -954,8 +949,9 @@ def render_lead_quality_intelligence_section(api_client: JorgeAnalyticsAPIClient
             color_continuous_scale="RdYlGn",
         )
 
-        fig.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font=dict(color="white"))
+        fig.update_layout()
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -1080,11 +1076,9 @@ def render_roi_attribution_section(api_client: JorgeAnalyticsAPIClient):
         fig.update_layout(
             height=600,
             showlegend=False,
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="white"),
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:

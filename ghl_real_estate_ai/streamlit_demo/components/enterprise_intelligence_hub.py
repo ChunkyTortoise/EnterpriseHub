@@ -25,6 +25,7 @@ from ghl_real_estate_ai.services.enterprise_tenant_service import get_enterprise
 
 # Import our strategic services
 from ghl_real_estate_ai.services.strategic_claude_consultant import (
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
     get_strategic_claude_consultant,
 )
 
@@ -600,6 +601,7 @@ def render_performance_intelligence(hub: EnterpriseIntelligenceHub):
             title="Revenue Trend vs Target", xaxis_title="Month", yaxis_title="Revenue ($)", height=400, showlegend=True
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -625,6 +627,7 @@ def render_performance_intelligence(hub: EnterpriseIntelligenceHub):
 
         fig.update_layout(title="Customer Acquisition Funnel", height=400)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     # Detailed performance table
@@ -791,6 +794,7 @@ def render_predictive_analytics_executive(hub: EnterpriseIntelligenceHub):
 
         fig.update_layout(title="18-Month Revenue Forecast", xaxis_title="Month", yaxis_title="Revenue ($)", height=400)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -819,6 +823,7 @@ def render_predictive_analytics_executive(hub: EnterpriseIntelligenceHub):
             height=400,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -867,6 +872,7 @@ def render_competitive_intelligence_dashboard(hub: EnterpriseIntelligenceHub):
             height=500,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -1016,6 +1022,7 @@ def render_roi_attribution_executive(hub: EnterpriseIntelligenceHub):
             height=400,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -1044,6 +1051,7 @@ def render_roi_attribution_executive(hub: EnterpriseIntelligenceHub):
         fig.add_trace(go.Bar(x=months, y=roi_percentage, name="ROI %", marker_color="#3498db"), row=2, col=1)
 
         fig.update_layout(height=500, showlegend=True)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -1163,6 +1171,7 @@ def render_mobile_command_center(hub: EnterpriseIntelligenceHub):
 
     fig.update_layout(title="30-Day Revenue Trend", height=300, margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 

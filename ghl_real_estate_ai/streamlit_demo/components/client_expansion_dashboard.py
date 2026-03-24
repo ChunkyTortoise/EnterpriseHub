@@ -18,6 +18,7 @@ from ghl_real_estate_ai.services.client_expansion_intelligence import (
     get_expansion_intelligence,
 )
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_client_expansion_dashboard():
@@ -153,6 +154,7 @@ def render_overview_tab(framework: dict, tier_filter: list):
             title="Client Count by Tier",
             color_discrete_sequence=px.colors.qualitative.Set3,
         )
+        fig_dist = style_obsidian_chart(fig_dist)
         st.plotly_chart(fig_dist, use_container_width=True)
 
     with col2:
@@ -165,6 +167,7 @@ def render_overview_tab(framework: dict, tier_filter: list):
             color="Success Rate (%)",
             color_continuous_scale="RdYlGn",
         )
+        fig_revenue = style_obsidian_chart(fig_revenue)
         st.plotly_chart(fig_revenue, use_container_width=True)
 
 
@@ -255,11 +258,13 @@ def render_opportunities_tab(framework: dict, tier_filter: list, readiness_filte
             title="Opportunities by Readiness Level",
             labels={"x": "Readiness Level", "y": "Count"},
         )
+        fig_readiness = style_obsidian_chart(fig_readiness)
         st.plotly_chart(fig_readiness, use_container_width=True)
 
     with col2:
         tier_revenue = df_opps.groupby("Tier")["Expansion $"].sum().reset_index()
         fig_tier_rev = px.pie(tier_revenue, values="Expansion $", names="Tier", title="Revenue Distribution by Tier")
+        fig_tier_rev = style_obsidian_chart(fig_tier_rev)
         st.plotly_chart(fig_tier_rev, use_container_width=True)
 
 
@@ -337,6 +342,7 @@ def render_revenue_projections_tab(framework: dict):
         height=400,
     )
 
+    fig_timeline = style_obsidian_chart(fig_timeline)
     st.plotly_chart(fig_timeline, use_container_width=True)
 
     # Display detailed table
@@ -368,12 +374,13 @@ def render_revenue_projections_tab(framework: dict):
 
     fig_mrr = px.line(df_mrr, x="Milestone", y="MRR", title="MRR Growth Trajectory", markers=True, text="MRR")
 
-    fig_mrr.update_traces(texttemplate="$%{text:,.0f}", textposition="top center")
+    fig_mrr.update_traces(text, textposition="top center")
 
     fig_mrr.add_hline(y=target_mrr, line_dash="dash", line_color="green", annotation_text="Target MRR")
 
     fig_mrr.update_layout(height=400)
 
+    fig_mrr = style_obsidian_chart(fig_mrr)
     st.plotly_chart(fig_mrr, use_container_width=True)
 
 

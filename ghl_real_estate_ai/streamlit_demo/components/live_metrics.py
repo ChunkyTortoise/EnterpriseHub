@@ -22,6 +22,7 @@ import streamlit as st
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 logger = get_logger(__name__)
 
@@ -169,6 +170,7 @@ class LiveMetricsManager:
             hovermode="x unified",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True, key="lead_trends_chart")
 
     def _render_response_times_chart(self):
@@ -210,6 +212,7 @@ class LiveMetricsManager:
             showlegend=False,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True, key="response_times_chart")
 
     def _render_commission_pipeline_chart(self):
@@ -244,6 +247,7 @@ class LiveMetricsManager:
             height=400,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True, key="commission_pipeline_chart")
 
     def _get_chart_data(self, chart_type: str, default_data: Dict) -> Dict:
