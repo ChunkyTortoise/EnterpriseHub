@@ -815,8 +815,10 @@ if os.getenv("ENVIRONMENT") == "production":
 # Multi-tier compression with intelligent sizing
 app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
 
-# Performance metrics tracking
-performance_stats = {"total_requests": 0, "total_response_time": 0, "cache_hits": 0, "compression_saved": 0}
+# DEPRECATED: performance_stats is redundant with Prometheus metrics.
+# Kept as no-op dict to avoid modifying 10+ references in the middleware.
+# Will be removed when the middleware is refactored.
+performance_stats: dict = {"total_requests": 0, "total_response_time": 0.0, "cache_hits": 0, "compression_saved": 0}
 
 # Prometheus metrics — use canonical singleton from observability module
 def _get_prometheus_exporter():

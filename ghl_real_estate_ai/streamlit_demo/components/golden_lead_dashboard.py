@@ -738,7 +738,6 @@ def render_signals_tab(behavioral_data: Dict):
             colorscale="RdYlBu",
             reversescale=True,
             text=np.round(correlation_matrix, 2),
-            text,
             textfont={"size": 10},
             colorbar=dict(title="Correlation"),
         )

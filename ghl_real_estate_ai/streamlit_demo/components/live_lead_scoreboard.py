@@ -220,7 +220,6 @@ class LiveLeadScoreboard:
     def _generate_score_history(self, lead: Dict[str, Any]) -> List[int]:
         """Generate realistic score history for visualization"""
         import random
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         current_score = lead["score"]
         history = []

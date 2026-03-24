@@ -270,7 +270,6 @@ def generate_property_matches(lead_context: Dict, elite_mode: bool = False) -> L
     """
     try:
         from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         pm = PropertyMatcher()
         pm.set_strategy("ai" if elite_mode else "basic")

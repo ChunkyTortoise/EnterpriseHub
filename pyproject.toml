@@ -109,11 +109,11 @@ ignore_errors = true
 
 [[tool.mypy.overrides]]
 # Wave 1a: clean modules — zero errors, full checking
+# Note: security_framework intentionally in Wave 1b only (needs SDK noise suppression)
 module = [
     "ghl_real_estate_ai.api.routes.billing",
     "ghl_real_estate_ai.api.routes.webhook",
     "ghl_real_estate_ai.api.middleware.jwt_auth",
-    "ghl_real_estate_ai.services.security_framework",
     "ghl_real_estate_ai.utils.sql_safety",
 ]
 ignore_errors = false

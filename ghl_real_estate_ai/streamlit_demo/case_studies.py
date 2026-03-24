@@ -291,7 +291,7 @@ def create_metric_chart(metrics: list, title: str):
         title=title,
         xaxis_title="",
         yaxis_title="",
-        height=400
+        height=400,
         showlegend=False,
     )
 

@@ -105,7 +105,7 @@ with col_left:
         marker_color="#22c55e",
     ))
     fig_cost.update_layout(
-        barmode="stack"
+        barmode="stack",
         height=400,
         margin=dict(l=40, r=20, t=20, b=40),
         legend=dict(orientation="h", y=-0.15),

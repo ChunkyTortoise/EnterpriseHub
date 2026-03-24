@@ -202,7 +202,6 @@ class UltraPremiumDashboard:
     def _generate_client_portfolio(self) -> pd.DataFrame:
         """Generate UHNW client portfolio data"""
         import random
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         clients = []
         wealth_tiers = list(self.config.wealth_tiers.keys())

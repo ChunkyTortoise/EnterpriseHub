@@ -952,7 +952,6 @@ class EnterpriseTenantDashboard:
                 y=tenant_names,
                 colorscale="RdYlGn",
                 text=[[f"{val:.1f}" for val in row] for row in performance_matrix],
-                text,
                 textfont={"size": 10},
             )
         )

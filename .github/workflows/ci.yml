@@ -108,7 +108,7 @@ jobs:
         GHL_API_KEY: test-ghl-key-for-ci-only
         GHL_LOCATION_ID: test-location-id-for-ci-only
       run: |
-        pytest tests/unit/ --override-ini="addopts=" --cov=ghl_real_estate_ai --cov-append --cov-report=xml --cov-report=term-missing --cov-fail-under=0 --tb=short -q
+        pytest tests/unit/ --override-ini="addopts=" --cov=ghl_real_estate_ai --cov-append --cov-report=xml --cov-report=term-missing --cov-fail-under=50 --tb=short -q
 
     - name: Run agent tests (tests/agents/)
       env:
@@ -225,7 +225,8 @@ jobs:
         echo "No unprotected f-string SQL found."
 
     - name: Dependency vulnerability scan
-      run: pip-audit -r requirements.txt --ignore-vuln PYSEC-2024-162 || true
+      # PYSEC-2024-162: assessed 2026-03-24, low risk for this codebase (aiohttp URL parsing edge case)
+      run: pip-audit -r requirements.txt --ignore-vuln PYSEC-2024-162
 
   type-check:
     name: Type Checking
