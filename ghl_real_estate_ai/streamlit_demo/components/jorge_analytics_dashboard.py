@@ -220,7 +220,6 @@ class JorgeAnalyticsAPIClient:
     async def get_funnel_analysis(self) -> Dict[str, Any]:
         """Get detailed conversion funnel analysis."""
         import random
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         return {
             "current_period": {

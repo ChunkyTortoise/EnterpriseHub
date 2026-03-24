@@ -97,7 +97,7 @@ with col_left:
         marker_color="#ef4444",
     ))
     fig_latency.update_layout(
-        barmode="overlay"
+        barmode="overlay",
         height=400,
         margin=dict(l=140, r=20, t=20, b=40),
         xaxis_title="Latency (ms)",

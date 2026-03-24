@@ -167,7 +167,6 @@ def render_lead_intelligence_with_shap_integration(selected_lead_name: str, lead
             # Performance chart
             if ml_metrics["total_analyses"] > 0:
                 import plotly.graph_objects as go
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
                 fig = go.Figure(
                     data=[

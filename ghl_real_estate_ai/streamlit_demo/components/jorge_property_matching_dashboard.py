@@ -255,7 +255,6 @@ class JorgePropertyMatchingAPIClient:
     async def get_match_performance_analytics(self) -> Dict[str, Any]:
         """Get matching algorithm performance analytics."""
         import random
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         # Generate historical performance data
         dates = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(30, 0, -1)]

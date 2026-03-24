@@ -17,7 +17,7 @@ def render_sparkline(data, color="#6366F1"):
         yaxis=dict(visible=False),
         margin=dict(l=0, r=0, t=0, b=0),
         height=30,
-        width=100
+        width=100,
         showlegend=False,
     )
     return fig

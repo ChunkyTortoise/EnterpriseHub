@@ -671,7 +671,6 @@ class ConversationAnalyticsDashboard:
                 y=days,
                 colorscale="RdYlGn",
                 text=[[f"{val:.1%}" for val in row] for row in heatmap_data],
-                text,
                 textfont={"size": 8},
                 colorbar=dict(title="Conversion Rate"),
             )

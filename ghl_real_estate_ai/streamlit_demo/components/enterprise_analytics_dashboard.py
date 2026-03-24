@@ -236,7 +236,6 @@ def load_real_time_metrics():
         return run_async(engines["revenue_attribution"].get_real_time_metrics())
     except Exception as e:
         import logging
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         logging.getLogger(__name__).error(f"Error loading real-time metrics: {e}")
         return {}

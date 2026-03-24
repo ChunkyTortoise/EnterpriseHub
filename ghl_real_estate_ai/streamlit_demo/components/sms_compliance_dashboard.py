@@ -485,7 +485,6 @@ def render_sms_compliance_dashboard():
     # Auto-refresh functionality
     if auto_refresh:
         import time
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         placeholder = st.empty()
         time.sleep(30)

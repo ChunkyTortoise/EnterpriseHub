@@ -318,7 +318,6 @@ class RedisCustomerIntelligenceDashboard:
                     st.success("Cache cleared, data will refresh")
                 except Exception as e:
                     import logging
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
                     logging.getLogger(__name__).error(f"Error clearing cache: {e}")
                     st.info("Data refresh initiated")

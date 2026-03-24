@@ -8,6 +8,7 @@ churn, analytics, ML, and demo modules. These will be migrated incrementally.
 """
 
 import logging
+import warnings
 from typing import Any, Dict
 
 from ghl_real_estate_ai.models.ghl_webhook_types import GHLAPIResponse
@@ -21,6 +22,11 @@ class GHLService:
     """Deprecated thin wrapper around GHLClient. Use GHLClient directly."""
 
     def __init__(self, ghl_client: GHLClient = None):
+        warnings.warn(
+            "GHLService is deprecated. Use GHLClient or EnhancedGHLClient directly.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.client = ghl_client or GHLClient()
 
     async def trigger_workflow(

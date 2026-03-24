@@ -742,7 +742,6 @@ class TransactionProgressDashboard:
                 time_ago = self._time_ago(event_time)
             except Exception as e:
                 import logging
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
                 logging.getLogger(__name__).debug(f"Activity feed timestamp parsing error: {e}")
                 time_ago = "recently"
