@@ -105,11 +105,11 @@ EnterpriseHub delivers quantified outcomes based on production deployment (Case 
 
 ### Proof Artifacts
 
+- **Case Study**: [CASE_STUDY.md](CASE_STUDY.md) — Architecture decisions, production metrics, and lessons learned
 - **Live Demo**: [ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app) — Interactive BI dashboard (circuit breaker, cache perf, handoff Sankey)
 - **API Docs**: [/docs](https://enterprisehub-api.onrender.com/docs) — Swagger UI with zero-auth demo endpoints (`/demo/leads`, `/demo/pipeline`, `/demo/health`)
-- **Source Code**: [GitHub](https://github.com/ChunkyTortoise/EnterpriseHub) — 181 CI tests, 1,553+ integration tests, CI/CD, comprehensive docs
+- **Source Code**: [GitHub](https://github.com/ChunkyTortoise/EnterpriseHub) — 6,300+ tests, CI/CD with security scanning, comprehensive docs
 - **Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md) — Monorepo layout, test organization, AI orchestration diagrams
-- **System Diagram**: [assets/diagrams/arete_architecture.svg](assets/diagrams/arete_architecture.svg) — Visual architecture
 
 ### Screenshots
 
@@ -349,7 +349,7 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 1,553+ integration tests
+├── tests/                        # 6,300+ tests (unit + integration + security)
 ├── app.py                        # FastAPI entry point
 ├── admin_dashboard.py            # Streamlit BI dashboard
 └── docker-compose.yml            # Container orchestration
@@ -428,14 +428,15 @@ See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Security
 
-The CI pipeline runs a 7-job security scan on every push:
-- **Parameterized SQL** — all database queries use SQLAlchemy ORM, no raw string interpolation
-- **JWT authentication** — 1-hour expiry, RS256-signed tokens, validated on every protected route
-- **Webhook signature verification** — HMAC-SHA256 validation on all GHL webhook payloads
+CI runs security scanning (bandit, pip-audit, SQL injection grep) on every push.
+
+- **Parameterized SQL** — all queries use parameterized `text()` or asyncpg `$1` bindings. DDL identifiers validated and double-quoted via `utils.sql_safety.quote_identifier()`. CI gate rejects any unprotected f-string SQL patterns.
+- **Webhook authentication** — Router-level `require_ghl_webhook_signature` dependency enforces Ed25519 or HMAC-SHA256 signature verification on all GHL webhook routes. Replay protection via `X-GHL-Timestamp` with 5-minute window.
+- **JWT authentication** — 1-hour expiry tokens validated on every protected route
 - **PII encryption** — contact data encrypted at rest using Fernet symmetric encryption
-- **Input validation** — Pydantic models enforce strict types on all API boundaries
-- **Rate limiting** — 100 req/min per IP, enforced at the FastAPI middleware layer
-- **Compliance checks** — FHA/Fair Housing and CAN-SPAM compliance enforced in bot response pipeline
+- **Input validation** — Pydantic V2 models enforce strict types on all API boundaries
+- **Rate limiting** — Redis-backed sliding window: 100 req/min per IP, 200 burst
+- **Compliance pipeline** — 7-stage response processing enforces FHA, RESPA, TCPA, CCPA, and SB-243
 
 See [`.github/workflows/security-scan.yml`](.github/workflows/security-scan.yml) for the full pipeline.
 
