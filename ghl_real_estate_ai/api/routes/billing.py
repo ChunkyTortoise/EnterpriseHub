@@ -8,6 +8,11 @@ Provides REST endpoints for:
 - Billing history and analytics
 
 Supports $240K ARR foundation with usage-based billing integration.
+
+Decomposition status (strangler fig migration):
+- billing_pkg/_helpers.py: Dependencies, retry logic, event tracking (extracted)
+- billing_pkg/__init__.py: Package API
+- This file: All billing routes (to be split into subscriptions/usage/payments/analytics)
 """
 
 import asyncio
