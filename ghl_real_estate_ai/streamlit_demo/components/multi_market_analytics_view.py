@@ -447,7 +447,7 @@ def render_performance_trends(time_series_data: pd.DataFrame):
             labels={"Conversion_Rate": "Conversion Rate (%)"},
         )
 
-        fig.update_layout(,
+        fig.update_layout(
             font_family="Inter",
             yaxis=dict(tickformat=".1%"),
         )
@@ -466,7 +466,7 @@ def render_performance_trends(time_series_data: pd.DataFrame):
             labels={"Revenue": "Revenue ($)"},
         )
 
-        fig.update_layout(,
+        fig.update_layout(
             font_family="Inter",
             yaxis=dict(tickformat="$.0f"),
         )
@@ -490,7 +490,7 @@ def render_performance_trends(time_series_data: pd.DataFrame):
         labels={"Lead_Volume": "Lead Volume", "Conversion_Rate": "Conversion Rate", "Revenue": "Revenue ($)"},
     )
 
-    fig.update_layout(,
+    fig.update_layout(
         font_family="Inter",
         yaxis=dict(tickformat=".1%"),
     )
@@ -601,7 +601,7 @@ def render_cross_market_attribution(flows: List[CrossMarketFlow], markets: List[
             color_continuous_scale="Blues",
         )
 
-        fig.update_layout(,
+        fig.update_layout(
             font_family="Inter",
             height=300,
         )
@@ -753,7 +753,7 @@ def render_competitive_positioning(markets: List[MarketPerformance]):
         fig.add_annotation(x=0.1, y=0.2, text="Question Marks", showarrow=False)
         fig.add_annotation(x=0.1, y=0.05, text="Dogs", showarrow=False)
 
-        fig.update_layout(,
+        fig.update_layout(
             font_family="Inter",
             xaxis=dict(tickformat=".1%"),
             yaxis=dict(tickformat=".1%"),

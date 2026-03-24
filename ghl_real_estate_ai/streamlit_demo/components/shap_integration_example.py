@@ -106,7 +106,7 @@ def render_lead_intelligence_with_shap_integration(selected_lead_name: str, lead
                     features_df, x="Importance", y="Feature", orientation="h", title="Top 5 Feature Importance"
                 )
 
-                fig.update_layout(,
+                fig.update_layout(
                     font={"color": "#E5E7EB"},
                 )
 

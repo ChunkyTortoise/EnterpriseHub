@@ -78,6 +78,12 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "slow: Slow tests - tests that take >10 seconds")
     config.addinivalue_line("markers", "critical: Critical path tests - business-critical functionality")
     config.addinivalue_line("markers", "smoke: Smoke tests - basic functionality verification")
+    config.addinivalue_line("markers", "compliance: Fair Housing and regulatory compliance tests")
+    config.addinivalue_line("markers", "e2e: End-to-end tests - full workflow tests")
+    config.addinivalue_line("markers", "load: Load testing - concurrent request handling")
+    config.addinivalue_line("markers", "stress: Stress testing - capacity and breaking point analysis")
+    config.addinivalue_line("markers", "endurance: Endurance testing - sustained load over time")
+    config.addinivalue_line("markers", "capacity: Capacity testing - maximum throughput analysis")
 
     # Configure coverage for Service 6
     config.option.cov_source = ["ghl_real_estate_ai/services"]

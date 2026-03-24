@@ -25,9 +25,9 @@ from ghl_real_estate_ai.services.enterprise_tenant_service import get_enterprise
 
 # Import our strategic services
 from ghl_real_estate_ai.services.strategic_claude_consultant import (
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
     get_strategic_claude_consultant,
 )
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # ============================================================================
 # Executive Intelligence Data Models

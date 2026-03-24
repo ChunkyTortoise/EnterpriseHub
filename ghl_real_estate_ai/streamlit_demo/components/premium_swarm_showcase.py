@@ -19,6 +19,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+
 # Import existing swarm services
 from ghl_real_estate_ai.agents.lead_intelligence_swarm import LeadIntelligenceSwarm
 
@@ -291,7 +293,6 @@ def run_swarm_analysis_demo(showcase: PremiumSwarmShowcase, selected_lead: str):
 
         # Simulate processing time
         import time
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         time.sleep(0.3)
 
@@ -520,7 +521,6 @@ def render_agent_consensus_visualization(showcase: PremiumSwarmShowcase):
                 y=agents,
                 colorscale="RdYlGn",
                 text=np.round(agreement_matrix, 2),
-                text,
                 textfont={"size": 10},
             )
         )

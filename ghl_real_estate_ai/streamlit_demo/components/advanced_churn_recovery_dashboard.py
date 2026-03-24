@@ -512,7 +512,7 @@ def render_campaign_performance(campaign_data: pd.DataFrame):
         )
 
         fig.update_layout(
-            title="Conversion Rates by Channel (%)"
+            title="Conversion Rates by Channel (%)",
             xaxis_tickangle=45,
             yaxis_title="Rate (%)",
         )
