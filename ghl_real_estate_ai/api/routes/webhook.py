@@ -65,7 +65,10 @@ from ghl_real_estate_ai.services.jorge.response_pipeline.models import Processin
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer
 from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, LeadSourceTracker
 from ghl_real_estate_ai.services.mls_client import MLSClient
-from ghl_real_estate_ai.services.security_framework import verify_webhook
+from ghl_real_estate_ai.services.security_framework import (
+    require_ghl_webhook_signature,
+    verify_webhook,
+)
 from ghl_real_estate_ai.services.subscription_manager import SubscriptionManager
 from ghl_real_estate_ai.services.tenant_service import TenantService
 
@@ -104,7 +107,11 @@ def _signals_to_handoff_profile(contact_id: str, signals: dict) -> LeadIntentPro
 
 
 SMS_MAX_CHARS = 320
-router = APIRouter(prefix="/ghl", tags=["ghl"])
+router = APIRouter(
+    prefix="/ghl",
+    tags=["ghl"],
+    dependencies=[Depends(require_ghl_webhook_signature)],
+)
 
 # Graceful fallback when Claude API is unavailable (timeout / circuit breaker)
 LLM_FALLBACK_MSG = (
@@ -474,7 +481,6 @@ async def _get_tenant_ghl_client(
 
 
 @router.post("/tag-webhook", response_model=GHLWebhookResponse)
-@verify_webhook("ghl")
 async def handle_ghl_tag_webhook(
     request: Request,
     event: GHLTagWebhookEvent,
@@ -572,7 +578,6 @@ async def handle_ghl_tag_webhook(
 
 
 @router.post("/webhook", response_model=GHLWebhookResponse)
-@verify_webhook("ghl")
 async def handle_ghl_webhook(
     request: Request,
     event: GHLWebhookEvent,
@@ -2360,7 +2365,6 @@ class InitiateQualificationRequest(BaseModel):
 
 
 @router.post("/initiate-qualification")
-@verify_webhook("ghl")
 async def initiate_qualification(
     request: Request,
     body: InitiateQualificationRequest,

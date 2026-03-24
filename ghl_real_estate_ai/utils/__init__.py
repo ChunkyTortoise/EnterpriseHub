@@ -3,5 +3,18 @@
 from ghl_real_estate_ai.utils.datetime_utils import parse_iso8601
 from ghl_real_estate_ai.utils.pii_redactor import PIIRedactor
 from ghl_real_estate_ai.utils.score_utils import clamp_score, normalize_score
+from ghl_real_estate_ai.utils.sql_safety import (
+    quote_identifier,
+    safe_pragma,
+    validate_identifier,
+)
 
-__all__ = ["PIIRedactor", "clamp_score", "normalize_score", "parse_iso8601"]
+__all__ = [
+    "PIIRedactor",
+    "clamp_score",
+    "normalize_score",
+    "parse_iso8601",
+    "quote_identifier",
+    "safe_pragma",
+    "validate_identifier",
+]

@@ -471,9 +471,10 @@ class DatabaseOptimizer:
         """Optimize SQLite configuration settings."""
         try:
             # Set cache size for better performance
-            # Cast to int explicitly — PRAGMA values cannot be parameterized in SQLite
-            cache_pages = int(self.cache_size_pages)
-            await db.execute(f"PRAGMA cache_size = {cache_pages}")
+            # PRAGMA values cannot be parameterized in SQLite; safe_pragma validates both name and value
+            from ghl_real_estate_ai.utils.sql_safety import safe_pragma
+
+            await db.execute(safe_pragma("cache_size", int(self.cache_size_pages)))
 
             # Enable Write-Ahead Logging for better concurrency
             await db.execute("PRAGMA journal_mode = WAL")
@@ -500,13 +501,16 @@ class DatabaseOptimizer:
             """) as cursor:
                 tables = await cursor.fetchall()
 
+            from ghl_real_estate_ai.utils.sql_safety import quote_identifier
+
             for table in tables:
                 table_name = table[0]
-                # Validate identifier — table_name comes from sqlite_master, not user input,
-                # but validate defensively before use in DDL
-                if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", table_name):
+                # table_name comes from sqlite_master, but validate defensively
+                try:
+                    quoted = quote_identifier(table_name, dialect="sqlite")
+                except ValueError:
                     continue
-                await db.execute(f"ANALYZE {table_name}")
+                await db.execute(f"ANALYZE {quoted}")
 
             results["operations"].append(f"Analyzed {len(tables)} tables")
             logger.debug(f"Analyzed {len(tables)} database tables")

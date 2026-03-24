@@ -45,9 +45,9 @@ class SimpleDatabaseService:
     async def get_dashboard_kpis(self, location_id: str = "default", timeframe: str = "24h") -> Dict[str, Any]:
         """Get dashboard KPIs from OLAP data"""
         try:
-            # Convert timeframe to hours
+            # Convert timeframe to hours — int() cast prevents injection via timeframe
             hours_map = {"24h": 24, "7d": 168, "30d": 720, "90d": 2160, "1y": 8760}
-            hours = hours_map.get(timeframe, 24)
+            hours = int(hours_map.get(timeframe, 24))
 
             async with self.get_connection() as conn:
                 # Get lead interaction metrics

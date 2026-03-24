@@ -742,6 +742,40 @@ def verify_webhook(provider: str):
     return decorator
 
 
+async def require_ghl_webhook_signature(request: Request) -> None:
+    """FastAPI dependency for GHL webhook signature verification.
+
+    Use as a router-level dependency to enforce signature verification
+    on all POST/PUT/PATCH/DELETE routes in a router. GET requests
+    (e.g., health checks) are excluded since they carry no payload
+    to verify.
+
+    Example:
+        router = APIRouter(
+            prefix="/ghl",
+            dependencies=[Depends(require_ghl_webhook_signature)],
+        )
+    """
+    # Skip signature verification for safe HTTP methods (health checks, etc.)
+    if request.method in ("GET", "HEAD", "OPTIONS"):
+        return
+
+    security = SecurityFramework()
+    try:
+        if not await security.verify_webhook_signature(request, "ghl"):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid GHL webhook signature",
+            )
+        await security._audit_log(
+            event="webhook_verified",
+            details={"provider": "ghl"},
+            request=request,
+        )
+    finally:
+        await security.close_redis()
+
+
 # ============================================================================
 # Security Middleware Classes
 # ============================================================================
