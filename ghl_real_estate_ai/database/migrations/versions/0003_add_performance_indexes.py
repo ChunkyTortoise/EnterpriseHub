@@ -30,16 +30,15 @@ def upgrade() -> None:
         ON transaction_celebrations (transaction_id, milestone_type);
     """)
 
+    # Note: milestone_timeline_view is a VIEW, not a table — cannot index a view.
+    # Index the underlying milestone_timeline table instead.
     op.execute("""
     CREATE INDEX IF NOT EXISTS idx_milestone_timeline_tx_order
-        ON milestone_timeline_view (transaction_id, order_sequence);
+        ON milestone_timeline (transaction_id, order_sequence);
     """)
 
-    # LLM cost analytics (cost_tracker.py, LLM Cost Analytics dashboard)
-    op.execute("""
-    CREATE INDEX IF NOT EXISTS idx_llm_cost_log_bot_type
-        ON llm_cost_log (bot_type);
-    """)
+    # Note: idx_llm_cost_log_bot_type removed — already covered by
+    # migration 0002's composite index on (created_at, bot_type).
 
     op.execute("""
     CREATE INDEX IF NOT EXISTS idx_llm_cost_log_model_created
@@ -62,7 +61,6 @@ def downgrade() -> None:
     op.execute("DROP INDEX IF EXISTS idx_real_estate_transactions_transaction_id;")
     op.execute("DROP INDEX IF EXISTS idx_transaction_celebrations_tx_type;")
     op.execute("DROP INDEX IF EXISTS idx_milestone_timeline_tx_order;")
-    op.execute("DROP INDEX IF EXISTS idx_llm_cost_log_bot_type;")
     op.execute("DROP INDEX IF EXISTS idx_llm_cost_log_model_created;")
     op.execute("DROP INDEX IF EXISTS idx_llm_cost_log_conversation;")
     op.execute("DROP INDEX IF EXISTS idx_communication_logs_contact_created;")
