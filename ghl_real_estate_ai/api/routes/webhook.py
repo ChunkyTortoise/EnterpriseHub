@@ -12,6 +12,12 @@ Flow:
 6. Calculate lead score
 7. Prepare GHL actions (tags, custom fields)
 8. Send response back to GHL
+
+Decomposition status (strangler fig migration):
+- webhooks/_helpers.py: Dependency injection factories + safe wrappers (extracted)
+- webhooks/qualification.py: /initiate-qualification + /health (extracted)
+- webhooks/ghl.py: Re-exports this router during migration
+- This file: /webhook + /tag-webhook handlers (to be decomposed next)
 """
 
 import os
