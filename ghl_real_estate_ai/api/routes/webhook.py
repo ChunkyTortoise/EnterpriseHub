@@ -124,72 +124,23 @@ LLM_FALLBACK_MSG = (
     "I'm having a brief connection issue — I'll follow up with you shortly. You can also reach Jorge directly."
 )
 
-# FastAPI dependency injection - lazy singletons via @lru_cache (no import-time blocking)
-
-
-@lru_cache(maxsize=1)
-def _get_conversation_manager() -> ConversationManager:
-    return ConversationManager()
-
-
-@lru_cache(maxsize=1)
-def _get_ghl_client_default() -> GHLClient:
-    return GHLClient()
-
-
-@lru_cache(maxsize=1)
-def _get_lead_scorer() -> LeadScorer:
-    return LeadScorer()
-
-
-@lru_cache(maxsize=1)
-def _get_tenant_service() -> TenantService:
-    return TenantService()
-
-
-@lru_cache(maxsize=1)
-def _get_analytics_service() -> AnalyticsService:
-    return AnalyticsService()
-
-
-@lru_cache(maxsize=1)
-def _get_pricing_optimizer() -> DynamicPricingOptimizer:
-    return DynamicPricingOptimizer()
-
-
-@lru_cache(maxsize=1)
-def _get_calendar_scheduler() -> CalendarScheduler:
-    return CalendarScheduler()
-
-
-@lru_cache(maxsize=1)
-def _get_lead_source_tracker() -> LeadSourceTracker:
-    return LeadSourceTracker()
-
-
-@lru_cache(maxsize=1)
-def _get_attribution_analytics() -> AttributionAnalytics:
-    return AttributionAnalytics()
-
-
-@lru_cache(maxsize=1)
-def _get_subscription_manager() -> SubscriptionManager:
-    return SubscriptionManager()
-
-
-@lru_cache(maxsize=1)
-def _get_handoff_service() -> JorgeHandoffService:
-    return JorgeHandoffService(analytics_service=_get_analytics_service())
-
-
-@lru_cache(maxsize=1)
-def _get_hitl_gate() -> HITLGate:
-    return HITLGate()
-
-
-@lru_cache(maxsize=1)
-def _get_mls_client() -> MLSClient:
-    return MLSClient()
+# FastAPI dependency injection — canonical factories live in webhooks/_helpers.py
+# to avoid split-singleton instances during the strangler fig migration.
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
+    get_analytics_service as _get_analytics_service,
+    get_attribution_analytics as _get_attribution_analytics,
+    get_calendar_scheduler as _get_calendar_scheduler,
+    get_conversation_manager as _get_conversation_manager,
+    get_ghl_client_default as _get_ghl_client_default,
+    get_handoff_service as _get_handoff_service,
+    get_hitl_gate as _get_hitl_gate,
+    get_lead_scorer as _get_lead_scorer,
+    get_lead_source_tracker as _get_lead_source_tracker,
+    get_mls_client as _get_mls_client,
+    get_pricing_optimizer as _get_pricing_optimizer,
+    get_subscription_manager as _get_subscription_manager,
+    get_tenant_service as _get_tenant_service,
+)
 
 
 # Safe wrappers for background tasks to prevent silent delivery failures

@@ -49,5 +49,5 @@ class GHLService:
         return {"conversations": conversations}
 
     async def health_check(self) -> bool:
-        response = self.client.check_health()
+        response = await self.client.check_health()
         return response.status_code == 200

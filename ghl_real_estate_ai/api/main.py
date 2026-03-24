@@ -818,19 +818,13 @@ app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
 # Performance metrics tracking
 performance_stats = {"total_requests": 0, "total_response_time": 0, "cache_hits": 0, "compression_saved": 0}
 
-# Prometheus metrics singleton (lazy init to avoid import-time side effects)
-_prometheus_exporter = None
-
-
+# Prometheus metrics — use canonical singleton from observability module
 def _get_prometheus_exporter():
-    global _prometheus_exporter
-    if _prometheus_exporter is None:
-        try:
-            from ghl_real_estate_ai.observability.prometheus_exporter import JorgePrometheusExporter
-            _prometheus_exporter = JorgePrometheusExporter()
-        except Exception:
-            _prometheus_exporter = None
-    return _prometheus_exporter
+    try:
+        from ghl_real_estate_ai.observability.prometheus_exporter import get_prometheus_exporter
+        return get_prometheus_exporter()
+    except Exception:
+        return None
 
 
 @app.middleware("http")
@@ -865,8 +859,10 @@ async def enhanced_performance_middleware(request: Request, call_next):
     # Prometheus HTTP request metrics
     exporter = _get_prometheus_exporter()
     if exporter and not path.startswith("/metrics") and not path.startswith("/prometheus"):
-        # Normalize path to avoid high-cardinality labels
-        endpoint = path.split("?")[0]
+        # Use the FastAPI route template (e.g., "/{location_id}/leads") instead of the
+        # resolved path to prevent label cardinality explosion with unique IDs.
+        route = request.scope.get("route")
+        endpoint = route.path if route else path.split("?")[0]
         exporter.observe_http_request(method, endpoint, response.status_code, process_time)
 
     # ADVANCED CACHING STRATEGY
