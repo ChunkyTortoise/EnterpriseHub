@@ -20,6 +20,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -382,8 +383,6 @@ def create_probability_distribution_chart(deals: List[DealProbability]) -> go.Fi
         showlegend=False,
         title_text="Deal Probability Analytics Dashboard",
         title_x=0.5,
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
     )
 
     return fig
@@ -528,11 +527,13 @@ def main():
     # Jorge Performance Dashboard
     st.subheader("🔥 Jorge Methodology Performance")
     jorge_gauge = create_jorge_performance_gauge(deals)
+    jorge_gauge = style_obsidian_chart(jorge_gauge)
     st.plotly_chart(jorge_gauge, use_container_width=True)
 
     # Main analytics dashboard
     st.subheader("📊 Deal Analytics Dashboard")
     analytics_chart = create_probability_distribution_chart(deals)
+    analytics_chart = style_obsidian_chart(analytics_chart)
     st.plotly_chart(analytics_chart, use_container_width=True)
 
     # Detailed analysis

@@ -13,6 +13,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Import services
 try:
@@ -166,6 +167,7 @@ def render_commission_analysis_results(current_rate, new_rate, period, confidenc
 
         fig.update_layout(title="Revenue Waterfall Analysis", showlegend=False, height=400)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Risk analysis
@@ -313,6 +315,7 @@ def render_qualification_analysis_results(current_threshold, new_threshold, curr
 
     fig.update_layout(title="Lead Funnel: Current vs Proposed Threshold", height=400)
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     # Quality vs Quantity Analysis
@@ -355,6 +358,7 @@ def render_qualification_analysis_results(current_threshold, new_threshold, curr
             name="Proposed",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -574,6 +578,7 @@ def render_growth_analysis_results(scenario_name, scenario_info, market_confiden
         height=400,
     )
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     # Risk and opportunity analysis
@@ -692,6 +697,7 @@ def render_portfolio_analysis_panel():
             values=list(revenue_sources.values()), names=list(revenue_sources.keys()), title="Revenue by Source"
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -704,6 +710,7 @@ def render_portfolio_analysis_panel():
 
         fig.update_layout(xaxis_title="Property Type", yaxis_title="Number of Deals")
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     # Performance trends
@@ -728,11 +735,13 @@ def render_portfolio_analysis_panel():
     with col1:
         fig = px.line(trend_data, x="Month", y="Revenue", title="Monthly Revenue Trend")
         fig.update_layout(yaxis_title="Revenue ($)")
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
         fig = px.line(trend_data, x="Month", y="Deals", title="Monthly Deal Volume Trend")
         fig.update_layout(yaxis_title="Number of Deals")
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
 

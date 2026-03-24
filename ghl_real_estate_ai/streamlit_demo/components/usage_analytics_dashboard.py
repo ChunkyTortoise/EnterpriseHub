@@ -19,6 +19,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Note: Usage Analytics Engine would be imported here when available
 # from ghl_real_estate_ai.services.usage_analytics_engine import UsageAnalyticsEngine
@@ -345,6 +346,7 @@ def render_overview_tab(usage_data: Dict, behavioral_data: Dict):
             showlegend=True,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -359,6 +361,7 @@ def render_overview_tab(usage_data: Dict, behavioral_data: Dict):
 
         fig_pie.update_layout(title="User Distribution", height=350, showlegend=False)
 
+        fig_pie = style_obsidian_chart(fig_pie)
         st.plotly_chart(fig_pie, use_container_width=True)
 
     # Feature usage overview
@@ -447,6 +450,7 @@ def render_performance_tab(usage_data: Dict, trends_data: Dict):
         fig.update_traces(line_color="#2E86C1", line_width=3)
         fig.update_layout(height=300)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -463,6 +467,7 @@ def render_performance_tab(usage_data: Dict, trends_data: Dict):
         )
         fig2.update_layout(height=300, showlegend=False)
 
+        fig2 = style_obsidian_chart(fig2)
         st.plotly_chart(fig2, use_container_width=True)
 
     # Performance alerts
@@ -551,6 +556,7 @@ def render_behavior_tab(behavioral_data: Dict, usage_data: Dict):
             title="Conversion Rate by Hour", xaxis_title="Hour of Day", yaxis_title="Conversion Rate", height=300
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -574,6 +580,7 @@ def render_behavior_tab(behavioral_data: Dict, usage_data: Dict):
 
         fig_sankey.update_layout(title="User Flow Analysis", height=300)
 
+        fig_sankey = style_obsidian_chart(fig_sankey)
         st.plotly_chart(fig_sankey, use_container_width=True)
 
     # AI Performance insights
@@ -606,6 +613,7 @@ def render_behavior_tab(behavioral_data: Dict, usage_data: Dict):
         )
 
         fig_gauge.update_layout(height=250)
+        fig_gauge = style_obsidian_chart(fig_gauge)
         st.plotly_chart(fig_gauge, use_container_width=True)
 
     with col2:
@@ -703,6 +711,7 @@ def render_cost_analysis_tab(usage_data: Dict, trends_data: Dict):
 
         fig_costs.update_layout(title="Daily Cost Distribution", height=300)
 
+        fig_costs = style_obsidian_chart(fig_costs)
         st.plotly_chart(fig_costs, use_container_width=True)
 
     with col2:
@@ -726,6 +735,7 @@ def render_cost_analysis_tab(usage_data: Dict, trends_data: Dict):
 
         fig_roi.update_layout(title="7-Day ROI Trend", yaxis_title="ROI Percentage", height=300)
 
+        fig_roi = style_obsidian_chart(fig_roi)
         st.plotly_chart(fig_roi, use_container_width=True)
 
     # Cost optimization recommendations

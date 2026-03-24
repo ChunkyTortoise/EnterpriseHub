@@ -26,6 +26,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Import orchestration services
 try:
@@ -191,6 +192,7 @@ def render_overview_dashboard():
         )
 
         fig.update_layout(height=400, showlegend=True)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -277,6 +279,7 @@ def render_transactions_dashboard():
                 "Closing": "#00D4AA",
             },
         )
+        fig_progress = style_obsidian_chart(fig_progress)
         st.plotly_chart(fig_progress, use_container_width=True)
 
     with col2:
@@ -289,6 +292,7 @@ def render_transactions_dashboard():
             color=list(health_data.values()),
             color_continuous_scale="RdYlGn",
         )
+        fig_health = style_obsidian_chart(fig_health)
         st.plotly_chart(fig_health, use_container_width=True)
 
     with col3:
@@ -303,6 +307,7 @@ def render_transactions_dashboard():
             ]
         )
         fig_automation.update_layout(title="Manual vs Automated Tasks", barmode="stack")
+        fig_automation = style_obsidian_chart(fig_automation)
         st.plotly_chart(fig_automation, use_container_width=True)
 
     # Detailed transactions table
@@ -409,6 +414,7 @@ def render_documents_dashboard():
         )
 
         fig_pipeline.update_layout(title_text="Document Processing Pipeline", font_size=10)
+        fig_pipeline = style_obsidian_chart(fig_pipeline)
         st.plotly_chart(fig_pipeline, use_container_width=True)
 
     with col2:
@@ -424,6 +430,7 @@ def render_documents_dashboard():
             color_continuous_scale="viridis",
         )
         fig_types.update_layout(showlegend=False)
+        fig_types = style_obsidian_chart(fig_types)
         st.plotly_chart(fig_types, use_container_width=True)
 
     # Document requests table
@@ -513,6 +520,7 @@ def render_vendors_dashboard():
         hover_data=["property_address", "status"],
     )
     fig_calendar.update_layout(height=400)
+    fig_calendar = style_obsidian_chart(fig_calendar)
     st.plotly_chart(fig_calendar, use_container_width=True)
 
     # Vendor performance analytics
@@ -529,6 +537,7 @@ def render_vendors_dashboard():
             color_continuous_scale="RdYlGn",
             range_color=[1, 5],
         )
+        fig_ratings = style_obsidian_chart(fig_ratings)
         st.plotly_chart(fig_ratings, use_container_width=True)
 
     with col2:
@@ -537,6 +546,7 @@ def render_vendors_dashboard():
         fig_services = px.pie(
             values=list(service_dist.values()), names=list(service_dist.keys()), title="Services Distribution"
         )
+        fig_services = style_obsidian_chart(fig_services)
         st.plotly_chart(fig_services, use_container_width=True)
 
     # Vendor management actions
@@ -605,6 +615,7 @@ def render_communications_dashboard():
             color=list(channel_data.values()),
             color_continuous_scale="viridis",
         )
+        fig_channels = style_obsidian_chart(fig_channels)
         st.plotly_chart(fig_channels, use_container_width=True)
 
     with col2:
@@ -613,6 +624,7 @@ def render_communications_dashboard():
         fig_types = px.pie(
             values=list(message_types.values()), names=list(message_types.keys()), title="Message Types Distribution"
         )
+        fig_types = style_obsidian_chart(fig_types)
         st.plotly_chart(fig_types, use_container_width=True)
 
     # Recent communications feed
@@ -707,6 +719,7 @@ def render_exceptions_dashboard():
             color=list(severity_data.keys()),
             color_discrete_map={"Low": "#27AE60", "Medium": "#F39C12", "High": "#E67E22", "Critical": "#E74C3C"},
         )
+        fig_severity = style_obsidian_chart(fig_severity)
         st.plotly_chart(fig_severity, use_container_width=True)
 
     with col2:
@@ -715,6 +728,7 @@ def render_exceptions_dashboard():
         fig_resolution = px.pie(
             values=list(resolution_data.values()), names=list(resolution_data.keys()), title="Resolution Methods"
         )
+        fig_resolution = style_obsidian_chart(fig_resolution)
         st.plotly_chart(fig_resolution, use_container_width=True)
 
     # Active exceptions table

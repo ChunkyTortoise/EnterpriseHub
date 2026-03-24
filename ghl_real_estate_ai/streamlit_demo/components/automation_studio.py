@@ -14,6 +14,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def sparkline(data: list, color: str = "#6366F1", height: int = 50):
@@ -44,9 +45,7 @@ def sparkline(data: list, color: str = "#6366F1", height: int = 50):
     )
 
     fig.update_layout(
-        showlegend=False,
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
+        showlegend=False
         margin=dict(l=0, r=0, t=5, b=0),
         height=height,
         xaxis=dict(visible=False, fixedrange=True),
@@ -238,32 +237,20 @@ class AutomationStudioHub:
 
         with col1:
             st.metric("AI ROI (SAVED)", f"${saved_cost:.4f}", delta=f"{usage.get('cache_hits', 0)} hits")
-            st.plotly_chart(
-                sparkline([0, 0.5, 0.8, 1.2, saved_cost, saved_cost], color="#6366F1", height=40),
-                use_container_width=True,
-                config={"displayModeBar": False},
-            )
+            _fig1 = style_obsidian_chart(sparkline([0, 0.5, 0.8, 1.2, saved_cost, saved_cost], color="#6366F1", height=40))
+            st.plotly_chart(_fig1, use_container_width=True, config={"displayModeBar": False})
         with col2:
             st.metric("EVENTS (24H)", "1,842", delta="12%")
-            st.plotly_chart(
-                sparkline([1400, 1550, 1620, 1780, 1800, 1842], color="#8B5CF6", height=40),
-                use_container_width=True,
-                config={"displayModeBar": False},
-            )
+            _fig2 = style_obsidian_chart(sparkline([1400, 1550, 1620, 1780, 1800, 1842], color="#8B5CF6", height=40))
+            st.plotly_chart(_fig2, use_container_width=True, config={"displayModeBar": False})
         with col3:
             st.metric("AUTONOMY RATE", "94%", delta="+2%")
-            st.plotly_chart(
-                sparkline([88, 90, 91, 92, 93, 94], color="#10B981", height=40),
-                use_container_width=True,
-                config={"displayModeBar": False},
-            )
+            _fig3 = style_obsidian_chart(sparkline([88, 90, 91, 92, 93, 94], color="#10B981", height=40))
+            st.plotly_chart(_fig3, use_container_width=True, config={"displayModeBar": False})
         with col4:
             st.metric("HUMAN TIME SAVED", "156h", delta="24h")
-            st.plotly_chart(
-                sparkline([110, 125, 135, 142, 150, 156], color="#F59E0B", height=40),
-                use_container_width=True,
-                config={"displayModeBar": False},
-            )
+            _fig4 = style_obsidian_chart(sparkline([110, 125, 135, 142, 150, 156], color="#F59E0B", height=40))
+            st.plotly_chart(_fig4, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("---")
 

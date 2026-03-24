@@ -22,6 +22,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Mock data for development/demo mode
 DEMO_MODE = True
@@ -104,6 +105,7 @@ class SourceROIDashboard:
         # Conversion rate chart
         st.markdown("### Conversion Rate Comparison")
         fig_conversion = self._create_conversion_chart(top_by_conversion)
+        fig_conversion = style_obsidian_chart(fig_conversion)
         st.plotly_chart(fig_conversion, use_container_width=True)
 
     def _render_roi_analysis(self, days: int) -> None:
@@ -126,6 +128,7 @@ class SourceROIDashboard:
         st.markdown("### ROI vs Volume Analysis")
         roi_data = self._get_roi_data(days)
         fig_bubble = self._create_roi_bubble_chart(roi_data)
+        fig_bubble = style_obsidian_chart(fig_bubble)
         st.plotly_chart(fig_bubble, use_container_width=True)
 
         # Cost efficiency comparison
@@ -134,10 +137,12 @@ class SourceROIDashboard:
 
         with col1:
             fig_cost_per_lead = self._create_cost_per_lead_chart(roi_data)
+            fig_cost_per_lead = style_obsidian_chart(fig_cost_per_lead)
             st.plotly_chart(fig_cost_per_lead, use_container_width=True)
 
         with col2:
             fig_cost_per_close = self._create_cost_per_close_chart(roi_data)
+            fig_cost_per_close = style_obsidian_chart(fig_cost_per_close)
             st.plotly_chart(fig_cost_per_close, use_container_width=True)
 
     def _render_trends(self, days: int) -> None:
@@ -162,16 +167,19 @@ class SourceROIDashboard:
         with col1:
             st.markdown("### Revenue Trend")
             fig_revenue = self._create_revenue_trend_chart(selected_sources, days)
+            fig_revenue = style_obsidian_chart(fig_revenue)
             st.plotly_chart(fig_revenue, use_container_width=True)
 
         with col2:
             st.markdown("### Conversion Rate Trend")
             fig_conversion = self._create_conversion_trend_chart(selected_sources, days)
+            fig_conversion = style_obsidian_chart(fig_conversion)
             st.plotly_chart(fig_conversion, use_container_width=True)
 
         # ROI trend
         st.markdown("### ROI Trend")
         fig_roi = self._create_roi_trend_chart(selected_sources, days)
+        fig_roi = style_obsidian_chart(fig_roi)
         st.plotly_chart(fig_roi, use_container_width=True)
 
     def _render_recommendations(self, days: int) -> None:

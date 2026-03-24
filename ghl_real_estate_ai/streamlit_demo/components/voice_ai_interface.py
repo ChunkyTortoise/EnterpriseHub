@@ -198,6 +198,7 @@ class VoiceAIInterface:
                 color_discrete_map={"positive": "#00D4AA", "neutral": "#FFB800", "negative": "#FF4B4B"},
             )
             fig_sentiment.update_traces(textposition="inside", textinfo="percent+label")
+            fig_sentiment = style_obsidian_chart(fig_sentiment)
             st.plotly_chart(fig_sentiment, use_container_width=True)
 
         with col_right:
@@ -215,6 +216,7 @@ class VoiceAIInterface:
             fig_conversion.update_layout(
                 xaxis_title="Conversion Rate (%)", yaxis_title="Interaction Type", showlegend=False
             )
+            fig_conversion = style_obsidian_chart(fig_conversion)
             st.plotly_chart(fig_conversion, use_container_width=True)
 
         # Top intents table
@@ -317,6 +319,7 @@ class VoiceAIInterface:
 
             # Select appropriate response (simplified logic)
             import random
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
             ai_response = random.choice(ai_responses)
 

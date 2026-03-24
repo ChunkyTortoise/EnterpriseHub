@@ -25,6 +25,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Import bot services and config with graceful fallback
 try:
@@ -342,6 +343,7 @@ def render_temperature_distribution() -> None:
     )
 
     fig.update_layout(height=420, yaxis_title="Lead Count", xaxis_title="Bot")
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -383,6 +385,7 @@ def render_compliance_monitor() -> None:
             xaxis_title="Date",
             showlegend=False,
         )
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -448,6 +451,7 @@ def render_handoff_tracker() -> None:
         height=420,
         font_size=12,
     )
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     # Success rate summary
@@ -549,6 +553,7 @@ def render_response_time_monitor() -> None:
     fig.update_layout(height=220 * len(BOT_NAMES) + 80, hovermode="x unified")
     fig.update_xaxes(title_text="Time", row=len(BOT_NAMES), col=1)
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     if p99_breach:
@@ -586,6 +591,7 @@ def render_qualification_funnel() -> None:
                 title=f"{bot} Bot Qualification Funnel",
                 height=380,
             )
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
             # Conversion rate comparison vs targets

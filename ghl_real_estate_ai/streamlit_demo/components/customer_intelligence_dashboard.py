@@ -41,6 +41,7 @@ try:
     from core.auth_system import AuthService, Permission, UserRole, get_auth_service
     from core.tenant_middleware import get_current_tenant
     from utils.cache_service import get_redis_client
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 except ImportError as e:
     st.warning(f"Customer Intelligence Platform not fully available: {e}")
     # We'll create mock services for demonstration
@@ -640,12 +641,11 @@ class CustomerIntelligenceDashboard:
         fig.update_layout(
             height=350,
             showlegend=True,
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
             xaxis_title="Time",
             yaxis_title="Engagement Score",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -671,8 +671,9 @@ class CustomerIntelligenceDashboard:
             )
         )
 
-        fig.update_layout(height=350, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=350)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -707,8 +708,9 @@ class CustomerIntelligenceDashboard:
             go.Bar(x=departments, y=conversion_counts, name="Conversions", marker_color="#764ba2"), row=1, col=2
         )
 
-        fig.update_layout(height=350, showlegend=False, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=350, showlegend=False)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -733,8 +735,9 @@ class CustomerIntelligenceDashboard:
             ]
         )
 
-        fig.update_layout(height=350, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=350)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Risk alerts
@@ -819,8 +822,9 @@ class CustomerIntelligenceDashboard:
             ]
         )
 
-        fig.update_layout(height=350, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=350)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -849,10 +853,9 @@ class CustomerIntelligenceDashboard:
             height=350,
             xaxis_title="Customer Segment",
             yaxis_title="Average CLV ($)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -917,6 +920,7 @@ class CustomerIntelligenceDashboard:
 
         fig.update_layout(height=400, font_size=10)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -978,6 +982,7 @@ class CustomerIntelligenceDashboard:
             title="Model Performance Comparison",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def _render_feature_importance(self):
@@ -1002,9 +1007,10 @@ class CustomerIntelligenceDashboard:
         )
 
         fig.update_layout(
-            height=350, xaxis_title="Importance Score", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)"
+            height=350, xaxis_title="Importance Score"
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1032,10 +1038,9 @@ class CustomerIntelligenceDashboard:
             height=350,
             xaxis_title="Date",
             yaxis_title="Accuracy",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 

@@ -35,6 +35,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Import competitive intelligence services
 
@@ -388,6 +389,7 @@ def render_competitive_dashboard():
         # Threat matrix
         if not competitor_df.empty:
             threat_fig = create_competitor_threat_matrix(competitor_df)
+            threat_fig = style_obsidian_chart(threat_fig)
             st.plotly_chart(threat_fig, use_container_width=True)
         else:
             st.warning("No competitor data available")
@@ -426,6 +428,7 @@ def render_competitive_dashboard():
         # Market position gauge
         position_score = metrics["market_intelligence"]["market_position_score"]
         gauge_fig = create_market_position_gauge(position_score)
+        gauge_fig = style_obsidian_chart(gauge_fig)
         st.plotly_chart(gauge_fig, use_container_width=True)
 
     with col2:
@@ -464,6 +467,7 @@ def render_competitive_dashboard():
             title="Market Position Trends (30 Days)", xaxis_title="Date", yaxis_title="Position Score", height=300
         )
 
+        fig_trends = style_obsidian_chart(fig_trends)
         st.plotly_chart(fig_trends, use_container_width=True)
 
     with col3:
@@ -491,6 +495,7 @@ def render_competitive_dashboard():
     with col1:
         # Response timeline
         timeline_fig = create_response_timeline_chart()
+        timeline_fig = style_obsidian_chart(timeline_fig)
         st.plotly_chart(timeline_fig, use_container_width=True)
 
     with col2:
@@ -545,6 +550,7 @@ def render_competitive_dashboard():
 
     with col1:
         roi_fig = create_roi_metrics_chart()
+        roi_fig = style_obsidian_chart(roi_fig)
         st.plotly_chart(roi_fig, use_container_width=True)
 
     with col2:

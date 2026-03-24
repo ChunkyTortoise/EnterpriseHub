@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_matrix_view():
@@ -86,11 +87,10 @@ def render_matrix_view():
             zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="rgba(255,255,255,0.05)"),
         ),
         margin=dict(l=0, r=0, b=0, t=40),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
         height=700,
     )
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     # Matrix Insights

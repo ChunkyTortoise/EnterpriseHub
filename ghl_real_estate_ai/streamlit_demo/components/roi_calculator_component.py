@@ -24,6 +24,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Configure page if running standalone
 if __name__ == "__main__":
@@ -515,10 +516,10 @@ def render_scenario_analysis(params: Dict, scenarios: List[InvestmentScenario]):
         # Add break-even line
         fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.7)
 
-        fig.update_layout(
-            paper_bgcolor="rgba(255,255,255,0.95)", plot_bgcolor="rgba(255,255,255,0.95)", font_family="Inter"
+        fig.update_layout(, font_family="Inter"
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -602,13 +603,12 @@ def render_channel_optimization(params: Dict, channels: List[ChannelInvestment])
             color_discrete_map={"Current": "#64748b", "Optimized": "#22c55e"},
         )
 
-        fig.update_layout(
-            paper_bgcolor="rgba(255,255,255,0.95)",
-            plot_bgcolor="rgba(255,255,255,0.95)",
+        fig.update_layout(,
             font_family="Inter",
             yaxis=dict(tickformat=".1%"),
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -635,10 +635,10 @@ def render_channel_optimization(params: Dict, channels: List[ChannelInvestment])
             title="Channel ROI Projections (%)",
         )
 
-        fig.update_layout(
-            paper_bgcolor="rgba(255,255,255,0.95)", plot_bgcolor="rgba(255,255,255,0.95)", font_family="Inter"
+        fig.update_layout(, font_family="Inter"
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     # Channel investment cards
@@ -765,11 +765,10 @@ def render_financial_projections(params: Dict):
             title="Monthly CLV Recovery Projections",
             xaxis_title="Month",
             yaxis_title="CLV Recovery ($)",
-            paper_bgcolor="rgba(255,255,255,0.95)",
-            plot_bgcolor="rgba(255,255,255,0.95)",
             font_family="Inter",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -795,11 +794,10 @@ def render_financial_projections(params: Dict):
             title="Net Benefit Analysis (CLV - Investment)",
             xaxis_title="Month",
             yaxis_title="Net Benefit ($)",
-            paper_bgcolor="rgba(255,255,255,0.95)",
-            plot_bgcolor="rgba(255,255,255,0.95)",
             font_family="Inter",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     # Summary financial metrics

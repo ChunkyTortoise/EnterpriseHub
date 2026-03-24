@@ -6,6 +6,7 @@ import streamlit as st
 from ghl_real_estate_ai.agent_system.dojo.runner import DojoRunner
 from ghl_real_estate_ai.agent_system.skills.base import registry
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_sparkline(data, color="#6366F1"):
@@ -16,9 +17,7 @@ def render_sparkline(data, color="#6366F1"):
         yaxis=dict(visible=False),
         margin=dict(l=0, r=0, t=0, b=0),
         height=30,
-        width=100,
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        width=100
         showlegend=False,
     )
     return fig
@@ -54,7 +53,8 @@ def render_agent_os_tab():
             st.markdown(f"**{agent}**")
             # Generate random sparkline data for demo
             spark_data = [random.uniform(0.8, 1.0) for _ in range(10)]
-            st.plotly_chart(render_sparkline(spark_data), use_container_width=False, config={"displayModeBar": False})
+            _fig = style_obsidian_chart(render_sparkline(spark_data))
+            st.plotly_chart(_fig, use_container_width=False, config={"displayModeBar": False})
             st.caption(f"Success: {perf_data['success_rate'] * 100:.0f}%")
 
     st.markdown("---")

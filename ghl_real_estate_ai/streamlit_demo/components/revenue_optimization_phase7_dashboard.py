@@ -20,6 +20,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -832,6 +833,7 @@ def main():
     # Commission Defense Analysis
     st.subheader("🛡️ Commission Defense Analysis")
     defense_chart = create_commission_defense_dashboard(defense_analysis)
+    defense_chart = style_obsidian_chart(defense_chart)
     st.plotly_chart(defense_chart, use_container_width=True)
 
     # Commission defense insights
@@ -850,6 +852,7 @@ def main():
     # Optimization Strategy Analysis
     st.subheader("📊 Optimization Strategy Analysis")
     comparison_chart = create_optimization_comparison_chart(plans)
+    comparison_chart = style_obsidian_chart(comparison_chart)
     st.plotly_chart(comparison_chart, use_container_width=True)
 
     # Strategy Recommendations

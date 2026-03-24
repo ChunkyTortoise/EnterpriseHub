@@ -25,6 +25,7 @@ from typing import Any, Dict
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Add project paths for imports
 current_file = Path(__file__).resolve()
@@ -422,12 +423,10 @@ def render_enhanced_overview():
         height=400,
         title_text="Comprehensive Bot Analytics Matrix",
         title_x=0.5,
-        showlegend=False,
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="white", size=10),
+        showlegend=False
     )
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     # Progressive disclosure sections for detailed data
@@ -675,8 +674,9 @@ def render_enhanced_performance(bot_type: str):
     fig.update_yaxes(title_text="Success Rate % / Active Leads", secondary_y=False)
     fig.update_yaxes(title_text="Response Time (seconds)", secondary_y=True)
 
-    fig.update_layout(height=350, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font=dict(color="white"))
+    fig.update_layout(height=350)
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 

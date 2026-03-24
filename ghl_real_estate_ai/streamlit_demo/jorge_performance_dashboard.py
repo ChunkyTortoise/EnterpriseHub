@@ -37,6 +37,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Jorge performance monitoring imports (mock for demo)
 try:
@@ -386,6 +387,7 @@ class JorgePerformanceDashboard:
             hovermode="x unified",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Summary statistics
@@ -444,6 +446,7 @@ class JorgePerformanceDashboard:
             title="Jorge Bot Accuracy Metrics vs Targets", yaxis_title="Accuracy (%)", height=400, showlegend=True
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def _display_memory_usage_chart(self, time_range: str):
@@ -486,6 +489,7 @@ class JorgePerformanceDashboard:
             showlegend=True,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def _display_business_metrics_chart(self):
@@ -543,6 +547,7 @@ class JorgePerformanceDashboard:
             )
 
         fig.update_layout(height=600)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def _display_alerts_section(self):
@@ -682,6 +687,7 @@ class JorgePerformanceDashboard:
             )
 
             fig = px.line(trend_data, x="Week", y=["Qualified Leads", "Close Rate"], title="Weekly Performance Trends")
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         st.markdown("---")
@@ -768,6 +774,7 @@ class JorgePerformanceDashboard:
                 title="Intervention Effectiveness vs Usage",
             )
             fig.update_traces(textposition="top center")
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         st.markdown("---")
@@ -940,6 +947,7 @@ class JorgePerformanceDashboard:
             names=list(breakdown_data.keys()),
             title="Response Time Component Breakdown",
         )
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def _display_accuracy_details(self):
@@ -963,6 +971,7 @@ class JorgePerformanceDashboard:
             y=["Stall Detection", "Re-engagement", "Property Matching"],
             title="Accuracy Trends (Last 7 Days)",
         )
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def _display_system_performance_details(self):
@@ -977,6 +986,7 @@ class JorgePerformanceDashboard:
             memory_data = pd.DataFrame({"Time": times, "Memory_MB": np.random.normal(42, 5, len(times))})
 
             fig = px.line(memory_data, x="Time", y="Memory_MB", title="Memory Usage (24 Hours)")
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -984,6 +994,7 @@ class JorgePerformanceDashboard:
             cpu_data = pd.DataFrame({"CPU_Usage": np.random.beta(2, 5, 100) * 100})
 
             fig = px.histogram(cpu_data, x="CPU_Usage", nbins=20, title="CPU Usage Distribution")
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
 

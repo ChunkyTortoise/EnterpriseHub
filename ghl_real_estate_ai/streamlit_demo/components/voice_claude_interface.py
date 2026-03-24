@@ -13,6 +13,7 @@ from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 # Import voice-enabled Claude companion
 try:
     from ghl_real_estate_ai.services.claude_platform_companion import get_claude_platform_companion
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
     VOICE_CLAUDE_AVAILABLE = True
 except ImportError:
@@ -362,9 +363,8 @@ def render_voice_claude_interface():
                     showlegend=False,
                     margin=dict(l=30, r=30, t=30, b=30),
                     height=250,
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
                 )
+                fig = style_obsidian_chart(fig)
                 st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
                 if st.session_state.last_mention == "safety":

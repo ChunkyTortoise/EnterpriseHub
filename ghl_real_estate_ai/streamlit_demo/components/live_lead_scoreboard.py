@@ -195,6 +195,7 @@ class LiveLeadScoreboard:
                     height=200,
                     margin=dict(l=0, r=0, t=30, b=0),
                 )
+                fig = style_obsidian_chart(fig)
                 st.plotly_chart(fig, use_container_width=True)
             st.markdown("**🎯 Scoring Factors:**")
             factors_df = pd.DataFrame(
@@ -219,6 +220,7 @@ class LiveLeadScoreboard:
     def _generate_score_history(self, lead: Dict[str, Any]) -> List[int]:
         """Generate realistic score history for visualization"""
         import random
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         current_score = lead["score"]
         history = []
@@ -283,6 +285,7 @@ class LiveLeadScoreboard:
             )
         )
         fig.update_layout(height=300, margin=dict(l=20, r=20, t=20, b=20))
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
 

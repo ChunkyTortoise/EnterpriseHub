@@ -11,6 +11,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.components.primitives import MetricConfig, render_obsidian_metric
 
 st.set_page_config(
     page_title="EnterpriseHub — Real Estate AI Platform",
@@ -179,19 +180,21 @@ TEMP_COLORS = {"Hot": "#ef4444", "Warm": "#f59e0b", "Cold": "#3b82f6"}
 
 
 def kpi_card(label, value, delta=None, prefix="", suffix=""):
-    delta_html = ""
+    trend = "none"
+    comparison_value = None
     if delta is not None:
-        color = "#10b981" if delta >= 0 else "#ef4444"
+        trend = "up" if delta >= 0 else "down"
         arrow = "+" if delta >= 0 else ""
-        delta_html = f"<div style='color:{color};font-size:0.85rem;margin-top:2px'>{arrow}{delta}%</div>"
-    st.markdown(
-        f"""
-    <div style='background:#1e293b;border-radius:12px;padding:20px;text-align:center'>
-        <div style='color:#94a3b8;font-size:0.8rem;text-transform:uppercase;letter-spacing:1px'>{label}</div>
-        <div style='color:#f8fafc;font-size:1.8rem;font-weight:700;margin:4px 0'>{prefix}{value}{suffix}</div>
-        {delta_html}
-    </div>""",
-        unsafe_allow_html=True,
+        comparison_value = f"{arrow}{delta}%"
+    render_obsidian_metric(
+        value=f"{prefix}{value}{suffix}",
+        label=label,
+        config=MetricConfig(
+            trend=trend,
+            show_comparison=comparison_value is not None,
+            size="small",
+        ),
+        comparison_value=comparison_value,
     )
 
 

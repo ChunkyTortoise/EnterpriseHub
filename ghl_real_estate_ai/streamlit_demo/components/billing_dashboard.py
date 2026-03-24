@@ -17,6 +17,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Billing service imports
 
@@ -212,6 +213,7 @@ def render_billing_dashboard(tenant_id: str = "demo"):
             margin=dict(t=30, b=30, l=30, r=30),
             annotations=[dict(text="$15.6K MRR", x=0.5, y=0.5, font_size=16, showarrow=False)],
         )
+        fig_revenue = style_obsidian_chart(fig_revenue)
         st.plotly_chart(fig_revenue, use_container_width=True)
 
     with col2:
@@ -240,6 +242,7 @@ def render_billing_dashboard(tenant_id: str = "demo"):
             height=350,
             margin=dict(t=50, b=30, l=30, r=30),
         )
+        fig_tiers = style_obsidian_chart(fig_tiers)
         st.plotly_chart(fig_tiers, use_container_width=True)
 
     # Usage Analytics Section
@@ -318,6 +321,7 @@ def render_billing_dashboard(tenant_id: str = "demo"):
             color_discrete_sequence=["#ff6b6b", "#4ecdc4", "#45b7d1"],
         )
         fig_usage.update_layout(height=400)
+        fig_usage = style_obsidian_chart(fig_usage)
         st.plotly_chart(fig_usage, use_container_width=True)
 
     with col2:
@@ -339,6 +343,7 @@ def render_billing_dashboard(tenant_id: str = "demo"):
             yaxis=dict(range=[0, 5]),
             height=400,
         )
+        fig_satisfaction = style_obsidian_chart(fig_satisfaction)
         st.plotly_chart(fig_satisfaction, use_container_width=True)
 
     # Payment Health Section
@@ -371,6 +376,7 @@ def render_billing_dashboard(tenant_id: str = "demo"):
             )
         )
         fig_payment_success.update_layout(height=300, margin=dict(t=30, b=30, l=30, r=30))
+        fig_payment_success = style_obsidian_chart(fig_payment_success)
         st.plotly_chart(fig_payment_success, use_container_width=True)
 
     with col2:
@@ -406,6 +412,7 @@ def render_billing_dashboard(tenant_id: str = "demo"):
             ]
         )
         fig_payment_methods.update_layout(height=300, margin=dict(t=30, b=30, l=30, r=30), showlegend=True)
+        fig_payment_methods = style_obsidian_chart(fig_payment_methods)
         st.plotly_chart(fig_payment_methods, use_container_width=True)
 
     # Advanced Analytics Section
@@ -436,6 +443,7 @@ def render_billing_dashboard(tenant_id: str = "demo"):
         fig_forecast.update_layout(
             title="30-Day Revenue Forecast", xaxis_title="Date", yaxis_title="Revenue ($)", height=400
         )
+        fig_forecast = style_obsidian_chart(fig_forecast)
         st.plotly_chart(fig_forecast, use_container_width=True)
 
     with col2:

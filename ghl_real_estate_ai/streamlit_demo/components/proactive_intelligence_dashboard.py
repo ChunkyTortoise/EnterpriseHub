@@ -20,6 +20,7 @@ def run_async(coro):
 # Import proactive intelligence services
 try:
     from ghl_real_estate_ai.services.proactive_intelligence_engine import (
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
         AlertPriority,
         AlertType,
         get_proactive_intelligence_engine,
@@ -316,6 +317,7 @@ def render_proactive_intelligence_dashboard():
             title="AI Prediction Accuracy Over Time", yaxis_title="Accuracy (%)", height=300, showlegend=False
         )
 
+        fig_accuracy = style_obsidian_chart(fig_accuracy)
         st.plotly_chart(fig_accuracy, use_container_width=True)
 
     # =======================
@@ -555,6 +557,7 @@ def render_proactive_intelligence_dashboard():
             hovermode="x unified",
         )
 
+        fig_monitoring = style_obsidian_chart(fig_monitoring)
         st.plotly_chart(fig_monitoring, use_container_width=True)
 
 

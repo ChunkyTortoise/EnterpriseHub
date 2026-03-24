@@ -23,6 +23,7 @@ from plotly.subplots import make_subplots
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 from ...services.client_success_scoring_service import get_client_success_service
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 @st.cache_resource
@@ -389,6 +390,7 @@ def render_executive_summary(report, dashboard_data):
     value_data = report.value_delivered
     fig = px.pie(values=list(value_data.values()), names=list(value_data.keys()), title="Client Value Distribution")
     fig.update_traces(textposition="inside", textinfo="percent+label")
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -463,6 +465,7 @@ def render_client_roi_view(agent_id: str):
 
     fig.update_layout(title="Value vs. Cost Analysis", yaxis_title="Value ($)", showlegend=False)
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     # Competitive Advantage
@@ -650,6 +653,7 @@ def create_performance_trends_chart(report):
 
     fig.update_layout(height=600, title_text="Performance Trends Over Time", showlegend=True)
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 

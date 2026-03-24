@@ -1,4 +1,5 @@
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_rlhf_loop():
@@ -86,10 +87,9 @@ def render_rlhf_loop():
         height=150,
         margin=dict(l=0, r=0, t=0, b=0),
         xaxis=dict(visible=False),
-        yaxis=dict(range=[85, 96]),
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        yaxis=dict(range=[85, 96])
     )
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
     st.caption("RLHF has improved overall matching precision by 6.8% this week.")
 

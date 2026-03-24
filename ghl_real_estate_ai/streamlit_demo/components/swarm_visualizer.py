@@ -7,6 +7,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 import yaml
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 try:
     from agents.swarm_orchestrator import AgentRole, SwarmOrchestrator, TaskStatus
@@ -234,7 +235,8 @@ def render_swarm_visualizer(lead_name: str = None, lead_data: dict = None):
                 yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             ),
         )
-        fig.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", height=500)
+        fig.update_layout(height=500)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         if tasks:
             st.markdown("### 📋 Swarm Project Roadmap")

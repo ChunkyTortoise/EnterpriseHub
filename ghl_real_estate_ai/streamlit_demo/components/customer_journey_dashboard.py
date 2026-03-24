@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 class CustomerJourneyDashboard:
@@ -538,8 +539,9 @@ class CustomerJourneyDashboard:
             )
         )
 
-        fig.update_layout(height=400, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=400)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -573,6 +575,7 @@ class CustomerJourneyDashboard:
 
         fig.update_layout(height=400, font_size=10)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -607,10 +610,9 @@ class CustomerJourneyDashboard:
             height=350,
             xaxis_title="Journey Stage",
             yaxis_title="Conversion Rate (%)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -654,10 +656,9 @@ class CustomerJourneyDashboard:
             height=350,
             xaxis_title="Journey Stage",
             yaxis_title="Duration (Days)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -733,8 +734,9 @@ class CustomerJourneyDashboard:
             ]
         )
 
-        fig.update_layout(height=350, plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=350)
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -761,9 +763,10 @@ class CustomerJourneyDashboard:
         )
 
         fig.update_layout(
-            height=350, xaxis_title="Action Frequency (%)", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)"
+            height=350, xaxis_title="Action Frequency (%)"
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1008,10 +1011,9 @@ class CustomerJourneyDashboard:
             height=350,
             xaxis_title="Conversion Probability Range",
             yaxis_title="Customer Count",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1110,9 +1112,10 @@ class CustomerJourneyDashboard:
         )
 
         fig.update_layout(
-            height=350, xaxis_title="Impact Score", plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)"
+            height=350, xaxis_title="Impact Score"
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1152,10 +1155,9 @@ class CustomerJourneyDashboard:
             height=350,
             xaxis_title="Date",
             yaxis_title="Conversion Rate (%)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
 

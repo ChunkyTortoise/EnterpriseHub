@@ -16,6 +16,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 # Mock services for demo (would import actual services in production)
@@ -229,6 +230,7 @@ def render_listing_intelligence_tab(listing_service, agent_id: str):
         height=400,
     )
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -277,6 +279,7 @@ def render_followup_optimization_tab(followup_service, agent_id: str):
         )
 
         fig_channels.update_layout(height=300)
+        fig_channels = style_obsidian_chart(fig_channels)
         st.plotly_chart(fig_channels, use_container_width=True)
 
     with col_right:
@@ -293,6 +296,7 @@ def render_followup_optimization_tab(followup_service, agent_id: str):
 
         fig_timing.update_traces(line_color="#FF6B6B", line_width=3)
         fig_timing.update_layout(height=300)
+        fig_timing = style_obsidian_chart(fig_timing)
         st.plotly_chart(fig_timing, use_container_width=True)
 
     # Lead-specific optimization
@@ -399,6 +403,7 @@ def render_revenue_analytics_tab(agent_id: str):
             title="2026 Revenue Performance & AI Forecast", xaxis_title="Month", yaxis_title="Revenue ($)", height=400
         )
 
+        fig_revenue = style_obsidian_chart(fig_revenue)
         st.plotly_chart(fig_revenue, use_container_width=True)
 
     with col_breakdown:
@@ -418,6 +423,7 @@ def render_revenue_analytics_tab(agent_id: str):
 
         fig_pie.update_traces(textposition="inside", textinfo="percent+label")
         fig_pie.update_layout(height=300)
+        fig_pie = style_obsidian_chart(fig_pie)
         st.plotly_chart(fig_pie, use_container_width=True)
 
     # AI-powered insights
@@ -489,6 +495,7 @@ def render_market_intelligence_tab(agent_id: str):
             height=300,
         )
 
+        fig_market = style_obsidian_chart(fig_market)
         st.plotly_chart(fig_market, use_container_width=True)
 
     with col_right:
@@ -534,6 +541,7 @@ def render_market_intelligence_tab(agent_id: str):
             polar=dict(radialaxis=dict(visible=True, range=[0, 1])), title="Competitive Analysis Radar", height=300
         )
 
+        fig_radar = style_obsidian_chart(fig_radar)
         st.plotly_chart(fig_radar, use_container_width=True)
 
     # Market insights
@@ -620,6 +628,7 @@ def render_productivity_insights_tab(agent_id: str):
 
         fig_time.update_layout(title="Weekly Time Allocation & Optimization Potential", barmode="group", height=400)
 
+        fig_time = style_obsidian_chart(fig_time)
         st.plotly_chart(fig_time, use_container_width=True)
 
     with col_right:

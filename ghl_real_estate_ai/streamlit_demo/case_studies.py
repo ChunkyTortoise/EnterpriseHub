@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.data.case_studies_data import CASE_STUDIES
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_case_studies():
@@ -204,12 +205,10 @@ def render_implementation_timeline(phases: list):
         xaxis_title="Duration (Days)",
         yaxis_title="",
         height=300,
-        showlegend=False,
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter, sans-serif"),
+        showlegend=False
     )
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     # Show phase details
@@ -246,10 +245,12 @@ def render_metrics_charts(metrics: list):
 
     with col1:
         fig1 = create_metric_chart(metrics_subset_1, "Key Performance Indicators")
+        fig1 = style_obsidian_chart(fig1)
         st.plotly_chart(fig1, use_container_width=True)
 
     with col2:
         fig2 = create_metric_chart(metrics_subset_2, "Operational Improvements")
+        fig2 = style_obsidian_chart(fig2)
         st.plotly_chart(fig2, use_container_width=True)
 
 
@@ -290,10 +291,7 @@ def create_metric_chart(metrics: list, title: str):
         title=title,
         xaxis_title="",
         yaxis_title="",
-        height=400,
-        plot_bgcolor="rgba(0,0,0,0)",
-        paper_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="Inter, sans-serif"),
+        height=400
         showlegend=False,
     )
 

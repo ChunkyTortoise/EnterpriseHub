@@ -3,6 +3,7 @@ import plotly.express as px
 import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_neighborhood_explorer(lead_profile: dict = None):
@@ -119,11 +120,13 @@ def render_neighborhood_explorer(lead_profile: dict = None):
                 with col1:
                     fig_price = px.line(x=months, y=avg_prices, title="Average Home Prices")
                     fig_price.update_layout(yaxis_title="Price ($)", xaxis_title="Month")
+                    fig_price = style_obsidian_chart(fig_price)
                     st.plotly_chart(fig_price, use_container_width=True)
 
                 with col2:
                     fig_dom = px.bar(x=months, y=days_on_market, title="Average Days on Market")
                     fig_dom.update_layout(yaxis_title="Days", xaxis_title="Month")
+                    fig_dom = style_obsidian_chart(fig_dom)
                     st.plotly_chart(fig_dom, use_container_width=True)
 
             with tab5:

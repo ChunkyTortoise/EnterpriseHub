@@ -171,6 +171,7 @@ def render_service_health_checks():
                 title="Service Response Times", xaxis_title="Service", yaxis_title="Response Time (ms)", height=400
             )
 
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
     except Exception as e:
@@ -237,6 +238,7 @@ def render_database_optimization_status():
             db_sizes = [health.database_size_mb for health in db_health_data.values()]
 
             fig = px.pie(values=db_sizes, names=db_names, title="Database Size Distribution")
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
             # Optimization recommendations
@@ -332,6 +334,7 @@ def render_performance_metrics():
             labels={"x": "Time", "y": "Response Time (ms)"},
         )
         fig.add_hline(y=100, line_dash="dash", line_color="orange", annotation_text="Target (100ms)")
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Error rate chart
@@ -343,6 +346,7 @@ def render_performance_metrics():
             x=dates, y=error_rates, title="Error Rate (Last 24 Hours)", labels={"x": "Time", "y": "Error Rate (%)"}
         )
         fig.add_hline(y=1.0, line_dash="dash", line_color="red", annotation_text="Alert Threshold (1%)")
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Key performance indicators
@@ -408,6 +412,7 @@ import os as _os
 import time as _time
 from dataclasses import dataclass as _dataclass
 from typing import Optional as _Optional
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 _DEMO_MODE = _os.getenv("DEMO_MODE", "").lower() in ("true", "1")
 

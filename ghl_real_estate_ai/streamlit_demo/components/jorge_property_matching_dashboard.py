@@ -255,6 +255,7 @@ class JorgePropertyMatchingAPIClient:
     async def get_match_performance_analytics(self) -> Dict[str, Any]:
         """Get matching algorithm performance analytics."""
         import random
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         # Generate historical performance data
         dates = [(datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(30, 0, -1)]
@@ -729,10 +730,10 @@ def render_inventory_analytics_section(api_client: JorgePropertyMatchingAPIClien
             color_continuous_scale="Blues",
         )
 
-        fig_price.update_layout(
-            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font=dict(color="white"), showlegend=False
+        fig_price.update_layout(, showlegend=False
         )
 
+        fig_price = style_obsidian_chart(fig_price)
         st.plotly_chart(fig_price, use_container_width=True)
 
     with col2:
@@ -743,8 +744,9 @@ def render_inventory_analytics_section(api_client: JorgePropertyMatchingAPIClien
 
         fig_city = px.pie(names=list(city_dist.keys()), values=list(city_dist.values()), title="Properties by City")
 
-        fig_city.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font=dict(color="white"))
+        fig_city.update_layout()
 
+        fig_city = style_obsidian_chart(fig_city)
         st.plotly_chart(fig_city, use_container_width=True)
 
         # Property types
@@ -834,11 +836,9 @@ def render_matching_performance_section(api_client: JorgePropertyMatchingAPIClie
             title="Algorithm Performance Over Time",
             xaxis_title="Date",
             yaxis_title="Performance Score (%)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="white"),
         )
 
+        fig_trends = style_obsidian_chart(fig_trends)
         st.plotly_chart(fig_trends, use_container_width=True)
 
     with col2:
@@ -863,9 +863,9 @@ def render_matching_performance_section(api_client: JorgePropertyMatchingAPIClie
         )
 
         fig_processing.update_layout(
-            plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", font=dict(color="white")
         )
 
+        fig_processing = style_obsidian_chart(fig_processing)
         st.plotly_chart(fig_processing, use_container_width=True)
 
         # Optimization opportunities

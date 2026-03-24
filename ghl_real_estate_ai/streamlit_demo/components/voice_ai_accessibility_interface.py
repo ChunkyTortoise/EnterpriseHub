@@ -12,6 +12,7 @@ import streamlit as st
 
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 class AccessibilityLevel(Enum):
@@ -669,14 +670,12 @@ class VoiceAIAccessibilityInterface:
             fig_commands.update_layout(
                 title="Voice Commands by Category",
                 title_font_size=14,
-                title_font_color="#FFFFFF",
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#FFFFFF"),
+                title_,
                 showlegend=True,
                 height=300,
             )
 
+            fig_commands = style_obsidian_chart(fig_commands)
             st.plotly_chart(fig_commands, use_container_width=True)
 
         with col2:

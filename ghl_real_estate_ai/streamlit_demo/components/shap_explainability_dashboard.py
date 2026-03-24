@@ -63,6 +63,7 @@ except ImportError:
 
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 logger = get_logger(__name__)
 
@@ -280,6 +281,7 @@ class SHAPExplainabilityDashboard:
 
         try:
             waterfall_fig = run_async(self.shap_service.create_waterfall_visualization(explanation))
+            waterfall_fig = style_obsidian_chart(waterfall_fig)
             st.plotly_chart(waterfall_fig, use_container_width=True)
         except Exception as e:
             logger.error(f"Waterfall chart failed: {e}")
@@ -376,6 +378,7 @@ class SHAPExplainabilityDashboard:
 
         try:
             importance_fig = run_async(self.shap_service.create_feature_importance_visualization(explanation))
+            importance_fig = style_obsidian_chart(importance_fig)
             st.plotly_chart(importance_fig, use_container_width=True)
         except Exception as e:
             logger.error(f"Feature importance chart failed: {e}")
@@ -618,8 +621,9 @@ class SHAPExplainabilityDashboard:
                     color_discrete_map={"Cache Hits": "#059669", "Fresh Explanations": "#DC2626"},
                 )
 
-                fig.update_layout(template="plotly_dark", paper_bgcolor="rgba(0,0,0,0)", font={"color": "#E5E7EB"})
+                fig.update_layout(, font={"color": "#E5E7EB"})
 
+                fig = style_obsidian_chart(fig)
                 st.plotly_chart(fig, use_container_width=True)
 
         except Exception as e:

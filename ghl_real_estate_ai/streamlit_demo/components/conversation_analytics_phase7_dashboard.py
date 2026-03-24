@@ -25,6 +25,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Page configuration
 st.set_page_config(
@@ -338,6 +339,7 @@ class ConversationAnalyticsDashboard:
                 height=400,
             )
 
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -408,6 +410,7 @@ class ConversationAnalyticsDashboard:
             height=350,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Sentiment distribution
@@ -465,6 +468,7 @@ class ConversationAnalyticsDashboard:
             yaxis=dict(range=[0, 100]),
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def _render_ab_testing_results(self, data):
@@ -532,6 +536,7 @@ class ConversationAnalyticsDashboard:
             yaxis=dict(range=[0, 100]),
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Temperature distribution
@@ -581,6 +586,7 @@ class ConversationAnalyticsDashboard:
                 labels={"y": "Success Rate (%)", "x": "Defense Strategy"},
             )
             fig.update_layout(height=350)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -590,6 +596,7 @@ class ConversationAnalyticsDashboard:
                 title="Strategy Usage Distribution",
             )
             fig.update_layout(height=350)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
     def _render_coaching_recommendations(self, data):
@@ -664,7 +671,7 @@ class ConversationAnalyticsDashboard:
                 y=days,
                 colorscale="RdYlGn",
                 text=[[f"{val:.1%}" for val in row] for row in heatmap_data],
-                texttemplate="%{text}",
+                text,
                 textfont={"size": 8},
                 colorbar=dict(title="Conversion Rate"),
             )
@@ -677,6 +684,7 @@ class ConversationAnalyticsDashboard:
             height=400,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Performance insights

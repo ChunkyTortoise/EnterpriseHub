@@ -27,6 +27,7 @@ from ghl_real_estate_ai.services.agent_mesh_coordinator import (
 )
 from ghl_real_estate_ai.services.mesh_agent_registry import get_agent_registry
 from ghl_real_estate_ai.services.token_tracker import TokenTracker
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 logger = get_logger(__name__)
 
@@ -152,6 +153,7 @@ def render_overview_tab(mesh_coordinator, agent_registry, token_tracker):
                     color_discrete_sequence=px.colors.qualitative.Set3,
                 )
                 fig.update_traces(textposition="inside", textinfo="percent+label")
+                fig = style_obsidian_chart(fig)
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info("No active agents found")
@@ -179,6 +181,7 @@ def render_overview_tab(mesh_coordinator, agent_registry, token_tracker):
                     color_continuous_scale="Blues",
                 )
                 fig.update_xaxis(tickangle=45)
+                fig = style_obsidian_chart(fig)
                 st.plotly_chart(fig, use_container_width=True)
 
     # Performance metrics
@@ -480,6 +483,7 @@ def render_cost_tracking_tab(token_tracker):
             fig = px.pie(
                 values=list(cost_by_type.values()), names=list(cost_by_type.keys()), title="Today's Cost Distribution"
             )
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -492,6 +496,7 @@ def render_cost_tracking_tab(token_tracker):
                 go.Scatter(x=hours, y=costs, mode="lines+markers", name="Hourly Cost", line=dict(color="blue"))
             )
             fig.update_layout(title="Cost Trend (24h)", xaxis_title="Hour", yaxis_title="Cost ($)")
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Budget alerts
@@ -559,6 +564,7 @@ def render_performance_tab(mesh_coordinator):
                 df, x="Agent", y="Response Time (s)", color="Response Time (s)", color_continuous_scale="RdYlBu_r"
             )
             fig.update_xaxis(tickangle=45)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -575,6 +581,7 @@ def render_performance_tab(mesh_coordinator):
             fig.update_layout(
                 title="Task Processing Rate (12h)", xaxis_title="Hours Ago", yaxis_title="Tasks Processed"
             )
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Performance insights

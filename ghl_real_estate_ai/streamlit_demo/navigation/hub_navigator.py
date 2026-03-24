@@ -10,6 +10,7 @@ import pandas as pd
 import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.config.page_config import ASYNC_UTILS_AVAILABLE, run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 try:
     from ghl_real_estate_ai.streamlit_demo.services.service_registry import (
@@ -281,8 +282,10 @@ def render_hub_navigator(sparkline_fn):
 
         # System Health Sparkline
         st.markdown("<br>", unsafe_allow_html=True)
+        _sparkline_fig = sparkline_fn([98, 99, 97, 99, 100, 99], color="#10B981", height=30)
+        _sparkline_fig = style_obsidian_chart(_sparkline_fig)
         st.plotly_chart(
-            sparkline_fn([98, 99, 97, 99, 100, 99], color="#10B981", height=30),
+            _sparkline_fig,
             width="stretch",
             config={"displayModeBar": False},
         )

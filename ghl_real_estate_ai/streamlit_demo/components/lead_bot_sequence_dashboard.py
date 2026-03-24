@@ -153,7 +153,7 @@
     'connector={"line": {"color":',
     "rgb(63, 63, 63)",
     'dash": "solid',
-    'hovertemplate="<b>%{y}</b><br>Leads: %{x}<br>Conversion: %{percentInitial}<extra></extra>"\n    ))\n\n    fig.update_layout(\n        title="\ud83c\udfaf Lead Conversion Funnel Across Sequence Stages',
+    'hover\n    ))\n\n    fig.update_layout(\n        title="\ud83c\udfaf Lead Conversion Funnel Across Sequence Stages',
     'height=500,\n        margin=dict(l=20, r=20, t=60, b=20)\n    )\n\n    return fig\n\ndef create_engagement_heatmap() -> go.Figure:\n    "',
     'Create engagement heatmap showing optimal timing."',
     '\n    hours = list(range(6, 22))  # 6 AM to 9 PM\n    days = ["Mon',
@@ -170,7 +170,7 @@
     "Fri",
     'if 9 <= hour <= 17:\n                    base = random.uniform(70, 90)\n                elif 18 <= hour <= 20:\n                    base = random.uniform(50, 70)\n                else:\n                    base = random.uniform(20, 40)\n            else:  # Weekends\n                if 10 <= hour <= 14:\n                    base = random.uniform(60, 80)\n                else:\n                    base = random.uniform(30, 50)\n            row.append(base)\n        engagement_data.append(row)\n\n    fig = go.Figure(data=go.Heatmap(\n        z=engagement_data,\n        x=[f"{h}:00',
     "for h in hours],\n        y=days,\n        colorscale='RdYlGn',\n        colorbar=dict(title=\"Engagement Rate (%)",
-    'hovertemplate="<b>%{y} %{x}</b><br>Engagement: %{z:.1f}%<extra></extra>"\n    ))\n\n    fig.update_layout(\n        title="\ud83d\udcc8 Engagement Heatmap - Optimal Touchpoint Timing',
+    'hover\n    ))\n\n    fig.update_layout(\n        title="\ud83d\udcc8 Engagement Heatmap - Optimal Touchpoint Timing',
     'xaxis_title="Time of Day',
     'yaxis_title="Day of Week',
     'height=400\n    )\n\n    return fig\n\ndef create_ab_test_comparison() -> go.Figure:\n    "',
@@ -437,6 +437,7 @@ Keep this module to avoid import errors from older navigation entries.
 """
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def render_lead_bot_sequence_dashboard() -> None:

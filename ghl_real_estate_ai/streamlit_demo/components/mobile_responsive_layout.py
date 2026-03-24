@@ -12,6 +12,7 @@ Provides intelligent layout management with:
 from typing import Any, Dict, List, Optional
 
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 def inject_responsive_css():
@@ -153,12 +154,12 @@ class ResponsiveLayoutManager:
             fig.update_layout(
                 height=adaptive_height,
                 margin=dict(l=20, r=20, t=30, b=20),
-                font=dict(size=10),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
             )
         else:
             fig.update_layout(height=adaptive_height)
         st.markdown('<div class="chart-responsive">', unsafe_allow_html=True)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True, **kwargs)
         st.markdown("</div>", unsafe_allow_html=True)
 

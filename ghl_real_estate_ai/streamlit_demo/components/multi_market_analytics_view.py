@@ -25,6 +25,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Configure page if running standalone
 if __name__ == "__main__":
@@ -446,13 +447,12 @@ def render_performance_trends(time_series_data: pd.DataFrame):
             labels={"Conversion_Rate": "Conversion Rate (%)"},
         )
 
-        fig.update_layout(
-            paper_bgcolor="rgba(255,255,255,0.95)",
-            plot_bgcolor="rgba(255,255,255,0.95)",
+        fig.update_layout(,
             font_family="Inter",
             yaxis=dict(tickformat=".1%"),
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -466,13 +466,12 @@ def render_performance_trends(time_series_data: pd.DataFrame):
             labels={"Revenue": "Revenue ($)"},
         )
 
-        fig.update_layout(
-            paper_bgcolor="rgba(255,255,255,0.95)",
-            plot_bgcolor="rgba(255,255,255,0.95)",
+        fig.update_layout(,
             font_family="Inter",
             yaxis=dict(tickformat="$.0f"),
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     # Market comparison matrix
@@ -491,13 +490,12 @@ def render_performance_trends(time_series_data: pd.DataFrame):
         labels={"Lead_Volume": "Lead Volume", "Conversion_Rate": "Conversion Rate", "Revenue": "Revenue ($)"},
     )
 
-    fig.update_layout(
-        paper_bgcolor="rgba(255,255,255,0.95)",
-        plot_bgcolor="rgba(255,255,255,0.95)",
+    fig.update_layout(,
         font_family="Inter",
         yaxis=dict(tickformat=".1%"),
     )
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -552,10 +550,10 @@ def render_cross_market_attribution(flows: List[CrossMarketFlow], markets: List[
         fig.update_layout(
             title_text="Lead Flow Between Markets",
             font_size=10,
-            paper_bgcolor="rgba(255,255,255,0.95)",
             font_family="Inter",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -603,13 +601,12 @@ def render_cross_market_attribution(flows: List[CrossMarketFlow], markets: List[
             color_continuous_scale="Blues",
         )
 
-        fig.update_layout(
-            paper_bgcolor="rgba(255,255,255,0.95)",
-            plot_bgcolor="rgba(255,255,255,0.95)",
+        fig.update_layout(,
             font_family="Inter",
             height=300,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -641,10 +638,10 @@ def render_market_health_scores(markets: List[MarketPerformance]):
             polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
             showlegend=True,
             title="Market Health Radar",
-            paper_bgcolor="rgba(255,255,255,0.95)",
             font_family="Inter",
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -751,19 +748,18 @@ def render_competitive_positioning(markets: List[MarketPerformance]):
         fig.add_vline(x=0.2, line_dash="dash", line_color="gray", opacity=0.5)
 
         # Add quadrant labels
-        fig.add_annotation(x=0.35, y=0.2, text="Stars", showarrow=False, font_color="gray")
-        fig.add_annotation(x=0.35, y=0.05, text="Cash Cows", showarrow=False, font_color="gray")
-        fig.add_annotation(x=0.1, y=0.2, text="Question Marks", showarrow=False, font_color="gray")
-        fig.add_annotation(x=0.1, y=0.05, text="Dogs", showarrow=False, font_color="gray")
+        fig.add_annotation(x=0.35, y=0.2, text="Stars", showarrow=False)
+        fig.add_annotation(x=0.35, y=0.05, text="Cash Cows", showarrow=False)
+        fig.add_annotation(x=0.1, y=0.2, text="Question Marks", showarrow=False)
+        fig.add_annotation(x=0.1, y=0.05, text="Dogs", showarrow=False)
 
-        fig.update_layout(
-            paper_bgcolor="rgba(255,255,255,0.95)",
-            plot_bgcolor="rgba(255,255,255,0.95)",
+        fig.update_layout(,
             font_family="Inter",
             xaxis=dict(tickformat=".1%"),
             yaxis=dict(tickformat=".1%"),
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:

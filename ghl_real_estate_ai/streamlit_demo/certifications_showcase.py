@@ -36,6 +36,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Page configuration
 st.set_page_config(
@@ -491,6 +492,7 @@ def main():
                 title="Distribution of Training Hours",
                 hole=0.4,
             )
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -504,6 +506,7 @@ def main():
                 color=list(status_data.keys()),
                 color_discrete_map={"Completed": "#4CAF50", "In Progress": "#2196F3"},
             )
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Progress tracking for in-progress certs
@@ -533,6 +536,7 @@ def main():
             hover_data=["Hours", "Expected"],
         )
         fig.update_layout(height=500)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
         # Provider table
@@ -585,6 +589,7 @@ def main():
                 color_continuous_scale="Viridis",
             )
             fig.update_layout(height=600)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         with col2:
@@ -674,6 +679,7 @@ def main():
             hover_data=["Hours"],
         )
         fig.update_layout(height=500)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     # Footer

@@ -12,7 +12,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import inject_elite_css
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import inject_elite_css, style_obsidian_chart
 
 st.set_page_config(
     page_title="LLM Cost Analytics | EnterpriseHub",
@@ -105,14 +105,12 @@ with col_left:
         marker_color="#22c55e",
     ))
     fig_cost.update_layout(
-        barmode="stack",
-        template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
+        barmode="stack"
         height=400,
         margin=dict(l=40, r=20, t=20, b=40),
         legend=dict(orientation="h", y=-0.15),
     )
+    fig_cost = style_obsidian_chart(fig_cost)
     st.plotly_chart(fig_cost, use_container_width=True)
 
 with col_right:
@@ -140,13 +138,11 @@ with col_right:
         line=dict(color="#22c55e", dash="dot"),
     ))
     fig_tokens.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
         height=400,
         margin=dict(l=40, r=20, t=20, b=40),
         legend=dict(orientation="h", y=-0.15),
     )
+    fig_tokens = style_obsidian_chart(fig_tokens)
     st.plotly_chart(fig_tokens, use_container_width=True)
 
 # ── Model Breakdown ──────────────────────────────────────────────────────
@@ -166,15 +162,13 @@ with col_model_left:
         color_discrete_sequence=["#3b82f6", "#22c55e", "#f59e0b"],
     )
     fig_model.update_layout(
-        template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
         height=350,
         showlegend=False,
         xaxis_title="",
         yaxis_title="Cost (USD)",
         margin=dict(l=40, r=20, t=20, b=80),
     )
+    fig_model = style_obsidian_chart(fig_model)
     st.plotly_chart(fig_model, use_container_width=True)
 
 with col_model_right:

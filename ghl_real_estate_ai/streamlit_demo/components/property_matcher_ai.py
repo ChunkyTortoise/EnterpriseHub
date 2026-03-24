@@ -204,15 +204,14 @@ def render_property_matcher(lead_context: Dict, elite_mode: bool = False, analys
                                 visible=True, range=[0, 100], showticklabels=False, gridcolor="rgba(255,255,255,0.1)"
                             ),
                             angularaxis=dict(
-                                gridcolor="rgba(255,255,255,0.1)", tickfont=dict(size=10, color="#8B949E")
+                                gridcolor="rgba(255,255,255,0.1)", tick
                             ),
                         ),
                         showlegend=False,
-                        paper_bgcolor="rgba(0,0,0,0)",
-                        plot_bgcolor="rgba(0,0,0,0)",
                         margin=dict(l=40, r=40, t=20, b=20),
                         height=250,
                     )
+                    fig = style_obsidian_chart(fig)
                     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
                 except Exception as e:
                     st.error(f"Radar visualization failed: {e}")
@@ -271,6 +270,7 @@ def generate_property_matches(lead_context: Dict, elite_mode: bool = False) -> L
     """
     try:
         from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         pm = PropertyMatcher()
         pm.set_strategy("ai" if elite_mode else "basic")

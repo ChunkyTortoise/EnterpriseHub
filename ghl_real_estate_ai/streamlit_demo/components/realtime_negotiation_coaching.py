@@ -14,6 +14,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.services.ai_negotiation_partner import get_ai_negotiation_partner
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 @st.cache_resource
@@ -327,6 +328,7 @@ class RealTimeNegotiationCoaching:
                 )
             )
             fig.update_layout(height=250)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Strategy evolution chart
@@ -457,6 +459,7 @@ class RealTimeNegotiationCoaching:
                 title="Conversation Distribution",
             )
             fig.update_layout(height=200)
+            fig = style_obsidian_chart(fig)
             st.plotly_chart(fig, use_container_width=True)
 
         # Tone analysis
@@ -487,6 +490,7 @@ class RealTimeNegotiationCoaching:
             df, x="Time", y="Index", color="Speaker", hover_data=["Event", "Tone"], title="Negotiation Timeline"
         )
         fig.update_layout(height=300)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def render_sentiment_chart(self):
@@ -515,6 +519,7 @@ class RealTimeNegotiationCoaching:
 
         fig = px.line(df, x="Time", y="Sentiment", color="Speaker", title="Emotional Sentiment Over Time")
         fig.update_layout(height=300)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def render_strategy_evolution_chart(self):
@@ -566,6 +571,7 @@ class RealTimeNegotiationCoaching:
             height=300,
         )
 
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def render_risk_trend_chart(self):
@@ -580,6 +586,7 @@ class RealTimeNegotiationCoaching:
 
         fig = px.line(df, x="Time", y="Risk_Count", title="Risk Alert Trend", markers=True)
         fig.update_layout(height=250)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     def render_available_negotiations(self):

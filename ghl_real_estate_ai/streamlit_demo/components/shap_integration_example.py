@@ -106,13 +106,11 @@ def render_lead_intelligence_with_shap_integration(selected_lead_name: str, lead
                     features_df, x="Importance", y="Feature", orientation="h", title="Top 5 Feature Importance"
                 )
 
-                fig.update_layout(
-                    template="plotly_dark",
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
+                fig.update_layout(,
                     font={"color": "#E5E7EB"},
                 )
 
+                fig = style_obsidian_chart(fig)
                 st.plotly_chart(fig, use_container_width=True)
 
         except Exception as e:
@@ -169,6 +167,7 @@ def render_lead_intelligence_with_shap_integration(selected_lead_name: str, lead
             # Performance chart
             if ml_metrics["total_analyses"] > 0:
                 import plotly.graph_objects as go
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
                 fig = go.Figure(
                     data=[
@@ -183,13 +182,11 @@ def render_lead_intelligence_with_shap_integration(selected_lead_name: str, lead
 
                 fig.update_layout(
                     title="Analysis Distribution",
-                    template="plotly_dark",
-                    paper_bgcolor="rgba(0,0,0,0)",
-                    plot_bgcolor="rgba(0,0,0,0)",
                     font={"color": "#E5E7EB"},
                     height=300,
                 )
 
+                fig = style_obsidian_chart(fig)
                 st.plotly_chart(fig, use_container_width=True)
 
         except Exception as e:

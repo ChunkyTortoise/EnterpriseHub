@@ -333,6 +333,7 @@ def render_frequency_tracking():
     fig.update_yaxes(title_text="Messages Sent", row=1, col=1)
     fig.update_yaxes(title_text="Events", row=2, col=1)
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
     # Frequency limits info
@@ -484,6 +485,7 @@ def render_sms_compliance_dashboard():
     # Auto-refresh functionality
     if auto_refresh:
         import time
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         placeholder = st.empty()
         time.sleep(30)

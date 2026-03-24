@@ -18,6 +18,7 @@ import streamlit as st
 from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer
 from ghl_real_estate_ai.services.roi_calculator_service import ROICalculatorService
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 # Initialize services
@@ -209,6 +210,7 @@ def render_roi_analysis_tab(roi_data: Any):
 
         fig_costs.update_layout(title="Cost Comparison (Monthly)", yaxis_title="Cost ($)", height=400, showlegend=False)
 
+        fig_costs = style_obsidian_chart(fig_costs)
         st.plotly_chart(fig_costs, use_container_width=True)
 
     with col2:
@@ -260,6 +262,7 @@ def render_pricing_analytics_tab(pricing_data: Dict):
 
         fig_arpu = px.line(trend_df, x="period", y="arpu", title="ARPU Growth Over Time", markers=True)
         fig_arpu.update_layout(xaxis_title="Period", yaxis_title="ARPU ($)", height=400)
+        fig_arpu = style_obsidian_chart(fig_arpu)
         st.plotly_chart(fig_arpu, use_container_width=True)
 
     # Tier performance breakdown
@@ -300,6 +303,7 @@ def render_pricing_analytics_tab(pricing_data: Dict):
             )
 
             fig_pie.update_layout(title="Lead Distribution by Tier", height=350)
+            fig_pie = style_obsidian_chart(fig_pie)
             st.plotly_chart(fig_pie, use_container_width=True)
 
     with col2:
@@ -433,6 +437,7 @@ def render_competitive_analysis_tab(roi_data: Any, pricing_data: Dict):
             height=400,
         )
 
+        fig_radar = style_obsidian_chart(fig_radar)
         st.plotly_chart(fig_radar, use_container_width=True)
 
 
@@ -491,6 +496,7 @@ def render_projections_tab(roi_data: Any, pricing_data: Dict):
         title="12-Month ARPU Projection", xaxis_title="Month", yaxis_title="ARPU ($)", height=400
     )
 
+    fig_projections = style_obsidian_chart(fig_projections)
     st.plotly_chart(fig_projections, use_container_width=True)
 
     # Key projections

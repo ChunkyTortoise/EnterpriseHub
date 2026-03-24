@@ -291,6 +291,7 @@ def run_swarm_analysis_demo(showcase: PremiumSwarmShowcase, selected_lead: str):
 
         # Simulate processing time
         import time
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
         time.sleep(0.3)
 
@@ -503,6 +504,7 @@ def render_agent_consensus_visualization(showcase: PremiumSwarmShowcase):
             )
         )
         fig.update_layout(height=300)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -518,11 +520,12 @@ def render_agent_consensus_visualization(showcase: PremiumSwarmShowcase):
                 y=agents,
                 colorscale="RdYlGn",
                 text=np.round(agreement_matrix, 2),
-                texttemplate="%{text}",
+                text,
                 textfont={"size": 10},
             )
         )
         fig.update_layout(title="Agent Agreement Matrix", height=300)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     # Consensus timeline
@@ -563,6 +566,7 @@ def render_agent_consensus_visualization(showcase: PremiumSwarmShowcase):
         yaxis=dict(range=[40, 100]),
     )
 
+    fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -624,6 +628,7 @@ def render_roi_attribution_dashboard(showcase: PremiumSwarmShowcase):
             title="ROI by Agent Specialization",
             labels={"ROI": "ROI (%)", "Volume": "Monthly Analyses"},
         )
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
@@ -644,6 +649,7 @@ def render_roi_attribution_dashboard(showcase: PremiumSwarmShowcase):
             )
         )
         fig.update_layout(title="Cumulative Business Impact", height=400)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
 
@@ -686,6 +692,7 @@ def render_swarm_performance_metrics(showcase: PremiumSwarmShowcase):
             color_continuous_scale="Viridis",
         )
         fig.update_layout(height=300)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     with col3:
@@ -694,6 +701,7 @@ def render_swarm_performance_metrics(showcase: PremiumSwarmShowcase):
 
         fig = px.line(volume_data, x="Hour", y="Analyses", title="24-Hour Processing Volume", markers=True)
         fig.update_layout(height=300)
+        fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
     # Detailed performance table

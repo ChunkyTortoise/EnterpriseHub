@@ -13,6 +13,7 @@ import plotly.express as px
 import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 try:
     from ghl_real_estate_ai.services.executive_portfolio_manager import (
@@ -191,6 +192,7 @@ class ExecutivePortfolioInterface:
                     names=list(type_values.keys()),
                     title="Portfolio by Property Type",
                 )
+                fig_types = style_obsidian_chart(fig_types)
                 st.plotly_chart(fig_types, use_container_width=True)
 
         with col2:
@@ -205,6 +207,7 @@ class ExecutivePortfolioInterface:
                     names=list(location_values.keys()),
                     title="Portfolio by Location",
                 )
+                fig_locations = style_obsidian_chart(fig_locations)
                 st.plotly_chart(fig_locations, use_container_width=True)
 
     def render_performance_analysis(self, analysis):
@@ -251,6 +254,7 @@ class ExecutivePortfolioInterface:
                 color_continuous_scale="Viridis",
             )
             fig_div.update_layout(yaxis_range=[0, 100])
+            fig_div = style_obsidian_chart(fig_div)
             st.plotly_chart(fig_div, use_container_width=True)
 
         with col2:
@@ -266,6 +270,7 @@ class ExecutivePortfolioInterface:
                     df_risk_return, x="Risk", y="Return", title="Risk-Return Profile", hover_data=["Asset"]
                 )
                 fig_risk_return.update_yaxis(tickformat=".1%")
+                fig_risk_return = style_obsidian_chart(fig_risk_return)
                 st.plotly_chart(fig_risk_return, use_container_width=True)
 
     def render_property_details(self, properties: List[PortfolioProperty]):
