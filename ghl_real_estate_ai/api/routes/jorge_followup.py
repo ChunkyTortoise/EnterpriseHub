@@ -8,9 +8,10 @@ Provides endpoints for:
 """
 
 import logging
+from functools import lru_cache
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
@@ -20,15 +21,35 @@ from ghl_real_estate_ai.services.jorge.jorge_followup_scheduler import JorgeFoll
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/jorge-followup", tags=["jorge-followup"])
 
-# Initialize components
-conversation_manager = ConversationManager()
-ghl_client = GHLClient()
-analytics_service = AnalyticsService()
-scheduler = JorgeFollowUpScheduler(conversation_manager, ghl_client, analytics_service)
+
+@lru_cache(maxsize=1)
+def _get_conversation_manager() -> ConversationManager:
+    return ConversationManager()
+
+
+@lru_cache(maxsize=1)
+def _get_ghl_client() -> GHLClient:
+    return GHLClient()
+
+
+@lru_cache(maxsize=1)
+def _get_analytics_service() -> AnalyticsService:
+    return AnalyticsService()
+
+
+@lru_cache(maxsize=1)
+def _get_scheduler() -> JorgeFollowUpScheduler:
+    return JorgeFollowUpScheduler(
+        _get_conversation_manager(), _get_ghl_client(), _get_analytics_service()
+    )
 
 
 @router.post("/webhook")
-async def trigger_followup_webhook(payload: Dict[str, Any], background_tasks: BackgroundTasks):
+async def trigger_followup_webhook(
+    payload: Dict[str, Any],
+    background_tasks: BackgroundTasks,
+    scheduler: JorgeFollowUpScheduler = Depends(_get_scheduler),
+):
     """
     Endpoint for GHL Workflows to trigger an automated follow-up.
 
@@ -54,7 +75,11 @@ async def trigger_followup_webhook(payload: Dict[str, Any], background_tasks: Ba
 
 
 @router.post("/process-batch")
-async def process_batch_followups(batch_size: int = Query(default=50, ge=1, le=100), location_id: Optional[str] = None):
+async def process_batch_followups(
+    batch_size: int = Query(default=50, ge=1, le=100),
+    location_id: Optional[str] = None,
+    scheduler: JorgeFollowUpScheduler = Depends(_get_scheduler),
+):
     """
     Trigger batch processing of all due follow-ups.
     Can be called by a cron job.
@@ -64,7 +89,11 @@ async def process_batch_followups(batch_size: int = Query(default=50, ge=1, le=1
 
 
 @router.get("/stats")
-async def get_followup_stats(location_id: Optional[str] = None, days: int = Query(default=30, ge=1, le=90)):
+async def get_followup_stats(
+    location_id: Optional[str] = None,
+    days: int = Query(default=30, ge=1, le=90),
+    scheduler: JorgeFollowUpScheduler = Depends(_get_scheduler),
+):
     """
     Get follow-up system performance statistics.
     """
@@ -73,7 +102,10 @@ async def get_followup_stats(location_id: Optional[str] = None, days: int = Quer
 
 
 @router.post("/setup-workflows/{location_id}")
-async def setup_ghl_workflows(location_id: str):
+async def setup_ghl_workflows(
+    location_id: str,
+    scheduler: JorgeFollowUpScheduler = Depends(_get_scheduler),
+):
     """
     Create/Update GHL workflow templates for this location.
     """
