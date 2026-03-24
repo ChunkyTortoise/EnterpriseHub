@@ -59,10 +59,15 @@ class DatabasePropertyRepository(IPropertyRepository):
                 repository_type="database",
             )
 
+        from ghl_real_estate_ai.utils.sql_safety import validate_identifier
+
         # Configuration
         self.database_url = config.get("database_url", "")
         self.database_type = config.get("database_type", "postgresql")
-        self.table_name = config.get("table_name", "properties")
+        raw_table = config.get("table_name", "properties")
+        # Validate table name at init to prevent SQL injection in dynamic queries
+        validate_identifier(raw_table, dialect=self.database_type)
+        self.table_name = raw_table
         self.pool_size = config.get("pool_size", 10)
         self.pool_timeout = config.get("pool_timeout", 30)
         self.query_timeout = config.get("query_timeout", 30)

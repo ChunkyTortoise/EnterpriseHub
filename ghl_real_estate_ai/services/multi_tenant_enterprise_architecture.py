@@ -735,17 +735,16 @@ class MultiTenantEnterpriseArchitecture:
     async def _create_tenant_schema(self, tenant: EnterpriseTenant):
         """Create dedicated schema for tenant."""
 
-        schema_name = f"tenant_{tenant.tenant_id.replace('-', '_')}"
+        from ghl_real_estate_ai.utils.sql_safety import quote_identifier
 
-        # Validate schema name to prevent SQL injection in DDL statements
-        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", schema_name):
-            raise ValueError(f"Invalid schema name derived from tenant_id: {tenant.tenant_id!r}")
+        schema_name = f"tenant_{tenant.tenant_id.replace('-', '_')}"
+        quoted_schema = quote_identifier(schema_name)
 
         async with self.database_service.get_connection() as conn:
-            # DDL identifiers cannot use $1 parameters in PostgreSQL; schema_name is
-            # validated by the regex above (alphanumeric + underscore, starts with letter).
-            await conn.execute(f"CREATE SCHEMA IF NOT EXISTS {schema_name}")
-            await conn.execute(f"ALTER SCHEMA {schema_name} OWNER TO current_user")
+            # DDL identifiers cannot use $1 parameters in PostgreSQL;
+            # quote_identifier() validates and double-quotes the name.
+            await conn.execute(f"CREATE SCHEMA IF NOT EXISTS {quoted_schema}")
+            await conn.execute(f"ALTER SCHEMA {quoted_schema} OWNER TO current_user")
 
             # Record schema
             await conn.execute(

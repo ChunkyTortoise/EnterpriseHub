@@ -1898,6 +1898,8 @@ class DatabaseService:
 
     async def update_follow_up_task(self, task_id: str, updates: Dict[str, Any]) -> bool:
         """Update follow-up task status and result."""
+        from ghl_real_estate_ai.utils.sql_safety import quote_identifier
+
         async with self.transaction() as conn:
             set_clauses = []
             values = []
@@ -1909,14 +1911,16 @@ class DatabaseService:
                 if field not in self._FOLLOW_UP_TASK_ALLOWED_COLUMNS:
                     raise ValueError(f"Column '{field}' is not allowed in follow_up_tasks updates")
 
+                # Quote column name for defense-in-depth (allowlist above is primary guard)
+                quoted_field = quote_identifier(field)
                 if field == "metadata" or field == "result":
-                    set_clauses.append(f"{field} = ${param_count}")
+                    set_clauses.append(f"{quoted_field} = ${param_count}")
                     values.append(json.dumps(value))
                 elif field == "lead_id" and isinstance(value, str):
-                    set_clauses.append(f"{field} = ${param_count}")
+                    set_clauses.append(f"{quoted_field} = ${param_count}")
                     values.append(uuid.UUID(value))
                 else:
-                    set_clauses.append(f"{field} = ${param_count}")
+                    set_clauses.append(f"{quoted_field} = ${param_count}")
                     values.append(value)
                 param_count += 1
 

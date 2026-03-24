@@ -507,10 +507,13 @@ class DatabaseShardingService:
             if not target_pool:
                 raise ValueError(f"Target shard {target_shard_id} pool not available")
 
+            from ghl_real_estate_ai.utils.sql_safety import quote_identifier
+
             for table in tables:
+                quoted_table = quote_identifier(table)
                 async with source_pool.acquire() as src_conn:
                     rows = await src_conn.fetch(
-                        f"SELECT * FROM {table} WHERE location_id = $1",
+                        f"SELECT * FROM {quoted_table} WHERE location_id = $1",
                         location_id,
                     )
 
@@ -518,10 +521,12 @@ class DatabaseShardingService:
                     async with target_pool.acquire() as tgt_conn:
                         for row in rows:
                             cols = list(row.keys())
+                            quoted_cols = ", ".join(
+                                quote_identifier(c) for c in cols
+                            )
                             placeholders = ", ".join(f"${i + 1}" for i in range(len(cols)))
-                            col_names = ", ".join(cols)
                             await tgt_conn.execute(
-                                f"INSERT INTO {table} ({col_names}) VALUES ({placeholders}) ON CONFLICT DO NOTHING",
+                                f"INSERT INTO {quoted_table} ({quoted_cols}) VALUES ({placeholders}) ON CONFLICT DO NOTHING",
                                 *[row[c] for c in cols],
                             )
                     migrated_count += len(rows)
@@ -529,7 +534,7 @@ class DatabaseShardingService:
                     # Delete from source after successful copy
                     async with source_pool.acquire() as src_conn:
                         await src_conn.execute(
-                            f"DELETE FROM {table} WHERE location_id = $1",
+                            f"DELETE FROM {quoted_table} WHERE location_id = $1",
                             location_id,
                         )
 

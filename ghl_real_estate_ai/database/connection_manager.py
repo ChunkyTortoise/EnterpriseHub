@@ -284,10 +284,10 @@ class DatabaseConnectionManager:
             placeholders = ", ".join([f"${i + 1}" for i in range(len(columns))])
 
             # Use safe identifier quoting
-            import asyncpg
+            from ghl_real_estate_ai.utils.sql_safety import quote_identifier
 
-            quoted_table = asyncpg.utils._quote_ident(table_name)
-            quoted_columns = ", ".join([asyncpg.utils._quote_ident(col) for col in columns])
+            quoted_table = quote_identifier(table_name)
+            quoted_columns = ", ".join([quote_identifier(col) for col in columns])
 
             sql = f"""
                 INSERT INTO {quoted_table} ({quoted_columns})
@@ -460,9 +460,9 @@ class DatabaseConnectionManager:
                 for table in tables_to_optimize:
                     try:
                         # Use safe identifier quoting to prevent SQL injection
-                        import asyncpg
+                        from ghl_real_estate_ai.utils.sql_safety import quote_identifier
 
-                        quoted_table = asyncpg.utils._quote_ident(table)
+                        quoted_table = quote_identifier(table)
                         await conn.execute(f"VACUUM ANALYZE {quoted_table}")
                         logger.info(f"Vacuumed and analyzed table: {table}")
                     except Exception as e:
