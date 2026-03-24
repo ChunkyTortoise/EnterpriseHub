@@ -818,6 +818,20 @@ app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
 # Performance metrics tracking
 performance_stats = {"total_requests": 0, "total_response_time": 0, "cache_hits": 0, "compression_saved": 0}
 
+# Prometheus metrics singleton (lazy init to avoid import-time side effects)
+_prometheus_exporter = None
+
+
+def _get_prometheus_exporter():
+    global _prometheus_exporter
+    if _prometheus_exporter is None:
+        try:
+            from ghl_real_estate_ai.observability.prometheus_exporter import JorgePrometheusExporter
+            _prometheus_exporter = JorgePrometheusExporter()
+        except Exception:
+            _prometheus_exporter = None
+    return _prometheus_exporter
+
 
 @app.middleware("http")
 async def enhanced_performance_middleware(request: Request, call_next):
@@ -825,7 +839,7 @@ async def enhanced_performance_middleware(request: Request, call_next):
     Enhanced performance optimization middleware with:
     - Advanced caching strategies
     - Response compression optimization
-    - Performance monitoring and metrics
+    - Performance monitoring and metrics (Prometheus)
     - Content optimization
     - Request/response size tracking
     """
@@ -847,6 +861,13 @@ async def enhanced_performance_middleware(request: Request, call_next):
     # Calculate processing time
     process_time = time.time() - start_time
     performance_stats["total_response_time"] += process_time
+
+    # Prometheus HTTP request metrics
+    exporter = _get_prometheus_exporter()
+    if exporter and not path.startswith("/metrics") and not path.startswith("/prometheus"):
+        # Normalize path to avoid high-cardinality labels
+        endpoint = path.split("?")[0]
+        exporter.observe_http_request(method, endpoint, response.status_code, process_time)
 
     # ADVANCED CACHING STRATEGY
 
