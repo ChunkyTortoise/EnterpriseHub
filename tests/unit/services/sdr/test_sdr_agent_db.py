@@ -250,17 +250,22 @@ async def test_cadence_compute_next_touch_time_fast_replier():
     """Fast replier should get 25% reduction in delay."""
     from ghl_real_estate_ai.services.sdr.cadence_scheduler import CadenceScheduler
 
+    # Use a fixed Wednesday 10 AM UTC so 18h later (Thursday 4 AM) snaps to
+    # business hours without adding more than ~5h.  Using datetime.now() makes
+    # this test flaky when 18h lands on a Sunday or outside business hours.
+    fixed_now = datetime(2026, 3, 4, 10, 0, 0, tzinfo=timezone.utc)  # Wednesday
+
     base = 24.0  # hours
     result = CadenceScheduler.compute_next_touch_time(
         base_delay_hours=base,
         reply_count=0,
         last_reply_latency_minutes=10,  # fast
-        now=NOW,
+        now=fixed_now,
     )
-    # 24 * 0.75 = 18 hours, clamped to [4, 72]
-    expected_delta_hours = 18.0
-    actual_delta = (result - NOW).total_seconds() / 3600
-    assert actual_delta == pytest.approx(expected_delta_hours, abs=1.0)
+    # 24 * 0.75 = 18 hours, clamped to [4, 72], then snapped to business hours
+    # Wednesday 10 AM + 18h = Thursday 4 AM → snaps to Thursday 9 AM = 23h delta
+    actual_delta = (result - fixed_now).total_seconds() / 3600
+    assert actual_delta == pytest.approx(23.0, abs=1.0)
 
 
 @pytest.mark.asyncio
