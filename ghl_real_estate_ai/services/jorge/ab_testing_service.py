@@ -128,6 +128,8 @@ class ABTestingService:
                 cls._instance._initialized = False
             return cls._instance
 
+    _initialized: bool
+
     def __init__(self) -> None:
         if self._initialized:
             return

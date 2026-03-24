@@ -1864,17 +1864,20 @@ Current Time: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
             recommendations = []
 
             # Add ML-based recommendations
-            if core_prediction and hasattr(core_prediction, "recommended_actions"):
-                recommendations.extend(core_prediction.recommended_actions[:2])
+            ml_prediction = analysis.get("core_prediction", {})
+            if isinstance(ml_prediction, dict) and "recommended_actions" in ml_prediction:
+                recommendations.extend(ml_prediction["recommended_actions"][:2])
 
             # Add sentiment-based recommendations
-            if sentiment_result and sentiment_result.get("alert") == "COLD_LEAD":
-                objection = sentiment_result.get("objection_hint", "general concerns")
+            sentiment_data = analysis.get("sentiment_analysis", {})
+            if sentiment_data and sentiment_data.get("alert") == "COLD_LEAD":
+                objection = sentiment_data.get("objection_hint", "general concerns")
                 recommendations.append(f"Address {objection} with personalized re-engagement message")
 
             # Add psychographic-based recommendations
-            if psycho_result and "recommended_tone" in psycho_result:
-                tone = psycho_result["recommended_tone"]
+            psycho_data = analysis.get("psychographic_factors", {})
+            if psycho_data and "recommended_tone" in psycho_data:
+                tone = psycho_data["recommended_tone"]
                 recommendations.append(f"Adjust communication tone: {tone}")
 
             # Prioritize if high risk
