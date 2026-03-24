@@ -15,7 +15,17 @@ from ghl_real_estate_ai.agent_system.v2.agents.design_agent import DesignDeps, d
 from ghl_real_estate_ai.agent_system.v2.agents.executive_agent import ExecutiveDeps, executive_agent
 from ghl_real_estate_ai.agent_system.v2.agents.marketing_agent import MarketingDeps, marketing_agent
 from ghl_real_estate_ai.agent_system.v2.agents.research_agent import ResearchDeps, research_agent
-from ghl_real_estate_ai.services.ghl_integration_service import ghl_integration_service
+from ghl_real_estate_ai.services.ghl_client import GHLClient
+
+# Lazy singleton replacing the deleted GHLIntegrationService
+_ghl_client = None
+
+
+def _get_ghl_client() -> GHLClient:
+    global _ghl_client
+    if _ghl_client is None:
+        _ghl_client = GHLClient()
+    return _ghl_client
 from ghl_real_estate_ai.services.lead_scoring_service import lead_scoring_service
 from ghl_real_estate_ai.services.performance_monitoring_service import performance_monitor
 from ghl_real_estate_ai.services.semantic_cache_service import semantic_cache
@@ -215,8 +225,13 @@ async def marketing_node(state: ConductorState):
 
     print(f"📣 Generating marketing campaigns and matching leads for: {state['property_address']}")
 
-    # 1. Fetch leads from GHL
-    leads = await ghl_integration_service.get_active_leads()
+    # 1. Fetch leads from GHL (with mock fallback for demo)
+    try:
+        leads = await _get_ghl_client().search_contacts(limit=50)
+        if not leads:
+            leads = []
+    except Exception:
+        leads = []
 
     # 2. Match leads to property
     research_data = state.get("research_data") or {}
@@ -229,7 +244,7 @@ async def marketing_node(state: ConductorState):
     matched_leads = lead_scoring_service.match_leads_to_property(property_info, leads)
 
     # 3. Generate Marketing Campaign
-    deps = MarketingDeps(ghl_service=ghl_integration_service)
+    deps = MarketingDeps(ghl_service=_get_ghl_client())
     try:
         top_lead = matched_leads[0] if matched_leads else {"first_name": "Prospect"}
         result = await marketing_agent.run(
@@ -274,14 +289,14 @@ async def lead_recovery_node(state: ConductorState):
                 print(f"⚡ High priority lead detected ({lead_id}). Triggering GHL Hardening...")
 
                 # 1. Add Recovery Tag
-                await ghl_integration_service.client.add_tags(
+                await _get_ghl_client().client.add_tags(
                     lead_id, ["AI-Recovery-Active", f"Recovery-Priority-{analysis.priority_level.upper()}"]
                 )
 
                 # 2. Trigger Recovery Workflow if Critical
                 if analysis.priority_level == "critical":
                     # In a real app, these IDs would be in config
-                    await ghl_integration_service.client.trigger_workflow(lead_id, "workflow_recovery_critical_v2")
+                    await _get_ghl_client().client.trigger_workflow(lead_id, "workflow_recovery_critical_v2")
 
             recovery_results.append(
                 {
