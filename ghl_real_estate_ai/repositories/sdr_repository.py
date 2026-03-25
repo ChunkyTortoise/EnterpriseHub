@@ -68,9 +68,7 @@ class SDRRepository:
     async def get_prospect(self, prospect_id: str) -> Optional[SDRProspect]:
         return await self._session.get(SDRProspect, prospect_id)
 
-    async def get_prospect_by_contact(
-        self, contact_id: str, location_id: str
-    ) -> Optional[SDRProspect]:
+    async def get_prospect_by_contact(self, contact_id: str, location_id: str) -> Optional[SDRProspect]:
         stmt = select(SDRProspect).where(
             SDRProspect.contact_id == contact_id,
             SDRProspect.location_id == location_id,
@@ -78,9 +76,7 @@ class SDRRepository:
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def update_scores(
-        self, prospect_id: str, frs_score: float, pcs_score: float
-    ) -> None:
+    async def update_scores(self, prospect_id: str, frs_score: float, pcs_score: float) -> None:
         stmt = (
             update(SDRProspect)
             .where(SDRProspect.id == prospect_id)
@@ -119,9 +115,7 @@ class SDRRepository:
         await self._session.flush()
         return seq
 
-    async def get_active_sequence(
-        self, contact_id: str, location_id: str
-    ) -> Optional[SDROutreachSequence]:
+    async def get_active_sequence(self, contact_id: str, location_id: str) -> Optional[SDROutreachSequence]:
         stmt = select(SDROutreachSequence).where(
             SDROutreachSequence.contact_id == contact_id,
             SDROutreachSequence.location_id == location_id,
@@ -153,9 +147,7 @@ class SDRRepository:
         await self._session.execute(stmt)
         await self._session.flush()
 
-    async def get_due_sequences(
-        self, cutoff: datetime, limit: int = 50
-    ) -> List[SDROutreachSequence]:
+    async def get_due_sequences(self, cutoff: datetime, limit: int = 50) -> List[SDROutreachSequence]:
         stmt = (
             select(SDROutreachSequence)
             .where(
@@ -192,18 +184,14 @@ class SDRRepository:
         await self._session.flush()
         return touch
 
-    async def record_reply(
-        self, touch_id: str, reply_body: str, replied_at: datetime
-    ) -> None:
+    async def record_reply(self, touch_id: str, reply_body: str, replied_at: datetime) -> None:
         touch = await self._session.get(SDROutreachTouch, touch_id)
         if touch is not None:
             touch.reply_body = reply_body  # uses encrypted setter
             touch.replied_at = replied_at
             await self._session.flush()
 
-    async def get_touches_for_sequence(
-        self, sequence_id: str
-    ) -> List[SDROutreachTouch]:
+    async def get_touches_for_sequence(self, sequence_id: str) -> List[SDROutreachTouch]:
         stmt = (
             select(SDROutreachTouch)
             .where(SDROutreachTouch.sequence_id == sequence_id)
@@ -212,9 +200,7 @@ class SDRRepository:
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_touches_for_contact(
-        self, contact_id: str, limit: int = 20
-    ) -> List[SDROutreachTouch]:
+    async def get_touches_for_contact(self, contact_id: str, limit: int = 20) -> List[SDROutreachTouch]:
         stmt = (
             select(SDROutreachTouch)
             .where(SDROutreachTouch.contact_id == contact_id)
@@ -245,13 +231,9 @@ class SDRRepository:
         await self._session.flush()
         return obj
 
-    async def get_objection_logs(
-        self, contact_id: str
-    ) -> List[SDRObjectionLog]:
+    async def get_objection_logs(self, contact_id: str) -> List[SDRObjectionLog]:
         stmt = (
-            select(SDRObjectionLog)
-            .where(SDRObjectionLog.contact_id == contact_id)
-            .order_by(SDRObjectionLog.logged_at)
+            select(SDRObjectionLog).where(SDRObjectionLog.contact_id == contact_id).order_by(SDRObjectionLog.logged_at)
         )
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
@@ -260,47 +242,31 @@ class SDRRepository:
     # Aggregation (analytics)
     # ------------------------------------------------------------------
 
-    async def count_enrolled(
-        self, location_id: Optional[str], since: datetime
-    ) -> int:
-        stmt = select(func.count(SDRProspect.id)).where(
-            SDRProspect.enrolled_at >= since
-        )
+    async def count_enrolled(self, location_id: Optional[str], since: datetime) -> int:
+        stmt = select(func.count(SDRProspect.id)).where(SDRProspect.enrolled_at >= since)
         if location_id is not None:
             stmt = stmt.where(SDRProspect.location_id == location_id)
         result = await self._session.execute(stmt)
         return result.scalar_one() or 0
 
-    async def count_touches_sent(
-        self, location_id: Optional[str], since: datetime
-    ) -> int:
-        stmt = select(func.count(SDROutreachTouch.id)).where(
-            SDROutreachTouch.sent_at >= since
-        )
+    async def count_touches_sent(self, location_id: Optional[str], since: datetime) -> int:
+        stmt = select(func.count(SDROutreachTouch.id)).where(SDROutreachTouch.sent_at >= since)
         if location_id is not None:
-            stmt = stmt.join(SDROutreachSequence).where(
-                SDROutreachSequence.location_id == location_id
-            )
+            stmt = stmt.join(SDROutreachSequence).where(SDROutreachSequence.location_id == location_id)
         result = await self._session.execute(stmt)
         return result.scalar_one() or 0
 
-    async def count_replies(
-        self, location_id: Optional[str], since: datetime
-    ) -> int:
+    async def count_replies(self, location_id: Optional[str], since: datetime) -> int:
         stmt = select(func.count(SDROutreachTouch.id)).where(
             SDROutreachTouch.replied_at.isnot(None),
             SDROutreachTouch.sent_at >= since,
         )
         if location_id is not None:
-            stmt = stmt.join(SDROutreachSequence).where(
-                SDROutreachSequence.location_id == location_id
-            )
+            stmt = stmt.join(SDROutreachSequence).where(SDROutreachSequence.location_id == location_id)
         result = await self._session.execute(stmt)
         return result.scalar_one() or 0
 
-    async def count_by_step(
-        self, location_id: Optional[str], since: datetime
-    ) -> Dict[str, int]:
+    async def count_by_step(self, location_id: Optional[str], since: datetime) -> Dict[str, int]:
         stmt = (
             select(
                 SDROutreachSequence.current_step,
@@ -314,9 +280,7 @@ class SDRRepository:
         result = await self._session.execute(stmt)
         return {row[0]: row[1] for row in result.all()}
 
-    async def objection_distribution(
-        self, location_id: Optional[str], since: datetime
-    ) -> Dict[str, int]:
+    async def objection_distribution(self, location_id: Optional[str], since: datetime) -> Dict[str, int]:
         stmt = (
             select(
                 SDRObjectionLog.objection_type,

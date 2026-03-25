@@ -378,7 +378,6 @@ def render_market_overview(markets: List[MarketMetrics]):
             color_continuous_scale="RdYlGn_r",
         )
 
-
         fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
 
@@ -422,9 +421,7 @@ def render_recovery_pipeline(pipeline_data: pd.DataFrame):
             )
         )
 
-        fig.update_layout(
-            title="Recovery Funnel - Real-time"
-        )
+        fig.update_layout(title="Recovery Funnel - Real-time")
 
         fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
@@ -655,7 +652,6 @@ def render_roi_insights():
             color="CLV_Impact",
             color_continuous_scale="Blues",
         )
-
 
         fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)

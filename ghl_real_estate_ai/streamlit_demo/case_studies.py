@@ -201,11 +201,7 @@ def render_implementation_timeline(phases: list):
         )
 
     fig.update_layout(
-        title="Implementation Phases",
-        xaxis_title="Duration (Days)",
-        yaxis_title="",
-        height=300,
-        showlegend=False
+        title="Implementation Phases", xaxis_title="Duration (Days)", yaxis_title="", height=300, showlegend=False
     )
 
     fig = style_obsidian_chart(fig)

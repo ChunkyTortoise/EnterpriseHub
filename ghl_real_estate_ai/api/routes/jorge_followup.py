@@ -39,9 +39,7 @@ def _get_analytics_service() -> AnalyticsService:
 
 @lru_cache(maxsize=1)
 def _get_scheduler() -> JorgeFollowUpScheduler:
-    return JorgeFollowUpScheduler(
-        _get_conversation_manager(), _get_ghl_client(), _get_analytics_service()
-    )
+    return JorgeFollowUpScheduler(_get_conversation_manager(), _get_ghl_client(), _get_analytics_service())
 
 
 @router.post("/webhook")

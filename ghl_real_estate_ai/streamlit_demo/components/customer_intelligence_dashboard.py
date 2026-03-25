@@ -1007,9 +1007,7 @@ class CustomerIntelligenceDashboard:
             go.Bar(x=list(features.values()), y=list(features.keys()), orientation="h", marker=dict(color="#667eea"))
         )
 
-        fig.update_layout(
-            height=350, xaxis_title="Importance Score"
-        )
+        fig.update_layout(height=350, xaxis_title="Importance Score")
 
         fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)

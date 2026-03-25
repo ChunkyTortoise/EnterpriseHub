@@ -342,7 +342,7 @@ class SubscriptionManager:
 
             # Define threshold levels
             thresholds = {
-                "warning": 75,   # 75% usage warning
+                "warning": 75,  # 75% usage warning
                 "alert_80": 80,  # 80% usage alert (new)
                 "critical": 90,  # 90% usage critical alert
                 "overage": 100,  # Usage overage

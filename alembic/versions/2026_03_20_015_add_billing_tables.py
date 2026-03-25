@@ -41,15 +41,9 @@ def upgrade():
         )
         """
     )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_subscriptions_location_id ON subscriptions (location_id)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions (status)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_sub_id ON subscriptions (stripe_subscription_id)"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS idx_subscriptions_location_id ON subscriptions (location_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions (status)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_subscriptions_stripe_sub_id ON subscriptions (stripe_subscription_id)")
 
     # -- stripe_customers --
     op.execute(
@@ -67,9 +61,7 @@ def upgrade():
         )
         """
     )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_stripe_customers_location_id ON stripe_customers (location_id)"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS idx_stripe_customers_location_id ON stripe_customers (location_id)")
     op.execute(
         "CREATE INDEX IF NOT EXISTS idx_stripe_customers_stripe_customer_id ON stripe_customers (stripe_customer_id)"
     )
@@ -92,9 +84,7 @@ def upgrade():
         )
         """
     )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_usage_records_subscription_id ON usage_records (subscription_id)"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS idx_usage_records_subscription_id ON usage_records (subscription_id)")
 
     # -- billing_events --
     op.execute(
@@ -111,12 +101,8 @@ def upgrade():
         )
         """
     )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_billing_events_event_id ON billing_events (event_id)"
-    )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_billing_events_event_type ON billing_events (event_type)"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS idx_billing_events_event_id ON billing_events (event_id)")
+    op.execute("CREATE INDEX IF NOT EXISTS idx_billing_events_event_type ON billing_events (event_type)")
 
     # Tier rename: 'professional' → 'growth' for any existing rows
     op.execute("UPDATE subscriptions SET tier = 'growth' WHERE tier = 'professional'")

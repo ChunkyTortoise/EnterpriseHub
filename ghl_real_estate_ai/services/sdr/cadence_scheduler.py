@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 logger = get_logger(__name__)
 
 # Business-hours constraints for touch scheduling
-_BIZ_HOUR_START = 9   # 9 AM
-_BIZ_HOUR_END = 19    # 7 PM
+_BIZ_HOUR_START = 9  # 9 AM
+_BIZ_HOUR_END = 19  # 7 PM
 _BLOCKED_WEEKDAY = 6  # Sunday (Monday=0)
 _MIN_TOUCH_GAP_HOURS = 4
 _MAX_TOUCH_GAP_HOURS = 72

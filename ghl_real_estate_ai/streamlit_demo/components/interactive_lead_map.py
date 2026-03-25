@@ -289,6 +289,7 @@ def render_lead_analysis(lead: Dict[str, Any]):
             if action_id == "sync_crm":
                 with st.spinner("🔌 Establishing secure handshake with GHL API..."):
                     import time
+
                     time.sleep(0.8)
                     st.session_state[sync_key] = True
                     st.toast(f"✅ Successfully synced {lead.get('name')} to HighLevel CRM!", icon="🔗")

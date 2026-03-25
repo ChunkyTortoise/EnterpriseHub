@@ -90,9 +90,7 @@ class UsageRecord(Base):
     __tablename__ = "usage_records"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    subscription_id = Column(
-        Integer, ForeignKey("subscriptions.id", ondelete="CASCADE"), nullable=False, index=True
-    )
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id", ondelete="CASCADE"), nullable=False, index=True)
     stripe_usage_record_id = Column(String(128), nullable=True)
     lead_id = Column(String(128), nullable=True)
     contact_id = Column(String(128), nullable=True)

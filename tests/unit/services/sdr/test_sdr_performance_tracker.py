@@ -1,4 +1,5 @@
 """Tests for SDRPerformanceTracker."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -14,12 +15,8 @@ def mock_repo():
     repo.count_enrolled = AsyncMock(return_value=100)
     repo.count_touches_sent = AsyncMock(return_value=50)
     repo.count_replies = AsyncMock(return_value=10)
-    repo.count_by_step = AsyncMock(
-        return_value={"sms_1": 40, "email_1": 30, "qualified": 5, "booked": 2}
-    )
-    repo.objection_distribution = AsyncMock(
-        return_value={"timing": 3, "price": 2, "already_agent": 1}
-    )
+    repo.count_by_step = AsyncMock(return_value={"sms_1": 40, "email_1": 30, "qualified": 5, "booked": 2})
+    repo.objection_distribution = AsyncMock(return_value={"timing": 3, "price": 2, "already_agent": 1})
     return repo
 
 

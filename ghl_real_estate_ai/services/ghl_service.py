@@ -40,9 +40,7 @@ class GHLService:
         return await self.client.trigger_workflow(contact_id, workflow_id)
 
     async def get_contacts(self, **kwargs) -> Dict[str, Any]:
-        contacts = await self.client.search_contacts(
-            query=kwargs.get("query", ""), limit=kwargs.get("limit", 50)
-        )
+        contacts = await self.client.search_contacts(query=kwargs.get("query", ""), limit=kwargs.get("limit", 50))
         return {"contacts": contacts}
 
     async def get_contact(self, contact_id: str) -> Dict[str, Any]:

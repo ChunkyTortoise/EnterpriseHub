@@ -62,8 +62,7 @@ class Settings(BaseSettings):
         env = os.environ.get("ENVIRONMENT", "development").lower()
         if env == "production" and not v:
             raise ValueError(
-                "RAG_JWT_SECRET must be set in production. "
-                "Generate one with: openssl rand -hex 32"
+                "RAG_JWT_SECRET must be set in production. Generate one with: openssl rand -hex 32"
             )
         return v or "dev-only-insecure-secret"
 

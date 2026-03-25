@@ -170,8 +170,7 @@ async def lifespan(app: FastAPI):
         )
     if settings.environment in ("production", "prod") and not os.getenv("STRIPE_WEBHOOK_SECRET"):
         raise RuntimeError(
-            "STRIPE_WEBHOOK_SECRET is required in production — "
-            "set this env var to your Stripe webhook signing secret"
+            "STRIPE_WEBHOOK_SECRET is required in production — set this env var to your Stripe webhook signing secret"
         )
 
     # Initialize OpenTelemetry (reads from OTEL_ENABLED env var)
@@ -820,10 +819,12 @@ app.add_middleware(GZipMiddleware, minimum_size=500, compresslevel=6)
 # Will be removed when the middleware is refactored.
 performance_stats: dict = {"total_requests": 0, "total_response_time": 0.0, "cache_hits": 0, "compression_saved": 0}
 
+
 # Prometheus metrics — use canonical singleton from observability module
 def _get_prometheus_exporter():
     try:
         from ghl_real_estate_ai.observability.prometheus_exporter import get_prometheus_exporter
+
         return get_prometheus_exporter()
     except Exception:
         return None

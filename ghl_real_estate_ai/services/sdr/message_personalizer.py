@@ -87,11 +87,7 @@ class SDRMessagePersonalizer:
 
         Returns a string of max 160 characters, TCPA-compliant.
         """
-        prompt = (
-            f"Outreach step: {step}\n"
-            f"Lead profile: {_format_profile(lead_profile)}\n\n"
-            "Write the SMS message."
-        )
+        prompt = f"Outreach step: {step}\nLead profile: {_format_profile(lead_profile)}\n\nWrite the SMS message."
         try:
             response = await self._llm.agenerate(
                 prompt=prompt,
@@ -119,11 +115,7 @@ class SDRMessagePersonalizer:
 
         Returns ``{"subject": str, "body": str}``.
         """
-        prompt = (
-            f"Outreach step: {step}\n"
-            f"Lead profile: {_format_profile(lead_profile)}\n\n"
-            "Write the email."
-        )
+        prompt = f"Outreach step: {step}\nLead profile: {_format_profile(lead_profile)}\n\nWrite the email."
         try:
             response = await self._llm.agenerate(
                 prompt=prompt,

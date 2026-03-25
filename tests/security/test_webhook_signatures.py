@@ -545,8 +545,9 @@ class TestProductionStartupGuards:
         """BillingService.verify_webhook_signature raises when secret is missing."""
         from ghl_real_estate_ai.services.billing_service import BillingService
 
-        with patch("ghl_real_estate_ai.services.billing_service.os.getenv", return_value=None), patch(
-            "ghl_real_estate_ai.services.billing_service.stripe"
+        with (
+            patch("ghl_real_estate_ai.services.billing_service.os.getenv", return_value=None),
+            patch("ghl_real_estate_ai.services.billing_service.stripe"),
         ):
             service = BillingService.__new__(BillingService)
             service.webhook_secret = None
@@ -567,11 +568,11 @@ class TestGHLReplayProtection:
 
     def _make_framework(self, secret: str = "test_secret_abc123") -> "SecurityFramework":
         from ghl_real_estate_ai.services.security_framework import SecurityFramework
+
         sf = SecurityFramework.__new__(SecurityFramework)
         from ghl_real_estate_ai.services.security_framework import SecurityConfig
-        sf.config = SecurityConfig.model_construct(
-            webhook_signing_secrets={"ghl": secret}
-        )
+
+        sf.config = SecurityConfig.model_construct(webhook_signing_secrets={"ghl": secret})
         return sf
 
     def _make_hmac_sig(self, body: bytes, secret: str) -> str:
@@ -580,6 +581,7 @@ class TestGHLReplayProtection:
     def test_recent_timestamp_accepted(self):
         """Requests with a recent timestamp pass replay check."""
         from fastapi import HTTPException
+
         sf = self._make_framework()
         body = b'{"type":"test"}'
         sig = self._make_hmac_sig(body, "test_secret_abc123")
@@ -595,6 +597,7 @@ class TestGHLReplayProtection:
     def test_old_timestamp_rejected(self):
         """Requests with a timestamp > 5 minutes old are rejected as replays."""
         from fastapi import HTTPException
+
         sf = self._make_framework()
         body = b'{"type":"test"}'
         sig = self._make_hmac_sig(body, "test_secret_abc123")
@@ -656,9 +659,11 @@ class TestGHLEd25519Verification:
     def _make_ed25519_keypair(self):
         """Generate a test Ed25519 key pair."""
         from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
         private_key = Ed25519PrivateKey.generate()
         public_key = private_key.public_key()
         from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+
         pub_bytes = public_key.public_bytes(Encoding.Raw, PublicFormat.Raw)
         return private_key, pub_bytes.hex()
 
@@ -667,6 +672,7 @@ class TestGHLEd25519Verification:
 
     def _make_framework(self) -> "SecurityFramework":
         from ghl_real_estate_ai.services.security_framework import SecurityConfig, SecurityFramework
+
         sf = SecurityFramework.__new__(SecurityFramework)
         sf.config = SecurityConfig.model_construct(webhook_signing_secrets={})
         return sf
@@ -726,6 +732,7 @@ class TestGHLEd25519Verification:
     def test_no_public_key_falls_back_to_hmac(self):
         """Without GHL_WEBHOOK_PUBLIC_KEY, HMAC path is used."""
         from ghl_real_estate_ai.services.security_framework import SecurityConfig, SecurityFramework
+
         sf = SecurityFramework.__new__(SecurityFramework)
         secret = "hmac_fallback_secret"
         sf.config = SecurityConfig.model_construct(webhook_signing_secrets={"ghl": secret})

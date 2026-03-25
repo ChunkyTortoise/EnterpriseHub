@@ -34,10 +34,7 @@ def validate_identifier(name: str, dialect: str = "postgresql") -> str:
     """
     pattern = _PG_IDENTIFIER_RE if dialect == "postgresql" else _SQLITE_IDENTIFIER_RE
     if not pattern.match(name):
-        raise ValueError(
-            f"Unsafe SQL identifier: {name!r}. "
-            f"Must match {pattern.pattern}"
-        )
+        raise ValueError(f"Unsafe SQL identifier: {name!r}. Must match {pattern.pattern}")
     return name
 
 

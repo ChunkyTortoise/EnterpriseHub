@@ -38,6 +38,7 @@ try:
     import torch.nn as nn  # type: ignore[import]
     import torchvision.transforms as transforms  # type: ignore[import]
     from transformers import BertModel, BertTokenizer, CLIPModel, CLIPProcessor  # type: ignore[import]
+
     _TORCH_AVAILABLE = True
 except ImportError:
     Image = None  # type: ignore[assignment]

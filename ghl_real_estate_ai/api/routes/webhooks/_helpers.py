@@ -33,8 +33,7 @@ logger = get_logger(__name__)
 SMS_MAX_CHARS = 320
 
 LLM_FALLBACK_MSG = (
-    "I'm having a brief connection issue — I'll follow up with you shortly. "
-    "You can also reach Jorge directly."
+    "I'm having a brief connection issue — I'll follow up with you shortly. You can also reach Jorge directly."
 )
 
 
@@ -109,9 +108,7 @@ def get_mls_client() -> MLSClient:
 # ── Safe wrappers ───────────────────────────────────────────────────────
 
 
-async def safe_send_message(
-    ghl_client: GHLClient, contact_id: str, message: str, channel: Any = None
-) -> None:
+async def safe_send_message(ghl_client: GHLClient, contact_id: str, message: str, channel: Any = None) -> None:
     """Send a message via GHL, logging errors instead of raising."""
     try:
         await ghl_client.send_message(contact_id, message, channel=channel)
@@ -119,9 +116,7 @@ async def safe_send_message(
         logger.error(f"Message delivery failed for contact {contact_id}: {e}")
 
 
-async def safe_apply_actions(
-    ghl_client: GHLClient, contact_id: str, actions: list
-) -> None:
+async def safe_apply_actions(ghl_client: GHLClient, contact_id: str, actions: list) -> None:
     """Apply GHL actions (tags, fields), logging errors instead of raising."""
     try:
         for action in actions:
@@ -144,12 +139,8 @@ async def get_tenant_ghl_client(
 # ── Tag normalization + mode flags ──────────────────────────────────────
 
 # Tags that bots apply — contacts with ONLY these should still activate
-_LEAD_PASSTHROUGH_TAGS: frozenset[str] = frozenset(
-    {"hot-lead", "warm-lead", "cold-lead", "lead-qualified"}
-)
-_SELLER_PASSTHROUGH_TAGS: frozenset[str] = frozenset(
-    {"hot-seller", "warm-seller", "cold-seller", "seller-qualified"}
-)
+_LEAD_PASSTHROUGH_TAGS: frozenset[str] = frozenset({"hot-lead", "warm-lead", "cold-lead", "lead-qualified"})
+_SELLER_PASSTHROUGH_TAGS: frozenset[str] = frozenset({"hot-seller", "warm-seller", "cold-seller", "seller-qualified"})
 
 
 def normalize_tags(raw_tags: list[str] | None) -> set[str]:
@@ -215,33 +206,89 @@ def select_primary_mode(mode_flags: dict[str, bool]) -> Optional[str]:
 
 # ── Intent detection ────────────────────────────────────────────────────
 
-_SELLER_SIGNALS = frozenset({
-    "sell", "selling", "list", "listing", "want to sell", "looking to sell",
-    "thinking about selling", "put it on the market", "on the market",
-    "my home", "my house", "my property", "my condo", "my place",
-})
+_SELLER_SIGNALS = frozenset(
+    {
+        "sell",
+        "selling",
+        "list",
+        "listing",
+        "want to sell",
+        "looking to sell",
+        "thinking about selling",
+        "put it on the market",
+        "on the market",
+        "my home",
+        "my house",
+        "my property",
+        "my condo",
+        "my place",
+    }
+)
 
-_BUYER_SIGNALS = frozenset({
-    "buy", "buying", "purchase", "purchasing", "looking for", "find a home",
-    "looking to buy", "want to buy", "interested in buying", "find a house",
-    "searching for", "need a home", "need a house", "want a home",
-    "want a house", "first home", "first house", "investment property",
-    "rental property",
-})
+_BUYER_SIGNALS = frozenset(
+    {
+        "buy",
+        "buying",
+        "purchase",
+        "purchasing",
+        "looking for",
+        "find a home",
+        "looking to buy",
+        "want to buy",
+        "interested in buying",
+        "find a house",
+        "searching for",
+        "need a home",
+        "need a house",
+        "want a home",
+        "want a house",
+        "first home",
+        "first house",
+        "investment property",
+        "rental property",
+    }
+)
 
-_NEGATIVE_KEYWORDS = frozenset({
-    "angry", "frustrated", "disappointed", "furious", "upset", "scam",
-    "rip off", "waste of time", "terrible", "awful", "horrible",
-    "ridiculous", "unacceptable", "this is bs", "this is b.s",
-    "forget it", "never mind", "stop contacting",
-})
+_NEGATIVE_KEYWORDS = frozenset(
+    {
+        "angry",
+        "frustrated",
+        "disappointed",
+        "furious",
+        "upset",
+        "scam",
+        "rip off",
+        "waste of time",
+        "terrible",
+        "awful",
+        "horrible",
+        "ridiculous",
+        "unacceptable",
+        "this is bs",
+        "this is b.s",
+        "forget it",
+        "never mind",
+        "stop contacting",
+    }
+)
 
-_REJECTED_OFFER_KEYWORDS = frozenset({
-    "rejected", "won't accept", "not accepting", "turned down",
-    "declined the offer", "offer was rejected", "offer rejected",
-    "no deal", "not interested in the offer", "below asking",
-    "too low", "lowball", "insulting offer",
-})
+_REJECTED_OFFER_KEYWORDS = frozenset(
+    {
+        "rejected",
+        "won't accept",
+        "not accepting",
+        "turned down",
+        "declined the offer",
+        "offer was rejected",
+        "offer rejected",
+        "no deal",
+        "not interested in the offer",
+        "below asking",
+        "too low",
+        "lowball",
+        "insulting offer",
+    }
+)
 
 
 def detect_buy_sell_intent(message: str) -> Optional[str]:

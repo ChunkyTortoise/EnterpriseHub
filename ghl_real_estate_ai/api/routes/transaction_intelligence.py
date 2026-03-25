@@ -84,6 +84,7 @@ def _get_celebration_engine() -> CelebrationEngine:
         _celebration_engine = CelebrationEngine()
     return _celebration_engine
 
+
 # ============================================================================
 # PYDANTIC MODELS
 # ============================================================================
@@ -388,7 +389,9 @@ async def update_milestone(
         )
 
         # Update milestone
-        success = await _get_transaction_service().update_milestone_status(milestone_update.milestone_id, update_data, user_id)
+        success = await _get_transaction_service().update_milestone_status(
+            milestone_update.milestone_id, update_data, user_id
+        )
 
         if not success:
             raise HTTPException(status_code=404, detail="Milestone not found")

@@ -621,7 +621,7 @@ class SHAPExplainabilityDashboard:
                     color_discrete_map={"Cache Hits": "#059669", "Fresh Explanations": "#DC2626"},
                 )
 
-                fig.update_layout( font={"color": "#E5E7EB"})
+                fig.update_layout(font={"color": "#E5E7EB"})
 
                 fig = style_obsidian_chart(fig)
                 st.plotly_chart(fig, use_container_width=True)
