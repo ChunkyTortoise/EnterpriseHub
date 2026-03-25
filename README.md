@@ -1,7 +1,7 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-6%2C300+-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-6%2C497-brightgreen)](tests/)
 [![CI Tests](https://img.shields.io/badge/CI_verified-1%2C100+-blue)](tests/)
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
 [![Security](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/security-scan.yml?label=security)](https://github.com/ChunkyTortoise/EnterpriseHub/actions/workflows/security-scan.yml)
@@ -29,7 +29,7 @@
 
 | Metric | Value |
 |--------|-------|
-| Total Tests | 6,300+ (unit + integration + security + compliance + e2e) |
+| Total Tests | 6,497 (unit + integration + security + compliance + e2e) |
 | CI Tests | 1,100+ (unit + agent tests verified in CI; integration tests require PostgreSQL + Redis) |
 | API P95 Latency | < 2 seconds |
 | Cache Hit Rate | 88% (L1 59% + L2 21% + L3 8%) |
