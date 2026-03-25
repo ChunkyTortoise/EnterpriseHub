@@ -57,6 +57,7 @@ from ghl_real_estate_ai.ml.neural_property_matcher import NeuralMatchingConfig, 
 from ghl_real_estate_ai.ml.privacy_preserving_pipeline import PrivacyPreservingMLPipeline
 from ghl_real_estate_ai.services.cache_service import get_cache_service
 from ghl_real_estate_ai.services.neural_inference_engine import NeuralInferenceEngine
+
 logger = get_logger(__name__)
 cache = get_cache_service()
 

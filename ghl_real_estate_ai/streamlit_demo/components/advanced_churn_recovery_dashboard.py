@@ -25,6 +25,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Configure page if running standalone

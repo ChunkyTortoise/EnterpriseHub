@@ -15,13 +15,12 @@ from typing import Any, Dict, Optional
 import plotly.express as px
 import streamlit as st
 
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
-
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.voice_ai_service import (
     VoiceInteractionType,
     get_cached_voice_service,
 )
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 logger = get_logger(__name__)
 

@@ -11,6 +11,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+
 from ghl_real_estate_ai.streamlit_demo.components.primitives import MetricConfig, render_obsidian_metric
 
 st.set_page_config(

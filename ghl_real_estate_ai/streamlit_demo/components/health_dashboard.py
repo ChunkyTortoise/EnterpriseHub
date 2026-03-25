@@ -412,6 +412,7 @@ import os as _os
 import time as _time
 from dataclasses import dataclass as _dataclass
 from typing import Optional as _Optional
+
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 _DEMO_MODE = _os.getenv("DEMO_MODE", "").lower() in ("true", "1")

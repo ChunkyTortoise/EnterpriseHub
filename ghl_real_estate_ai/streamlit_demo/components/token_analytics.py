@@ -27,6 +27,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
+
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 DEMO_MODE = os.getenv("DEMO_MODE", "").lower() in ("true", "1")

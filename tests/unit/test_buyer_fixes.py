@@ -10,9 +10,9 @@ Unit tests for three buyer bot fixes (commit ac731f52):
 """
 
 import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
