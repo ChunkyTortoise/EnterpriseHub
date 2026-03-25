@@ -670,7 +670,6 @@ class VoiceAIAccessibilityInterface:
             fig_commands.update_layout(
                 title="Voice Commands by Category",
                 title_font_size=14,
-                title_,
                 showlegend=True,
                 height=300,
             )

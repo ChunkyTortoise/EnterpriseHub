@@ -803,7 +803,7 @@ class RedisCustomerIntelligenceDashboard:
                                         size=10, color=nba_df["expected_impact"], colorscale="Viridis", showscale=True
                                     ),
                                     text=nba_df["action"],
-                                    hover,
+                                    hoverinfo="text",
                                 )
                             ]
                         )

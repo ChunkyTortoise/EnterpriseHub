@@ -13,11 +13,11 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.services.consulting_delivery_service import (
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
     ConsultingDeliveryService,
     EngagementStatus,
     EngagementTier,
 )
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 class ConsultingDeliveryShowcase:

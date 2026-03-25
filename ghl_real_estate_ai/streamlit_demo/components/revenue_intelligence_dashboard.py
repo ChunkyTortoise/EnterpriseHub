@@ -28,6 +28,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 logger = logging.getLogger(__name__)
@@ -278,7 +279,7 @@ def create_deal_probability_distribution() -> go.Figure:
                 size=12, color=probabilities, colorscale="RdYlGn", showscale=True, colorbar=dict(title="Probability %")
             ),
             text=[f"Deal ${v:,.0f}<br>Prob: {p:.1f}%" for p, v in zip(probabilities, deal_values)],
-            hover,
+            hoverinfo="text",
             name="Active Deals",
         )
     )
