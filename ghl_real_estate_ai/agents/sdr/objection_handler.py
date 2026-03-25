@@ -99,7 +99,7 @@ _CLASSIFY_SYSTEM_PROMPT = (
     "Valid types: not_interested, already_agent, timing, price, info_request, none\n\n"
     "Rules:\n"
     "- 'none' means no objection detected — the message is neutral or positive\n"
-    "- Respond with ONLY a JSON object: {\"objection_type\": \"<type>\"}\n"
+    '- Respond with ONLY a JSON object: {"objection_type": "<type>"}\n'
     "- No explanation, no extra text"
 )
 

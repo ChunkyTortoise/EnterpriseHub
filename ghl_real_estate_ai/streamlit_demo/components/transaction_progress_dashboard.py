@@ -526,8 +526,7 @@ class TransactionProgressDashboard:
             )
         )
 
-        fig.update_layout( font={"color": "white", "size": 14}, height=250
-        )
+        fig.update_layout(font={"color": "white", "size": 14}, height=250)
 
         fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)

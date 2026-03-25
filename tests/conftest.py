@@ -528,6 +528,7 @@ def disable_redis(mocker):
     if redis_url:
         try:
             import redis as _redis_sync
+
             _r = _redis_sync.Redis.from_url(redis_url, socket_timeout=1)
             _r.ping()
             yield  # Real Redis available — skip the mock

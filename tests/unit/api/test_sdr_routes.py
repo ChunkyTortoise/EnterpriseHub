@@ -9,9 +9,7 @@ import pytest
 import pytest_asyncio
 
 # Pin Fernet key before model import
-os.environ.setdefault(
-    "SDR_FERNET_KEY", "thpo83actPznyyusxB0BOogCnJAr5-_TYPMAgxd8NDg="
-)
+os.environ.setdefault("SDR_FERNET_KEY", "thpo83actPznyyusxB0BOogCnJAr5-_TYPMAgxd8NDg=")
 
 from unittest.mock import AsyncMock, patch
 
@@ -66,13 +64,15 @@ async def app(db_engine):
     test_app = FastAPI()
 
     # Patch module-level service instances to avoid real GHL calls
-    with patch("ghl_real_estate_ai.api.routes.sdr.EnhancedGHLClient"), \
-         patch("ghl_real_estate_ai.api.routes.sdr._ghl_client"), \
-         patch("ghl_real_estate_ai.api.routes.sdr._sequence_engine"), \
-         patch("ghl_real_estate_ai.api.routes.sdr._scheduler"), \
-         patch("ghl_real_estate_ai.api.routes.sdr._sdr_agent"):
-
+    with (
+        patch("ghl_real_estate_ai.api.routes.sdr.EnhancedGHLClient"),
+        patch("ghl_real_estate_ai.api.routes.sdr._ghl_client"),
+        patch("ghl_real_estate_ai.api.routes.sdr._sequence_engine"),
+        patch("ghl_real_estate_ai.api.routes.sdr._scheduler"),
+        patch("ghl_real_estate_ai.api.routes.sdr._sdr_agent"),
+    ):
         from ghl_real_estate_ai.api.routes.sdr import router
+
         test_app.include_router(router)
         test_app.dependency_overrides[get_db] = override_get_db
         yield test_app
@@ -80,9 +80,7 @@ async def app(db_engine):
 
 @pytest_asyncio.fixture
 async def client(app):
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as c:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
         yield c
 
 
@@ -150,9 +148,11 @@ async def test_process_batch_uses_db(client: AsyncClient, session: AsyncSession)
 
     # Patch the sequence engine to avoid real GHL dispatch
     with patch("ghl_real_estate_ai.api.routes.sdr._sequence_engine") as mock_engine:
-        mock_engine.advance_sequence = AsyncMock(return_value=AsyncMock(
-            current_step="email_1",
-        ))
+        mock_engine.advance_sequence = AsyncMock(
+            return_value=AsyncMock(
+                current_step="email_1",
+            )
+        )
         resp = await client.post("/sdr/sequences/process-batch", params={"batch_size": 10})
 
     assert resp.status_code == 200

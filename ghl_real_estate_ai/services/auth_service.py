@@ -152,8 +152,12 @@ class AuthService:
             await self.init_database()
 
     async def create_user(
-        self, username: str, email: str, password: str, role: UserRole = UserRole.VIEWER,
-        location_id: Optional[str] = None
+        self,
+        username: str,
+        email: str,
+        password: str,
+        role: UserRole = UserRole.VIEWER,
+        location_id: Optional[str] = None,
     ) -> Optional[User]:
         """Create a new user."""
         await self._ensure_initialized()

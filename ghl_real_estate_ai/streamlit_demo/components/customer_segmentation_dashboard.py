@@ -753,9 +753,7 @@ class CustomerSegmentationDashboard:
             ]
         )
 
-        fig.update_layout(
-            height=350, xaxis_title="Frequency (%)"
-        )
+        fig.update_layout(height=350, xaxis_title="Frequency (%)")
 
         fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)

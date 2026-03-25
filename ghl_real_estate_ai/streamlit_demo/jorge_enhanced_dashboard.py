@@ -420,12 +420,7 @@ def render_enhanced_overview():
             col=2,
         )
 
-    fig.update_layout(
-        height=400,
-        title_text="Comprehensive Bot Analytics Matrix",
-        title_x=0.5,
-        showlegend=False
-    )
+    fig.update_layout(height=400, title_text="Comprehensive Bot Analytics Matrix", title_x=0.5, showlegend=False)
 
     fig = style_obsidian_chart(fig)
     st.plotly_chart(fig, use_container_width=True)

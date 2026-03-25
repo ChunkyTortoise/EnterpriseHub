@@ -182,17 +182,13 @@ class JorgePrometheusExporter:
         if self._enabled:
             self.pcs_score.observe(score)
 
-    def observe_http_request(
-        self, method: str, endpoint: str, status_code: int, duration_seconds: float
-    ) -> None:
+    def observe_http_request(self, method: str, endpoint: str, status_code: int, duration_seconds: float) -> None:
         """Record an HTTP request observation."""
         if self._enabled:
             self.http_request_duration_seconds.labels(
                 method=method, endpoint=endpoint, status_code=str(status_code)
             ).observe(duration_seconds)
-            self.http_requests_total.labels(
-                method=method, endpoint=endpoint, status_code=str(status_code)
-            ).inc()
+            self.http_requests_total.labels(method=method, endpoint=endpoint, status_code=str(status_code)).inc()
 
     def observe_llm_usage(
         self, model: str, input_tokens: int, output_tokens: int, cost_usd: float, status: str = "success"

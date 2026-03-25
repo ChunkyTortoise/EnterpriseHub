@@ -122,14 +122,30 @@ async def test_sourcer_deduplicates_across_mls_sources():
 
     # Both sources return a listing that maps to the same contact_id
     expired_listing = MLSListing(
-        mls_number="SHARED-001", address="123 Main", city="RC",
-        state="CA", zip_code="91730", price=500000, bedrooms=3,
-        bathrooms=2.0, sqft=1500, dom=60, listing_status="expired",
+        mls_number="SHARED-001",
+        address="123 Main",
+        city="RC",
+        state="CA",
+        zip_code="91730",
+        price=500000,
+        bedrooms=3,
+        bathrooms=2.0,
+        sqft=1500,
+        dom=60,
+        listing_status="expired",
     )
     fsbo_listing = MLSListing(
-        mls_number="SHARED-001", address="123 Main", city="RC",
-        state="CA", zip_code="91730", price=500000, bedrooms=3,
-        bathrooms=2.0, sqft=1500, dom=30, listing_status="fsbo",
+        mls_number="SHARED-001",
+        address="123 Main",
+        city="RC",
+        state="CA",
+        zip_code="91730",
+        price=500000,
+        bedrooms=3,
+        bathrooms=2.0,
+        sqft=1500,
+        dom=30,
+        listing_status="fsbo",
     )
     feed.fetch_expired_listings = AsyncMock(return_value=[expired_listing])
     feed.fetch_fsbo_listings = AsyncMock(return_value=[fsbo_listing])

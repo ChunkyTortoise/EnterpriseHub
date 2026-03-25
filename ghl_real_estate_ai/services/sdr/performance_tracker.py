@@ -1,6 +1,7 @@
 """
 SDR Performance Tracker — rolling-window analytics from DB aggregation.
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -51,9 +52,19 @@ class SDRPerformanceTracker:
         since = datetime.now(timezone.utc) - timedelta(days=days)
         by_step = await self._repo.count_by_step(location_id, since)
         step_order = [
-            "enrolled", "sms_1", "email_1", "sms_2", "voicemail_1",
-            "email_2", "sms_3", "voicemail_2", "nurture_pause",
-            "qualified", "booked", "disqualified", "opted_out",
+            "enrolled",
+            "sms_1",
+            "email_1",
+            "sms_2",
+            "voicemail_1",
+            "email_2",
+            "sms_3",
+            "voicemail_2",
+            "nurture_pause",
+            "qualified",
+            "booked",
+            "disqualified",
+            "opted_out",
         ]
         return [{"step": s, "count": by_step.get(s, 0)} for s in step_order]
 
@@ -69,8 +80,5 @@ class SDRPerformanceTracker:
         return {
             "total": total,
             "distribution": distribution,
-            "rates": {
-                k: round(v / total, 4) if total > 0 else 0.0
-                for k, v in distribution.items()
-            },
+            "rates": {k: round(v / total, 4) if total > 0 else 0.0 for k, v in distribution.items()},
         }

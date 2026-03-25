@@ -11,9 +11,7 @@ import pytest
 import pytest_asyncio
 
 # Pin Fernet key before model import
-os.environ.setdefault(
-    "SDR_FERNET_KEY", "thpo83actPznyyusxB0BOogCnJAr5-_TYPMAgxd8NDg="
-)
+os.environ.setdefault("SDR_FERNET_KEY", "thpo83actPznyyusxB0BOogCnJAr5-_TYPMAgxd8NDg=")
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -55,15 +53,17 @@ def _make_agent(ghl_client: Any, repo: SDRRepository) -> Any:
     """Create SDRAgent with mocked heavy dependencies."""
     from ghl_real_estate_ai.agents.sdr.sdr_agent import SDRAgent, SDRBotConfig
 
-    with patch(
-        "ghl_real_estate_ai.agents.intent_decoder.LeadIntentDecoder"
-    ), patch(
-        "ghl_real_estate_ai.agents.sdr.sdr_agent.QualificationGate"
-    ) as MockGate:
+    with (
+        patch("ghl_real_estate_ai.agents.intent_decoder.LeadIntentDecoder"),
+        patch("ghl_real_estate_ai.agents.sdr.sdr_agent.QualificationGate") as MockGate,
+    ):
         # Gate always fails by default (no handoff)
         gate_instance = MockGate.return_value
         gate_instance.evaluate.return_value = MagicMock(
-            passed=False, handoff_target=None, frs_score=0.3, pcs_score=0.2,
+            passed=False,
+            handoff_target=None,
+            frs_score=0.3,
+            pcs_score=0.2,
             intent_profile=MagicMock(),
         )
         agent = SDRAgent(
@@ -230,14 +230,13 @@ async def test_handoff_persists_qualified_step(repo: SDRRepository, session: Asy
 async def test_agent_works_without_repo():
     """SDRAgent should work with repository=None (backward compatible)."""
     ghl = _mock_ghl_client()
-    agent = _make_agent.__wrapped__(ghl, None) if hasattr(_make_agent, '__wrapped__') else None
+    agent = _make_agent.__wrapped__(ghl, None) if hasattr(_make_agent, "__wrapped__") else None
 
     from ghl_real_estate_ai.agents.sdr.sdr_agent import SDRAgent, SDRBotConfig
 
-    with patch(
-        "ghl_real_estate_ai.agents.intent_decoder.LeadIntentDecoder"
-    ), patch(
-        "ghl_real_estate_ai.agents.sdr.sdr_agent.QualificationGate"
+    with (
+        patch("ghl_real_estate_ai.agents.intent_decoder.LeadIntentDecoder"),
+        patch("ghl_real_estate_ai.agents.sdr.sdr_agent.QualificationGate"),
     ):
         agent = SDRAgent(ghl_client=ghl, config=SDRBotConfig(), repository=None)
 

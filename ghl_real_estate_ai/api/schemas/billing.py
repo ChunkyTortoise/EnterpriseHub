@@ -21,8 +21,8 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_seriali
 class SubscriptionTier(str, Enum):
     """Subscription tier options with usage allowances."""
 
-    STARTER = "starter"        # $297/month, 500 leads
-    GROWTH = "growth"          # $597/month, 2,500 leads
+    STARTER = "starter"  # $297/month, 500 leads
+    GROWTH = "growth"  # $597/month, 2,500 leads
     PROFESSIONAL = "professional"  # Legacy tier (DB rows pre-migration); maps to growth pricing
     ENTERPRISE = "enterprise"  # $1,497/month, unlimited
 

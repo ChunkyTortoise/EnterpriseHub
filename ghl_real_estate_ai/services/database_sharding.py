@@ -521,9 +521,7 @@ class DatabaseShardingService:
                     async with target_pool.acquire() as tgt_conn:
                         for row in rows:
                             cols = list(row.keys())
-                            quoted_cols = ", ".join(
-                                quote_identifier(c) for c in cols
-                            )
+                            quoted_cols = ", ".join(quote_identifier(c) for c in cols)
                             placeholders = ", ".join(f"${i + 1}" for i in range(len(cols)))
                             await tgt_conn.execute(
                                 f"INSERT INTO {quoted_table} ({quoted_cols}) VALUES ({placeholders}) ON CONFLICT DO NOTHING",

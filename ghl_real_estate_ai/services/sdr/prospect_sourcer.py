@@ -172,7 +172,6 @@ class ProspectSourcer:
             for c in contacts
         ]
 
-
     async def _fetch_expired_mls(self, location_id: str, limit: int) -> List[ProspectProfile]:
         """Pull expired MLS listings and convert to ProspectProfiles."""
         try:

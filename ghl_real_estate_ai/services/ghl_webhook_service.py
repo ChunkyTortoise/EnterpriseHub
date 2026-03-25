@@ -85,6 +85,7 @@ def get_anthropic_client() -> anthropic.Anthropic:
         _anthropic_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
     return _anthropic_client
 
+
 # Configuration
 GHL_WEBHOOK_SECRET = os.getenv("GHL_WEBHOOK_SECRET", "")
 GHL_API_KEY = os.getenv("GHL_API_KEY", "")

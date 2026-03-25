@@ -37,6 +37,7 @@ from typing import Any, Dict, List, Optional
 
 try:
     from sentence_transformers import SentenceTransformer  # type: ignore[import]
+
     _SENTENCE_TRANSFORMERS_AVAILABLE = True
 except ImportError:
     SentenceTransformer = None  # type: ignore[assignment]

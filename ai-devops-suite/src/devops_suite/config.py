@@ -70,7 +70,9 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
 
     # Auth
-    jwt_secret: str = Field(default="", description="JWT signing secret — set DEVOPS_JWT_SECRET in env")
+    jwt_secret: str = Field(
+        default="", description="JWT signing secret — set DEVOPS_JWT_SECRET in env"
+    )
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60
 

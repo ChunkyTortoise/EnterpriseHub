@@ -237,7 +237,9 @@ class AutomationStudioHub:
 
         with col1:
             st.metric("AI ROI (SAVED)", f"${saved_cost:.4f}", delta=f"{usage.get('cache_hits', 0)} hits")
-            _fig1 = style_obsidian_chart(sparkline([0, 0.5, 0.8, 1.2, saved_cost, saved_cost], color="#6366F1", height=40))
+            _fig1 = style_obsidian_chart(
+                sparkline([0, 0.5, 0.8, 1.2, saved_cost, saved_cost], color="#6366F1", height=40)
+            )
             st.plotly_chart(_fig1, use_container_width=True, config={"displayModeBar": False})
         with col2:
             st.metric("EVENTS (24H)", "1,842", delta="12%")
@@ -253,11 +255,6 @@ class AutomationStudioHub:
             st.plotly_chart(_fig4, use_container_width=True, config={"displayModeBar": False})
 
         st.markdown("---")
-
-
-def run_async(coro):
-
-    return run_async(coro)
 
     def _render_marketplace(self):
         """Elite Marketplace for pre-built workflows"""

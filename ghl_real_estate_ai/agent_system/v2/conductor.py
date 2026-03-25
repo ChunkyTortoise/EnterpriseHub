@@ -26,6 +26,8 @@ def _get_ghl_client() -> GHLClient:
     if _ghl_client is None:
         _ghl_client = GHLClient()
     return _ghl_client
+
+
 from ghl_real_estate_ai.services.lead_scoring_service import lead_scoring_service
 from ghl_real_estate_ai.services.performance_monitoring_service import performance_monitor
 from ghl_real_estate_ai.services.semantic_cache_service import semantic_cache

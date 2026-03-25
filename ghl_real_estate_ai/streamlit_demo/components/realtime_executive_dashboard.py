@@ -577,7 +577,6 @@ class RealTimeExecutiveDashboard:
                 )
             )
 
-
             fig_gauge = style_obsidian_chart(fig_gauge)
             st.plotly_chart(fig_gauge, use_container_width=True)
 

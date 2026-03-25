@@ -49,6 +49,7 @@ router = APIRouter(prefix="/billing", tags=["billing"], dependencies=[Depends(ge
 # Separate router for Stripe webhook — uses Stripe signature verification, not JWT
 stripe_webhook_router = APIRouter(prefix="/billing", tags=["billing"])
 
+
 # Dependency providers — lazy initialization avoids blocking the event loop at import time
 def get_billing_service() -> BillingService:
     return BillingService()
@@ -1038,7 +1039,7 @@ async def process_payment(invoice_id: str, background_tasks: BackgroundTasks):
                 "status": invoice.status,
             }
 
-    except stripe.error.CardError as e:
+    except stripe.CardError as e:
         logger.error(f"Card error processing payment for {invoice_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
@@ -1050,7 +1051,7 @@ async def process_payment(invoice_id: str, background_tasks: BackgroundTasks):
                 "stripe_error_code": e.code,
             },
         )
-    except stripe.error.StripeError as e:
+    except stripe.StripeError as e:
         logger.error(f"Stripe error processing payment for {invoice_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

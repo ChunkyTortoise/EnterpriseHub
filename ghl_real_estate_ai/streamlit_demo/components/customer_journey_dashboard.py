@@ -763,9 +763,7 @@ class CustomerJourneyDashboard:
             ]
         )
 
-        fig.update_layout(
-            height=350, xaxis_title="Action Frequency (%)"
-        )
+        fig.update_layout(height=350, xaxis_title="Action Frequency (%)")
 
         fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)
@@ -1112,9 +1110,7 @@ class CustomerJourneyDashboard:
             ]
         )
 
-        fig.update_layout(
-            height=350, xaxis_title="Impact Score"
-        )
+        fig.update_layout(height=350, xaxis_title="Impact Score")
 
         fig = style_obsidian_chart(fig)
         st.plotly_chart(fig, use_container_width=True)

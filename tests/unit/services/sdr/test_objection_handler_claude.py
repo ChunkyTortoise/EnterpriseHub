@@ -48,9 +48,7 @@ async def test_handle_async_calls_claude_when_no_pattern_match():
     llm = _mock_llm('{"objection_type": "timing"}')
     handler = ObjectionHandler()  # no constructor llm
 
-    result = await handler.handle_async(
-        "we might think about it down the road", contact_id="c2", llm_client=llm
-    )
+    result = await handler.handle_async("we might think about it down the road", contact_id="c2", llm_client=llm)
 
     assert result.objection_type == "timing"
     assert result.strategy == "nurture_pause"

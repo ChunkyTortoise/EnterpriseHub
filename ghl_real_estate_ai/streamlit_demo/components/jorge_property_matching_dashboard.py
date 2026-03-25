@@ -729,8 +729,7 @@ def render_inventory_analytics_section(api_client: JorgePropertyMatchingAPIClien
             color_continuous_scale="Blues",
         )
 
-        fig_price.update_layout( showlegend=False
-        )
+        fig_price.update_layout(showlegend=False)
 
         fig_price = style_obsidian_chart(fig_price)
         st.plotly_chart(fig_price, use_container_width=True)
@@ -861,8 +860,7 @@ def render_matching_performance_section(api_client: JorgePropertyMatchingAPIClie
             labels={"x": "Date", "y": "Processing Time (ms)"},
         )
 
-        fig_processing.update_layout(
-        )
+        fig_processing.update_layout()
 
         fig_processing = style_obsidian_chart(fig_processing)
         st.plotly_chart(fig_processing, use_container_width=True)

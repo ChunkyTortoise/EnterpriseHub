@@ -30,6 +30,7 @@ try:
     import torch  # type: ignore[import]
     import torch.nn as nn  # type: ignore[import]
     from transformers import BertModel, BertTokenizer, CLIPModel, CLIPProcessor  # type: ignore[import]
+
     _TORCH_AVAILABLE = True
 except ImportError:
     torch = None  # type: ignore[assignment]
