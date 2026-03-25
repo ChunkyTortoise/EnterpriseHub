@@ -284,7 +284,7 @@ def create_lead_score_distribution_chart(conversations: List[Dict]) -> go.Figure
         yaxis_title="Count",
         showlegend=False,
         height=300,
-        margin=dict(l=20, r=20, t=60, b=20)
+        margin=dict(l=20, r=20, t=60, b=20),
         xaxis=dict(gridcolor=COLORS["grid"]),
         yaxis=dict(gridcolor=COLORS["grid"]),
     )
@@ -317,7 +317,7 @@ def create_classification_pie_chart(conversations: List[Dict]) -> go.Figure:
     fig.update_layout(
         title="<b>Lead Classification Breakdown</b>",
         height=300,
-        margin=dict(l=20, r=20, t=60, b=20)
+        margin=dict(l=20, r=20, t=60, b=20),
         legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
     )
 
@@ -358,7 +358,7 @@ def create_conversation_timeline(conversations: List[Dict]) -> go.Figure:
         yaxis_title="Volume",
         showlegend=False,
         height=300,
-        margin=dict(l=20, r=20, t=60, b=20)
+        margin=dict(l=20, r=20, t=60, b=20),
         xaxis=dict(gridcolor=COLORS["grid"]),
         yaxis=dict(gridcolor=COLORS["grid"]),
     )
@@ -395,7 +395,7 @@ def create_response_time_chart(conversations: List[Dict]) -> go.Figure:
         yaxis_title="Seconds",
         showlegend=False,
         height=300,
-        margin=dict(l=20, r=20, t=60, b=20)
+        margin=dict(l=20, r=20, t=60, b=20),
         xaxis=dict(gridcolor=COLORS["grid"]),
         yaxis=dict(gridcolor=COLORS["grid"]),
     )
@@ -431,7 +431,7 @@ def create_intent_breakdown(conversations: List[Dict]) -> go.Figure:
         yaxis_title="Count",
         showlegend=False,
         height=300,
-        margin=dict(l=20, r=20, t=60, b=20)
+        margin=dict(l=20, r=20, t=60, b=20),
         xaxis=dict(gridcolor=COLORS["grid"]),
         yaxis=dict(gridcolor=COLORS["grid"]),
     )

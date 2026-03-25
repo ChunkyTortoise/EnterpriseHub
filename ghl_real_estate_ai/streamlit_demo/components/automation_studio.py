@@ -45,7 +45,7 @@ def sparkline(data: list, color: str = "#6366F1", height: int = 50):
     )
 
     fig.update_layout(
-        showlegend=False
+        showlegend=False,
         margin=dict(l=0, r=0, t=5, b=0),
         height=height,
         xaxis=dict(visible=False, fixedrange=True),

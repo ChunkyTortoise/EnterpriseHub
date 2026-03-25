@@ -20,11 +20,11 @@ def run_async(coro):
 # Import proactive intelligence services
 try:
     from ghl_real_estate_ai.services.proactive_intelligence_engine import (
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
         AlertPriority,
         AlertType,
         get_proactive_intelligence_engine,
     )
+    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
     PROACTIVE_INTELLIGENCE_AVAILABLE = True
 except ImportError:

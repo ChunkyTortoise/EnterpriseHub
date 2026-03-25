@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 import plotly.graph_objects as go
 import streamlit as st
+
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
@@ -97,7 +98,7 @@ def create_plotly_map(leads_data: List[Dict[str, Any]], config: Dict[str, Any]) 
             mode="markers",
             marker=dict(size=sizes, color=colors, opacity=0.9, sizemode="diameter"),
             text=texts,
-            hover,
+            hoverinfo="text",
             customdata=lead_ids,
             name="Leads",
         )
@@ -151,7 +152,7 @@ def create_heat_map(leads_data: List[Dict[str, Any]], config: Dict[str, Any]) ->
             radius=30,
             colorscale=[[0, "#3b82f6"], [0.3, "#60a5fa"], [0.5, "#f59e0b"], [0.7, "#fb923c"], [1, "#ef4444"]],
             opacity=0.6,
-            hover,
+            hoverinfo="none",
             showscale=True,
             colorbar=dict(
                 title="Activity<br>Level",
@@ -208,7 +209,7 @@ def create_combined_map(leads_data: List[Dict[str, Any]], config: Dict[str, Any]
             mode="markers",
             marker=dict(size=sizes, color=colors, opacity=0.9, sizemode="diameter"),
             text=texts,
-            hover,
+            hoverinfo="text",
             name="Leads",
         )
     )

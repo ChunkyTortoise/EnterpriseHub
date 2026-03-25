@@ -204,7 +204,7 @@ def render_property_matcher(lead_context: Dict, elite_mode: bool = False, analys
                                 visible=True, range=[0, 100], showticklabels=False, gridcolor="rgba(255,255,255,0.1)"
                             ),
                             angularaxis=dict(
-                                gridcolor="rgba(255,255,255,0.1)", tick
+                                gridcolor="rgba(255,255,255,0.1)",
                             ),
                         ),
                         showlegend=False,

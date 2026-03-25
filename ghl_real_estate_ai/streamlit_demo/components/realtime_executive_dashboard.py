@@ -326,7 +326,7 @@ class RealTimeExecutiveDashboard:
             fig_attribution.update_layout(
                 title="Revenue by Source (%)",
                 title_font_size=16,
-                title_font_color="#FFFFFF"
+                title_font_color="#FFFFFF",
                 showlegend=True,
                 legend=dict(orientation="v", yanchor="middle", y=0.5, xanchor="left", x=1.1),
                 height=300,
@@ -422,7 +422,7 @@ class RealTimeExecutiveDashboard:
         fig_forecast.update_layout(
             title="Revenue Projection (Next 5 Months)",
             title_font_size=18,
-            title_font_color="#FFFFFF"
+            title_font_color="#FFFFFF",
             showlegend=True,
             legend=dict(x=0, y=1),
             height=400,
@@ -496,7 +496,7 @@ class RealTimeExecutiveDashboard:
             fig_heatmap.update_layout(
                 title="Lead Density by Area (Last 24h)",
                 title_font_size=16,
-                title_font_color="#FFFFFF"
+                title_font_color="#FFFFFF",
                 height=300,
                 xaxis=dict(showticklabels=False),
                 yaxis=dict(showticklabels=False),

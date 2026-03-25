@@ -41,7 +41,8 @@ try:
     from core.auth_system import AuthService, Permission, UserRole, get_auth_service
     from core.tenant_middleware import get_current_tenant
     from utils.cache_service import get_redis_client
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+
+    from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 except ImportError as e:
     st.warning(f"Customer Intelligence Platform not fully available: {e}")
     # We'll create mock services for demonstration
