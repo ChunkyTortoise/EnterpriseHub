@@ -1,6 +1,7 @@
 """Tests for SDRPerformanceTracker."""
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from ghl_real_estate_ai.services.sdr.performance_tracker import SDRPerformanceTracker
 

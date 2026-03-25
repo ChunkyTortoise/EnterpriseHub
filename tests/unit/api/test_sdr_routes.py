@@ -15,8 +15,8 @@ os.environ.setdefault(
 
 from unittest.mock import AsyncMock, patch
 
-from httpx import ASGITransport, AsyncClient
 from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from ghl_real_estate_ai.models.base import Base

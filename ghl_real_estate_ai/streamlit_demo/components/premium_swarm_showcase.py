@@ -19,10 +19,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
-
 # Import existing swarm services
 from ghl_real_estate_ai.agents.lead_intelligence_swarm import LeadIntelligenceSwarm
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # ============================================================================
 # Data Models for Premium Showcase

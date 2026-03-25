@@ -21,7 +21,6 @@ from ghl_real_estate_ai.models.base import Base
 from ghl_real_estate_ai.models.sdr_models import SDRProspect
 from ghl_real_estate_ai.repositories.sdr_repository import SDRRepository
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------

@@ -32,14 +32,13 @@ from fastapi.testclient import TestClient
 
 # Import the webhook handlers (assuming they exist)
 try:
+    from ghl_real_estate_ai.api.main import app
     from ghl_real_estate_ai.api.routes.webhooks import (
         verify_ghl_signature,
         verify_sendgrid_signature,
         verify_twilio_signature,
         webhook_router,
     )
-
-    from ghl_real_estate_ai.api.main import app
 except ImportError:
     # Mock the imports if they don't exist yet
     def verify_ghl_signature(request: Request) -> bool:
@@ -667,7 +666,7 @@ class TestGHLEd25519Verification:
         return private_key.sign(body).hex()
 
     def _make_framework(self) -> "SecurityFramework":
-        from ghl_real_estate_ai.services.security_framework import SecurityFramework, SecurityConfig
+        from ghl_real_estate_ai.services.security_framework import SecurityConfig, SecurityFramework
         sf = SecurityFramework.__new__(SecurityFramework)
         sf.config = SecurityConfig.model_construct(webhook_signing_secrets={})
         return sf
@@ -726,7 +725,7 @@ class TestGHLEd25519Verification:
 
     def test_no_public_key_falls_back_to_hmac(self):
         """Without GHL_WEBHOOK_PUBLIC_KEY, HMAC path is used."""
-        from ghl_real_estate_ai.services.security_framework import SecurityFramework, SecurityConfig
+        from ghl_real_estate_ai.services.security_framework import SecurityConfig, SecurityFramework
         sf = SecurityFramework.__new__(SecurityFramework)
         secret = "hmac_fallback_secret"
         sf.config = SecurityConfig.model_construct(webhook_signing_secrets={"ghl": secret})

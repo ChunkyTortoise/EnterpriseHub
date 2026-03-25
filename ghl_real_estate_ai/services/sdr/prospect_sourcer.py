@@ -15,7 +15,6 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
-
 from ghl_real_estate_ai.services.sdr.mls_feed import SimulatedMLSFeed
 
 if TYPE_CHECKING:

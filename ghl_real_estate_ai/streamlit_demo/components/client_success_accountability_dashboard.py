@@ -21,9 +21,9 @@ import streamlit as st
 from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
+from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 from ...services.client_success_scoring_service import get_client_success_service
-from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 
 @st.cache_resource

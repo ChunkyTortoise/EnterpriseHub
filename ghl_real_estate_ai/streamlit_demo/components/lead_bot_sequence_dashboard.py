@@ -437,6 +437,7 @@ Keep this module to avoid import errors from older navigation entries.
 """
 
 import streamlit as st
+
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 

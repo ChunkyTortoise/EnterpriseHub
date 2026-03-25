@@ -25,6 +25,7 @@ from typing import Any, Dict
 import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
+
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 # Add project paths for imports

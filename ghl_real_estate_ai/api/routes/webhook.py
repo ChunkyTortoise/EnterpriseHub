@@ -128,17 +128,41 @@ LLM_FALLBACK_MSG = (
 # to avoid split-singleton instances during the strangler fig migration.
 from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_analytics_service as _get_analytics_service,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_attribution_analytics as _get_attribution_analytics,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_calendar_scheduler as _get_calendar_scheduler,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_conversation_manager as _get_conversation_manager,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_ghl_client_default as _get_ghl_client_default,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_handoff_service as _get_handoff_service,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_hitl_gate as _get_hitl_gate,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_lead_scorer as _get_lead_scorer,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_lead_source_tracker as _get_lead_source_tracker,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_mls_client as _get_mls_client,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_pricing_optimizer as _get_pricing_optimizer,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_subscription_manager as _get_subscription_manager,
+)
+from ghl_real_estate_ai.api.routes.webhooks._helpers import (
     get_tenant_service as _get_tenant_service,
 )
 
