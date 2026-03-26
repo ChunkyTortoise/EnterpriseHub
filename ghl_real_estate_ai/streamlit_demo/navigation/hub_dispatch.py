@@ -281,7 +281,7 @@ def dispatch_hub(
         Built for Jorge Sales | Claude Sonnet 4.5 | GHL Integration Ready
     </div>
     <div style='margin-top: 1rem; color: #8B949E; font-size: 0.85rem;'>
-        Consolidated Hub Architecture | Backend | 6,497 Tests
+        Consolidated Hub Architecture | Backend | 7,678 Tests
     </div>
 </div>
 """,
