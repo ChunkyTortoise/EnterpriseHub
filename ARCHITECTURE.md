@@ -77,6 +77,6 @@ Request
 
 **Why a monorepo?** The `advanced_rag_system` and `rag-as-a-service` sub-projects share the same Pydantic models, auth middleware, and CI pipeline as the core platform. Extracting them would require duplicating ~2,000 lines of shared infrastructure.
 
-**Why 8,600+ test functions but only 181 in CI?** Integration tests (the majority) require a running PostgreSQL database and Redis instance. CI runs only the unit tests that can execute with zero external dependencies. The 50% coverage gate on unit tests ensures the core business logic is covered; full integration suites run in staging.
+**Why 6,497 test functions but only 1,100+ in CI?** Integration tests (the majority) require a running PostgreSQL database and Redis instance. CI now runs 1,100+ unit + agent tests that can execute with zero external dependencies. The 50% coverage gate on unit tests ensures the core business logic is covered; full integration suites run in staging.
 
 **Why GoHighLevel?** GHL is the dominant CRM in the US real estate market. The `enhanced_ghl_client.py` provides rate-limited, retry-safe access to GHL's REST API with real-time webhook processing.

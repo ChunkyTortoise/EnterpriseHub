@@ -70,7 +70,7 @@ class GovernanceEngine:
             return message
 
         # Regex to find percentage promises (e.g., "20% yield")
-        yield_match = re.search(r"(\d+(?:\.\d+)?)\s*%\s*(?:Union[yield, roi]|return)", message, re.IGNORECASE)
+        yield_match = re.search(r"(\d+(?:\.\d+)?)\s*%\s*(?:yield|roi|return)", message, re.IGNORECASE)
         if yield_match:
             promised_yield = float(yield_match.group(1))
             market_id = context.get("market_id", "national")
@@ -80,7 +80,7 @@ class GovernanceEngine:
             if promised_yield > 15.0:
                 logger.warning(f"⚠️ G2 VERACITY: Promised yield {promised_yield}% exceeds safety limit. Neutralizing.")
                 message = re.sub(
-                    r"\d+(?:\.\d+)?\s*%\s*(?:Union[yield, roi]|return)", "high yield", message, flags=re.IGNORECASE
+                    r"\d+(?:\.\d+)?\s*%\s*(?:yield|roi|return)", "high yield", message, flags=re.IGNORECASE
                 )
 
         # Prevent absolute price promises (e.g., "I guarantee $500k")

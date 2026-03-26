@@ -1,6 +1,6 @@
 # Case Study: Production Real Estate AI Platform
 
-**89% LLM cost reduction | P95 < 2s | 7-stage compliance pipeline | 6,300+ tests**
+**89% LLM cost reduction | P95 < 2s | 7-stage compliance pipeline | 6,497 tests**
 
 ---
 
@@ -57,7 +57,7 @@ This exists because a single compliance violation can trigger regulatory action.
 | Lead qualification P95 | < 2 seconds | Synthetic load benchmark (no live LLM) |
 | Cache hit rate | 88% | L1 59% + L2 21% + L3 8% |
 | LLM cost reduction | 89% | Token usage: 93K to 7.8K per workflow |
-| Test suite | 6,300+ tests | Unit + integration + security + compliance |
+| Test suite | 6,497 tests | Unit + integration + security + compliance |
 | Agent fleet | 22 agents | Auto-routed via Agent Mesh Coordinator |
 | Compliance coverage | 5 regulations | FHA, RESPA, TCPA, CCPA, SB-243 |
 

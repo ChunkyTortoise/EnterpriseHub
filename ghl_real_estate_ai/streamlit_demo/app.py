@@ -143,10 +143,8 @@ with st.sidebar:
     # Persist market selection
     selected_market = st.selectbox(
         "Select Market:",
-        ["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"],
-        index=["Rancho Cucamonga, CA", "Rancho Cucamonga, CA"].index(
-            st.session_state.get("selected_market", "Rancho Cucamonga, CA")
-        ),
+        ["Rancho Cucamonga, CA"],
+        index=0,
         key="market_selector",
         on_change=update_market,
     )

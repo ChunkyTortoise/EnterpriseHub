@@ -906,7 +906,7 @@ async def get_report(report_id: str) -> Dict[str, Any]:
 
 @router.get("/reports/export", summary="Export Data", description="Export compliance data in CSV or JSON format.")
 async def export_data(
-    format: str = Query("json", pattern="^(Union[json, csv])$"),
+    format: str = Query("json", pattern="^(json|csv)$"),
     service: ComplianceService = Depends(get_compliance_service),
 ):
     """

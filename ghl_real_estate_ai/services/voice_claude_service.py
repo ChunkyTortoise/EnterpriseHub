@@ -353,8 +353,8 @@ class VoiceClaudeService:
 
                 price_patterns = [
                     r"\$[\d,]+",
-                    r"(\d+)\s*(?:Union[thousand, k])",
-                    r"(\d+)\s*(?:Union[million, m])",
+                    r"(\d+)\s*(?:thousand|k)",
+                    r"(\d+)\s*(?:million|m)",
                     r"under (\d+)",
                     r"below (\d+)",
                     r"around (\d+)",
@@ -367,11 +367,11 @@ class VoiceClaudeService:
                         break
 
                 # Room counts
-                bedroom_match = re.search(r"(\d+)\s*(?:Union[bed, bedroom])", text_lower)
+                bedroom_match = re.search(r"(\d+)\s*(?:bed|bedroom)", text_lower)
                 if bedroom_match:
                     entities["bedrooms"] = int(bedroom_match.group(1))
 
-                bathroom_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:Union[bath, bathroom])", text_lower)
+                bathroom_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:bath|bathroom)", text_lower)
                 if bathroom_match:
                     entities["bathrooms"] = float(bathroom_match.group(1))
 
@@ -415,7 +415,7 @@ class VoiceClaudeService:
                         r"lead\s+(\w+)",
                         r"client\s+(\w+)",
                         r"buyer\s+(\w+)",
-                        r"(\w+)\s+is\s+(?:Union[interested, not] Union[interested, qualified])",
+                        r"(\w+)\s+is\s+(?:interested|not interested|qualified)",
                     ]
 
                     for pattern in name_patterns:
@@ -429,10 +429,10 @@ class VoiceClaudeService:
 
                 # Time mentions
                 time_patterns = [
-                    r"(\d{1,2})\s*(?:Union[am, pm])",
-                    r"(\d{1,2}):(\d{2})\s*(?:Union[am, pm])",
-                    r"(Union[morning, afternoon]|evening)",
-                    r"(Union[today, tomorrow]|next Union[week, this] week)",
+                    r"(\d{1,2})\s*(?:am|pm)",
+                    r"(\d{1,2}):(\d{2})\s*(?:am|pm)",
+                    r"(morning|afternoon|evening)",
+                    r"(today|tomorrow|next week|this week)",
                 ]
 
                 for pattern in time_patterns:
@@ -443,9 +443,9 @@ class VoiceClaudeService:
 
                 # Date mentions
                 date_patterns = [
-                    r"(Union[monday, tuesday]|Union[wednesday, thursday]|Union[friday, saturday]|sunday)",
+                    r"(monday|tuesday|wednesday|thursday|friday|saturday|sunday)",
                     r"(\d{1,2})/(\d{1,2})",
-                    r"(Union[january, february]|Union[march, april]|Union[may, june]|Union[july, august]|Union[september, october]|Union[november, december])\s+(\d{1,2})",
+                    r"(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})",
                 ]
 
                 for pattern in date_patterns:

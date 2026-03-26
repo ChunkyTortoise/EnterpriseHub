@@ -62,7 +62,7 @@ async def compress_code(code: str, keep_functions: list[str]) -> str:
         # Check if line defines a function or class we want
         found = False
         for func in keep_functions:
-            if re.match(rf"^\s*(Union[def, class])\s+{re.escape(func)}\b", line):
+            if re.match(rf"^\s*(def|class)\s+{re.escape(func)}\b", line):
                 in_function = True
                 indent_level = len(line) - len(line.lstrip())
                 found = True
@@ -72,7 +72,7 @@ async def compress_code(code: str, keep_functions: list[str]) -> str:
             extracted.append(line)
             # Check if we've exited the function (new def/class at same or lower indent)
             if not found and line.strip() and (len(line) - len(line.lstrip())) <= indent_level:
-                if re.match(r"^\s*(Union[def, class])\s+", line):
+                if re.match(r"^\s*(def|class)\s+", line):
                     in_function = False
                     # Remove the last line if it belongs to another function
                     extracted.pop()

@@ -74,7 +74,7 @@ if str(ghl_path) not in sys.path:
 
 # Page configuration
 st.set_page_config(
-    page_title="Jorge AI Union[Command, Elite] Edition", page_icon="🎯", layout="wide", initial_sidebar_state="expanded"
+    page_title="Jorge AI Command Center", page_icon="🎯", layout="wide", initial_sidebar_state="expanded"
 )
 
 # Import elite styling

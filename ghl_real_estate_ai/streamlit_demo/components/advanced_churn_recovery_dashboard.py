@@ -761,7 +761,7 @@ def render_advanced_churn_recovery_dashboard():
     ---
     <div style="text-align: center; opacity: 0.6; font-size: 0.8rem; margin-top: 32px;">
         Last updated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | 
-        EnterpriseHub Churn Recovery Union[Engine, Data] refresh: {time_range.lower()}
+        EnterpriseHub Churn Recovery Engine | Data refresh: {time_range.lower()}
     </div>
     """,
         unsafe_allow_html=True,

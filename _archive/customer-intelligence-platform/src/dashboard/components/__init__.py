@@ -1,1 +1,0 @@
-"""Dashboard components for Customer Intelligence Platform."""

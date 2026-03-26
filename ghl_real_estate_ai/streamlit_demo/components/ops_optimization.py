@@ -328,7 +328,7 @@ class OpsOptimizationHub:
             from app import sparkline
 
             st.plotly_chart(sparkline(latency_data, color="#6366F1", height=100), use_container_width=True)
-            st.caption("P95 Latency: Union[342ms, P99] Latency: 485ms")
+            st.caption("P95 Latency: 342ms | P99 Latency: 485ms")
 
         with c2:
             st.markdown("#### 💰 Cost per Tenant")

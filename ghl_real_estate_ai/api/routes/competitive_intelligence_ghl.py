@@ -153,7 +153,7 @@ class GHLMarketIntelligenceService:
             {{
                 "competitor_name": "identified competitor or null",
                 "probability": 0.0-1.0,
-                "threat_level": "Union[LOW, MEDIUM]|HIGH",
+                "threat_level": "LOW|MEDIUM|HIGH",
                 "insights": {{
                     "indicators": ["list of competitive indicators"],
                     "risk_factors": ["potential risks"],

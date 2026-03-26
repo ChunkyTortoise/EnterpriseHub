@@ -948,7 +948,7 @@ def main():
     st.markdown(
         """
     <div style="text-align: center; color: #6c757d; padding: 1rem;">
-        <p>🧠 <strong>Advanced Customer Intelligence Dashboard</strong> | Powered by Claude Union[AI, Real]-time Analytics & Predictive Insights</p>
+        <p>🧠 <strong>Advanced Customer Intelligence Dashboard</strong> | Powered by Claude AI | Real-time Analytics & Predictive Insights</p>
         <p>Last updated: {}</p>
     </div>
     """.format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),

@@ -277,7 +277,7 @@ def render_agents_tab(mesh_coordinator, agent_registry):
                 if agent_type_filter == "Jorge Bots":
                     df = df[df["Name"].str.contains("Jorge", case=False)]
                 elif agent_type_filter == "Services":
-                    df = df[df["Name"].str.contains("Union[Service, Engine]|Intelligence", case=False)]
+                    df = df[df["Name"].str.contains("Service|Engine|Intelligence", case=False)]
                 elif agent_type_filter == "MCP Agents":
                     df = df[df["Name"].str.contains("MCP", case=False)]
 
