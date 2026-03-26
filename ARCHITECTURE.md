@@ -15,7 +15,7 @@ ghl_real_estate_ai/          # Main FastAPI application
 ├── models/                  # SQLAlchemy models + Pydantic schemas
 ├── services/                # Business logic, integrations, AI orchestration
 │   ├── jorge/               # Handoff, A/B testing, alerting, calendar
-│   ├── response_pipeline/   # 5-stage post-processing pipeline
+│   ├── response_pipeline/   # 7-stage post-processing pipeline
 │   └── circuit_breaker.py   # CLOSED/OPEN/HALF_OPEN failover
 ├── streamlit_demo/          # Internal BI dashboard (requires running services)
 └── tests/unit/              # Isolated unit tests (181 pass in CI)
@@ -53,12 +53,14 @@ These sub-projects are co-located to share auth, models, and CI infrastructure. 
 
 ```
 Request
-  └─► ResponsePipeline (5 stages)
-        1. LanguageMirrorProcessor  — detect language
-        2. TCPAOptOutProcessor      — compliance gate
-        3. ComplianceCheckProcessor — FHA/RESPA enforcement
-        4. AIDisclosureProcessor    — SB 243 footer
-        5. SMSTruncationProcessor   — 320-char limit
+  └─► ResponsePipeline (7 stages)
+        1. LanguageMirrorProcessor       — detect language
+        2. TCPAOptOutProcessor           — compliance gate
+        3. ConversationRepairProcessor   — breakdown detection
+        4. ComplianceCheckProcessor      — FHA/RESPA enforcement
+        5. AIDisclosureProcessor         — SB 243 footer
+        6. ResponseTranslationProcessor  — language mirroring
+        7. SMSTruncationProcessor        — 320-char limit
 
   └─► LLMClient
         └─► CircuitBreaker (CLOSED/OPEN/HALF_OPEN)
@@ -77,6 +79,6 @@ Request
 
 **Why a monorepo?** The `advanced_rag_system` and `rag-as-a-service` sub-projects share the same Pydantic models, auth middleware, and CI pipeline as the core platform. Extracting them would require duplicating ~2,000 lines of shared infrastructure.
 
-**Why 7,678 test functions but only 1,100+ in CI?** Integration tests (the majority) require a running PostgreSQL database and Redis instance. CI now runs 1,100+ unit + agent tests that can execute with zero external dependencies. The 50% coverage gate on unit tests ensures the core business logic is covered; full integration suites run in staging.
+**Why 8,212 test functions but only 1,100+ in CI?** Integration tests (the majority) require a running PostgreSQL database and Redis instance. CI now runs 1,100+ unit + agent tests that can execute with zero external dependencies. The 50% coverage gate on unit tests ensures the core business logic is covered; full integration suites run in staging.
 
 **Why GoHighLevel?** GHL is the dominant CRM in the US real estate market. The `enhanced_ghl_client.py` provides rate-limited, retry-safe access to GHL's REST API with real-time webhook processing.

@@ -47,7 +47,7 @@ Deployed three specialized AI assistants, each trained for a specific stage of t
 - **Buyer Bot**: Assesses financial readiness, pre-approval status, budget range, and purchase timeline
 - **Seller Bot**: Evaluates property condition, seller motivation, pricing expectations, and listing readiness
 
-Each bot was configured with domain-specific knowledge (Rancho Cucamonga market data, Fair Housing compliance rules, DRE regulations) and a 5-stage response pipeline ensuring TCPA compliance and AI disclosure.
+Each bot was configured with domain-specific knowledge (Rancho Cucamonga market data, Fair Housing compliance rules, DRE regulations) and a 7-stage response pipeline ensuring TCPA compliance and AI disclosure.
 
 ### Phase 2: CRM Integration (Weeks 3-4)
 

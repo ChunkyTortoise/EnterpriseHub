@@ -86,7 +86,7 @@ Real-time analytics show your pipeline health: how many leads came in, where the
 Adopting new technology always raises fair questions. Here is how we address the common ones:
 
 **"What if the AI says the wrong thing?"**
-Every bot response passes through a 5-stage compliance pipeline: language mirroring, TCPA checks, Fair Housing compliance, AI disclosure, and message formatting. The system is designed to protect your brand.
+Every bot response passes through a 7-stage compliance pipeline: language mirroring, TCPA checks, Fair Housing compliance, AI disclosure, and message formatting. The system is designed to protect your brand.
 
 **"What if it breaks?"**
 The platform includes circuit breakers, automatic failover, and real-time alerting. If any component degrades, the system routes around it and notifies your team. P95 latency stays under 300ms even under load.
