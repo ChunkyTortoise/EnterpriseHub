@@ -123,6 +123,8 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 
 **Outcome:** 22 registered agents across the platform with per-agent P50/P95 tracking and automatic load rebalancing when queue time exceeds 30 seconds.
 
+**Training foundation:** Microsoft AI & ML Engineering (75h) — agent orchestration patterns, SLA-based routing, performance monitoring.
+
 ---
 
 ### 2. 3-Tier LLM Cache
@@ -139,6 +141,8 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 A background task promotes frequently accessed L1 keys to L2.
 
 **Outcome:** 89% token cost reduction (93K to 7.8K tokens per workflow); 88% overall hit rate (L1 59% + L2 21% + L3 8%). P95 latency for cached queries drops from 800ms to under 200ms.
+
+**Training foundation:** Duke LLMOps (48h) — multi-tier caching, cost optimization, token budgeting. IBM GenAI Engineering (144h) — LangChain orchestration, model strategy patterns.
 
 ---
 
@@ -159,6 +163,8 @@ A background task promotes frequently accessed L1 keys to L2.
 7. `SMSTruncationProcessor` — enforces 320-character SMS limit, truncates at sentence boundaries
 
 **Outcome:** Every bot message is compliance-checked before delivery. Stage failures are caught per-stage and logged without dropping the message.
+
+**Training foundation:** IBM RAG & Agentic AI (24h) — agentic pipeline design, safety constraints. Vanderbilt Generative AI Strategic Leader (40h) — responsible agent behavior patterns.
 
 ---
 
@@ -181,6 +187,8 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 **Outcome:** `blocked_by_performance` and `blocked_by_circular` tracked as named analytics fields. Handoff success rate and processing time are available via `get_analytics_summary()`.
 
+**Training foundation:** Microsoft AI & ML Engineering (75h) — confidence scoring, performance routing. IBM GenAI Engineering (144h) — conversation context design, multi-agent coordination.
+
 ---
 
 ### 5. A/B Testing Service
@@ -194,6 +202,10 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 **Pattern:** Variant assignment hashes `experiment_id + contact_id` (SHA-256) and maps the result to a bucket. The same contact always gets the same variant. Significance is evaluated with a two-proportion z-test: `StatisticalAnalyzer.calculate_statistical_significance()` computes a pooled standard error and z-score, then approximates a two-tailed p-value using `math.erf`. Minimum sample size is calculated before an experiment starts using configurable `significance_level` (default 0.05) and `statistical_power` (default 0.8). Four pre-built experiment identifiers cover response tone, follow-up timing, CTA style, and greeting style. An optional `ABTestingRepository` provides write-through PostgreSQL persistence without blocking the in-memory caller.
 
 **Outcome:** Experiments run with no risk of variant drift per contact. Results surface `is_significant`, `p_value`, and `winner` in `ExperimentResult`.
+
+**Training foundation:** Duke LLMOps (48h) — model A/B testing with statistical significance, prompt variant evaluation. Google Advanced Data Analytics (200h) — z-test methodology, power analysis.
+
+→ Full cert-to-code mapping: [`docs/certifications.md`](docs/certifications.md) (1,398h across 15 certifications)
 
 ---
 
