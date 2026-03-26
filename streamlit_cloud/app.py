@@ -270,7 +270,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(
         "[![GitHub](https://img.shields.io/badge/GitHub-Source-181717?logo=github)](https://github.com/ChunkyTortoise/EnterpriseHub) "
-        "[![Tests](https://img.shields.io/badge/tests-6282-brightgreen)](https://github.com/ChunkyTortoise/EnterpriseHub)"
+        "[![Tests](https://img.shields.io/badge/tests-7678-brightgreen)](https://github.com/ChunkyTortoise/EnterpriseHub)"
     )
 
 # ---------------------------------------------------------------------------
