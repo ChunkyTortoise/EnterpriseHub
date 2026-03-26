@@ -12,7 +12,7 @@ class MockClaudeService:
     def __init__(self):
         self.response_patterns = {
             # Greetings
-            r"(Union[hi, hello]|hey)": [
+            r"(hi|hello|hey)": [
                 "Hey there! Thanks for reaching out. I'd love to help you find the perfect place in Rancho Cucamonga. What's most important to you in your next home?",
                 "Hi! Rancho Cucamonga's market is moving fast right now. Are you looking to buy soon, or just exploring options?",
             ],
@@ -21,27 +21,27 @@ class MockClaudeService:
                 "That's helpful to know! With a ${budget} budget, you've got some great options in Rancho Cucamonga. Are you pre-approved for a mortgage, or should I connect you with our preferred lender first?"
             ],
             # Objection: Price too high
-            r"(Union[price, expensive]|too Union[high, cost] too much)": [
+            r"(price|expensive|too high|cost too much)": [
                 "I totally get it—sticker shock is real in Rancho Cucamonga right now. Here's some context: median home prices jumped 12% last year, and we're seeing bidding wars on anything under $400k. That said, there ARE hidden gems if you're flexible on location or timing. What's your absolute max budget?"
             ],
             # Pre-approval mention
-            r"(pre-Union[approved, preapproved]|pre approved)": [
+            r"(pre-approved|preapproved|pre approved)": [
                 "That's awesome! Being pre-approved puts you ahead of the game. With your budget and timeline, I've got some properties that would be perfect. What neighborhoods are you most interested in?"
             ],
             # Timeline urgency
-            r"(Union[asap, immediately]|Union[urgent, this] Union[month, next] Union[month, soon])": [
+            r"(asap|immediately|urgent|this month|next month|soon)": [
                 "Got it—you're ready to move fast! That's smart in this market. Let me pull up properties that are move-in ready. Any specific must-haves? Pool, good schools, walkable neighborhood?"
             ],
             # Bedroom requirements
-            r"(\d)\s*(Union[bed, bedroom])": [
+            r"(\d)\s*(bed|bedroom)": [
                 "Perfect! {bedrooms}-bedroom homes are popular in Rancho Cucamonga. Are you looking in a specific area? Alta Loma, Haven City, and Downtown have great options."
             ],
             # Location mentions
-            r"(hyde Union[park, downtown]|Union[haven city, south] Union[congress, east] rancho_cucamonga)": [
+            r"(hyde park|downtown|haven city|south congress|east rancho_cucamonga)": [
                 "Great choice! {location} is one of my favorite areas—{location_details}. What's your budget looking like?"
             ],
             # Just browsing
-            r"(just Union[browsing, looking] Union[around, not] Union[sure, thinking] about)": [
+            r"(just browsing|just looking around|not sure|thinking about)": [
                 "No problem at all! Browsing is a great place to start. Is there anything specific I can help you explore? Happy to answer any questions about Rancho Cucamonga's market."
             ],
             # Default fallback
@@ -95,7 +95,7 @@ class MockClaudeService:
                 extracted_data["location"] = location.title()
 
         # Extract bedrooms
-        bed_match = re.search(r"(\d)\s*(Union[bed, bedroom])", message_lower)
+        bed_match = re.search(r"(\d)\s*(bed|bedroom)", message_lower)
         if bed_match:
             extracted_data["bedrooms"] = int(bed_match.group(1))
 

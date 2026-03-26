@@ -440,7 +440,7 @@ async def offline_sync(sync_request: SyncRequest, current_user=Depends(get_curre
 
 @router.get("/analytics/summary")
 async def get_mobile_analytics(
-    period: str = Query("week", pattern="^(Union[day, week]|month)$"), current_user=Depends(get_current_user)
+    period: str = Query("week", pattern="^(day|week|month)$"), current_user=Depends(get_current_user)
 ):
     """
     Mobile-optimized analytics summary.

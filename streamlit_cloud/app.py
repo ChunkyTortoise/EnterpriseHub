@@ -234,7 +234,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(
         "[![GitHub](https://img.shields.io/badge/GitHub-Source-181717?logo=github)](https://github.com/ChunkyTortoise/EnterpriseHub) "
-        "[![Tests](https://img.shields.io/badge/tests-8600%2B-brightgreen)](https://github.com/ChunkyTortoise/EnterpriseHub)"
+        "[![Tests](https://img.shields.io/badge/tests-6497-brightgreen)](https://github.com/ChunkyTortoise/EnterpriseHub)"
     )
 
 # ---------------------------------------------------------------------------
@@ -974,7 +974,7 @@ st.markdown(
     "EnterpriseHub — Portfolio Demo &bull; "
     "<a href='https://github.com/ChunkyTortoise/EnterpriseHub' style='color:#6366f1'>Source Code</a> &bull; "
     "<a href='https://chunkytortoise.github.io' style='color:#6366f1'>Portfolio</a> &bull; "
-    "8,600+ test functions &bull; FastAPI + Streamlit + PostgreSQL + Redis + Claude AI"
+    "6,497 test functions &bull; FastAPI + Streamlit + PostgreSQL + Redis + Claude AI"
     "</div>",
     unsafe_allow_html=True,
 )

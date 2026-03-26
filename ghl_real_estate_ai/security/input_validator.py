@@ -95,14 +95,14 @@ class InputValidator:
             ),
             ValidationRule(
                 name="xss_javascript_protocol",
-                pattern=r"(?i)javascript\s*:|data\s*:.*Union[script, vbscript]\s*:",
+                pattern=r"(?i)javascript\s*:|data\s*:.*(?:script|vbscript)\s*:",
                 severity=ValidationSeverity.HIGH,
                 description="Dangerous JavaScript protocol detected",
                 action="reject",
             ),
             ValidationRule(
                 name="xss_event_handlers",
-                pattern=r"(?i)on(Union[load, error]|Union[click, mouse]|Union[focus, blur]|Union[change, submit]|Union[key, resize])\s*=",
+                pattern=r"(?i)on(load|error|click|mouse|focus|blur|change|submit|key|resize)\s*=",
                 severity=ValidationSeverity.HIGH,
                 description="JavaScript event handler detected",
                 action="sanitize",
@@ -118,7 +118,7 @@ class InputValidator:
             # Command Injection
             ValidationRule(
                 name="command_injection",
-                pattern=r"(?i)(\||;|&|`|\$\(|\${|<|>|&&|\|\||Union[exec, eval]|Union[system, shell_exec]|passthru)",
+                pattern=r"(?i)(\||;|&|`|\$\(|\${|<|>|&&|\|\||exec|eval|system|shell_exec|passthru)",
                 severity=ValidationSeverity.CRITICAL,
                 description="Command injection attempt detected",
                 action="reject",
@@ -134,7 +134,7 @@ class InputValidator:
             # XXE (XML External Entity)
             ValidationRule(
                 name="xxe_injection",
-                pattern=r"(?i)<!entity|<!doctype.*Union[entity, system]\s+['\"]|public\s+['\"]",
+                pattern=r"(?i)<!entity|<!doctype.*(?:entity|system)\s+['\"]|public\s+['\"]",
                 severity=ValidationSeverity.HIGH,
                 description="XXE injection attempt detected",
                 action="reject",

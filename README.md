@@ -6,7 +6,7 @@
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
 [![Security](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/security-scan.yml?label=security)](https://github.com/ChunkyTortoise/EnterpriseHub/actions/workflows/security-scan.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Demo](https://img.shields.io/badge/demo-live-FF4B4B.svg?logo=streamlit&logoColor=white)](https://ct-enterprise-ai.streamlit.app)
 
@@ -109,7 +109,7 @@ EnterpriseHub delivers quantified outcomes based on production deployment (Case 
 - **Case Study**: [CASE_STUDY.md](CASE_STUDY.md) — Architecture decisions, production metrics, and lessons learned
 - **Live Demo**: [ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app) — Interactive BI dashboard (circuit breaker, cache perf, handoff Sankey)
 - **API Docs**: [/docs](https://enterprisehub-api.onrender.com/docs) — Swagger UI with zero-auth demo endpoints (`/demo/leads`, `/demo/pipeline`, `/demo/health`)
-- **Source Code**: [GitHub](https://github.com/ChunkyTortoise/EnterpriseHub) — 6,300+ tests, CI/CD with security scanning, comprehensive docs
+- **Source Code**: [GitHub](https://github.com/ChunkyTortoise/EnterpriseHub) — 6,497 tests, CI/CD with security scanning, comprehensive docs
 - **Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md) — Monorepo layout, test organization, AI orchestration diagrams
 
 ### Screenshots
@@ -350,7 +350,7 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 6,300+ tests (unit + integration + security)
+├── tests/                        # 6,497 tests (unit + integration + security)
 ├── app.py                        # FastAPI entry point
 ├── admin_dashboard.py            # Streamlit BI dashboard
 └── docker-compose.yml            # Container orchestration

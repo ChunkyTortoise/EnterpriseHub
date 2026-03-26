@@ -39,7 +39,7 @@ services:
       - key: GHL_LOCATION_ID
         value: "demo_location"
       - key: PYTHON_VERSION
-        value: 3.11.4
+        value: "3.12"
 
   - type: web
     name: enterprisehub-dashboard
@@ -68,7 +68,7 @@ services:
       - key: TEST_MODE
         value: "true"
       - key: PYTHON_VERSION
-        value: 3.11.4
+        value: "3.12"
 
 databases:
   - name: enterprisehub-db

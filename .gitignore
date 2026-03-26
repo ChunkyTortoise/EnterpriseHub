@@ -242,3 +242,7 @@ JORGE_OWNER_REFERENCE.md
 
 # Raw macOS screenshots (analysis artifacts, not portfolio assets)
 assets/screenshots/analysis_pending/
+
+# Prevent backup files from being committed
+*.backup
+*.dump

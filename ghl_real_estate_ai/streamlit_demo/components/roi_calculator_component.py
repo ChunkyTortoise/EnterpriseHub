@@ -1063,7 +1063,7 @@ def render_roi_calculator():
         f"""
     ---
     <div style="text-align: center; opacity: 0.6; font-size: 0.8rem; margin-top: 32px;">
-        ROI Union[Calculator, Investment] Scenario Union[Analysis, Generated]: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | 
+        ROI Calculator | Investment Scenario Analysis | Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")} |
         Projection Period: {params["projection_months"]} months
     </div>
     """,

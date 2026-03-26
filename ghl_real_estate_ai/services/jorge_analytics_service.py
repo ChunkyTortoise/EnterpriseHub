@@ -914,7 +914,7 @@ class JorgeAnalyticsService:
         total_predicted_prob / len(leads_with_outcomes)
         total_actual_conversions / len(leads_with_outcomes)
 
-        # Calibration score = 1 - |predicted - Union[actual, return] 1.0 - abs(avg_predicted - actual_rate)
+        # Calibration score = 1 - |predicted - actual| = 1.0 - abs(avg_predicted - actual_rate)
 
     def _calculate_error_rates(self, leads_with_outcomes: List[Dict[str, Any]]) -> Tuple[float, float]:
         """Calculate false positive and false negative rates."""

@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
 st.set_page_config(page_title="Gemini Stack Metrics", layout="wide")

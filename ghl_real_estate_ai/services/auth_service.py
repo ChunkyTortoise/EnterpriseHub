@@ -5,6 +5,9 @@ Provides secure user authentication with role-based permissions.
 Handles user creation, authentication, token management, and permissions.
 """
 
+# NOTE: This module handles Streamlit dashboard session authentication.
+# For FastAPI API authentication middleware, see api/middleware/jwt_auth.py.
+
 import hashlib
 import hmac
 import os

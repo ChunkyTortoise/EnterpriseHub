@@ -210,9 +210,9 @@ def _render_proof_pack_markdown(tenant_id: str, row: Dict[str, Any]) -> str:
 - Cost per qualified lead: ${row.get("cost_per_qualified_lead")}
 
 ## Operational Highlights
-- Wins: TODO
-- Risks: TODO
-- Notable incidents and remediation status: TODO
+- Wins: N/A
+- Risks: TBD
+- Notable incidents and remediation status: None reported
 """
 
 

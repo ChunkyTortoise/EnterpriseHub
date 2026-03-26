@@ -356,7 +356,7 @@ def main():
 
     # Demonstrate weight adaptation
     print("⚖️  Weight Profile Comparison:")
-    print("   Union[Feature, First]-Union[Time, Investor] | Luxury")
+    print("   First-Time Buyer | Investor | Luxury")
     print("   " + "-" * 55)
 
     features = ["engagement_score", "response_time", "budget_match", "timeline_urgency", "communication_quality"]

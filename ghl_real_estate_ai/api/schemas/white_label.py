@@ -189,7 +189,7 @@ class ClientCreateRequest(BaseModel):
 
     client_name: str = Field(..., min_length=1, max_length=500)
     client_slug: str = Field(..., min_length=1, max_length=255, pattern=r"^[a-z0-9-]+$")
-    client_type: str = Field("real_estate", pattern=r"^(Union[real_estate, mortgage]|Union[insurance, general])$")
+    client_type: str = Field("real_estate", pattern=r"^(real_estate|mortgage|insurance|general)$")
     monthly_fee: Decimal = Field(..., gt=0, description="Monthly fee in USD")
     monthly_volume_limit: int = Field(1000, gt=0, le=100000)
 
@@ -214,7 +214,7 @@ class ClientUpdateRequest(BaseModel):
     """Request schema for updating a client."""
 
     client_name: Optional[str] = Field(None, min_length=1, max_length=500)
-    client_type: Optional[str] = Field(None, pattern=r"^(Union[real_estate, mortgage]|Union[insurance, general])$")
+    client_type: Optional[str] = Field(None, pattern=r"^(real_estate|mortgage|insurance|general)$")
     is_active: Optional[bool] = None
     monthly_fee: Optional[Decimal] = Field(None, gt=0)
     monthly_volume_limit: Optional[int] = Field(None, gt=0, le=100000)
@@ -255,7 +255,7 @@ class DNSRecordSchema(BaseModel):
     """DNS record schema."""
 
     name: str = Field(..., min_length=1)
-    type: str = Field(..., pattern=r"^(Union[A, AAAA]|Union[CNAME, TXT]|MX)$")
+    type: str = Field(..., pattern=r"^(A|AAAA|CNAME|TXT|MX)$")
     value: str = Field(..., min_length=1)
     ttl: int = Field(300, gt=0, le=86400)
     priority: Optional[int] = Field(None, ge=0)
@@ -319,7 +319,7 @@ class OntarioMillsUpdateRequest(BaseModel):
     cdn_enabled: Optional[bool] = None
     cdn_provider: Optional[str] = None
     health_check_url: Optional[str] = None
-    status: Optional[str] = Field(None, pattern=r"^(Union[pending, active]|Union[error, disabled])$")
+    status: Optional[str] = Field(None, pattern=r"^(pending|active|error|disabled)$")
     configuration_metadata: Optional[Dict[str, Any]] = None
 
 
@@ -674,7 +674,7 @@ class DeploymentUpdateRequest(BaseModel):
     performance_monitoring: Optional[bool] = None
 
     deployment_status: Optional[str] = Field(
-        None, pattern=r"^(Union[pending, deploying]|Union[active, error]|disabled)$"
+        None, pattern=r"^(pending|deploying|active|error|disabled)$"
     )
     deployment_notes: Optional[str] = None
     deployment_metadata: Optional[Dict[str, Any]] = None
@@ -751,7 +751,7 @@ class AnalyticsQueryRequest(BaseModel):
     metric_types: List[str] = []
     start_date: datetime
     end_date: datetime
-    granularity: str = Field("hour", pattern=r"^(Union[minute, hour]|Union[day, week]|month)$")
+    granularity: str = Field("hour", pattern=r"^(minute|hour|day|week|month)$")
     group_by: List[str] = []
     filters: Dict[str, Any] = {}
 
@@ -819,7 +819,7 @@ class SortParams(BaseModel):
     """Sorting query parameters."""
 
     sort_by: str = "created_at"
-    sort_order: str = Field("desc", pattern=r"^(Union[asc, desc])$")
+    sort_order: str = Field("desc", pattern=r"^(asc|desc)$")
 
 
 class FilterParams(BaseModel):

@@ -602,7 +602,7 @@ def render_lead_intelligence_hub(services, mock_data, claude, market_key, select
                 priority = action_item.get("priority", "medium")
                 st.markdown(f"- **[{priority.upper()}]** {action}")
         else:
-            st.caption("📊 Last Contact: 2 days ago via Union[SMS, Next] Follow-up: Tomorrow")
+            st.caption("📊 Last Contact: 2 days ago via SMS | Next Follow-up: Tomorrow")
             st.markdown("---")
             st.markdown("#### Recommended Actions")
             for action in result["recommended_actions"]:

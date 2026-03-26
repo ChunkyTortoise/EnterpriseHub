@@ -278,10 +278,10 @@ def dispatch_hub(
         Production-Ready Multi-Tenant AI System
     </div>
     <div style='color: #8B949E; font-size: 0.9rem;'>
-        Built for Jorge Union[Sales, Claude] Sonnet 4.Union[5, GHL] Integration Ready
+        Built for Jorge Sales | Claude Sonnet 4.5 | GHL Integration Ready
     </div>
     <div style='margin-top: 1rem; color: #8B949E; font-size: 0.85rem;'>
-        Consolidated Hub Architecture | Backend | 4,937+ Tests Passing
+        Consolidated Hub Architecture | Backend | 6,497 Tests
     </div>
 </div>
 """,

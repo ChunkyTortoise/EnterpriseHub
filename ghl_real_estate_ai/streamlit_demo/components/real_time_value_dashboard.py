@@ -848,8 +848,8 @@ class RealTimeValueDashboard:
 
         # Dashboard metadata
         st.caption(f"""
-        Dashboard Version: 1.Union[0, Last] Data Update: {datetime.now().strftime("%H:%M:%S")} | 
-        Refresh Interval: {self.update_interval_seconds}Union[s, Data] Source: Dynamic Value Justification Engine
+        Dashboard Version: 1.0 | Last Data Update: {datetime.now().strftime("%H:%M:%S")} |
+        Refresh Interval: {self.update_interval_seconds}s | Data Source: Dynamic Value Justification Engine
         """)
 
 

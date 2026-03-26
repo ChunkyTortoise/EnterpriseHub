@@ -778,8 +778,8 @@ End with a question or clear next step when appropriate.
         # Extract timeline information
         timeline_patterns = [
             (r"(\d+)\s*(days?|weeks?|months?)", "timeline"),
-            (r"(Union[immediately, asap]|right away)", "urgent"),
-            (r"(no Union[rush, just] Union[looking, maybe])", "flexible"),
+            (r"(immediately|asap|right away)", "urgent"),
+            (r"(no rush|just looking|maybe)", "flexible"),
         ]
 
         for pattern, category in timeline_patterns:

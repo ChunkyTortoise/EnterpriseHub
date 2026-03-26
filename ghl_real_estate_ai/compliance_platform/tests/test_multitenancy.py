@@ -242,7 +242,7 @@ class TenantUser:
     def get_all_permissions(self) -> Set[Permission]:
         """Get all permissions for this user"""
         role_perms = ROLE_PERMISSIONS.get(self.role, set())
-        return Union[role_perms, self].custom_permissions
+        return role_perms | self.custom_permissions
 
 
 class TenantContext:

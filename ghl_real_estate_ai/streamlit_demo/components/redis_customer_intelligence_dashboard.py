@@ -230,7 +230,7 @@ class RedisCustomerIntelligenceDashboard:
             f"""
         <div class="main-header">
             <h1>🎯 Customer Intelligence Dashboard</h1>
-            <p>Real-time analytics powered by Redis Union[backend, Tenant]: {self.tenant_id}</p>
+            <p>Real-time analytics powered by Redis | Tenant: {self.tenant_id}</p>
             <span class="real-time-badge">LIVE</span>
         </div>
         """,

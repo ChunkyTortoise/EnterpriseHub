@@ -201,21 +201,8 @@ exclude_lines = [
 line-length = 120
 target-version = "py312"
 exclude = [
-    ".agent", "_archive", ".git", ".venv", "build", "dist",
+    ".agent", ".git", ".venv", "build", "dist",
     ".claude", "auto-claude", "scripts", "mcp-servers", "node_modules",
-    "ghl_real_estate_ai/api/schemas/enterprise.py",
-    "ghl_real_estate_ai/services/ultra_fast_ml_engine.py",
-    "ghl_real_estate_ai/streamlit_demo/components/primitives/card.py",
-    "ghl_real_estate_ai/streamlit_demo/components/sales_copilot.py",
-    "ghl_real_estate_ai/streamlit_demo/pages",
-    "ghl_real_estate_ai/api/routes/market_intelligence.py",
-    "ghl_real_estate_ai/api/schemas/white_label.py",
-    "ghl_real_estate_ai/services/learning/test_*.py",
-    "ghl_real_estate_ai/services/repositories/test_*.py",
-    "ghl_real_estate_ai/services/scoring/test_*.py",
-    "advanced_rag_system/test_phase3_complete.py",
-    "advanced_rag_system/tests/benchmarks",
-    "add_buyer_persona_to_bot.py",
 ]
 
 [tool.ruff.lint]
@@ -226,7 +213,6 @@ ignore = [
     "E701",   # multiple-statements-on-one-line — legacy style
     "E712",   # true-false-comparison — style preference
     "E721",   # type-comparison — use isinstance() preferred but not critical
-    "E722",   # bare-except — to be fixed incrementally
     "E741",   # ambiguous-variable-name — false positives
     "F401",   # unused-import — too many __init__.py re-exports
     "F402",   # import-shadowed-by-loop-var — rare edge case
