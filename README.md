@@ -1,7 +1,7 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-6%2C497-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-8%2C212-brightgreen)](tests/)
 [![CI Tests](https://img.shields.io/badge/CI_verified-1%2C100+-blue)](tests/)
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
 [![Security](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/security-scan.yml?label=security)](https://github.com/ChunkyTortoise/EnterpriseHub/actions/workflows/security-scan.yml)
@@ -14,7 +14,7 @@
 
 ## Executive Summary
 
-Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots — so no lead goes cold. Built for real estate brokerages and agencies; production-validated with 7,678 tests and a full observability stack.
+Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots — so no lead goes cold. Built for real estate brokerages and agencies; production-validated with 8,212 tests and a full observability stack.
 
 ---
 
@@ -95,9 +95,11 @@ graph TB
 | | |
 |--|--|
 | **Dashboard** | https://ct-enterprise-ai.streamlit.app |
-| **API Docs** | `<api-url>/docs` — Swagger UI with 40+ routes |
+| **API Docs** | Swagger UI (40+ routes, available on local/staging deploy) |
 | **Demo login** | `demo_user` / `Demo1234!` |
 | **Admin login** | `admin` / `Admin1234!` |
+
+> These credentials are for the public demo instance only. They access synthetic data and are not production secrets.
 
 > **Deploying your own instance?** See [Deployment](#deployment) below. Run `python scripts/seed_demo.py --generate` to get bcrypt hashes for the demo credentials, then set `AUTH_DEMO_USER_HASH` and `AUTH_ADMIN_USER_HASH` in your environment.
 
@@ -214,7 +216,7 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 | API | FastAPI (async), Pydantic validation |
 | UI | Streamlit, Plotly |
 | Database | PostgreSQL, Alembic migrations |
-| Cache | Redis (L1), Application memory (L2), Database (L3) |
+| Cache | Application memory (L1), Redis (L2), PostgreSQL (L3) |
 | AI/ML | Claude (primary), Gemini (analysis), OpenRouter (fallback) |
 | CRM | GoHighLevel (webhooks, contacts, workflows) |
 | Search | ChromaDB vector store, BM25, hybrid retrieval |
@@ -276,9 +278,9 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 7,678 tests (unit + integration + security)
-├── app.py                        # FastAPI entry point
-├── admin_dashboard.py            # Streamlit BI dashboard
+├── tests/                        # 8,212 tests (unit + integration + security)
+├── conftest.py                   # Shared test fixtures
+├── render.yaml                   # Render deployment config
 └── docker-compose.yml            # Container orchestration
 ```
 
@@ -349,6 +351,8 @@ See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) and [BENCHMARKS.md](BENCHMARK
 ---
 
 ## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, PR guidelines, and code standards.
 
 See [CHANGELOG.md](CHANGELOG.md) for release history.
 

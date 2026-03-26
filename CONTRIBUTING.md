@@ -10,7 +10,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.12 or higher
 - Git
 - A GitHub account
 
@@ -38,7 +38,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
 5. **Install dependencies**
    ```bash
    pip install -r requirements.txt
-   pip install -r dev-requirements.txt
+   pip install -r requirements-dev.txt
    ```
 
 6. **Create a feature branch**
@@ -73,7 +73,7 @@ By participating in this project, you agree to maintain a respectful and inclusi
    flake8 .
    
    # Type checking
-   mypy app.py modules/ utils/
+   mypy ghl_real_estate_ai/
    ```
 
 4. **Commit your changes**
@@ -233,42 +233,25 @@ Your PR should:
 ## 🏗️ Project Structure
 
 ```
-enterprise-hub/
-├── app.py                 # Main entry point
-├── modules/              # Feature modules
-│   ├── __init__.py
-│   └── market_pulse.py
-├── utils/                # Shared utilities
-│   ├── __init__.py
-│   └── data_loader.py
-├── tests/                # Test suite
-│   ├── __init__.py
-│   ├── test_data_loader.py
-│   └── test_market_pulse.py
-└── docs/                 # Documentation
+EnterpriseHub/
+├── ghl_real_estate_ai/  # Main application package
+│   ├── api/             # FastAPI routes and middleware
+│   ├── services/        # Business logic and AI services
+│   ├── models/          # SQLAlchemy models
+│   └── tests/           # Unit and integration tests
+├── tests/               # Additional test suite
+└── docs/                # Documentation
 ```
 
 ## 🎨 Module Development
 
-When creating a new module:
+When adding new functionality:
 
-1. Create file in `modules/` directory
-2. Implement a `render()` function
-3. Add navigation in `app.py`
+1. Create services in `ghl_real_estate_ai/services/`
+2. Add routes in `ghl_real_estate_ai/api/routes/`
+3. Add models in `ghl_real_estate_ai/models/`
 4. Write tests in `tests/`
 5. Update README.md
-
-Example module structure:
-
-```python
-# modules/your_module.py
-import streamlit as st
-
-def render():
-    """Main render function for the module."""
-    st.title("Your Module")
-    # Implementation
-```
 
 ## ❓ Questions?
 

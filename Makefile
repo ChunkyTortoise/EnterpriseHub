@@ -13,7 +13,7 @@ install:  ## Install production dependencies
 
 install-dev:  ## Install development dependencies
 	pip install -r requirements.txt
-	pip install -r dev-requirements.txt
+	pip install -r requirements-dev.txt
 	pre-commit install
 
 test:  ## Run tests with coverage
@@ -60,7 +60,7 @@ format:  ## Auto-format code
 	ruff format .
 
 type-check:  ## Run type checking
-	mypy app.py modules/ utils/
+	mypy ghl_real_estate_ai/
 
 security:  ## Run security checks
 	bandit -r . -ll

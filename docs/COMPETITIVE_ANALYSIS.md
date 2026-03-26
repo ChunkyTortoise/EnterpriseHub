@@ -134,7 +134,7 @@ Total: 12 months to production (optimistic)
 | Handoff orchestration | Confidence-based, circular prevention | Basic routing rules |
 | Conversation memory | Multi-turn context tracking | Session-based only |
 | Compliance checks | DRE, Fair Housing, TCPA, CAN-SPAM | Often missing entirely |
-| Response pipeline | 5-stage post-processing | Raw LLM output |
+| Response pipeline | 7-stage post-processing | Raw LLM output |
 
 ### Observability
 

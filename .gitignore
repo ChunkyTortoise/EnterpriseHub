@@ -242,6 +242,10 @@ JORGE_OWNER_REFERENCE.md
 
 # Raw macOS screenshots (analysis artifacts, not portfolio assets)
 assets/screenshots/analysis_pending/
+assets/screenshots/processed_batch_1/
+
+# Test model artifacts
+test_models/
 
 # Prevent backup files from being committed
 *.backup
