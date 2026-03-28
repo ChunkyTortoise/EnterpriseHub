@@ -5,6 +5,7 @@ Creates exponential revenue opportunities beyond core SaaS.
 """
 
 import logging
+import os
 import uuid
 from collections import defaultdict
 from dataclasses import asdict, dataclass
@@ -514,7 +515,7 @@ class APIMonetization:
         }
 
         # Use JWT for secure, self-contained API keys
-        api_key = jwt.encode(payload, "your-secret-key", algorithm="HS256")
+        api_key = jwt.encode(payload, os.environ.get("API_KEY_SIGNING_SECRET", "change-me-in-production"), algorithm="HS256")
         return f"ent_{api_key}"  # Prefix for identification
 
     def _get_tier_endpoints(self, tier: PricingTier) -> List[APIEndpoint]:
