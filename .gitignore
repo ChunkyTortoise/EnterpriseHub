@@ -141,6 +141,7 @@ data/chroma/
 # MCP Configuration (contains local paths and secrets)
 *_mcp_config.json
 mcp_config.json
+.mcp.json
 .aider*
 
 # Claude Code agent workflows

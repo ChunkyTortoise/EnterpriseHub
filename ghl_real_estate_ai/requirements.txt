@@ -23,13 +23,13 @@ requests==2.31.0
 
 # Utilities
 python-dotenv==1.0.1
-python-multipart==0.0.6
+python-multipart>=0.0.22
 
 # Numpy (compatible with all platforms)
 numpy==1.26.3
 
 # Security Dependencies
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]>=3.4.0
 passlib[bcrypt]==1.7.4
 
 # UI & Dashboard
