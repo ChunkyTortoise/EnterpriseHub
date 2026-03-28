@@ -59,6 +59,7 @@ def sparkline(data: list, color: str = "#6366F1", height: int = 50):
 
 
 # Absolute imports
+analytics_service = None
 try:
     from ghl_real_estate_ai.services.analytics_service import AnalyticsService
     from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
@@ -68,10 +69,9 @@ try:
         render_behavioral_tuning_panel,
     )
     from ghl_real_estate_ai.streamlit_demo.components.workflow_designer import render_workflow_designer
+    analytics_service = AnalyticsService()
 except ImportError:
-    st.error("🚨 Critical Error: Required services for Automation Studio not found.")
-
-analytics_service = AnalyticsService()
+    st.warning("⚠️ Running in demo mode — live analytics services unavailable.")
 
 
 class AutomationStudioHub:
