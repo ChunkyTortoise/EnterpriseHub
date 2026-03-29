@@ -15,13 +15,13 @@ class ObsidianThemeService:
     TOKENS: Dict[str, Any] = {
         "colors": {
             "brand": {
-                "primary": "#6366F1",
-                "primary-glow": "rgba(99, 102, 241, 0.4)",
-                "secondary": "#8B5CF6",
+                "primary": "#E8734A",
+                "primary-glow": "rgba(232, 115, 74, 0.30)",
+                "secondary": "#FBBF24",
             },
             "background": {
-                "deep": "#05070A",
-                "card": "#161B22",
+                "deep": "#0A0706",
+                "card": "#1A1210",
                 "elevated": "#1C2128",
                 "glass": "rgba(13, 17, 23, 0.8)",
             },
@@ -30,19 +30,19 @@ class ObsidianThemeService:
                 "secondary": "#E6EDF3",
                 "muted": "#8B949E",
                 "tertiary": "#8B949E",
-                "accent": "#6366F1",
+                "accent": "#E8734A",
             },
             "status": {
-                "hot": "#EF4444",
-                "warm": "#F59E0B",
-                "cold": "#3B82F6",
+                "hot": "#E8734A",
+                "warm": "#FBBF24",
+                "cold": "#64B5F6",
                 "success": "#10B981",
                 "warning": "#F59E0B",
                 "error": "#EF4444",
             },
             "primary": {
-                "indigo": "#6366F1",
-                "purple": "#8B5CF6",
+                "ember": "#E8734A",
+                "amber": "#FBBF24",
                 "blue": "#3B82F6",
             },
         },
@@ -83,7 +83,7 @@ class ObsidianThemeService:
         },
         "shadow": {
             "obsidian": "0 8px 32px 0 rgba(0, 0, 0, 0.8)",
-            "glow-indigo": "0 0 25px rgba(99, 102, 241, 0.3)",
+            "glow-ember": "0 0 25px rgba(232, 115, 74, 0.30)",
             "glow-red": "0 0 25px rgba(239, 68, 68, 0.3)",
             "glow-amber": "0 0 25px rgba(245, 158, 11, 0.3)",
             "glow-blue": "0 0 25px rgba(59, 130, 246, 0.3)",
