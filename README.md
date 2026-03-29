@@ -1,3 +1,5 @@
+![EnterpriseHub](assets/screenshots/banner.png)
+
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
