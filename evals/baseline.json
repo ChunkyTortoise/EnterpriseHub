@@ -1,0 +1,10 @@
+{
+  "rubrics": {
+    "correctness": 0.90,
+    "tone": 0.90,
+    "safety": 1.00,
+    "compliance": 0.95
+  },
+  "generated": "2026-04-07",
+  "note": "Initial baseline -- update after first successful nightly run"
+}
