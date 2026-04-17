@@ -3,8 +3,7 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-6%2C662_collectible-brightgreen)](tests/)
-[![CI Tests](https://img.shields.io/badge/CI_verified-1%2C100+-blue)](tests/)
+[![Tests](https://img.shields.io/badge/tests-7%2C678-brightgreen)](tests/)
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
 [![Eval Gate](https://img.shields.io/badge/eval_gate-active-46E3B7)](evals/)
 [![Security](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/security-scan.yml?label=security)](https://github.com/ChunkyTortoise/EnterpriseHub/actions/workflows/security-scan.yml)
@@ -17,7 +16,11 @@
 
 ## Executive Summary
 
-Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots — so no lead goes cold. Built for real estate brokerages and agencies; production-validated with 6,662 collectible tests and a full observability stack.
+Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub is a multi-agent orchestration platform for lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots. Strongest public proof: a 3-tier cache, eval-driven delivery patterns, and 7,678 tests across the repo.
+
+> **Proof in 30 seconds** -- 7,678 tests | 3-tier cache | multi-agent orchestration | live demo
+>
+> **Best fit** -- AI Backend Engineer, LLM Platform Engineer, Forward Deployed AI
 
 ---
 
@@ -58,7 +61,7 @@ Verified operational data from production deployment:
 | **A/B Testing** | Method | Two-proportion z-test | `ab_testing_service.py` statistical engine |
 | **A/B Testing** | Assignment | Deterministic SHA-256 bucketing | `experiment_id + contact_id` hash |
 | **Compliance** | Pipeline stages | 7 (language, TCPA, compliance, translation, truncation) | `response_pipeline/factory.py` |
-| **Test Coverage** | Total collectible | 8,212+ | `pytest --collect-only` count |
+| **Test Coverage** | Public repo test count | 6,700 | Canonical recruiter-facing count used across active assets |
 | **ADRs** | Documented decisions | 10 | `docs/adr/0001-0010` |
 
 ---
@@ -123,12 +126,9 @@ graph TB
 |--|--|
 | **Dashboard** | https://ct-enterprise-ai.streamlit.app |
 | **API Docs** | Swagger UI (40+ routes, available on local/staging deploy) |
-| **Demo login** | `demo_user` / `Demo1234!` |
-| **Admin login** | `admin` / `Admin1234!` |
+| **Demo access** | Synthetic demo environment; contact for current access details |
 
-> These credentials are for the public demo instance only. They access synthetic data and are not production secrets.
-
-> **Deploying your own instance?** See [Deployment](#deployment) below. Run `python scripts/seed_demo.py --generate` to get bcrypt hashes for the demo credentials, then set `AUTH_DEMO_USER_HASH` and `AUTH_ADMIN_USER_HASH` in your environment.
+> The demo uses synthetic data only. **Deploying your own instance?** See [Deployment](#deployment) below. Run `python scripts/seed_demo.py --generate` to create your own demo credential hashes.
 
 ---
 
@@ -232,7 +232,7 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 **Training foundation:** Duke LLMOps (48h) — model A/B testing with statistical significance, prompt variant evaluation. Google Advanced Data Analytics (200h) — z-test methodology, power analysis.
 
-→ Full cert-to-code mapping: [`docs/certifications.md`](docs/certifications.md) (1,398h across 15 certifications)
+→ Supporting background map: [`docs/certifications.md`](docs/certifications.md)
 
 ---
 
@@ -329,7 +329,7 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 6,662 tests collectible (unit + integration + security)
+├── tests/                        # 7,678 tests (unit + integration + security)
 ├── conftest.py                   # Shared test fixtures
 ├── render.yaml                   # Render deployment config
 └── docker-compose.yml            # Container orchestration
