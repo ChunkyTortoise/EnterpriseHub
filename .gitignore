@@ -251,3 +251,6 @@ test_models/
 # Prevent backup files from being committed
 *.backup
 *.dump
+
+# Ephemeral session notes (gitignored so Claude can write freely)
+NOTES.md
