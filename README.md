@@ -61,7 +61,7 @@ Verified operational data from production deployment:
 | **A/B Testing** | Method | Two-proportion z-test | `ab_testing_service.py` statistical engine |
 | **A/B Testing** | Assignment | Deterministic SHA-256 bucketing | `experiment_id + contact_id` hash |
 | **Compliance** | Pipeline stages | 7 (language, TCPA, compliance, translation, truncation) | `response_pipeline/factory.py` |
-| **Test Coverage** | Public repo test count | 6,700 | Canonical recruiter-facing count used across active assets |
+| **Test Coverage** | Public repo test count | 7,678 | Collected by `pytest --collect-only -q` with full deps installed |
 | **ADRs** | Documented decisions | 10 | `docs/adr/0001-0010` |
 
 ---
@@ -245,6 +245,7 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 | **Backend / Systems Engineer** | FastAPI app ([`app.py`](ghl_real_estate_ai/app.py)), Alembic migrations, Redis L1/L2/L3 cache, PostgreSQL | DeepLearning.AI Deep Learning (120h), Meta Back-End Developer (75h) |
 | **RAG / Retrieval Engineer** | Advanced RAG system ([`advanced_rag_system/`](advanced_rag_system/)), BM25 + dense + RRF hybrid retrieval, ChromaDB | IBM RAG & Agentic AI (24h), Google Cloud GenAI (25h) |
 | **MLOps / LLMOps** | A/B testing service, experiment tracking, model routing (Haiku/Sonnet/Opus), observability ([`services/llm_observability.py`](ghl_real_estate_ai/services/llm_observability.py)) | Duke LLMOps (48h), Google Advanced Data Analytics (200h) |
+| **MCP / Tool-Use Engineer** | MCP server exposing lead qualification + CRM tools ([`ghl_real_estate_ai/mcp_server.py`](ghl_real_estate_ai/mcp_server.py)) -- Claude can call Jorge's tools directly | Anthropic Building with Claude (Vanderbilt) |
 
 ---
 
@@ -408,9 +409,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, PR guidelines, and
 See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ```bash
-python -m pytest tests/ -v
+python -m pytest                                       # full suite (uses testpaths from pytest.ini)
 python -m pytest --cov=ghl_real_estate_ai --cov-report=term-missing
 python -m benchmarks.run_all
+python evals/run_evals_deterministic.py --verbose      # dataset structure checks, no API key needed
 ```
 
 ---

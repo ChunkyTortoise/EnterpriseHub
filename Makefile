@@ -1,6 +1,6 @@
 # Makefile for Enterprise Hub
 
-.PHONY: help install install-dev test lint format type-check clean run demo build ghl-setup ghl-setup-check ghl-setup-guide compile-check no-mock-check metrics-snapshot weekly-pilot-kpis weekly-proof-pack persist-pilot-data pilot-proof-pack pilot-proof-pack-sync revenue-ops-qa
+.PHONY: help install install-dev test lint format type-check clean run demo build ghl-setup ghl-setup-check ghl-setup-guide compile-check no-mock-check metrics-snapshot weekly-pilot-kpis weekly-proof-pack persist-pilot-data pilot-proof-pack pilot-proof-pack-sync revenue-ops-qa evals
 
 help:  ## Show this help message
 	@echo 'Usage: make [target]'
@@ -65,6 +65,9 @@ type-check:  ## Run type checking
 security:  ## Run security checks
 	bandit -r . -ll
 	pip-audit
+
+evals:  ## Run deterministic eval checks (no API key required)
+	python evals/run_evals_deterministic.py --verbose
 
 clean:  ## Clean up build artifacts and cache
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

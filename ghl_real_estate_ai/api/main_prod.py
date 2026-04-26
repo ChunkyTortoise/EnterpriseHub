@@ -130,3 +130,9 @@ app.include_router(test_bots_router)
 from ghl_real_estate_ai.api.routes.admin_settings import router as admin_settings_router
 
 app.include_router(admin_settings_router)
+
+# Cost governance dashboard
+# GET /admin/cost-dashboard?period=24h
+from ghl_real_estate_ai.api.routes.cost_dashboard import router as cost_dashboard_router
+
+app.include_router(cost_dashboard_router)

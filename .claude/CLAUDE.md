@@ -6,6 +6,8 @@
 - `.claude/reference/domain-context.md` (market, terminology, bots)
 - `.claude/reference/quality-standards.md` (perf targets, testing, KPIs)
 - [`AGENTS.md`](AGENTS.md) (human agent personas and workflows)
+- `.claude/anatomy.md` (file index — read for deep work sessions; create with 1-line descriptions if not yet generated)
+- `.claude/skills/land-the-plane.md` (session end checklist)
 
 ---
 
@@ -70,14 +72,4 @@ Uses **Beads** (`bd`): `bd ready` for available work, `bd close` when done, `bd 
 
 ## Landing the Plane
 
-When ending a session, complete ALL steps in order:
-
-1. Run tests + linters if code changed
-2. Update Beads task status (`bd close` / `bd sync`)
-3. Push to remote:
-   ```bash
-   git pull --rebase && bd sync && git push
-   git status  # must show "up to date with origin"
-   ```
-
-Work is NOT complete until `git push` succeeds. Stranded local commits = incomplete work.
+See `.claude/skills/land-the-plane.md` for the full session-end checklist.
