@@ -1,3 +1,7 @@
+> **⚠️ CORRECTION 2026-04-27:** Audit B's "empty evals/" claim was wrong; the eval harness, prompt versioning, adversarial tests, cost governance, and nightly regression workflow were all shipped in prior commit `e2e5311f` (2026-04-07). The P0/P1 register below contains items that are already complete (P0-4, P0-5 framing). See [CORRECTION.md](CORRECTION.md). The remaining valid P0/P1 findings (audit A architecture issues, audit C k6/OTLP/cost-dashboard gaps, audit D bcrypt/secret findings, audit E demo unlock) all stand.
+
+---
+
 # Phase 1 Audit Synthesis — 2026-04-27
 
 **Source reports:** `audit-A-architecture.md`, `audit-B-evals.md`, `audit-C-observability.md`, `audit-D-security.md`, `audit-E-visual.md`, `audit-F-hiring-persona.md`

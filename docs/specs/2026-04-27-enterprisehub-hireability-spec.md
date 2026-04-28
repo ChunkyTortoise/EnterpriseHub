@@ -1,3 +1,14 @@
+> **⚠️ CORRECTION 2026-04-27** (post-publication): Phase 1 audit B was wrong about empty `evals/` — eval harness, prompt versioning, adversarial tests, cost governance, and nightly regression workflow were already shipped in commit `e2e5311f` (2026-04-07) under prior spec [`docs/specs/2026-04-07-feature-ai-hiring-signal-enhancement-spec.md`](2026-04-07-feature-ai-hiring-signal-enhancement-spec.md).
+>
+> **Requirements affected:**
+> - **REQ-W1-3** (eval harness build): **SUPERSEDED** — already implemented (pytest-based + LLM-as-judge, equivalent to promptfoo). Replace with: surface a reliability diagram PNG in README from existing baseline.
+> - **REQ-W1-4** (`evals/README.md`): **ALREADY EXISTS** ([`evals/README.md`](../../evals/README.md)). Replace with: cross-link from top-level README hero.
+> - **REQ-W2-1** (prompt versioning): **ALREADY EXISTS** (`PromptRegistry` service + `PROMPT_CHANGELOG.md`). No-op.
+>
+> All other REQ-* still apply. Wave 1 effort drops ~50%. Track-fit scores updated in [`audits/2026-04-27/03-track-fit.md`](audits/2026-04-27/03-track-fit.md). Full rationale: [`audits/2026-04-27/CORRECTION.md`](audits/2026-04-27/CORRECTION.md).
+
+---
+
 # EnterpriseHub Hireability Transformation — Master Spec
 
 **Spec ID:** 2026-04-27-enterprisehub-hireability

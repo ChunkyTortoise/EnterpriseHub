@@ -1,3 +1,7 @@
+> **⚠️ CORRECTION 2026-04-27:** Wave 1 scope reduced ~50%. The eval harness, prompt versioning, adversarial tests, cost governance service, and nightly regression workflow were already shipped 2026-04-07 (commit `e2e5311f`). Items removed from Wave 1: build harness, build promptfoo wiring, build evals/README.md, build adversarial tests, build nightly cron. Items added to Wave 1: reliability diagram PNG (from existing baseline data), README cross-link to evals/README.md + PROMPT_CHANGELOG.md (visibility lift). Wave 1 effort: ~12 days → ~6 days. See [CORRECTION.md](CORRECTION.md).
+
+---
+
 # Phase 4 — Strategic Roadmap (Binding)
 
 **Date:** 2026-04-27

@@ -1,3 +1,13 @@
+> **⚠️ CORRECTION 2026-04-27:** Scoring below assumed "empty evals/" — that premise was wrong. Corrected scores (binding):
+> - **AI/LLM Engineer (senior):** 47.5 → **~58.0** (eval/observability rigor lifts from 3/10 to 7/10 — eval harness already shipped 2026-04-07)
+> - **QA/SDET (LLM eval niche):** 63.5 → **~73.5 NOW** (eval-framework-presence already 7/10, not 1/10; Wave 1 lift to ~78 from visibility surfacing)
+> - Other tracks unchanged.
+>
+> **Wedge verdict still holds:** Multi-track — AI mid primary, QA/SDET niche secondary, consulting tertiary.
+> **Senior-tier delta checklist:** 2 of 7 already in motion (eval harness ✓, prompt versioning ✓). See [CORRECTION.md](CORRECTION.md) for re-scoring rationale.
+
+---
+
 # Phase 3 — Track-Fit Assessment (Binding)
 
 **Date:** 2026-04-27

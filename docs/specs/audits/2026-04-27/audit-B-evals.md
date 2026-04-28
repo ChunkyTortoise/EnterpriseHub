@@ -1,3 +1,7 @@
+> **⚠️ CORRECTION 2026-04-27:** This audit's headline claim ("empty `evals/` + orphan `__pycache__`") was **wrong**. The `evals/` directory was already populated by commit `e2e5311f` (2026-04-07): 50-case golden dataset, LLM-as-judge with 4 rubrics, baseline + comparison, plus prompt versioning, adversarial tests, nightly regression workflow, and prior spec doc. See [CORRECTION.md](CORRECTION.md) for full re-scoring. This audit is preserved for audit trail; **do not act on the build-from-scratch recommendations below without cross-referencing CORRECTION.md first**. The remaining valid finding is the un-reconciled handoff threshold tuples in `jorge_handoff_service.py`.
+
+---
+
 # Audit B — Eval & Prompt Engineering Maturity
 
 **Auditor**: Agent B (Eval & Prompt Engineering)
