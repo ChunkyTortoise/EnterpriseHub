@@ -514,8 +514,15 @@ class APIMonetization:
             "uuid": str(uuid.uuid4()),
         }
 
-        # Use JWT for secure, self-contained API keys
-        api_key = jwt.encode(payload, os.environ.get("API_KEY_SIGNING_SECRET", "change-me-in-production"), algorithm="HS256")
+        # Use JWT for secure, self-contained API keys.
+        # Fail-closed: never sign with a fallback secret (mirrors jwt_auth.py:21-26).
+        signing_secret = os.environ.get("API_KEY_SIGNING_SECRET")
+        if not signing_secret or len(signing_secret) < 32:
+            raise RuntimeError(
+                "API_KEY_SIGNING_SECRET environment variable must be set and be at "
+                "least 32 characters. No fallback allowed for API key signing."
+            )
+        api_key = jwt.encode(payload, signing_secret, algorithm="HS256")
         return f"ent_{api_key}"  # Prefix for identification
 
     def _get_tier_endpoints(self, tier: PricingTier) -> List[APIEndpoint]:

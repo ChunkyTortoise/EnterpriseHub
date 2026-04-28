@@ -95,7 +95,11 @@ def main() -> int:
     _row("Cache L1 P99 < 1ms", cache_targets["L1_p99_ms"], f"{cache_result.tiers['L1'].p99:.2f}ms")
     _row("Cache L2 P99 < 5ms", cache_targets["L2_p99_ms"], f"{cache_result.tiers['L2'].p99:.2f}ms")
     _row("Cache L3 P99 < 20ms", cache_targets["L3_p99_ms"], f"{cache_result.tiers['L3'].p99:.2f}ms")
-    _row("Cache hit rate >= 87%", cache_targets["hit_rate"], f"{cache_result.hit_rate:.1%}")
+    _row(
+        "Cache modeled hit rate >= 87% (simulation)",
+        cache_targets["modeled_hit_rate"],
+        f"{cache_result.modeled_hit_rate:.1%} (sampled, not measured)",
+    )
 
     # Orchestration rows
     _row("Orchestration total P99 < 200ms", orch_targets["total_p99_ms"], f"{orch_result.p99:.4f}ms")

@@ -1,8 +1,28 @@
-"""Benchmark: 3-tier cache (L1 in-memory, L2 Redis, L3 PostgreSQL).
+"""Monte Carlo simulation of the 3-tier cache (L1 in-memory / L2 Redis / L3 PostgreSQL).
 
-Simulates 10,000 cache operations with realistic hit/miss ratios and
-measures per-tier latency percentiles. Uses a statistical model with
-real computation to validate the caching architecture meets targets.
+WHAT THIS IS:
+    A *simulation* that asks: given the design-target hit-rate distribution
+    (L1 60% / L2 20% / L3 8% / miss 12%) and per-tier latency models calibrated
+    to production observations, what end-to-end latency percentiles would the
+    cache exhibit? The script samples from the modeled distributions and runs
+    real CPU work alongside to keep the code path warm.
+
+WHAT THIS IS NOT:
+    This is NOT a measurement of the production cache hit-rate. The hit-rate
+    distribution is the input parameter, not the output — so the reported
+    "modeled_hit_rate" is by construction the configured `_TIER_CONFIG`
+    cumulative threshold, not an empirical measurement. A live measurement
+    tool that reads real hit/miss counters from `LLMObservabilityService` is
+    a separate Wave 1 task (see beads EnterpriseHub-dvvt rationale).
+
+USE THIS FOR:
+    - Validating that the *latency model* of each tier is realistic
+    - Comparing two hypothetical hit-rate distributions side-by-side
+    - Sanity-checking architecture decisions before a refactor
+
+DO NOT USE THIS FOR:
+    - Quoting hit-rate numbers in case studies, blog posts, or interviews
+    - Validating production cache health (use the live tool instead)
 
 Run:
     python -m benchmarks.bench_cache
@@ -73,12 +93,17 @@ def _compute_l3(rng: random.Random) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Tier configuration (L1 60%, L2 20%, L3 7%, miss 13%)
+# DESIGN-TARGET tier distribution (NOT measured)
 # ---------------------------------------------------------------------------
+# These are the per-tier hit probabilities the cache architecture is *designed*
+# to achieve under the expected workload. The simulation samples from this
+# distribution; it does NOT measure the running system. Any empirical hit-rate
+# claim must come from `bench_cache_live.py` (Wave 1 task) which reads real
+# counters from LLMObservabilityService.
 _TIER_CONFIG = [
     ("L1", 0.60, _model_l1, _compute_l1),
-    ("L2", 0.80, _model_l2, _compute_l2),  # cumulative
-    ("L3", 0.88, _model_l3, _compute_l3),  # cumulative (88% hit rate)
+    ("L2", 0.80, _model_l2, _compute_l2),  # cumulative (60% + 20%)
+    ("L3", 0.88, _model_l3, _compute_l3),  # cumulative (60% + 20% + 8%) — design target only
 ]
 
 
@@ -117,7 +142,14 @@ class CacheBenchmarkResult:
     wall_time_s: float = 0.0
 
     @property
-    def hit_rate(self) -> float:
+    def modeled_hit_rate(self) -> float:
+        """Sampled hit rate from the design-target distribution.
+
+        This converges to the cumulative threshold in `_TIER_CONFIG` as
+        iterations grow — it is a property of the input, not a measurement
+        of any running cache. Renamed from `hit_rate` to prevent the number
+        from being mistaken for an empirical observation.
+        """
         return self.total_hits / self.total_ops if self.total_ops else 0.0
 
     @property
@@ -216,7 +248,9 @@ TARGETS = {
     "L1_p99_ms": 1.0,
     "L2_p99_ms": 5.0,
     "L3_p99_ms": 20.0,
-    "hit_rate": 0.87,
+    # `modeled_hit_rate` is the sampled cumulative threshold — kept here only
+    # to detect simulation drift, NOT as an empirical hit-rate claim.
+    "modeled_hit_rate": 0.87,
 }
 
 
@@ -225,19 +259,20 @@ def check_targets(result: CacheBenchmarkResult) -> dict[str, bool]:
         "L1_p99_ms": result.tiers["L1"].p99 < TARGETS["L1_p99_ms"],
         "L2_p99_ms": result.tiers["L2"].p99 < TARGETS["L2_p99_ms"],
         "L3_p99_ms": result.tiers["L3"].p99 < TARGETS["L3_p99_ms"],
-        "hit_rate": result.hit_rate >= TARGETS["hit_rate"],
+        "modeled_hit_rate": result.modeled_hit_rate >= TARGETS["modeled_hit_rate"],
     }
 
 
 def print_results(result: CacheBenchmarkResult) -> None:
     print("=" * 62)
-    print("  3-Tier Cache Benchmark")
+    print("  3-Tier Cache Latency Simulation (Monte Carlo, NOT a measurement)")
     print("=" * 62)
-    print(f"  Total operations : {result.total_ops:,}")
-    print(f"  Total hits       : {result.total_hits:,}")
-    print(f"  Total misses     : {result.total_misses:,}")
-    print(f"  Hit rate         : {result.hit_rate:.1%}  (target >= 87%)")
-    print(f"  Wall time        : {result.wall_time_s:.2f}s")
+    print(f"  Total operations  : {result.total_ops:,}")
+    print(f"  Total hits        : {result.total_hits:,}")
+    print(f"  Total misses      : {result.total_misses:,}")
+    print(f"  Modeled hit rate  : {result.modeled_hit_rate:.1%}  (sampled from design target 88%)")
+    print("                      ^ NOT an empirical measurement — see module docstring.")
+    print(f"  Wall time         : {result.wall_time_s:.2f}s")
     print()
     fmt = "  {:<6} {:>8} {:>8} {:>8}   {:>6}   {}"
     print(fmt.format("Tier", "P50", "P95", "P99", "Hits", "Target"))
@@ -261,8 +296,8 @@ def print_results(result: CacheBenchmarkResult) -> None:
         )
     print()
     print(f"  Overall  P50={result.p50:.2f}ms  P95={result.p95:.2f}ms  P99={result.p99:.2f}ms")
-    hr_status = "PASS" if targets_met["hit_rate"] else "FAIL"
-    print(f"  Hit rate: {result.hit_rate:.1%} [{hr_status}]")
+    hr_status = "PASS" if targets_met["modeled_hit_rate"] else "FAIL"
+    print(f"  Modeled hit rate: {result.modeled_hit_rate:.1%} [{hr_status}] (simulation, not measurement)")
     print("=" * 62)
 
 
