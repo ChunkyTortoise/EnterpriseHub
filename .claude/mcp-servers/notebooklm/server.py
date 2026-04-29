@@ -70,7 +70,7 @@ async def notebooklm_add_source(notebook_id: str, source_type: str, content: str
         if source_type == "url":
             source = await client.sources.add_url(notebook_id, content)
         elif source_type == "text":
-            source = await client.sources.add_text(notebook_id, text=content, title=title)
+            source = await client.sources.add_text(notebook_id, title=title, content=content)
         else:
             return json.dumps({"error": f"Unsupported source type: {source_type}. Use 'url' or 'text'."})
 
