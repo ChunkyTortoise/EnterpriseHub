@@ -300,7 +300,6 @@ if __name__ == "__main__":
     class MockRealtimeService:
         @st.cache_data(ttl=300)
         def get_recent_events(self, event_type=None, limit=50, since=None):
-
             return []
 
     class MockStateManager:

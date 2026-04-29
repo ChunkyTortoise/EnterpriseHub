@@ -1,0 +1,21 @@
+name,kind,source_url,install_cmd,category,track,fit_score_0_5,install_risk,overlap_with,last_commit,stars,verified
+pyright-lsp,plugin,https://claude.com/plugins,/plugin install pyright-lsp@claude-plugins-official,dev-productivity,work,5,low,,unknown,unknown,true
+typescript-lsp,plugin,https://claude.com/plugins,/plugin install typescript-lsp@claude-plugins-official,dev-productivity,work,5,low,,unknown,unknown,true
+kepano/obsidian-skills,skill,https://github.com/kepano/obsidian-skills,git clone https://github.com/kepano/obsidian-skills && cp -r obsidian-skills/skills/* ~/.claude/skills/,knowledge-mgmt,personal,5,low,obsidian MCP (complementary not duplicate),2026-01,~7000,unverified
+hamelsmu/evals-skills,skill,https://github.com/hamelsmu/evals-skills,git clone https://github.com/hamelsmu/evals-skills,ai-engineering,work,5,low,,unknown,unknown,unverified
+blacktwist/social-media-skills,skill,https://github.com/blacktwist/social-media-skills,git clone https://github.com/blacktwist/social-media-skills,writing,personal,4,low,,unknown,unknown,unverified
+planning-with-files,skill,https://github.com/OthmanAdi/planning-with-files,npx skills add https://github.com/othmanadi/planning-with-files,dev-productivity,work,5,medium,,2026-01,13400,unverified
+claude-mem,skill+hook,https://github.com/thedotmack/claude-mem,git clone https://github.com/thedotmack/claude-mem && pip install -r requirements.txt,dev-productivity,work,5,medium,memory MCP (evaluate conflict),unknown,unverified-89k,unverified
+disler/claude-code-hooks-mastery,hooks,https://github.com/disler/claude-code-hooks-mastery,git clone https://github.com/disler/claude-code-hooks-mastery && npm install,dev-productivity,work,4,medium,,unknown,1400,unverified
+addyosmani/web-quality-skills,skill,https://github.com/addyosmani/web-quality-skills,npx skills add addyosmani/web-quality-skills,code-review-testing,work,4,low,,unknown,496,unverified
+sentry,plugin,https://claude.com/plugins,/plugin install sentry@claude-plugins-official,ops-observability,work,4,low,,unknown,unknown,true
+obra/superpowers,plugin,https://github.com/obra/superpowers,/plugin marketplace add obra/superpowers-marketplace (project-scoped),dev-productivity,work,3,medium,,unknown,unverified-43700,unverified
+alembic-migration-safety,skill,BUILD,mkdir -p ~/.claude/skills/alembic-migration-safety && write SKILL.md from 04-chatgpt.md spec,code-review-testing,work,5,low,,n/a,n/a,n/a
+api-contract-enforcer,skill,BUILD,mkdir -p ~/.claude/skills/api-contract-enforcer && write SKILL.md from 04-chatgpt.md spec,dev-productivity,work,5,low,,n/a,n/a,n/a
+incident-triage,skill,BUILD,mkdir -p ~/.claude/skills/incident-triage && write SKILL.md from 04-chatgpt.md spec,ops-observability,work,4,low,,n/a,n/a,n/a
+saas-orchestrator,skill,BUILD,mkdir -p ~/.claude/skills/saas-orchestrator && write SKILL.md from 04-chatgpt.md spec,ops-observability,work,4,low,,n/a,n/a,n/a
+nextlevelbuilder/ui-ux-pro-max-skill,skill,https://github.com/nextlevelbuilder/ui-ux-pro-max-skill,git clone https://github.com/nextlevelbuilder/ui-ux-pro-max-skill,ui-design,work+personal,3,low,,unknown,~16000,unverified
+document-skills,plugin,https://github.com/anthropics/skills,/plugin marketplace add anthropics/skills && /plugin install document-skills@anthropic-agent-skills,dev-productivity,work,4,low,,unknown,120000,true
+agent-sdk-dev,plugin,https://claude.com/plugins,/plugin install agent-sdk-dev@claude-plugins-official,ai-engineering,work,3,low,,unknown,unknown,true
+explanatory-output-style,plugin,https://claude.com/plugins,/plugin install explanatory-output-style@claude-plugins-official,research-learning,personal,3,low,,unknown,unknown,true
+obsidian-second-brain,skill,https://lobehub.com/skills/sennabruno,see lobehub.com install instructions,knowledge-mgmt,personal,3,medium,kepano/obsidian-skills (install after),unknown,unknown,unverified

@@ -324,7 +324,6 @@ class MockSendGridClient:
         campaign_id: str = None,
         attachments: List[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-
         email_data = {
             "message_id": f"sg_{datetime.now().strftime('%Y%m%d%H%M%S')}",
             "to": to_email,

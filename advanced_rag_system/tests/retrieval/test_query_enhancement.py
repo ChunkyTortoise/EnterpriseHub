@@ -7,6 +7,7 @@ This module tests the query enhancement system including:
 """
 
 import pytest
+
 from src.retrieval.query.classifier import (
     ClassificationResult,
     ClassifierConfig,

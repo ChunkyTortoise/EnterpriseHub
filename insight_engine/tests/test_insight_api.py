@@ -2,6 +2,7 @@
 
 import pytest
 from fastapi.testclient import TestClient
+
 from insight_engine.api.app import app
 
 client = TestClient(app)

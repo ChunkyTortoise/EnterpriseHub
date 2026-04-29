@@ -208,15 +208,16 @@ class TestJorgeRevenuePlatformE2E:
 
             # Validate golden lead detection
             assert golden_score is not None, "Golden lead detection should return a score"
-            assert golden_score.tier in [GoldenLeadTier.GOLD, GoldenLeadTier.PLATINUM], (
-                f"Hot lead should be Gold/Platinum tier, got {golden_score.tier}"
-            )
-            assert golden_score.overall_score >= 70.0, (
-                f"Golden lead score should be ≥70, got {golden_score.overall_score}"
-            )
-            assert golden_score.conversion_probability >= 0.85, (
-                f"Conversion probability should be ≥0.85, got {golden_score.conversion_probability}"
-            )
+            assert golden_score.tier in [
+                GoldenLeadTier.GOLD,
+                GoldenLeadTier.PLATINUM,
+            ], f"Hot lead should be Gold/Platinum tier, got {golden_score.tier}"
+            assert (
+                golden_score.overall_score >= 70.0
+            ), f"Golden lead score should be ≥70, got {golden_score.overall_score}"
+            assert (
+                golden_score.conversion_probability >= 0.85
+            ), f"Conversion probability should be ≥0.85, got {golden_score.conversion_probability}"
 
             # Validate behavioral signals detected
             signal_types = [signal.signal_type for signal in golden_score.behavioral_signals]
@@ -232,13 +233,13 @@ class TestJorgeRevenuePlatformE2E:
             # Validate pricing (base_price=$1, hot multiplier=3.5x, so final_price is modest but correct)
             assert pricing_result is not None, "Pricing calculation should return result"
             assert pricing_result.tier == "hot", f"Should be hot tier, got {pricing_result.tier}"
-            assert pricing_result.final_price > 0.0, (
-                f"Golden lead pricing should be positive, got ${pricing_result.final_price}"
-            )
+            assert (
+                pricing_result.final_price > 0.0
+            ), f"Golden lead pricing should be positive, got ${pricing_result.final_price}"
             assert pricing_result.conversion_probability > 0.0, "Pricing should reflect conversion probability"
-            assert pricing_result.expected_roi > 0.0, (
-                f"Should have ROI expectation, got {pricing_result.expected_roi:.1f}x"
-            )
+            assert (
+                pricing_result.expected_roi > 0.0
+            ), f"Should have ROI expectation, got {pricing_result.expected_roi:.1f}x"
 
             # STEP 4: Verify analytics tracking
             # track_event signature: (event_type, location_id, contact_id=None, data=None)
@@ -425,9 +426,9 @@ class TestJorgeRevenuePlatformE2E:
 
             # Validate all requests succeeded
             successful = sum(1 for r in responses if not isinstance(r, Exception) and r.status_code == 200)
-            assert successful == len(contact_ids), (
-                f"All {len(contact_ids)} concurrent requests should succeed, got {successful}"
-            )
+            assert successful == len(
+                contact_ids
+            ), f"All {len(contact_ids)} concurrent requests should succeed, got {successful}"
 
             # Validate unique pricing for each lead (LeadPricingResponse: {success, pricing_result, error})
             prices = []

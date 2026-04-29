@@ -16,6 +16,8 @@ from typing import Any, Dict
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -25,7 +27,6 @@ try:
 except ImportError:
     # Fallback for testing environment
 
-@pytest.mark.integration
     class ProductionRAGOrchestrator:
         async def query_with_metrics(self, query: str, k: int = 5, **kwargs):
             # Simulate API processing

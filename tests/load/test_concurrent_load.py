@@ -582,12 +582,12 @@ class TestConcurrentAPILoad:
         report = metrics.get_report()
 
         # Baseline targets: very lenient
-        assert report["reliability"]["error_rate"] <= 0.10, (
-            f"Error rate {report['reliability']['error_rate']:.2%} exceeds 10% for baseline"
-        )
-        assert report["response_times"]["p95_ms"] < 500, (
-            f"p95 latency {report['response_times']['p95_ms']:.1f}ms exceeds 500ms for baseline"
-        )
+        assert (
+            report["reliability"]["error_rate"] <= 0.10
+        ), f"Error rate {report['reliability']['error_rate']:.2%} exceeds 10% for baseline"
+        assert (
+            report["response_times"]["p95_ms"] < 500
+        ), f"p95 latency {report['response_times']['p95_ms']:.1f}ms exceeds 500ms for baseline"
 
     @pytest.mark.asyncio
     @pytest.mark.performance
@@ -606,12 +606,12 @@ class TestConcurrentAPILoad:
         metrics.print_report()
         report = metrics.get_report()
 
-        assert report["reliability"]["error_rate"] <= 0.10, (
-            f"Error rate {report['reliability']['error_rate']:.2%} exceeds 10% for light load"
-        )
-        assert report["response_times"]["p95_ms"] < 400, (
-            f"p95 latency {report['response_times']['p95_ms']:.1f}ms exceeds 400ms for light load"
-        )
+        assert (
+            report["reliability"]["error_rate"] <= 0.10
+        ), f"Error rate {report['reliability']['error_rate']:.2%} exceeds 10% for light load"
+        assert (
+            report["response_times"]["p95_ms"] < 400
+        ), f"p95 latency {report['response_times']['p95_ms']:.1f}ms exceeds 400ms for light load"
 
     @pytest.mark.asyncio
     @pytest.mark.performance
@@ -630,12 +630,12 @@ class TestConcurrentAPILoad:
         metrics.print_report()
         report = metrics.get_report()
 
-        assert report["reliability"]["error_rate"] <= 0.05, (
-            f"Error rate {report['reliability']['error_rate']:.2%} exceeds 5% for moderate load"
-        )
-        assert report["response_times"]["p95_ms"] < 300, (
-            f"p95 latency {report['response_times']['p95_ms']:.1f}ms exceeds 300ms for moderate load"
-        )
+        assert (
+            report["reliability"]["error_rate"] <= 0.05
+        ), f"Error rate {report['reliability']['error_rate']:.2%} exceeds 5% for moderate load"
+        assert (
+            report["response_times"]["p95_ms"] < 300
+        ), f"p95 latency {report['response_times']['p95_ms']:.1f}ms exceeds 300ms for moderate load"
 
     @pytest.mark.asyncio
     @pytest.mark.performance
@@ -666,18 +666,18 @@ class TestConcurrentAPILoad:
         report = metrics.get_report()
 
         # Primary performance targets
-        assert report["response_times"]["p95_ms"] < 200, (
-            f"p95 latency {report['response_times']['p95_ms']:.1f}ms exceeds target of 200ms"
-        )
-        assert report["response_times"]["p99_ms"] < 500, (
-            f"p99 latency {report['response_times']['p99_ms']:.1f}ms exceeds target of 500ms"
-        )
-        assert report["reliability"]["error_rate"] < 0.05, (
-            f"Error rate {report['reliability']['error_rate']:.2%} exceeds target of 5%"
-        )
-        assert report["throughput"]["requests_per_second"] > 1000, (
-            f"Throughput {report['throughput']['requests_per_second']:.1f} req/s below target of 1000 req/s"
-        )
+        assert (
+            report["response_times"]["p95_ms"] < 200
+        ), f"p95 latency {report['response_times']['p95_ms']:.1f}ms exceeds target of 200ms"
+        assert (
+            report["response_times"]["p99_ms"] < 500
+        ), f"p99 latency {report['response_times']['p99_ms']:.1f}ms exceeds target of 500ms"
+        assert (
+            report["reliability"]["error_rate"] < 0.05
+        ), f"Error rate {report['reliability']['error_rate']:.2%} exceeds target of 5%"
+        assert (
+            report["throughput"]["requests_per_second"] > 1000
+        ), f"Throughput {report['throughput']['requests_per_second']:.1f} req/s below target of 1000 req/s"
 
     @pytest.mark.asyncio
     @pytest.mark.performance
@@ -705,15 +705,15 @@ class TestConcurrentAPILoad:
         report = metrics.get_report()
 
         # Stress targets: system should not collapse
-        assert report["reliability"]["success_rate"] >= 0.80, (
-            f"Success rate {report['reliability']['success_rate']:.2%} below 80% under stress"
-        )
-        assert report["response_times"]["p95_ms"] < 1000, (
-            f"p95 latency {report['response_times']['p95_ms']:.1f}ms exceeds 1000ms stress limit"
-        )
-        assert report["throughput"]["requests_per_second"] > 500, (
-            f"Throughput {report['throughput']['requests_per_second']:.1f} req/s below 500 req/s stress floor"
-        )
+        assert (
+            report["reliability"]["success_rate"] >= 0.80
+        ), f"Success rate {report['reliability']['success_rate']:.2%} below 80% under stress"
+        assert (
+            report["response_times"]["p95_ms"] < 1000
+        ), f"p95 latency {report['response_times']['p95_ms']:.1f}ms exceeds 1000ms stress limit"
+        assert (
+            report["throughput"]["requests_per_second"] > 500
+        ), f"Throughput {report['throughput']['requests_per_second']:.1f} req/s below 500 req/s stress floor"
 
 
 # ============================================================================
@@ -787,12 +787,12 @@ class TestBotConcurrentProcessing:
         metrics.print_report()
         report = metrics.get_report()
 
-        assert report["reliability"]["error_rate"] < 0.05, (
-            f"Buyer bot error rate {report['reliability']['error_rate']:.2%} exceeds 5%"
-        )
-        assert report["response_times"]["p95_ms"] < 500, (
-            f"Buyer bot p95 {report['response_times']['p95_ms']:.1f}ms exceeds 500ms"
-        )
+        assert (
+            report["reliability"]["error_rate"] < 0.05
+        ), f"Buyer bot error rate {report['reliability']['error_rate']:.2%} exceeds 5%"
+        assert (
+            report["response_times"]["p95_ms"] < 500
+        ), f"Buyer bot p95 {report['response_times']['p95_ms']:.1f}ms exceeds 500ms"
 
     @pytest.mark.asyncio
     @pytest.mark.performance
@@ -848,12 +848,12 @@ class TestBotConcurrentProcessing:
         metrics.print_report()
         report = metrics.get_report()
 
-        assert report["reliability"]["error_rate"] < 0.05, (
-            f"Seller bot error rate {report['reliability']['error_rate']:.2%} exceeds 5%"
-        )
-        assert report["response_times"]["p95_ms"] < 500, (
-            f"Seller bot p95 {report['response_times']['p95_ms']:.1f}ms exceeds 500ms"
-        )
+        assert (
+            report["reliability"]["error_rate"] < 0.05
+        ), f"Seller bot error rate {report['reliability']['error_rate']:.2%} exceeds 5%"
+        assert (
+            report["response_times"]["p95_ms"] < 500
+        ), f"Seller bot p95 {report['response_times']['p95_ms']:.1f}ms exceeds 500ms"
 
     @pytest.mark.asyncio
     @pytest.mark.performance
@@ -953,12 +953,12 @@ class TestBotConcurrentProcessing:
         metrics.print_report()
         report = metrics.get_report()
 
-        assert report["reliability"]["error_rate"] < 0.05, (
-            f"Mixed bot error rate {report['reliability']['error_rate']:.2%} exceeds 5%"
-        )
-        assert report["response_times"]["p95_ms"] < 500, (
-            f"Mixed bot p95 {report['response_times']['p95_ms']:.1f}ms exceeds 500ms"
-        )
+        assert (
+            report["reliability"]["error_rate"] < 0.05
+        ), f"Mixed bot error rate {report['reliability']['error_rate']:.2%} exceeds 5%"
+        assert (
+            report["response_times"]["p95_ms"] < 500
+        ), f"Mixed bot p95 {report['response_times']['p95_ms']:.1f}ms exceeds 500ms"
         assert report["total_requests"] == 60, f"Expected 60 total requests, got {report['total_requests']}"
 
 
@@ -1045,9 +1045,9 @@ class TestResourceUtilization:
 
         # Memory growth should be bounded (no significant leaks)
         # Allow up to 500MB growth for 100 concurrent sessions
-        assert memory_growth_mb < 500, (
-            f"Memory grew by {memory_growth_mb:.1f}MB during load test, suggesting a possible leak"
-        )
+        assert (
+            memory_growth_mb < 500
+        ), f"Memory grew by {memory_growth_mb:.1f}MB during load test, suggesting a possible leak"
 
     @pytest.mark.asyncio
     @pytest.mark.performance

@@ -217,7 +217,7 @@ class CLI:
             print("Error: No agents.py found. Run 'agentforge init' first.")
             return 1
 
-        agent_code = f'''
+        agent_code = f"""
 
 from agentforge import ConfigurableAgent
 
@@ -226,7 +226,7 @@ from agentforge import ConfigurableAgent
     instructions="Add instructions for {args.name}.",
     llm="{args.llm}",
 )
-'''
+"""
         with open(agents_file, "a") as f:
             f.write(agent_code)
 

@@ -187,7 +187,7 @@ class TimingPlugin(AgentForgePlugin):
             """
             event_type = event_data.get("type", "unknown")
             duration = event_data.get("duration", 0.0)
-            if isinstance(duration, (int, float)):
+            if isinstance(duration, int | float):
                 if event_type not in self._timings:
                     self._timings[event_type] = []
                 self._timings[event_type].append(duration)

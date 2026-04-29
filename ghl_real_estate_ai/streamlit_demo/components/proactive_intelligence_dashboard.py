@@ -13,7 +13,6 @@ from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Helper for safe asyncio execution in Streamlit
 def run_async(coro):
-
     return run_async(coro)
 
 

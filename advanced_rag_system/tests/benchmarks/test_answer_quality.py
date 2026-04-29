@@ -17,6 +17,8 @@ from typing import List
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -28,7 +30,6 @@ try:
 except ImportError:
     # Mock RAG system for testing
 
-@pytest.mark.integration
     class MockRAGResponse:
         def __init__(self, answer: str, sources: List[str], query: str):
             self.answer = answer

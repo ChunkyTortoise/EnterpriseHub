@@ -1,0 +1,698 @@
+[
+  {
+    "name": "ask",
+    "kind": "skill",
+    "description": "Ask Gemini, GPT-5.5, or Grok a question directly. Use when the user says 'ask gemini', 'ask gpt', 'ask grok', wants a sp",
+    "source": "/Users/cave/.claude/skills/ask/SKILL.md"
+  },
+  {
+    "name": "claude-prompt-engineer",
+    "kind": "skill",
+    "description": "Expert Claude prompt engineer. Use when the user says 'engineer a prompt', 'optimize this prompt', 'write a prompt for',",
+    "source": "/Users/cave/.claude/skills/claude-prompt-engineer/SKILL.md"
+  },
+  {
+    "name": "compare",
+    "kind": "skill",
+    "description": "Compare Claude's answer with Gemini, GPT-4.1, and Grok responses side-by-side. Use for architecture decisions, technolog",
+    "source": "/Users/cave/.claude/skills/compare/SKILL.md"
+  },
+  {
+    "name": "design-md",
+    "kind": "skill",
+    "description": "Analyze Stitch projects and synthesize a semantic design system into DESIGN.md files",
+    "source": "/Users/cave/.claude/skills/design-md/SKILL.md"
+  },
+  {
+    "name": "docker-patterns",
+    "kind": "skill",
+    "description": "Generates Dockerfiles, docker-compose configs, render.yaml blueprints, and .dockerignore for Python/FastAPI services. Us",
+    "source": "/Users/cave/.claude/skills/docker-patterns/SKILL.md"
+  },
+  {
+    "name": "draft-email",
+    "kind": "skill",
+    "description": "Drafts professional emails for client communication, follow-ups, meeting requests, SOW covers, and status reports. Use w",
+    "source": "/Users/cave/.claude/skills/draft-email/SKILL.md"
+  },
+  {
+    "name": "enhance-prompt",
+    "kind": "skill",
+    "description": "Transforms vague UI ideas into polished, Stitch-optimized prompts. Enhances specificity, adds UI/UX keywords, injects de",
+    "source": "/Users/cave/.claude/skills/enhance-prompt/SKILL.md"
+  },
+  {
+    "name": "fastapi-patterns",
+    "kind": "skill",
+    "description": "Generates FastAPI services following project conventions for Python/Redis/Claude stacks. Use when building new API route",
+    "source": "/Users/cave/.claude/skills/fastapi-patterns/SKILL.md"
+  },
+  {
+    "name": "frontend-aesthetics",
+    "kind": "skill",
+    "description": "Anti-slop guardrail for UI code in Streamlit, Next.js, and Plotly projects. Use when writing or reviewing any frontend c",
+    "source": "/Users/cave/.claude/skills/frontend-aesthetics/SKILL.md"
+  },
+  {
+    "name": "ghl-bot",
+    "kind": "skill",
+    "description": "Generates GoHighLevel webhook handlers, contact operations, and bot integration patterns. Use when adding GHL webhook ro",
+    "source": "/Users/cave/.claude/skills/ghl-bot/SKILL.md"
+  },
+  {
+    "name": "git-maintain",
+    "kind": "skill",
+    "description": "Weekly git maintenance sweep across all 18 portfolio repos. Checks: stale branches, dep CVEs (via OSV.dev batch API), te",
+    "source": "/Users/cave/.claude/skills/git-maintain/SKILL.md"
+  },
+  {
+    "name": "github-actions",
+    "kind": "skill",
+    "description": "Generates GitHub Actions workflows: Python CI with lint/test/coverage, Node.js CI, service containers (pgvector+Redis), ",
+    "source": "/Users/cave/.claude/skills/github-actions/SKILL.md"
+  },
+  {
+    "name": "hospitality-resume",
+    "kind": "skill",
+    "description": "",
+    "source": "/Users/cave/.claude/skills/hospitality-resume/SKILL.md"
+  },
+  {
+    "name": "large-context-review",
+    "kind": "skill",
+    "description": "",
+    "source": "/Users/cave/.claude/skills/large-context-review/SKILL.md"
+  },
+  {
+    "name": "lead-scan",
+    "kind": "skill",
+    "description": "",
+    "source": "/Users/cave/.claude/skills/lead-scan/SKILL.md"
+  },
+  {
+    "name": "multi-llm-routing",
+    "kind": "skill",
+    "description": "Multi-LLM provider routing for Gemini, GPT-5.5, and Grok. Use when the user asks about a specific model's capabilities, ",
+    "source": "/Users/cave/.claude/skills/multi-llm-routing/SKILL.md"
+  },
+  {
+    "name": "nextjs-patterns",
+    "kind": "skill",
+    "description": "Generates Next.js 15 App Router components, API routes, auth middleware, and Vitest tests following conventions used in ",
+    "source": "/Users/cave/.claude/skills/nextjs-patterns/SKILL.md"
+  },
+  {
+    "name": "pgvector-rag",
+    "kind": "skill",
+    "description": "Generates RAG pipelines: embedder singleton, cosine similarity search, hybrid BM25+RRF retrieval, document chunking, and",
+    "source": "/Users/cave/.claude/skills/pgvector-rag/SKILL.md"
+  },
+  {
+    "name": "postgres-migration",
+    "kind": "skill",
+    "description": "Generates Alembic migrations, SQLAlchemy async models, and pgvector schemas. Use when adding a new database table, colum",
+    "source": "/Users/cave/.claude/skills/postgres-migration/SKILL.md"
+  },
+  {
+    "name": "prompt-engineer",
+    "kind": "skill",
+    "description": "Autonomous prompt engineering agent. Accepts a task description or user need and auto-generates the optimal production-r",
+    "source": "/Users/cave/.claude/skills/prompt-engineer/SKILL.md"
+  },
+  {
+    "name": "pytest-patterns",
+    "kind": "skill",
+    "description": "Generates pytest configuration, conftest fixtures, and test utilities following conventions used across all 15 Python re",
+    "source": "/Users/cave/.claude/skills/pytest-patterns/SKILL.md"
+  },
+  {
+    "name": "quality-standards",
+    "kind": "skill",
+    "description": "Code quality standards for Python, TypeScript, and Go across all repos. Use when reviewing code quality, setting up a ne",
+    "source": "/Users/cave/.claude/skills/quality-standards/SKILL.md"
+  },
+  {
+    "name": "react:components",
+    "kind": "skill",
+    "description": "Converts Stitch designs into modular Vite and React components using system-level networking and AST-based validation.",
+    "source": "/Users/cave/.claude/skills/react-components/SKILL.md"
+  },
+  {
+    "name": "realtime-check",
+    "kind": "skill",
+    "description": "",
+    "source": "/Users/cave/.claude/skills/realtime-check/SKILL.md"
+  },
+  {
+    "name": "redis-patterns",
+    "kind": "skill",
+    "description": "Generates Redis caching patterns including L1/L2/L3 multi-tier cache, pub/sub, rate limiting, distributed locks, and ses",
+    "source": "/Users/cave/.claude/skills/redis-patterns/SKILL.md"
+  },
+  {
+    "name": "render-deploy",
+    "kind": "skill",
+    "description": "Guides safe deployment to Render including Docker builds, render.yaml config, env var management, and health verificatio",
+    "source": "/Users/cave/.claude/skills/render-deploy/SKILL.md"
+  },
+  {
+    "name": "research-pipeline",
+    "kind": "skill",
+    "description": "Sequential multi-model research pipeline via Comet browser where each AI deepens the previous one's findings. Use when t",
+    "source": "/Users/cave/.claude/skills/research-pipeline/SKILL.md"
+  },
+  {
+    "name": "second-opinion-checkpoint",
+    "kind": "skill",
+    "description": "",
+    "source": "/Users/cave/.claude/skills/second-opinion-checkpoint/SKILL.md"
+  },
+  {
+    "name": "second-opinion",
+    "kind": "skill",
+    "description": "Get parallel responses from Gemini, GPT-4.1, and Grok on any question. Use when the user wants multiple AI perspectives,",
+    "source": "/Users/cave/.claude/skills/second-opinion/SKILL.md"
+  },
+  {
+    "name": "shadcn-ui",
+    "kind": "skill",
+    "description": "Expert guidance for integrating and building applications with shadcn/ui components, including component discovery, inst",
+    "source": "/Users/cave/.claude/skills/shadcn-ui/SKILL.md"
+  },
+  {
+    "name": "skill-creator",
+    "kind": "skill",
+    "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a sk",
+    "source": "/Users/cave/.claude/skills/skill-creator/SKILL.md"
+  },
+  {
+    "name": "spec-creator",
+    "kind": "skill",
+    "description": "Creates comprehensive, agent-executable specifications that serve as the single source of truth for agent team developme",
+    "source": "/Users/cave/.claude/skills/spec-creator/SKILL.md"
+  },
+  {
+    "name": "stitch-design",
+    "kind": "skill",
+    "description": "Unified entry point for Stitch design work. Handles prompt enhancement (UI/UX keywords, atmosphere), design system synth",
+    "source": "/Users/cave/.claude/skills/stitch-design/SKILL.md"
+  },
+  {
+    "name": "stitch-loop",
+    "kind": "skill",
+    "description": "Teaches agents to iteratively build websites using Stitch with an autonomous baton-passing loop pattern",
+    "source": "/Users/cave/.claude/skills/stitch-loop/SKILL.md"
+  },
+  {
+    "name": "streamlit-dashboard",
+    "kind": "skill",
+    "description": "Generates Streamlit dashboard pages with Plotly charts, metric cards, and sidebar filters. Use when building a new Strea",
+    "source": "/Users/cave/.claude/skills/streamlit-dashboard/SKILL.md"
+  },
+  {
+    "name": "visual-audit",
+    "kind": "skill",
+    "description": "",
+    "source": "/Users/cave/.claude/skills/visual-audit/SKILL.md"
+  },
+  {
+    "name": "ats-assembler",
+    "kind": "agent",
+    "description": "ATS-optimized application package assembler. Fetches a JD, runs ats-optimizer.py to score keyword match, selects the cor",
+    "source": "/Users/cave/.claude/agents/ats-assembler.md"
+  },
+  {
+    "name": "case-study-generator",
+    "kind": "agent",
+    "description": "Transforms repo metrics, benchmarks, and architecture into compelling client-facing case studies in multiple formats (lo",
+    "source": "/Users/cave/.claude/agents/case-study-generator.md"
+  },
+  {
+    "name": "claude-prompt-architect",
+    "kind": "agent",
+    "description": "Autonomous Claude prompt architect for complex, multi-prompt system design. Use when designing prompt libraries, multi-a",
+    "source": "/Users/cave/.claude/agents/claude-prompt-architect.md"
+  },
+  {
+    "name": "data-pipeline-architect",
+    "kind": "agent",
+    "description": "Designs ETL/ELT data pipelines with quality gates, schema evolution, dead-letter-queue patterns, PII compliance, and pip",
+    "source": "/Users/cave/.claude/agents/data-pipeline-architect.md"
+  },
+  {
+    "name": "email-drafter",
+    "kind": "agent",
+    "description": "General-purpose email drafting agent. Researches recipients, gathers pipeline and portfolio context, then drafts persona",
+    "source": "/Users/cave/.claude/agents/email-drafter.md"
+  },
+  {
+    "name": "follow-up-scheduler",
+    "kind": "agent",
+    "description": "Scans all application trackers and pipeline files for overdue follow-ups. Drafts LinkedIn DMs or emails using the proven",
+    "source": "/Users/cave/.claude/agents/follow-up-scheduler.md"
+  },
+  {
+    "name": "freelance-ops-digest-writer",
+    "kind": "agent",
+    "description": "Reads all agent reports and updated reference files, then writes the final daily digest to output/freelance-ops-digest-Y",
+    "source": "/Users/cave/.claude/agents/freelance-ops-digest-writer.md"
+  },
+  {
+    "name": "freelance-ops-gmail-scout",
+    "kind": "agent",
+    "description": "Reads Gmail via Chrome browser extension to extract freelance signals \u2014 interview invites, order confirmations, recruite",
+    "source": "/Users/cave/.claude/agents/freelance-ops-gmail-scout.md"
+  },
+  {
+    "name": "freelance-ops-lead-check",
+    "kind": "agent",
+    "description": "Lightweight read-only lead intelligence scanner. Runs parallel scans across Gmail, LinkedIn, Fiverr (browser sub-agents)",
+    "source": "/Users/cave/.claude/agents/freelance-ops-lead-check.md"
+  },
+  {
+    "name": "freelance-ops-lead",
+    "kind": "agent",
+    "description": "Freelance ops orchestrator. Wave 1 (Gmail scout + Upwork scan), Wave 2 (LinkedIn + proposal writer), Wave 3 (pipeline-tr",
+    "source": "/Users/cave/.claude/agents/freelance-ops-lead.md"
+  },
+  {
+    "name": "freelance-ops-linkedin",
+    "kind": "agent",
+    "description": "LinkedIn browser agent using Chrome extension (session persistence \u2014 LinkedIn flags Playwright headless). Checks message",
+    "source": "/Users/cave/.claude/agents/freelance-ops-linkedin.md"
+  },
+  {
+    "name": "freelance-ops-pipeline-tracker",
+    "kind": "agent",
+    "description": "State reconciliation agent. Reads ALL Wave 1 and Wave 2 agent reports first, then atomically updates client-pipeline.md,",
+    "source": "/Users/cave/.claude/agents/freelance-ops-pipeline-tracker.md"
+  },
+  {
+    "name": "freelance-ops-upwork",
+    "kind": "agent",
+    "description": "Upwork browser agent using Playwright. Wave 1 (read-only): scans the jobs feed for postings <24h old matching AI/Python/",
+    "source": "/Users/cave/.claude/agents/freelance-ops-upwork.md"
+  },
+  {
+    "name": "ghl-integration-specialist",
+    "kind": "agent",
+    "description": "GoHighLevel ecosystem specialist for marketplace apps, API integrations, community content, and GHL agency consulting. D",
+    "source": "/Users/cave/.claude/agents/ghl-integration-specialist.md"
+  },
+  {
+    "name": "human-queue-builder",
+    "kind": "agent",
+    "description": "Aggregates all pending human actions from agent reports, follow-up queues, escalations, and pipeline files. Produces a s",
+    "source": "/Users/cave/.claude/agents/human-queue-builder.md"
+  },
+  {
+    "name": "lead-check-lite",
+    "kind": "agent",
+    "description": "Fast daily intelligence scan using Gmail MCP and Indeed MCP only. No browser agents, no sub-agents. Runs in-session in u",
+    "source": "/Users/cave/.claude/agents/lead-check-lite.md"
+  },
+  {
+    "name": "lead-scan-fiverr",
+    "kind": "agent",
+    "description": "Fiverr sub-agent for the lead-scan team. Scans inbox, notifications, and buyer requests via Chrome browser extension. Fl",
+    "source": "/Users/cave/.claude/agents/lead-scan-fiverr.md"
+  },
+  {
+    "name": "lead-scan-gmail",
+    "kind": "agent",
+    "description": "Gmail sub-agent for the lead-scan team. Runs 7 targeted queries to find recruiter outreach, interview invites, offer let",
+    "source": "/Users/cave/.claude/agents/lead-scan-gmail.md"
+  },
+  {
+    "name": "lead-scan-indeed",
+    "kind": "agent",
+    "description": "Indeed sub-agent for the lead-scan team. Runs 5 job search queries across Cayman's active tracks (DA, AI, Python, SE, QA",
+    "source": "/Users/cave/.claude/agents/lead-scan-indeed.md"
+  },
+  {
+    "name": "lead-scan-linkedin",
+    "kind": "agent",
+    "description": "LinkedIn sub-agent for the lead-scan team. Scans unread messages and notifications via Chrome browser extension. Flags n",
+    "source": "/Users/cave/.claude/agents/lead-scan-linkedin.md"
+  },
+  {
+    "name": "lead-scan-orchestrator",
+    "kind": "agent",
+    "description": "Orchestrates the lead-scan agent team. Spawns Gmail, LinkedIn, Indeed, and Fiverr sub-agents in parallel, waits for resu",
+    "source": "/Users/cave/.claude/agents/lead-scan-orchestrator.md"
+  },
+  {
+    "name": "llm-cost-optimizer",
+    "kind": "agent",
+    "description": "Engineers LLM cost efficiency via multi-model routing, multi-layer caching strategy, token budget governance, and prompt",
+    "source": "/Users/cave/.claude/agents/llm-cost-optimizer.md"
+  },
+  {
+    "name": "multi-model-researcher",
+    "kind": "agent",
+    "description": "Deep research agent that queries Gemini, GPT-4.1, and Grok in parallel with injected codebase and web context. Use for a",
+    "source": "/Users/cave/.claude/agents/multi-model-researcher.md"
+  },
+  {
+    "name": "pipeline-groomer",
+    "kind": "agent",
+    "description": "Enforces pipeline hygiene rules. Archives stale leads (21-day silence \u2192 Closed), caps active table at 20 rows, purges ou",
+    "source": "/Users/cave/.claude/agents/pipeline-groomer.md"
+  },
+  {
+    "name": "project-scope-analyst",
+    "kind": "agent",
+    "description": "Decomposes project requirements into work breakdowns with calibrated effort estimates, risk registers, and complexity mu",
+    "source": "/Users/cave/.claude/agents/project-scope-analyst.md"
+  },
+  {
+    "name": "prompt-engineering-specialist",
+    "kind": "agent",
+    "description": "Designs and optimizes LLM prompts across Claude, Gemini, and OpenAI with A/B testing frameworks, injection prevention, t",
+    "source": "/Users/cave/.claude/agents/prompt-engineering-specialist.md"
+  },
+  {
+    "name": "strategy-consolidator",
+    "kind": "agent",
+    "description": "Reads all active strategy/spec documents, identifies conflicts and expired deadlines, extracts still-valid action items,",
+    "source": "/Users/cave/.claude/agents/strategy-consolidator.md"
+  },
+  {
+    "name": "technical-proposal-writer",
+    "kind": "agent",
+    "description": "Crafts winning freelance proposals and SOWs with portfolio evidence, competitive differentiation, pricing strategy, and ",
+    "source": "/Users/cave/.claude/agents/technical-proposal-writer.md"
+  },
+  {
+    "name": "visual-audit-api-tester",
+    "kind": "agent",
+    "description": "API endpoint tester for visual audits. Discovers endpoints via /openapi.json, runs 3-4 test cases per endpoint (valid pa",
+    "source": "/Users/cave/.claude/agents/visual-audit-api-tester.md"
+  },
+  {
+    "name": "visual-audit-crawler",
+    "kind": "agent",
+    "description": "Browser crawler for visual audits. Navigates pages, takes desktop and mobile screenshots, tests primary user flows, inje",
+    "source": "/Users/cave/.claude/agents/visual-audit-crawler.md"
+  },
+  {
+    "name": "visual-audit-evaluator",
+    "kind": "agent",
+    "description": "Multi-model visual evaluator for visual audits. Reads screenshots from Phase 3, queries GPT-4.1 (primary) and optionally",
+    "source": "/Users/cave/.claude/agents/visual-audit-evaluator.md"
+  },
+  {
+    "name": "visual-audit-monitor",
+    "kind": "agent",
+    "description": "Console and network monitor for visual audits. Reads browser console messages and network requests during crawls, catego",
+    "source": "/Users/cave/.claude/agents/visual-audit-monitor.md"
+  },
+  {
+    "name": "visual-repo-auditor",
+    "kind": "agent",
+    "description": "Orchestrates end-to-end visual audits of portfolio repos. Manages all 6 phases: pre-audit checks, route discovery, boot/",
+    "source": "/Users/cave/.claude/agents/visual-repo-auditor.md"
+  },
+  {
+    "name": "agent-sdk-verifier-py",
+    "kind": "plugin-agent",
+    "description": "Use this agent to verify that a Python Agent SDK application is properly configured, follows SDK best practices and docu",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/agent-sdk-dev/unknown/agents/agent-sdk-verifier-py.md"
+  },
+  {
+    "name": "agent-sdk-verifier-ts",
+    "kind": "plugin-agent",
+    "description": "Use this agent to verify that a TypeScript Agent SDK application is properly configured, follows SDK best practices and ",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/agent-sdk-dev/unknown/agents/agent-sdk-verifier-ts.md"
+  },
+  {
+    "name": "code-architect",
+    "kind": "plugin-agent",
+    "description": "Designs feature architectures by analyzing existing codebase patterns and conventions, then providing comprehensive impl",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/feature-dev/unknown/agents/code-architect.md"
+  },
+  {
+    "name": "code-explorer",
+    "kind": "plugin-agent",
+    "description": "Deeply analyzes existing codebase features by tracing execution paths, mapping architecture layers, understanding patter",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/feature-dev/unknown/agents/code-explorer.md"
+  },
+  {
+    "name": "code-reviewer",
+    "kind": "plugin-agent",
+    "description": "Reviews code for bugs, logic errors, security vulnerabilities, code quality issues, and adherence to project conventions",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/feature-dev/unknown/agents/code-reviewer.md"
+  },
+  {
+    "name": "conversation-analyzer",
+    "kind": "plugin-agent",
+    "description": "Use this agent when analyzing conversation transcripts to find behaviors worth preventing with hooks. Examples: <example",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/hookify/unknown/agents/conversation-analyzer.md"
+  },
+  {
+    "name": "agent-creator",
+    "kind": "plugin-agent",
+    "description": "|",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/plugin-dev/unknown/agents/agent-creator.md"
+  },
+  {
+    "name": "plugin-validator",
+    "kind": "plugin-agent",
+    "description": "|",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/plugin-dev/unknown/agents/plugin-validator.md"
+  },
+  {
+    "name": "skill-reviewer",
+    "kind": "plugin-agent",
+    "description": "|",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/plugin-dev/unknown/agents/skill-reviewer.md"
+  },
+  {
+    "name": "code-reviewer",
+    "kind": "plugin-agent",
+    "description": "Use this agent when you need to review code for adherence to project guidelines, style guides, and best practices. This ",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/unknown/agents/code-reviewer.md"
+  },
+  {
+    "name": "code-simplifier",
+    "kind": "plugin-agent",
+    "description": "|",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/unknown/agents/code-simplifier.md"
+  },
+  {
+    "name": "comment-analyzer",
+    "kind": "plugin-agent",
+    "description": "Use this agent when you need to analyze code comments for accuracy, completeness, and long-term maintainability. This in",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/unknown/agents/comment-analyzer.md"
+  },
+  {
+    "name": "pr-test-analyzer",
+    "kind": "plugin-agent",
+    "description": "Use this agent when you need to review a pull request for test coverage quality and completeness. This agent should be i",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/unknown/agents/pr-test-analyzer.md"
+  },
+  {
+    "name": "silent-failure-hunter",
+    "kind": "plugin-agent",
+    "description": "Use this agent when reviewing code changes in a pull request to identify silent failures, inadequate error handling, and",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/unknown/agents/silent-failure-hunter.md"
+  },
+  {
+    "name": "type-design-analyzer",
+    "kind": "plugin-agent",
+    "description": "Use this agent when you need expert analysis of type design in your codebase. Specifically use it: (1) when introducing ",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/pr-review-toolkit/unknown/agents/type-design-analyzer.md"
+  },
+  {
+    "name": "ai-architect",
+    "kind": "plugin-agent",
+    "description": "Specializes in architecting AI-powered applications on Vercel \u2014 choosing between AI SDK patterns, configuring providers,",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/vercel/0.40.0/agents/ai-architect.md"
+  },
+  {
+    "name": "deployment-expert",
+    "kind": "plugin-agent",
+    "description": "Specializes in Vercel deployment strategies, CI/CD pipelines, preview URLs, production promotions, rollbacks, environmen",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/vercel/0.40.0/agents/deployment-expert.md"
+  },
+  {
+    "name": "performance-optimizer",
+    "kind": "plugin-agent",
+    "description": "Specializes in optimizing Vercel application performance \u2014 Core Web Vitals, rendering strategies, caching, image optimiz",
+    "source": "/Users/cave/.claude/plugins/cache/claude-plugins-official/vercel/0.40.0/agents/performance-optimizer.md"
+  },
+  {
+    "name": "codex-rescue",
+    "kind": "plugin-agent",
+    "description": "Proactively use when Claude Code is stuck, wants a second implementation or diagnosis pass, needs a deeper root-cause in",
+    "source": "/Users/cave/.claude/plugins/cache/openai-codex/codex/1.0.1/agents/codex-rescue.md"
+  },
+  {
+    "name": "agent-sdk-verifier-py",
+    "kind": "plugin-agent",
+    "description": "Use this agent to verify that a Python Agent SDK application is properly configured, follows SDK best practices and docu",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/agent-sdk-dev/agents/agent-sdk-verifier-py.md"
+  },
+  {
+    "name": "agent-sdk-verifier-ts",
+    "kind": "plugin-agent",
+    "description": "Use this agent to verify that a TypeScript Agent SDK application is properly configured, follows SDK best practices and ",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/agent-sdk-dev/agents/agent-sdk-verifier-ts.md"
+  },
+  {
+    "name": "architecture-critic",
+    "kind": "plugin-agent",
+    "description": "Reviews proposed target architectures and transformed code against modern best practice. Adversarial \u2014 looks for over-en",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/code-modernization/agents/architecture-critic.md"
+  },
+  {
+    "name": "business-rules-extractor",
+    "kind": "plugin-agent",
+    "description": "Mines domain logic, calculations, validations, and policies from legacy code into testable Given/When/Then specification",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/code-modernization/agents/business-rules-extractor.md"
+  },
+  {
+    "name": "legacy-analyst",
+    "kind": "plugin-agent",
+    "description": "Deep-reads legacy codebases (COBOL, Java, .NET, Node, anything) to build structural and behavioral understanding. Use fo",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/code-modernization/agents/legacy-analyst.md"
+  },
+  {
+    "name": "security-auditor",
+    "kind": "plugin-agent",
+    "description": "Adversarial security reviewer \u2014 OWASP Top 10, CWE, dependency CVEs, secrets, injection. Use for security debt scanning a",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/code-modernization/agents/security-auditor.md"
+  },
+  {
+    "name": "test-engineer",
+    "kind": "plugin-agent",
+    "description": "Writes characterization, contract, and equivalence tests that pin down legacy behavior so transformation can be proven c",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/code-modernization/agents/test-engineer.md"
+  },
+  {
+    "name": "code-simplifier",
+    "kind": "plugin-agent",
+    "description": "Simplifies and refines code for clarity, consistency, and maintainability while preserving all functionality. Focuses on",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/code-simplifier/agents/code-simplifier.md"
+  },
+  {
+    "name": "code-architect",
+    "kind": "plugin-agent",
+    "description": "Designs feature architectures by analyzing existing codebase patterns and conventions, then providing comprehensive impl",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/feature-dev/agents/code-architect.md"
+  },
+  {
+    "name": "code-explorer",
+    "kind": "plugin-agent",
+    "description": "Deeply analyzes existing codebase features by tracing execution paths, mapping architecture layers, understanding patter",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/feature-dev/agents/code-explorer.md"
+  },
+  {
+    "name": "code-reviewer",
+    "kind": "plugin-agent",
+    "description": "Reviews code for bugs, logic errors, security vulnerabilities, code quality issues, and adherence to project conventions",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/feature-dev/agents/code-reviewer.md"
+  },
+  {
+    "name": "conversation-analyzer",
+    "kind": "plugin-agent",
+    "description": "Use this agent when analyzing conversation transcripts to find behaviors worth preventing with hooks. Typical triggers i",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/hookify/agents/conversation-analyzer.md"
+  },
+  {
+    "name": "agent-creator",
+    "kind": "plugin-agent",
+    "description": "|",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/plugin-dev/agents/agent-creator.md"
+  },
+  {
+    "name": "plugin-validator",
+    "kind": "plugin-agent",
+    "description": "|",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/plugin-dev/agents/plugin-validator.md"
+  },
+  {
+    "name": "skill-reviewer",
+    "kind": "plugin-agent",
+    "description": "|",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/plugin-dev/agents/skill-reviewer.md"
+  },
+  {
+    "name": "code-reviewer",
+    "kind": "plugin-agent",
+    "description": "Use this agent when you need to review code for adherence to project guidelines, style guides, and best practices. This ",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/pr-review-toolkit/agents/code-reviewer.md"
+  },
+  {
+    "name": "code-simplifier",
+    "kind": "plugin-agent",
+    "description": "|",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/pr-review-toolkit/agents/code-simplifier.md"
+  },
+  {
+    "name": "comment-analyzer",
+    "kind": "plugin-agent",
+    "description": "Use this agent when you need to analyze code comments for accuracy, completeness, and long-term maintainability. This in",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/pr-review-toolkit/agents/comment-analyzer.md"
+  },
+  {
+    "name": "pr-test-analyzer",
+    "kind": "plugin-agent",
+    "description": "Use this agent when you need to review a pull request for test coverage quality and completeness. This agent should be i",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/pr-review-toolkit/agents/pr-test-analyzer.md"
+  },
+  {
+    "name": "silent-failure-hunter",
+    "kind": "plugin-agent",
+    "description": "Use this agent when reviewing code changes in a pull request to identify silent failures, inadequate error handling, and",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/pr-review-toolkit/agents/silent-failure-hunter.md"
+  },
+  {
+    "name": "type-design-analyzer",
+    "kind": "plugin-agent",
+    "description": "Use this agent when you need expert analysis of type design in your codebase. Specifically use it (1) when introducing a",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/pr-review-toolkit/agents/type-design-analyzer.md"
+  },
+  {
+    "name": "analyzer.md",
+    "kind": "plugin-agent",
+    "description": "",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/skill-creator/skills/skill-creator/agents/analyzer.md"
+  },
+  {
+    "name": "comparator.md",
+    "kind": "plugin-agent",
+    "description": "",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/skill-creator/skills/skill-creator/agents/comparator.md"
+  },
+  {
+    "name": "grader.md",
+    "kind": "plugin-agent",
+    "description": "",
+    "source": "/Users/cave/.claude/plugins/marketplaces/claude-plugins-official/plugins/skill-creator/skills/skill-creator/agents/grader.md"
+  },
+  {
+    "name": "default-agent",
+    "kind": "plugin-agent",
+    "description": "",
+    "source": "/Users/cave/.claude/plugins/marketplaces/every-marketplace/tests/fixtures/custom-paths/agents/default-agent.md"
+  },
+  {
+    "name": "repo-research-analyst",
+    "kind": "plugin-agent",
+    "description": "Research repository structure and conventions",
+    "source": "/Users/cave/.claude/plugins/marketplaces/every-marketplace/tests/fixtures/sample-plugin/agents/agent-one.md"
+  },
+  {
+    "name": "security-sentinel",
+    "kind": "plugin-agent",
+    "description": "Security audits and vulnerability assessments",
+    "source": "/Users/cave/.claude/plugins/marketplaces/every-marketplace/tests/fixtures/sample-plugin/agents/security-reviewer.md"
+  },
+  {
+    "name": "codex-rescue",
+    "kind": "plugin-agent",
+    "description": "Proactively use when Claude Code is stuck, wants a second implementation or diagnosis pass, needs a deeper root-cause in",
+    "source": "/Users/cave/.claude/plugins/marketplaces/openai-codex/plugins/codex/agents/codex-rescue.md"
+  }
+]

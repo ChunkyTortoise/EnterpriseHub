@@ -164,6 +164,7 @@ async def judge_response(
     # Call judge LLM
     if client is None:
         import anthropic
+
         client = anthropic.AsyncAnthropic()
 
     msg = await client.messages.create(
@@ -192,10 +193,7 @@ async def judge_response(
             "reasoning": f"Judge parse error: {raw_text[:100]}",
         }
 
-    scores = {
-        name: float(parsed.get(name, 0.0))
-        for name in rubrics
-    }
+    scores = {name: float(parsed.get(name, 0.0)) for name in rubrics}
     reasoning = parsed.get("reasoning", "")
 
     # Deterministic checks

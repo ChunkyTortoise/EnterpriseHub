@@ -323,9 +323,9 @@ class TestRealTimeInferenceEngineV2:
             )
 
             result = await engine.predict(request)
-            assert result.market_segment == case["expected_segment"], (
-                f"Expected {case['expected_segment']}, got {result.market_segment}"
-            )
+            assert (
+                result.market_segment == case["expected_segment"]
+            ), f"Expected {case['expected_segment']}, got {result.market_segment}"
 
     @pytest.mark.asyncio
     async def test_performance_monitoring_integration(self, engine, sample_request):

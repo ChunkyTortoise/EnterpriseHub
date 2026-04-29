@@ -673,9 +673,7 @@ class DeploymentUpdateRequest(BaseModel):
     error_tracking_enabled: Optional[bool] = None
     performance_monitoring: Optional[bool] = None
 
-    deployment_status: Optional[str] = Field(
-        None, pattern=r"^(pending|deploying|active|error|disabled)$"
-    )
+    deployment_status: Optional[str] = Field(None, pattern=r"^(pending|deploying|active|error|disabled)$")
     deployment_notes: Optional[str] = None
     deployment_metadata: Optional[Dict[str, Any]] = None
 

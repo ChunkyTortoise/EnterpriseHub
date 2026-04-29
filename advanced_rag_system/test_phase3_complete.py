@@ -1,6 +1,3 @@
-import pytest
-
-@pytest.mark.integration
 """Comprehensive Phase 3 integration test.
 
 This test validates the complete advanced RAG system with all components:
@@ -15,10 +12,14 @@ import time
 import uuid
 from typing import List
 
+import pytest
+
 from src.core.types import DocumentChunk
 from src.reranking import ReRankingConfig, ReRankingStrategy
 from src.retrieval.advanced_hybrid_searcher import AdvancedHybridSearcher, AdvancedSearchConfig
 from src.retrieval.query import ExpansionConfig, HyDEConfig
+
+pytestmark = pytest.mark.integration
 
 
 def create_test_corpus() -> List[DocumentChunk]:

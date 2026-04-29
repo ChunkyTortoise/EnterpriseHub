@@ -42,7 +42,6 @@ class BasicFilteringStrategy(PropertyMatchingStrategy):
     def find_matches(
         self, listings: List[Dict[str, Any]], preferences: Dict[str, Any], limit: int = 5
     ) -> List[Dict[str, Any]]:
-
         scored_listings = []
 
         for prop in listings:
@@ -100,7 +99,6 @@ class AISemanticSearchStrategy(PropertyMatchingStrategy):
     def find_matches(
         self, listings: List[Dict[str, Any]], preferences: Dict[str, Any], limit: int = 5
     ) -> List[Dict[str, Any]]:
-
         # In a real implementation, this would:
         # 1. Embed the user's "natural language" preferences.
         # 2. Query a Vector DB (Chroma/Pinecone).

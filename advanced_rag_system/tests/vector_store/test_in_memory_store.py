@@ -9,6 +9,7 @@ from uuid import uuid4
 
 import numpy as np
 import pytest
+
 from src.core.exceptions import NotFoundError, VectorStoreError
 from src.core.types import DocumentChunk, Metadata
 from src.vector_store.base import SearchOptions, VectorStoreConfig

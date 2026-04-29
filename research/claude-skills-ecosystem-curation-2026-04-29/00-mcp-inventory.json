@@ -1,0 +1,122 @@
+[
+  {
+    "name": "claude-in-chrome",
+    "kind": "mcp-server",
+    "description": "Browser automation via Chrome extension"
+  },
+  {
+    "name": "claude_ai_Canva",
+    "kind": "mcp-server",
+    "description": "Canva design platform integration"
+  },
+  {
+    "name": "claude_ai_Excalidraw",
+    "kind": "mcp-server",
+    "description": "Excalidraw diagramming"
+  },
+  {
+    "name": "claude_ai_Gmail",
+    "kind": "mcp-server",
+    "description": "Gmail read/write/label/draft"
+  },
+  {
+    "name": "claude_ai_Google_Calendar",
+    "kind": "mcp-server",
+    "description": "Google Calendar"
+  },
+  {
+    "name": "claude_ai_Google_Drive",
+    "kind": "mcp-server",
+    "description": "Google Drive file access"
+  },
+  {
+    "name": "claude_ai_Hugging_Face",
+    "kind": "mcp-server",
+    "description": "Hugging Face model hub"
+  },
+  {
+    "name": "claude_ai_Indeed",
+    "kind": "mcp-server",
+    "description": "Indeed job search"
+  },
+  {
+    "name": "claude_ai_Slack",
+    "kind": "mcp-server",
+    "description": "Slack messaging"
+  },
+  {
+    "name": "claude_ai_Supabase",
+    "kind": "mcp-server",
+    "description": "Supabase backend"
+  },
+  {
+    "name": "claude_ai_Vercel",
+    "kind": "mcp-server",
+    "description": "Vercel deployments and projects"
+  },
+  {
+    "name": "ghl",
+    "kind": "mcp-server",
+    "description": "GoHighLevel CRM full API"
+  },
+  {
+    "name": "grok-mcp",
+    "kind": "mcp-server",
+    "description": "Grok AI chat / image understanding"
+  },
+  {
+    "name": "gumroad",
+    "kind": "mcp-server",
+    "description": "Gumroad products, sales, offer codes"
+  },
+  {
+    "name": "memory",
+    "kind": "mcp-server",
+    "description": "Graph-based memory (entities/relations)"
+  },
+  {
+    "name": "notebooklm",
+    "kind": "mcp-server",
+    "description": "NotebookLM notebooks, Q&A, audio overview"
+  },
+  {
+    "name": "obsidian",
+    "kind": "mcp-server",
+    "description": "Obsidian vault read/write/search"
+  },
+  {
+    "name": "plugin_compound-engineering_context7",
+    "kind": "mcp-server",
+    "description": "Context7 library docs fetcher"
+  },
+  {
+    "name": "upwork",
+    "kind": "mcp-server",
+    "description": "Upwork jobs, proposals, contracts, messages"
+  },
+  {
+    "name": "gemini",
+    "kind": "mcp-server",
+    "description": "Gemini AI model (claude.json)"
+  },
+  {
+    "name": "multi-llm",
+    "kind": "mcp-server",
+    "description": "Multi-model routing (Gemini/GPT/Grok)"
+  },
+  {
+    "name": "grok-media",
+    "kind": "mcp-server",
+    "description": "Grok media/image generation, X search"
+  },
+  {
+    "name": "figma",
+    "kind": "mcp-server",
+    "description": "Figma design files (plugin)"
+  },
+  {
+    "name": "atlassian",
+    "kind": "mcp-server",
+    "description": "Atlassian Rovo (Jira/Confluence)"
+  }
+]

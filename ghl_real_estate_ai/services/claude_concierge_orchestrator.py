@@ -146,7 +146,6 @@ class ClaudeConciergeOrchestrator:
         memory_service: Optional[MemoryService] = None,
         client_config: Optional[ConciergeClientConfig] = None,
     ):
-
         # Core Services
         self.claude = claude_orchestrator or self._get_claude_orchestrator()
         self.memory = memory_service or MemoryService()

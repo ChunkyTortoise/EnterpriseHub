@@ -69,6 +69,7 @@ try:
         render_behavioral_tuning_panel,
     )
     from ghl_real_estate_ai.streamlit_demo.components.workflow_designer import render_workflow_designer
+
     analytics_service = AnalyticsService()
 except ImportError:
     st.warning("⚠️ Running in demo mode — live analytics services unavailable.")

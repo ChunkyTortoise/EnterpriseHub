@@ -3,6 +3,7 @@
 Tests that run_deterministic_checks catches responses where the bot
 has been jailbroken into dropping its persona or revealing internals.
 """
+
 from __future__ import annotations
 
 import pytest

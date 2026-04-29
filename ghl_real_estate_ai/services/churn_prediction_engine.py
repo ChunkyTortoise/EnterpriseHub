@@ -1290,7 +1290,6 @@ class ChurnPredictionEngine:
         lead_scorer: Optional[LeadScorer] = None,
         model_path: Optional[str] = None,
     ):
-
         self.logger = logging.getLogger(__name__ + ".ChurnPredictionEngine")
 
         # Initialize components with optional dependencies

@@ -98,7 +98,6 @@ class ChurnIntegrationService:
         ghl_service: GHLService,
         model_path: Optional[str] = None,
     ):
-
         # Store service dependencies
         self.memory_service = memory_service
         self.lifecycle_tracker = lifecycle_tracker

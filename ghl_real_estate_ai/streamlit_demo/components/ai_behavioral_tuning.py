@@ -62,7 +62,7 @@ def render_behavioral_tuning_panel(phase_name: str, phase_config: Dict[str, Any]
         st.markdown("### 👁️ Response Simulation")
         preview_text = generate_behavior_preview(tone, creativity, question_style, followup_count, mention_agent)
         st.markdown(
-            f'''\n        <div class="glass-card" style="padding: 1.5rem; border-radius: 12px; border-left: 5px solid #8B5CF6;">\n            <div style="font-size: 0.75rem; color: #8B5CF6; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: 0.1em;">SIMULATED OUTPUT</div>\n            <div style="color: #1e293b; font-size: 1rem; line-height: 1.6; font-family: 'Inter', sans-serif;">\n                "{preview_text}"\n            </div>\n        </div>\n        ''',
+            f"""\n        <div class="glass-card" style="padding: 1.5rem; border-radius: 12px; border-left: 5px solid #8B5CF6;">\n            <div style="font-size: 0.75rem; color: #8B5CF6; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: 0.1em;">SIMULATED OUTPUT</div>\n            <div style="color: #1e293b; font-size: 1rem; line-height: 1.6; font-family: 'Inter', sans-serif;">\n                "{preview_text}"\n            </div>\n        </div>\n        """,
             unsafe_allow_html=True,
         )
         st.markdown("<br>", unsafe_allow_html=True)

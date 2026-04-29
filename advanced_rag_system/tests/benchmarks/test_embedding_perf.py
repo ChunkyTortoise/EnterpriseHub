@@ -14,6 +14,8 @@ import time
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -23,7 +25,6 @@ try:
 except ImportError:
     # Fallback for testing environment
 
-@pytest.mark.integration
     class MockEmbedder:
         async def embed(self, texts, batch_size=32):
             # Simulate embedding latency

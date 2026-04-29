@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta
 
 import pytest
+
 from src.query.temporal_processor import (
     RecencyBoostConfig,
     TemporalConstraint,

@@ -135,7 +135,6 @@ class PlatformOrchestrator:
         database_service: DatabaseService,
         mode: PlatformMode = PlatformMode.PRODUCTION,
     ):
-
         self.llm_client = llm_client
         self.cache = cache_service
         self.db = database_service

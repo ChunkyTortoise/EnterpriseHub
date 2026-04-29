@@ -163,9 +163,9 @@ class TestBotSpecificConfig:
         afford = config.buyer_bot.affordability
 
         assert 0.0 < afford.default_dti_ratio <= 1.0, f"Invalid DTI ratio: {afford.default_dti_ratio}"
-        assert 0.0 < afford.default_down_payment_percent <= 1.0, (
-            f"Invalid down payment: {afford.default_down_payment_percent}"
-        )
+        assert (
+            0.0 < afford.default_down_payment_percent <= 1.0
+        ), f"Invalid down payment: {afford.default_down_payment_percent}"
         assert afford.default_interest_rate > 0.0, f"Invalid interest rate: {afford.default_interest_rate}"
 
     def test_seller_bot_commission_rate(self):
@@ -243,9 +243,9 @@ class TestConfigLifecycle:
         config2 = get_config()
 
         # Values should match (config unchanged)
-        assert config2.shared.performance.sla_response_time_seconds == original_sla, (
-            "SLA value changed after reload without environment change"
-        )
+        assert (
+            config2.shared.performance.sla_response_time_seconds == original_sla
+        ), "SLA value changed after reload without environment change"
 
         # Reload mechanism should work (config refreshed)
         # Note: After reload, get_config() returns the new singleton instance

@@ -4,6 +4,7 @@ import pickle
 from unittest.mock import AsyncMock, patch
 
 import pytest
+
 from src.embeddings.cache import RedisCacheBackend
 
 

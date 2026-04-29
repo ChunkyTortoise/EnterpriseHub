@@ -180,9 +180,11 @@ class TestSellerFlow:
 
         assert result is not None, "Engine must return a result"
         assert "message" in result, "Result must contain a message"
-        assert result["temperature"] in ("cold", "warm", "hot"), (
-            f"Temperature must be valid, got: {result.get('temperature')}"
-        )
+        assert result["temperature"] in (
+            "cold",
+            "warm",
+            "hot",
+        ), f"Temperature must be valid, got: {result.get('temperature')}"
         # First turn should be cold (no data answered yet) and message should be Q1
         assert result["temperature"] == "cold", "Fresh contact with no data should be cold"
 
@@ -234,22 +236,26 @@ class TestSellerFlow:
 
         # Must add HOT seller tags
         assert ("add_tag", "Hot-Seller") in action_types, f"Hot-Seller tag must be added. Actions: {action_types}"
-        assert ("add_tag", "Seller-Qualified") in action_types, (
-            f"Seller-Qualified tag must be added. Actions: {action_types}"
-        )
+        assert (
+            "add_tag",
+            "Seller-Qualified",
+        ) in action_types, f"Seller-Qualified tag must be added. Actions: {action_types}"
 
         # Must add AI-Off and Human-Follow-Up-Needed after booking confirmed
-        assert ("add_tag", "AI-Off") in action_types, (
-            f"AI-Off must be added after scheduling confirmed. Actions: {action_types}"
-        )
-        assert ("add_tag", "Human-Follow-Up-Needed") in action_types, (
-            f"Human-Follow-Up-Needed must be added after scheduling confirmed. Actions: {action_types}"
-        )
+        assert (
+            "add_tag",
+            "AI-Off",
+        ) in action_types, f"AI-Off must be added after scheduling confirmed. Actions: {action_types}"
+        assert (
+            "add_tag",
+            "Human-Follow-Up-Needed",
+        ) in action_types, f"Human-Follow-Up-Needed must be added after scheduling confirmed. Actions: {action_types}"
 
         # Must remove Needs Qualifying
-        assert ("remove_tag", "Needs Qualifying") in action_types, (
-            f"Needs Qualifying must be removed on HOT. Actions: {action_types}"
-        )
+        assert (
+            "remove_tag",
+            "Needs Qualifying",
+        ) in action_types, f"Needs Qualifying must be removed on HOT. Actions: {action_types}"
 
     @pytest.mark.asyncio
     async def test_seller_hot_workflow_fires_only_after_booking_confirmed(self) -> None:
@@ -303,9 +309,9 @@ class TestSellerFlow:
                 pricing_result=pricing_mock,
             )
             wf_post = [a for a in actions_post if a.get("type") == "trigger_workflow"]
-            assert wf_post, (
-                f"Workflow MUST fire after scheduling_step=confirmed. Actions: {[a.get('type') for a in actions_post]}"
-            )
+            assert (
+                wf_post
+            ), f"Workflow MUST fire after scheduling_step=confirmed. Actions: {[a.get('type') for a in actions_post]}"
             assert wf_post[0]["workflow_id"] == TEST_HOT_SELLER_WORKFLOW_ID
 
     @pytest.mark.asyncio
@@ -350,9 +356,9 @@ class TestSellerFlow:
             )
 
         custom_field_actions = [a for a in actions if a.get("type") == "update_custom_field"]
-        assert custom_field_actions, (
-            f"Custom field updates must be written for HOT seller. Got actions: {[a.get('type') for a in actions]}"
-        )
+        assert (
+            custom_field_actions
+        ), f"Custom field updates must be written for HOT seller. Got actions: {[a.get('type') for a in actions]}"
 
     @pytest.mark.asyncio
     async def test_seller_temperature_classification_hot_requires_4_questions_and_timeline(self) -> None:
@@ -394,9 +400,9 @@ class TestSellerFlow:
                 "timeline_acceptable": True,
             }
         )
-        assert result_hot["temperature"] == "hot", (
-            f"Should be HOT with 4 questions + timeline. Got: {result_hot['temperature']}"
-        )
+        assert (
+            result_hot["temperature"] == "hot"
+        ), f"Should be HOT with 4 questions + timeline. Got: {result_hot['temperature']}"
 
     @pytest.mark.asyncio
     async def test_seller_ai_valuation_price_uses_sellers_price_expectation(self) -> None:
@@ -885,9 +891,9 @@ class TestWebhookSmoke:
         )
 
         primary_mode = _select_primary_mode(mode_flags)
-        assert primary_mode == "seller", (
-            f"'Needs Qualifying' tag on {TEST_PHONE} must route to seller mode. Got: {primary_mode}"
-        )
+        assert (
+            primary_mode == "seller"
+        ), f"'Needs Qualifying' tag on {TEST_PHONE} must route to seller mode. Got: {primary_mode}"
 
 
 # ---------------------------------------------------------------------------

@@ -18,7 +18,6 @@ import pytest
 
 try:
     from ghl_real_estate_ai.services.advanced_cache_service import EnterpriseRedisCache
-
     from ghl_real_estate_ai.services.advanced_db_optimizer import DatabaseOptimizer
     from ghl_real_estate_ai.services.async_task_manager import EnterpriseTaskManager
     from ghl_real_estate_ai.services.enterprise_deployment_validator import EnterpriseDeploymentValidator

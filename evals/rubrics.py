@@ -88,8 +88,6 @@ def format_rubrics_for_prompt(rubrics: Dict[str, Rubric] | None = None) -> str:
     for rubric in rubrics.values():
         criteria_text = "\n".join(f"  - {c}" for c in rubric.criteria)
         sections.append(
-            f"## {rubric.name} (weight: {rubric.weight})\n"
-            f"{rubric.description}\n"
-            f"Criteria:\n{criteria_text}"
+            f"## {rubric.name} (weight: {rubric.weight})\n" f"{rubric.description}\n" f"Criteria:\n{criteria_text}"
         )
     return "\n\n".join(sections)

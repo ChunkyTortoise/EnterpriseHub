@@ -293,9 +293,9 @@ def test_t1_opener_elicits_motivation_question(seller_transcript):
     """
     t = _turn(seller_transcript, "T1-opener")
     reply_lower = t.bot_reply.lower()
-    assert any(kw in reply_lower for kw in Q1_KEYWORDS), (
-        f"T1 reply should ask motivation (Q1).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q1_KEYWORDS}"
-    )
+    assert any(
+        kw in reply_lower for kw in Q1_KEYWORDS
+    ), f"T1 reply should ask motivation (Q1).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q1_KEYWORDS}"
 
 
 @pytest.mark.e2e
@@ -305,9 +305,9 @@ def test_t2_motivation_answer_elicits_timeline_question(seller_transcript):
     """
     t = _turn(seller_transcript, "T2-motivation")
     reply_lower = t.bot_reply.lower()
-    assert any(kw in reply_lower for kw in Q2_KEYWORDS), (
-        f"T2 reply should ask 30-45 day timeline (Q2).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q2_KEYWORDS}"
-    )
+    assert any(
+        kw in reply_lower for kw in Q2_KEYWORDS
+    ), f"T2 reply should ask 30-45 day timeline (Q2).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q2_KEYWORDS}"
 
 
 @pytest.mark.e2e
@@ -317,9 +317,9 @@ def test_t3_timeline_answer_elicits_condition_question(seller_transcript):
     """
     t = _turn(seller_transcript, "T3-timeline")
     reply_lower = t.bot_reply.lower()
-    assert any(kw in reply_lower for kw in Q3_KEYWORDS), (
-        f"T3 reply should ask property condition (Q3).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q3_KEYWORDS}"
-    )
+    assert any(
+        kw in reply_lower for kw in Q3_KEYWORDS
+    ), f"T3 reply should ask property condition (Q3).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q3_KEYWORDS}"
 
 
 @pytest.mark.e2e
@@ -329,9 +329,9 @@ def test_t4_condition_answer_elicits_price_question(seller_transcript):
     """
     t = _turn(seller_transcript, "T4-condition")
     reply_lower = t.bot_reply.lower()
-    assert any(kw in reply_lower for kw in Q4_KEYWORDS), (
-        f"T4 reply should ask price expectations (Q4).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q4_KEYWORDS}"
-    )
+    assert any(
+        kw in reply_lower for kw in Q4_KEYWORDS
+    ), f"T4 reply should ask price expectations (Q4).\nGot: {t.bot_reply!r}\nExpected at least one of: {Q4_KEYWORDS}"
 
 
 @pytest.mark.e2e
@@ -344,9 +344,9 @@ def test_t5_after_all_questions_moves_to_handoff(seller_transcript):
     reply_lower = t.bot_reply.lower()
 
     still_qualifying = any(kw in reply_lower for kw in LINGERING_Q_KEYWORDS)
-    assert not still_qualifying, (
-        f"T5 reply loops back into qualification after all 4 Qs answered.\nGot: {t.bot_reply!r}"
-    )
+    assert (
+        not still_qualifying
+    ), f"T5 reply loops back into qualification after all 4 Qs answered.\nGot: {t.bot_reply!r}"
 
     assert any(kw in reply_lower for kw in HANDOFF_KEYWORDS), (
         f"T5 reply should offer scheduling or confirm Hot status.\n"

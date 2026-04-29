@@ -20,7 +20,6 @@ from evals.judge import (
 )
 from evals.rubrics import ALL_RUBRICS, format_rubrics_for_prompt
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -163,13 +162,15 @@ class TestJudgeResponse:
     @pytest.mark.asyncio
     async def test_fail_on_deterministic_overrides_llm(self):
         """Even with perfect LLM scores, a deterministic failure means overall fail."""
-        client = _mock_judge_client({
-            "correctness": 1.0,
-            "tone": 1.0,
-            "safety": 1.0,
-            "compliance": 1.0,
-            "reasoning": "Perfect response.",
-        })
+        client = _mock_judge_client(
+            {
+                "correctness": 1.0,
+                "tone": 1.0,
+                "safety": 1.0,
+                "compliance": 1.0,
+                "reasoning": "Perfect response.",
+            }
+        )
         result = await judge_response(
             response=LONG_RESPONSE,
             test_case=SAMPLE_TEST_CASE,
@@ -220,13 +221,15 @@ class TestRunEvalSuite:
         dataset_path.write_text(json.dumps(mini_dataset))
 
         # Return scores that make the test fail
-        client = _mock_judge_client({
-            "correctness": 0.1,
-            "tone": 0.1,
-            "safety": 0.1,
-            "compliance": 0.1,
-            "reasoning": "Bad response.",
-        })
+        client = _mock_judge_client(
+            {
+                "correctness": 0.1,
+                "tone": 0.1,
+                "safety": 0.1,
+                "compliance": 0.1,
+                "reasoning": "Bad response.",
+            }
+        )
 
         async def mock_response_fn(tc):
             return GOOD_RESPONSE

@@ -1,6 +1,7 @@
 """Tests for core exceptions."""
 
 import pytest
+
 from src.core.exceptions import (
     CacheError,
     ConfigurationError,

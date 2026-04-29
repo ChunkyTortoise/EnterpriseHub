@@ -245,12 +245,12 @@ class TestLeadAnalysisPerformance:
         summary = metrics.get_summary()
 
         assert throughput >= 10.0, f"Throughput {throughput:.2f} leads/sec should be >=10/sec"
-        assert summary["response_times"]["p95"] <= 300, (
-            f"P95 latency {summary['response_times']['p95']:.1f}ms should be <=300ms"
-        )
-        assert summary["reliability"]["success_rate"] >= 0.99, (
-            f"Success rate {summary['reliability']['success_rate']:.3f} should be >=99%"
-        )
+        assert (
+            summary["response_times"]["p95"] <= 300
+        ), f"P95 latency {summary['response_times']['p95']:.1f}ms should be <=300ms"
+        assert (
+            summary["reliability"]["success_rate"] >= 0.99
+        ), f"Success rate {summary['reliability']['success_rate']:.3f} should be >=99%"
 
         # Verify system resource usage
         assert summary["system_resources"]["peak_memory_mb"] <= 2048, "Peak memory should be <=2GB"
@@ -374,15 +374,15 @@ class TestLeadAnalysisPerformance:
         summary = metrics.get_summary()
 
         # Validate real-time scoring performance
-        assert summary["response_times"]["p95"] <= 200, (
-            f"RT scoring P95 {summary['response_times']['p95']:.1f}ms should be <=200ms"
-        )
-        assert summary["response_times"]["p99"] <= 500, (
-            f"RT scoring P99 {summary['response_times']['p99']:.1f}ms should be <=500ms"
-        )
-        assert summary["response_times"]["mean"] <= 100, (
-            f"RT scoring mean {summary['response_times']['mean']:.1f}ms should be <=100ms"
-        )
+        assert (
+            summary["response_times"]["p95"] <= 200
+        ), f"RT scoring P95 {summary['response_times']['p95']:.1f}ms should be <=200ms"
+        assert (
+            summary["response_times"]["p99"] <= 500
+        ), f"RT scoring P99 {summary['response_times']['p99']:.1f}ms should be <=500ms"
+        assert (
+            summary["response_times"]["mean"] <= 100
+        ), f"RT scoring mean {summary['response_times']['mean']:.1f}ms should be <=100ms"
         assert summary["reliability"]["success_rate"] >= 0.999, "RT scoring should have 99.9% success rate"
 
     @pytest.mark.performance
@@ -571,12 +571,12 @@ class TestDatabasePerformance:
         summary = metrics.get_summary()
 
         # Validate database performance
-        assert summary["response_times"]["mean"] <= 100, (
-            f"DB avg latency {summary['response_times']['mean']:.1f}ms should be <=100ms"
-        )
-        assert summary["response_times"]["p95"] <= 200, (
-            f"DB P95 latency {summary['response_times']['p95']:.1f}ms should be <=200ms"
-        )
+        assert (
+            summary["response_times"]["mean"] <= 100
+        ), f"DB avg latency {summary['response_times']['mean']:.1f}ms should be <=100ms"
+        assert (
+            summary["response_times"]["p95"] <= 200
+        ), f"DB P95 latency {summary['response_times']['p95']:.1f}ms should be <=200ms"
         assert summary["reliability"]["success_rate"] >= 0.99, "DB operations should have 99% success rate"
 
     @pytest.mark.performance
@@ -660,12 +660,12 @@ class TestDatabasePerformance:
         concurrent_throughput = total_ops / total_time
 
         # Validate concurrent database performance
-        assert concurrent_throughput >= 50, (
-            f"Concurrent DB throughput {concurrent_throughput:.1f} ops/sec should be >=50/sec"
-        )
-        assert summary["response_times"]["p95"] <= 250, (
-            f"Concurrent DB P95 {summary['response_times']['p95']:.1f}ms should be <=250ms"
-        )
+        assert (
+            concurrent_throughput >= 50
+        ), f"Concurrent DB throughput {concurrent_throughput:.1f} ops/sec should be >=50/sec"
+        assert (
+            summary["response_times"]["p95"] <= 250
+        ), f"Concurrent DB P95 {summary['response_times']['p95']:.1f}ms should be <=250ms"
         assert summary["reliability"]["success_rate"] >= 0.95, "Concurrent DB success rate should be >=95%"
 
 

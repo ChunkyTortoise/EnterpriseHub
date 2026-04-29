@@ -4,6 +4,7 @@ Tests that run_deterministic_checks catches responses that leak identity,
 mention competitors, or include URLs when the bot is manipulated into
 going off-topic.
 """
+
 from __future__ import annotations
 
 import pytest

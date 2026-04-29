@@ -335,9 +335,9 @@ class TestObjectionAccuracyTarget:
         detection = engine.detect_objection(message)
 
         assert detection.detected, f"Failed to detect objection in: {message}"
-        assert detection.objection_category == expected_category, (
-            f"Misclassified '{message}' as {detection.objection_category}, expected {expected_category}"
-        )
+        assert (
+            detection.objection_category == expected_category
+        ), f"Misclassified '{message}' as {detection.objection_category}, expected {expected_category}"
         assert detection.confidence >= 0.7, f"Low confidence for: {message}"
 
 
@@ -427,9 +427,9 @@ class TestObjectionCategoryMapping:
         )
 
         for obj_type in ObjectionType:
-            assert obj_type in OBJECTION_CATEGORY_MAP, (
-                f"ObjectionType.{obj_type.name} missing from OBJECTION_CATEGORY_MAP"
-            )
+            assert (
+                obj_type in OBJECTION_CATEGORY_MAP
+            ), f"ObjectionType.{obj_type.name} missing from OBJECTION_CATEGORY_MAP"
 
     def test_get_objection_category(self):
         """Test helper method for getting category from type."""

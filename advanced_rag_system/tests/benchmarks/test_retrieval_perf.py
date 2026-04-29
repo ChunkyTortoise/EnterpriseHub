@@ -16,6 +16,8 @@ from typing import Dict
 import numpy as np
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 # Add the project root to path for imports
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../"))
@@ -27,7 +29,6 @@ try:
 except ImportError:
     # Fallback mock classes for testing environment
 
-@pytest.mark.integration
     class SearchResult:
         def __init__(self, text: str, source: str, id: str, distance: float, metadata: Dict):
             self.text = text

@@ -154,14 +154,14 @@ class TestTrack3PredictiveIntelligence:
             assert isinstance(result.stage_bottlenecks, list)
 
             # Validate performance target (<50ms)
-            assert result.processing_time_ms < 50.0, (
-                f"Processing time {result.processing_time_ms}ms exceeds 50ms target"
-            )
+            assert (
+                result.processing_time_ms < 50.0
+            ), f"Processing time {result.processing_time_ms}ms exceeds 50ms target"
 
             # Validate business logic
-            assert result.conversion_probability > 0.3, (
-                "High Jorge score should yield reasonable conversion probability"
-            )
+            assert (
+                result.conversion_probability > 0.3
+            ), "High Jorge score should yield reasonable conversion probability"
 
             print(
                 f"✅ Journey Prediction: {result.processing_time_ms:.2f}ms, Stage: {result.current_stage}, Conversion: {result.conversion_probability:.3f}"
@@ -262,9 +262,9 @@ class TestTrack3PredictiveIntelligence:
             # Later stages should generally have higher conversion probabilities
             for i in range(1, len(probabilities)):
                 # Allow some flexibility due to mock data, but general trend should be upward
-                assert probabilities[i] >= probabilities[i - 1] - 0.1, (
-                    f"Stage progression should increase conversion probability"
-                )
+                assert (
+                    probabilities[i] >= probabilities[i - 1] - 0.1
+                ), f"Stage progression should increase conversion probability"
 
             print(f"✅ Stage Progression Validation: {probabilities}")
 
@@ -516,15 +516,15 @@ class TestTrack3PredictiveIntelligence:
             low_conversion = await ml_engine.predict_conversion_probability("low_jorge", "qualification")
 
         # High Jorge score should yield better predictions
-        assert high_journey.conversion_probability > low_journey.conversion_probability, (
-            "High Jorge score should have higher conversion probability"
-        )
-        assert high_conversion.stage_conversion_probability > low_conversion.stage_conversion_probability, (
-            "High Jorge score should have better stage conversion"
-        )
-        assert high_journey.stage_progression_velocity >= low_journey.stage_progression_velocity, (
-            "High Jorge score should have faster or equal progression velocity"
-        )
+        assert (
+            high_journey.conversion_probability > low_journey.conversion_probability
+        ), "High Jorge score should have higher conversion probability"
+        assert (
+            high_conversion.stage_conversion_probability > low_conversion.stage_conversion_probability
+        ), "High Jorge score should have better stage conversion"
+        assert (
+            high_journey.stage_progression_velocity >= low_journey.stage_progression_velocity
+        ), "High Jorge score should have faster or equal progression velocity"
 
         print(f"✅ Jorge Score Correlation:")
         print(
@@ -666,14 +666,15 @@ class TestTrack3IntegrationScenarios:
 
                 # Validate business logic alignment
                 if scenario_data["jorge_score"] > 4.0:
-                    assert journey.conversion_probability > 0.5, (
-                        f"High Jorge score should yield good conversion probability"
-                    )
+                    assert (
+                        journey.conversion_probability > 0.5
+                    ), f"High Jorge score should yield good conversion probability"
 
                 if scenario_data["jorge_score"] < 3.0:
-                    assert touchpoints.contact_frequency_recommendation in ["patient", "moderate"], (
-                        f"Low Jorge score should recommend patient approach"
-                    )
+                    assert touchpoints.contact_frequency_recommendation in [
+                        "patient",
+                        "moderate",
+                    ], f"Low Jorge score should recommend patient approach"
 
 
 if __name__ == "__main__":

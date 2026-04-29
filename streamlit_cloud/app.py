@@ -6,15 +6,15 @@ Runs on Streamlit Cloud with zero external dependencies (no DB, Redis, or API ke
 
 import datetime
 
+# Inline metric primitive — no dependency on main app package
+from dataclasses import dataclass
+from typing import Literal, Optional
+
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-
-# Inline metric primitive — no dependency on main app package
-from dataclasses import dataclass
-from typing import Literal, Optional
 
 
 @dataclass
@@ -29,8 +29,11 @@ def render_obsidian_metric(value, label, config=None, comparison_value=None, met
     if config is None:
         config = MetricConfig()
     _COLORS = {
-        "default": "#E2E8F0", "success": "#10B981", "warning": "#F59E0B",
-        "error": "#EF4444", "premium": "#6366F1",
+        "default": "#E2E8F0",
+        "success": "#10B981",
+        "warning": "#F59E0B",
+        "error": "#EF4444",
+        "premium": "#6366F1",
     }
     _SIZES = {"small": "1.8rem", "medium": "2.5rem", "large": "3.2rem"}
     color = _COLORS.get(config.variant, "#E2E8F0")
@@ -40,15 +43,23 @@ def render_obsidian_metric(value, label, config=None, comparison_value=None, met
         trend_html = f'<div style="color:#10B981;font-size:0.8rem;margin-top:0.3rem;">▲ UP</div>'
     elif config.trend == "down":
         trend_html = f'<div style="color:#EF4444;font-size:0.8rem;margin-top:0.3rem;">▼ DOWN</div>'
-    comp_html = f'<div style="color:#8B949E;font-size:0.75rem;margin-top:0.3rem;">{comparison_value}</div>' if comparison_value else ""
-    st.markdown(f"""
+    comp_html = (
+        f'<div style="color:#8B949E;font-size:0.75rem;margin-top:0.3rem;">{comparison_value}</div>'
+        if comparison_value
+        else ""
+    )
+    st.markdown(
+        f"""
     <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);
         border-radius:12px;padding:1.2rem;text-align:center;margin-bottom:1rem;">
         <div style="color:{color};font-size:{font_size};font-weight:700;line-height:1.2;">{value}</div>
         <div style="color:#8B949E;font-size:0.8rem;font-weight:600;text-transform:uppercase;
             letter-spacing:0.05em;margin-top:0.4rem;">{label}</div>
         {trend_html}{comp_html}
-    </div>""", unsafe_allow_html=True)
+    </div>""",
+        unsafe_allow_html=True,
+    )
+
 
 st.set_page_config(
     page_title="EnterpriseHub — Real Estate AI Platform",

@@ -137,7 +137,10 @@ class CostTracker:
                 ),
                 {"cutoff": cutoff},
             )
-            by_agent = {row["agent_name"]: {"cost": float(row["cost"]), "requests": row["requests"]} for row in agent_result.mappings()}
+            by_agent = {
+                row["agent_name"]: {"cost": float(row["cost"]), "requests": row["requests"]}
+                for row in agent_result.mappings()
+            }
 
             # By model
             model_result = await session.execute(
@@ -159,9 +162,7 @@ class CostTracker:
 
             # Per-lead average (unique request_ids as proxy for leads)
             lead_result = await session.execute(
-                text(
-                    "SELECT COUNT(DISTINCT request_id) AS leads FROM cost_records WHERE created_at >= :cutoff"
-                ),
+                text("SELECT COUNT(DISTINCT request_id) AS leads FROM cost_records WHERE created_at >= :cutoff"),
                 {"cutoff": cutoff},
             )
             unique_leads = lead_result.scalar_one() or 0
@@ -185,9 +186,7 @@ class CostTracker:
             # Emergency status: hourly rate check
             one_hour_ago = datetime.now(UTC) - timedelta(hours=1)
             hourly_result = await session.execute(
-                text(
-                    "SELECT COALESCE(SUM(cost_usd), 0) AS hourly FROM cost_records WHERE created_at >= :cutoff"
-                ),
+                text("SELECT COALESCE(SUM(cost_usd), 0) AS hourly FROM cost_records WHERE created_at >= :cutoff"),
                 {"cutoff": one_hour_ago},
             )
             hourly_cost = float(hourly_result.scalar_one())

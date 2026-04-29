@@ -32,28 +32,99 @@ st.markdown("### Agent Mesh Routing | Task Lifecycle | Latency Analytics | Execu
 random.seed(43)
 
 agents = [
-    {"name": "Lead Qualifier", "type": "qualification", "p50_ms": 340, "p95_ms": 890, "success_rate": 0.96, "tasks_24h": 142},
+    {
+        "name": "Lead Qualifier",
+        "type": "qualification",
+        "p50_ms": 340,
+        "p95_ms": 890,
+        "success_rate": 0.96,
+        "tasks_24h": 142,
+    },
     {"name": "Seller Scorer", "type": "scoring", "p50_ms": 280, "p95_ms": 720, "success_rate": 0.98, "tasks_24h": 89},
     {"name": "Buyer Matcher", "type": "matching", "p50_ms": 450, "p95_ms": 1200, "success_rate": 0.94, "tasks_24h": 67},
-    {"name": "CMA Generator", "type": "analysis", "p50_ms": 1200, "p95_ms": 2800, "success_rate": 0.91, "tasks_24h": 23},
-    {"name": "Compliance Checker", "type": "compliance", "p50_ms": 120, "p95_ms": 280, "success_rate": 0.99, "tasks_24h": 298},
-    {"name": "Intent Decoder", "type": "classification", "p50_ms": 180, "p95_ms": 420, "success_rate": 0.97, "tasks_24h": 312},
+    {
+        "name": "CMA Generator",
+        "type": "analysis",
+        "p50_ms": 1200,
+        "p95_ms": 2800,
+        "success_rate": 0.91,
+        "tasks_24h": 23,
+    },
+    {
+        "name": "Compliance Checker",
+        "type": "compliance",
+        "p50_ms": 120,
+        "p95_ms": 280,
+        "success_rate": 0.99,
+        "tasks_24h": 298,
+    },
+    {
+        "name": "Intent Decoder",
+        "type": "classification",
+        "p50_ms": 180,
+        "p95_ms": 420,
+        "success_rate": 0.97,
+        "tasks_24h": 312,
+    },
     {"name": "Handoff Router", "type": "routing", "p50_ms": 45, "p95_ms": 120, "success_rate": 0.99, "tasks_24h": 56},
-    {"name": "Follow-up Scheduler", "type": "scheduling", "p50_ms": 90, "p95_ms": 210, "success_rate": 0.98, "tasks_24h": 178},
+    {
+        "name": "Follow-up Scheduler",
+        "type": "scheduling",
+        "p50_ms": 90,
+        "p95_ms": 210,
+        "success_rate": 0.98,
+        "tasks_24h": 178,
+    },
 ]
 
 # Trace example
 trace_steps = [
     {"step": 1, "phase": "Think", "action": "Analyze incoming message intent", "duration_ms": 45, "confidence": 0.0},
     {"step": 2, "phase": "Act", "action": "Route to Intent Decoder agent", "duration_ms": 180, "confidence": 0.87},
-    {"step": 3, "phase": "Observe", "action": "Intent: seller_inquiry (0.87 confidence)", "duration_ms": 12, "confidence": 0.87},
-    {"step": 4, "phase": "Think", "action": "Check handoff thresholds (0.87 > 0.70)", "duration_ms": 8, "confidence": 0.87},
+    {
+        "step": 3,
+        "phase": "Observe",
+        "action": "Intent: seller_inquiry (0.87 confidence)",
+        "duration_ms": 12,
+        "confidence": 0.87,
+    },
+    {
+        "step": 4,
+        "phase": "Think",
+        "action": "Check handoff thresholds (0.87 > 0.70)",
+        "duration_ms": 8,
+        "confidence": 0.87,
+    },
     {"step": 5, "phase": "Act", "action": "Route to Seller Scorer agent", "duration_ms": 280, "confidence": 0.91},
-    {"step": 6, "phase": "Observe", "action": "FRS: 72/100, PCS: 68/100 — Warm Seller", "duration_ms": 15, "confidence": 0.91},
+    {
+        "step": 6,
+        "phase": "Observe",
+        "action": "FRS: 72/100, PCS: 68/100 — Warm Seller",
+        "duration_ms": 15,
+        "confidence": 0.91,
+    },
     {"step": 7, "phase": "Think", "action": "Generate qualification response", "duration_ms": 22, "confidence": 0.91},
-    {"step": 8, "phase": "Act", "action": "Call Claude Sonnet for response generation", "duration_ms": 890, "confidence": 0.93},
-    {"step": 9, "phase": "Observe", "action": "Response generated (148 chars, compliant)", "duration_ms": 120, "confidence": 0.93},
-    {"step": 10, "phase": "Act", "action": "Apply compliance pipeline (7 stages)", "duration_ms": 45, "confidence": 0.93},
+    {
+        "step": 8,
+        "phase": "Act",
+        "action": "Call Claude Sonnet for response generation",
+        "duration_ms": 890,
+        "confidence": 0.93,
+    },
+    {
+        "step": 9,
+        "phase": "Observe",
+        "action": "Response generated (148 chars, compliant)",
+        "duration_ms": 120,
+        "confidence": 0.93,
+    },
+    {
+        "step": 10,
+        "phase": "Act",
+        "action": "Apply compliance pipeline (7 stages)",
+        "duration_ms": 45,
+        "confidence": 0.93,
+    },
 ]
 
 # ── KPI Cards ────────────────────────────────────────────────────────────
@@ -82,20 +153,24 @@ col_left, col_right = st.columns(2)
 with col_left:
     st.subheader("Agent Latency (P50 vs P95)")
     fig_latency = go.Figure()
-    fig_latency.add_trace(go.Bar(
-        y=[a["name"] for a in agents],
-        x=[a["p50_ms"] for a in agents],
-        name="P50",
-        orientation="h",
-        marker_color="#3b82f6",
-    ))
-    fig_latency.add_trace(go.Bar(
-        y=[a["name"] for a in agents],
-        x=[a["p95_ms"] for a in agents],
-        name="P95",
-        orientation="h",
-        marker_color="#ef4444",
-    ))
+    fig_latency.add_trace(
+        go.Bar(
+            y=[a["name"] for a in agents],
+            x=[a["p50_ms"] for a in agents],
+            name="P50",
+            orientation="h",
+            marker_color="#3b82f6",
+        )
+    )
+    fig_latency.add_trace(
+        go.Bar(
+            y=[a["name"] for a in agents],
+            x=[a["p95_ms"] for a in agents],
+            name="P95",
+            orientation="h",
+            marker_color="#ef4444",
+        )
+    )
     fig_latency.update_layout(
         barmode="overlay",
         height=400,
@@ -129,16 +204,17 @@ st.markdown("*Think-Act-Observe loop for contact `jorge_lead_847`*")
 
 # Confidence trajectory
 fig_confidence = go.Figure()
-fig_confidence.add_trace(go.Scatter(
-    x=[s["step"] for s in trace_steps],
-    y=[s["confidence"] for s in trace_steps],
-    mode="lines+markers",
-    name="Confidence",
-    line=dict(color="#22c55e", width=3),
-    marker=dict(size=10),
-))
-fig_confidence.add_hline(y=0.70, line_dash="dash", line_color="#f59e0b",
-                          annotation_text="Handoff Threshold (0.70)")
+fig_confidence.add_trace(
+    go.Scatter(
+        x=[s["step"] for s in trace_steps],
+        y=[s["confidence"] for s in trace_steps],
+        mode="lines+markers",
+        name="Confidence",
+        line=dict(color="#22c55e", width=3),
+        marker=dict(size=10),
+    )
+)
+fig_confidence.add_hline(y=0.70, line_dash="dash", line_color="#f59e0b", annotation_text="Handoff Threshold (0.70)")
 fig_confidence.update_layout(
     height=250,
     margin=dict(l=40, r=20, t=20, b=40),
@@ -179,6 +255,5 @@ st.markdown("""
 
 st.markdown("---")
 st.caption(
-    "EnterpriseHub Agent Trace Viewer v2026.1 | "
-    "Data: demo mode (production reads from AgentMeshCoordinator metrics)"
+    "EnterpriseHub Agent Trace Viewer v2026.1 | " "Data: demo mode (production reads from AgentMeshCoordinator metrics)"
 )

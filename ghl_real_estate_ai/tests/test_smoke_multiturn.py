@@ -138,9 +138,9 @@ async def test_seller_valuation_field_omitted_when_no_price_expectation() -> Non
     )
 
     valuation_actions = [a for a in actions if "valuation" in str(a.get("field", ""))]
-    assert not valuation_actions, (
-        f"ai_valuation_price should NOT be written when price_expectation is unknown, got: {valuation_actions}"
-    )
+    assert (
+        not valuation_actions
+    ), f"ai_valuation_price should NOT be written when price_expectation is unknown, got: {valuation_actions}"
 
 
 @pytest.mark.asyncio
@@ -170,9 +170,9 @@ async def test_buyer_multiturn_advances_past_tour_question() -> None:
     # Turn 1: pre-approved buyer
     r1 = await run_turn("Looking to buy around $600K, I have pre-approval", buyer_name="Jorge")
     resp1 = r1.get("response_content", "")
-    assert "mornings or afternoons" in resp1.lower() or "morning" in resp1.lower(), (
-        f"Turn 1 should ask about tour preference, got: {resp1}"
-    )
+    assert (
+        "mornings or afternoons" in resp1.lower() or "morning" in resp1.lower()
+    ), f"Turn 1 should ask about tour preference, got: {resp1}"
 
     # Turn 2: user answers tour preference
     r2 = await run_turn("mornings work great")

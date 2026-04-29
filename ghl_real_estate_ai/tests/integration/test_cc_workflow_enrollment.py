@@ -335,9 +335,9 @@ class TestTagWebhookCCAIWorkflowEnrollment:
             )
 
         triggered_ids = [a.workflow_id for a in response.actions if a.type == ActionType.TRIGGER_WORKFLOW]
-        assert ai_tag_wf_id in triggered_ids, (
-            f"Expected cc_ai_tag_workflow_id {ai_tag_wf_id} to be triggered, got: {triggered_ids}"
-        )
+        assert (
+            ai_tag_wf_id in triggered_ids
+        ), f"Expected cc_ai_tag_workflow_id {ai_tag_wf_id} to be triggered, got: {triggered_ids}"
 
     @pytest.mark.asyncio
     async def test_ai_tag_dedup_prevents_double_enrollment(self):
@@ -389,9 +389,9 @@ class TestTagWebhookCCAIWorkflowEnrollment:
             )
 
         triggered_ids = [a.workflow_id for a in response.actions if a.type == ActionType.TRIGGER_WORKFLOW]
-        assert ai_tag_wf_id not in triggered_ids, (
-            f"Expected dedup to suppress cc_ai_tag_workflow_id, but it appeared in: {triggered_ids}"
-        )
+        assert (
+            ai_tag_wf_id not in triggered_ids
+        ), f"Expected dedup to suppress cc_ai_tag_workflow_id, but it appeared in: {triggered_ids}"
         # set() should not have been called again since key already exists
         mock_cache.set.assert_not_called()
 
@@ -472,9 +472,9 @@ class TestTagWebhookCCAIWorkflowEnrollment:
         # Response message must be buyer-style, not seller-style
         assert response.success is True
         assert "selling" not in response.message.lower(), f"Seller outreach sent to buyer contact: {response.message!r}"
-        assert "searching" in response.message.lower() or "glad" in response.message.lower(), (
-            f"Expected buyer-style outreach, got: {response.message!r}"
-        )
+        assert (
+            "searching" in response.message.lower() or "glad" in response.message.lower()
+        ), f"Expected buyer-style outreach, got: {response.message!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -509,9 +509,10 @@ class TestGhostingSetRedisKey:
 
         ghost_key = f"ghost_state:{contact_id}"
         set_calls = [(c.args[0], c.args[1]) for c in mock_cache.set.call_args_list if c.args]
-        assert (ghost_key, "ghosted") in set_calls, (
-            f"Expected cache.set('{ghost_key}', 'ghosted', ...) to be called. Got: {set_calls}"
-        )
+        assert (
+            ghost_key,
+            "ghosted",
+        ) in set_calls, f"Expected cache.set('{ghost_key}', 'ghosted', ...) to be called. Got: {set_calls}"
 
 
 class TestCCGhostingWorkflowTriggeredOnGhost:
@@ -591,9 +592,9 @@ class TestUnstaleFiresWhenGhostedContactMessages:
             )
 
         triggered_ids = [a.workflow_id for a in actions if a.type == ActionType.TRIGGER_WORKFLOW]
-        assert _CC_UNSTALE_WF_ID in triggered_ids, (
-            f"Expected cc_unstale_lead_workflow_id to fire when ghosted contact sends new message. Got: {triggered_ids}"
-        )
+        assert (
+            _CC_UNSTALE_WF_ID in triggered_ids
+        ), f"Expected cc_unstale_lead_workflow_id to fire when ghosted contact sends new message. Got: {triggered_ids}"
 
     @pytest.mark.asyncio
     async def test_unstale_resets_ghost_state_to_active(self, cc_settings):
@@ -615,6 +616,7 @@ class TestUnstaleFiresWhenGhostedContactMessages:
             )
 
         set_calls = [(c.args[0], c.args[1]) for c in cache.set.call_args_list if len(c.args) >= 2]
-        assert (ghost_key, "active") in set_calls, (
-            f"Expected ghost_state key to be reset to 'active' after unstale. Set calls: {set_calls}"
-        )
+        assert (
+            ghost_key,
+            "active",
+        ) in set_calls, f"Expected ghost_state key to be reset to 'active' after unstale. Set calls: {set_calls}"

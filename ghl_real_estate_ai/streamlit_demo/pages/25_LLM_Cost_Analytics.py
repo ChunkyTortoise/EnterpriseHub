@@ -39,14 +39,16 @@ for d in dates:
     cache_hits = random.randint(4000, 18000)
     cost = (input_tok * 3.0 / 1_000_000) + (output_tok * 15.0 / 1_000_000)
     savings = cache_hits * 3.0 / 1_000_000  # What cache hits saved
-    daily_data.append({
-        "date": d.strftime("%Y-%m-%d"),
-        "input_tokens": input_tok,
-        "output_tokens": output_tok,
-        "cache_hits": cache_hits,
-        "cost_usd": round(cost, 4),
-        "savings_usd": round(savings, 4),
-    })
+    daily_data.append(
+        {
+            "date": d.strftime("%Y-%m-%d"),
+            "input_tokens": input_tok,
+            "output_tokens": output_tok,
+            "cache_hits": cache_hits,
+            "cost_usd": round(cost, 4),
+            "savings_usd": round(savings, 4),
+        }
+    )
 
 # Model breakdown
 model_data = [
@@ -75,7 +77,9 @@ with col1:
     st.metric("30-Day Cost", f"${total_cost:.2f}", delta="-89% vs. no cache")
 
 with col2:
-    st.metric("Cache Savings", f"${total_savings:.2f}", delta=f"{total_savings/(total_cost+total_savings)*100:.0f}% saved")
+    st.metric(
+        "Cache Savings", f"${total_savings:.2f}", delta=f"{total_savings/(total_cost+total_savings)*100:.0f}% saved"
+    )
 
 with col3:
     st.metric("Total Requests", f"{total_requests:,}")
@@ -92,18 +96,22 @@ col_left, col_right = st.columns(2)
 with col_left:
     st.subheader("Daily Cost vs. Cache Savings")
     fig_cost = go.Figure()
-    fig_cost.add_trace(go.Bar(
-        x=[d["date"] for d in daily_data],
-        y=[d["cost_usd"] for d in daily_data],
-        name="Actual Cost",
-        marker_color="#ef4444",
-    ))
-    fig_cost.add_trace(go.Bar(
-        x=[d["date"] for d in daily_data],
-        y=[d["savings_usd"] for d in daily_data],
-        name="Cache Savings",
-        marker_color="#22c55e",
-    ))
+    fig_cost.add_trace(
+        go.Bar(
+            x=[d["date"] for d in daily_data],
+            y=[d["cost_usd"] for d in daily_data],
+            name="Actual Cost",
+            marker_color="#ef4444",
+        )
+    )
+    fig_cost.add_trace(
+        go.Bar(
+            x=[d["date"] for d in daily_data],
+            y=[d["savings_usd"] for d in daily_data],
+            name="Cache Savings",
+            marker_color="#22c55e",
+        )
+    )
     fig_cost.update_layout(
         barmode="stack",
         height=400,
@@ -116,27 +124,33 @@ with col_left:
 with col_right:
     st.subheader("Token Usage by Type")
     fig_tokens = go.Figure()
-    fig_tokens.add_trace(go.Scatter(
-        x=[d["date"] for d in daily_data],
-        y=[d["input_tokens"] for d in daily_data],
-        name="Input Tokens",
-        mode="lines+markers",
-        line=dict(color="#3b82f6"),
-    ))
-    fig_tokens.add_trace(go.Scatter(
-        x=[d["date"] for d in daily_data],
-        y=[d["output_tokens"] for d in daily_data],
-        name="Output Tokens",
-        mode="lines+markers",
-        line=dict(color="#f59e0b"),
-    ))
-    fig_tokens.add_trace(go.Scatter(
-        x=[d["date"] for d in daily_data],
-        y=[d["cache_hits"] for d in daily_data],
-        name="Cache Hits",
-        mode="lines+markers",
-        line=dict(color="#22c55e", dash="dot"),
-    ))
+    fig_tokens.add_trace(
+        go.Scatter(
+            x=[d["date"] for d in daily_data],
+            y=[d["input_tokens"] for d in daily_data],
+            name="Input Tokens",
+            mode="lines+markers",
+            line=dict(color="#3b82f6"),
+        )
+    )
+    fig_tokens.add_trace(
+        go.Scatter(
+            x=[d["date"] for d in daily_data],
+            y=[d["output_tokens"] for d in daily_data],
+            name="Output Tokens",
+            mode="lines+markers",
+            line=dict(color="#f59e0b"),
+        )
+    )
+    fig_tokens.add_trace(
+        go.Scatter(
+            x=[d["date"] for d in daily_data],
+            y=[d["cache_hits"] for d in daily_data],
+            name="Cache Hits",
+            mode="lines+markers",
+            line=dict(color="#22c55e", dash="dot"),
+        )
+    )
     fig_tokens.update_layout(
         height=400,
         margin=dict(l=40, r=20, t=20, b=40),

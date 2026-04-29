@@ -189,9 +189,9 @@ async def test_aria_labels(streamlit_app: Page):
         ]
     ]
 
-    assert len(aria_violations) == 0, (
-        f"Found {len(aria_violations)} ARIA violations: {[v['id'] for v in aria_violations]}"
-    )
+    assert (
+        len(aria_violations) == 0
+    ), f"Found {len(aria_violations)} ARIA violations: {[v['id'] for v in aria_violations]}"
 
 
 @pytest.mark.asyncio
@@ -218,9 +218,13 @@ async def test_keyboard_navigation(streamlit_app: Page):
     focused_element = await streamlit_app.evaluate("document.activeElement.tagName")
 
     # Verify focus moved to an interactive element
-    assert focused_element in ["BUTTON", "A", "INPUT", "SELECT", "TEXTAREA"], (
-        f"Tab navigation failed - focused element: {focused_element}"
-    )
+    assert focused_element in [
+        "BUTTON",
+        "A",
+        "INPUT",
+        "SELECT",
+        "TEXTAREA",
+    ], f"Tab navigation failed - focused element: {focused_element}"
 
     # Run axe scan for keyboard-specific issues
     results = await run_axe(streamlit_app)

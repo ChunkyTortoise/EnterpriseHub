@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+
 from src.core.exceptions import RetrievalError
 from src.query.intent_classifier_v2 import (
     ClassifierConfig,

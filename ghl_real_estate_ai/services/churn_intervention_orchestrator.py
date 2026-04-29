@@ -116,7 +116,6 @@ class InterventionOrchestrator:
     """
 
     def __init__(self, reengagement_engine: ReengagementEngine, memory_service: MemoryService, ghl_service: GHLService):
-
         self.reengagement_engine = reengagement_engine
         self.memory_service = memory_service
         self.ghl_service = ghl_service
