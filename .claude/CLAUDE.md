@@ -45,6 +45,7 @@ ghl_real_estate_ai/            # Main app
 - **Files/Functions**: `snake_case` | **Classes**: `PascalCase` | **Constants**: `SCREAMING_SNAKE_CASE`
 - **Env vars**: `PROJECT_FEATURE_NAME` | **DB tables**: `plural_snake_case`
 - **Errors**: Explicit exception types, structured JSON responses (`error`, `message`, `field`, `code`)
+- **Alembic migrations**: Always require DROP/ALTER column operations to include a corresponding rollback migration in `downgrade()`
 
 ## Critical Services
 | Service | File | Key Behavior |
