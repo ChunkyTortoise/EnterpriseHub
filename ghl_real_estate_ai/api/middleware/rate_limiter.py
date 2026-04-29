@@ -11,6 +11,7 @@ Features:
 """
 
 import asyncio
+import logging
 from collections import defaultdict, deque
 from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
@@ -18,9 +19,7 @@ from typing import Dict, Optional, Tuple
 from fastapi import HTTPException, Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from ghl_real_estate_ai.ghl_utils.logger import get_logger
-
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class ThreatDetector:

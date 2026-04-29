@@ -9,10 +9,24 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import streamlit as st
-import ta
-import yfinance as yf
+
+try:
+    import yfinance as yf
+except ModuleNotFoundError:
+
+    class _MissingYFinance:
+        @staticmethod
+        def download(*args, **kwargs):
+            raise RuntimeError("yfinance is required to fetch market data. Install requirements.txt.")
+
+        class Ticker:
+            def __init__(self, *args, **kwargs):
+                raise RuntimeError("yfinance is required to fetch company data. Install requirements.txt.")
+
+    yf = _MissingYFinance()
 
 from utils.exceptions import DataFetchError, DataProcessingError, InvalidTickerError
+from utils.indicators import calculate_macd, calculate_rsi
 from utils.logger import get_logger
 
 # Initialize logger
@@ -154,27 +168,30 @@ def calculate_indicators(df: pd.DataFrame) -> pd.DataFrame:
             raise DataProcessingError(f"Missing required columns: {missing_columns}")
 
         # Calculate Moving Average (20-period)
-        df["MA20"] = ta.trend.sma_indicator(df["Close"], window=20)
+        df["MA20"] = df["Close"].rolling(window=20).mean()
         logger.debug("Calculated MA20")
 
         # Calculate Bollinger Bands
-        bb_indicator = ta.volatility.BollingerBands(df["Close"], window=20, window_dev=2)
-        df["BB_Upper"] = bb_indicator.bollinger_hband()
-        df["BB_Lower"] = bb_indicator.bollinger_lband()
+        rolling_mean = df["Close"].rolling(window=20).mean()
+        rolling_std = df["Close"].rolling(window=20).std()
+        df["BB_Upper"] = rolling_mean + (rolling_std * 2)
+        df["BB_Lower"] = rolling_mean - (rolling_std * 2)
         logger.debug("Calculated Bollinger Bands")
 
         # Calculate ATR (Average True Range) - 14-period
-        atr_indicator = ta.volatility.AverageTrueRange(df["High"], df["Low"], df["Close"], window=14)
-        df["ATR"] = atr_indicator.average_true_range()
+        high_low = df["High"] - df["Low"]
+        high_close = (df["High"] - df["Close"].shift()).abs()
+        low_close = (df["Low"] - df["Close"].shift()).abs()
+        true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+        df["ATR"] = true_range.rolling(window=14).mean()
         logger.debug("Calculated ATR")
 
         # Calculate RSI (14-period)
-        df["RSI"] = ta.momentum.rsi(df["Close"], window=14)
+        df["RSI"] = calculate_rsi(df["Close"], period=14)
         logger.debug("Calculated RSI")
 
         # Calculate MACD
-        df["MACD"] = ta.trend.macd(df["Close"])
-        df["Signal"] = ta.trend.macd_signal(df["Close"])
+        df["MACD"], df["Signal"] = calculate_macd(df["Close"])
         logger.debug("Calculated MACD and Signal")
 
         logger.info("Successfully calculated all indicators")

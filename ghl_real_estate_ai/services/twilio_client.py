@@ -20,8 +20,29 @@ import aiohttp
 from aiohttp import BasicAuth, ClientTimeout
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
-from twilio.base.exceptions import TwilioRestException
-from twilio.rest import Client as TwilioSyncClient
+
+try:
+    from twilio.base.exceptions import TwilioRestException
+    from twilio.rest import Client as TwilioSyncClient
+except ModuleNotFoundError:
+
+    class TwilioRestException(Exception):
+        """Fallback exception used when the Twilio SDK is not installed."""
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args)
+            self.code = kwargs.get("code")
+            self.msg = str(args[0]) if args else "Twilio SDK is not installed"
+
+    class TwilioSyncClient:
+        """Import-time fallback; live Twilio calls still require the SDK."""
+
+        def __init__(self, *args, **kwargs):
+            self._missing_sdk_message = "twilio is required for SMS operations. Install requirements.txt."
+
+        def __getattr__(self, name: str):
+            raise RuntimeError(self._missing_sdk_message)
+
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

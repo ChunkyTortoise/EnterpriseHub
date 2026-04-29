@@ -6,8 +6,23 @@ Provides a standardized interface for agent capabilities (Skills).
 import inspect
 from typing import Any, Callable, Dict, List, Optional
 
-from fastmcp import FastMCP
 from pydantic import BaseModel, Field, create_model
+
+try:
+    from fastmcp import FastMCP
+except ImportError:
+
+    class FastMCP:
+        """No-op FastMCP fallback for environments without MCP extras."""
+
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def tool(self):
+            def decorator(func: Callable):
+                return func
+
+            return decorator
 
 
 class SkillMetadata(BaseModel):

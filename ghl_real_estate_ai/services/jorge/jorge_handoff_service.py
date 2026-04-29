@@ -1472,29 +1472,17 @@ class JorgeHandoffService:
             import asyncio
 
             try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    asyncio.ensure_future(
-                        repo.save_handoff_outcome(
-                            contact_id=contact_id,
-                            source_bot=source_bot,
-                            target_bot=target_bot,
-                            outcome=outcome,
-                            timestamp=ts,
-                            metadata=metadata,
-                        )
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    repo.save_handoff_outcome(
+                        contact_id=contact_id,
+                        source_bot=source_bot,
+                        target_bot=target_bot,
+                        outcome=outcome,
+                        timestamp=ts,
+                        metadata=metadata,
                     )
-                else:
-                    loop.run_until_complete(
-                        repo.save_handoff_outcome(
-                            contact_id=contact_id,
-                            source_bot=source_bot,
-                            target_bot=target_bot,
-                            outcome=outcome,
-                            timestamp=ts,
-                            metadata=metadata,
-                        )
-                    )
+                )
             except RuntimeError:
                 logger.debug("No event loop for handoff outcome DB write-through")
 
@@ -1504,27 +1492,16 @@ class JorgeHandoffService:
             import asyncio
 
             try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    asyncio.ensure_future(
-                        publisher.publish_handoff_outcome(
-                            contact_id=contact_id,
-                            source_bot=source_bot,
-                            target_bot=target_bot,
-                            outcome=outcome,
-                            confidence=confidence,
-                        )
+                loop = asyncio.get_running_loop()
+                loop.create_task(
+                    publisher.publish_handoff_outcome(
+                        contact_id=contact_id,
+                        source_bot=source_bot,
+                        target_bot=target_bot,
+                        outcome=outcome,
+                        confidence=confidence,
                     )
-                else:
-                    loop.run_until_complete(
-                        publisher.publish_handoff_outcome(
-                            contact_id=contact_id,
-                            source_bot=source_bot,
-                            target_bot=target_bot,
-                            outcome=outcome,
-                            confidence=confidence,
-                        )
-                    )
+                )
             except RuntimeError:
                 logger.debug("No event loop for handoff outcome GHL write-through")
             except Exception as e:

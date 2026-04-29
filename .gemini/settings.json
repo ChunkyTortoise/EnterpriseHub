@@ -1,10 +1,12 @@
 {
   "general": {
-    "autonomous_execution": true
+    "autonomous_execution": true,
+    "plan": {
+      "enabled": true
+    }
   },
   "experimental": {
     "enableAgents": true,
-    "plan": true,
     "toolOutputMasking": {
       "enabled": true,
       "toolProtectionThreshold": 1000
@@ -74,5 +76,8 @@
         "OBSIDIAN_VAULT_PATH": "/Users/cave/Projects/EnterpriseHub/.obsidian-vault"
       }
     }
+  },
+  "agents": {
+    "overrides": {}
   }
 }

@@ -7,7 +7,6 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 
-import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
@@ -249,10 +248,17 @@ class JWTAuth:
 
         Note: bcrypt has a 72-byte limit. For security, we truncate long passwords.
         """
-        # bcrypt has a 72-byte limit, truncate if needed
+        try:
+            import bcrypt
+        except ImportError as exc:
+            raise RuntimeError("bcrypt is required for password hashing. Install requirements.txt.") from exc
+
         password_bytes = password.encode("utf-8")
         if len(password_bytes) > 72:
-            password_bytes = password_bytes[:72]
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Password must not exceed 72 characters",
+            )
 
         # Generate salt and hash
         salt = bcrypt.gensalt()
@@ -265,6 +271,11 @@ class JWTAuth:
 
         Note: bcrypt has a 72-byte limit. For security, we truncate long passwords.
         """
+        try:
+            import bcrypt
+        except ImportError as exc:
+            raise RuntimeError("bcrypt is required for password verification. Install requirements.txt.") from exc
+
         # bcrypt has a 72-byte limit, truncate if needed
         password_bytes = plain_password.encode("utf-8")
         if len(password_bytes) > 72:

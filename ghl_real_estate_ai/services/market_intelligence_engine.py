@@ -25,10 +25,29 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
+from math import asin, cos, radians, sin, sqrt
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from geopy.distance import geodesic
+
+try:
+    from geopy.distance import geodesic
+except ImportError:
+
+    class _Distance:
+        def __init__(self, miles: float):
+            self.miles = miles
+
+    def geodesic(point_a, point_b):
+        """Approximate geodesic distance in miles when geopy is unavailable."""
+        lat1, lon1 = point_a
+        lat2, lon2 = point_b
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+        miles = 3958.8 * 2 * asin(sqrt(a))
+        return _Distance(miles)
+
 
 from ghl_real_estate_ai.api.schemas.analytics import (
     Granularity,

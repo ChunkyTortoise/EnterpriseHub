@@ -17,7 +17,6 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-import bcrypt
 import redis.asyncio as aioredis
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -380,6 +379,11 @@ class EnhancedJWTAuth:
 
         SECURITY FIX: Notify user if password is truncated.
         """
+        try:
+            import bcrypt
+        except ImportError as exc:
+            raise RuntimeError("bcrypt is required for password hashing. Install requirements.txt.") from exc
+
         if len(password) > 72:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Password must not exceed 72 characters"
@@ -393,6 +397,11 @@ class EnhancedJWTAuth:
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         """Verify password with proper length handling."""
+        try:
+            import bcrypt
+        except ImportError as exc:
+            raise RuntimeError("bcrypt is required for password verification. Install requirements.txt.") from exc
+
         if len(plain_password) > 72:
             plain_password = plain_password[:72]
 

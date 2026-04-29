@@ -8,6 +8,7 @@ import logging
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 
@@ -19,15 +20,24 @@ DATABASE_URL: str = settings.database_url or "sqlite+aiosqlite:///./enterprisehu
 if DATABASE_URL.startswith("postgresql://"):
     DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=settings.log_level == "DEBUG",
-    future=True,
-    pool_size=20,
-    max_overflow=10,
-    pool_timeout=30,
-    pool_recycle=1800,
-)
+engine_kwargs = {
+    "echo": settings.log_level == "DEBUG",
+    "future": True,
+}
+
+if DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["poolclass"] = NullPool
+else:
+    engine_kwargs.update(
+        {
+            "pool_size": 20,
+            "max_overflow": 10,
+            "pool_timeout": 30,
+            "pool_recycle": 1800,
+        }
+    )
+
+engine = create_async_engine(DATABASE_URL, **engine_kwargs)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,

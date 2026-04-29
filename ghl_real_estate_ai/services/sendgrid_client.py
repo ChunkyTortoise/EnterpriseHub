@@ -17,11 +17,38 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-import sendgrid
 from aiohttp import ClientTimeout
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
-from sendgrid.helpers.mail import Attachment, Content, Email, FileContent, FileName, FileType, Mail, To
+
+try:
+    import sendgrid
+    from sendgrid.helpers.mail import Attachment, Content, Email, FileContent, FileName, FileType, Mail, To
+except ImportError:
+
+    class _MissingSendGridClient:
+        def __init__(self, *_args, **_kwargs):
+            pass
+
+        def send(self, *_args, **_kwargs):
+            raise RuntimeError("sendgrid is required to send email. Install requirements.txt.")
+
+    class _SendGridModule:
+        SendGridAPIClient = _MissingSendGridClient
+
+    class _MailValue:
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+
+    class Mail:
+        pass
+
+    class Attachment:
+        pass
+
+    sendgrid = _SendGridModule()
+    Content = Email = FileContent = FileName = FileType = To = _MailValue
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.logger import get_logger

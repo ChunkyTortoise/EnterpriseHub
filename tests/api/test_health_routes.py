@@ -13,6 +13,7 @@ Endpoints tested:
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 pytestmark = pytest.mark.unit
@@ -26,32 +27,54 @@ _MOCK_USER = {"user": {"id": "test-user"}, "session": {"permissions": []}}
 
 
 def _make_client():
-    """Create TestClient with main app."""
-    from ghl_real_estate_ai.api.main import app
-
-    return TestClient(app, raise_server_exceptions=False)
+    """Create TestClient with the health router only."""
+    return TestClient(_make_health_app(), raise_server_exceptions=False)
 
 
 def _make_authed_client():
     """Create TestClient with enterprise auth overridden."""
+    return TestClient(_make_health_app(authenticated=True), raise_server_exceptions=False)
+
+
+def _make_health_app(authenticated=False):
+    """Mount health routes without importing unrelated optional app modules."""
     from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
-    from ghl_real_estate_ai.api.main import app
+    from ghl_real_estate_ai.api.routes import health
 
-    async def _fake_user():
-        return _MOCK_USER
+    app = FastAPI()
+    app.include_router(health.router, prefix="/api")
 
-    app.dependency_overrides[enterprise_auth_service.get_current_enterprise_user] = _fake_user
-    client = TestClient(app, raise_server_exceptions=False)
-    return client
+    for route in health.router.routes:
+        dependant = getattr(route, "dependant", None)
+        if not dependant:
+            continue
+        for dependency in dependant.dependencies:
+            callable_dep = dependency.call
+            if callable_dep.__name__ == "get_database":
+
+                async def _current_database():
+                    return await health.get_database()
+
+                app.dependency_overrides[callable_dep] = _current_database
+            elif callable_dep.__name__ == "get_cache_service":
+                app.dependency_overrides[callable_dep] = lambda: health.get_cache_service()
+            elif callable_dep.__name__ == "get_monitoring_service":
+                app.dependency_overrides[callable_dep] = lambda: health.get_monitoring_service()
+
+    if authenticated:
+
+        async def _fake_user():
+            return _MOCK_USER
+
+        app.dependency_overrides[enterprise_auth_service.get_current_enterprise_user] = _fake_user
+
+    return app
 
 
 @pytest.fixture(autouse=True)
 def _cleanup_overrides():
     """Clear dependency overrides after each test."""
     yield
-    from ghl_real_estate_ai.api.main import app
-
-    app.dependency_overrides.clear()
 
 
 # ---------------------------------------------------------------------------

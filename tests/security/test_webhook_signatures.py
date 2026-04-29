@@ -27,13 +27,13 @@ from typing import Any, Dict
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from fastapi import Request
+from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
 
 # Import the webhook handlers (assuming they exist)
 try:
-    from ghl_real_estate_ai.api.main import app
     from ghl_real_estate_ai.api.routes.webhooks import (
+        _ghl_request_timestamps,
         verify_ghl_signature,
         verify_sendgrid_signature,
         verify_twilio_signature,
@@ -58,13 +58,16 @@ except ImportError:
 
 
 @pytest.fixture
-def test_client():
+def test_client(ghl_secret):
     """FastAPI test client"""
-    try:
-        return TestClient(app)
-    except Exception:
-        # Mock test client if app doesn't exist
-        return Mock()
+    import ghl_real_estate_ai.api.routes.webhooks as webhooks
+
+    webhooks.GHL_WEBHOOK_SECRET = ghl_secret
+    _ghl_request_timestamps.clear()
+
+    app = FastAPI()
+    app.include_router(webhook_router)
+    return TestClient(app, raise_server_exceptions=False)
 
 
 @pytest.fixture
@@ -200,17 +203,18 @@ class TestGHLWebhookSecurity:
 
         # All should take similar time to process
         times = []
-        for signature in [short_invalid, long_invalid, valid_signature]:
-            mock_request = Mock()
-            mock_request.headers = {"X-GHL-Signature": signature}
-            mock_request.body = payload_str.encode("utf-8")
+        with patch("ghl_real_estate_ai.api.routes.webhooks.GHL_WEBHOOK_SECRET", ghl_secret):
+            for signature in [short_invalid, long_invalid, valid_signature]:
+                mock_request = Mock()
+                mock_request.headers = {"X-GHL-Signature": signature}
+                mock_request.body = payload_str.encode("utf-8")
 
-            start_time = time.perf_counter()
-            with patch("ghl_real_estate_ai.api.routes.webhooks.GHL_WEBHOOK_SECRET", ghl_secret):
-                verify_ghl_signature(mock_request)
-            end_time = time.perf_counter()
+                start_time = time.perf_counter()
+                for _ in range(500):
+                    verify_ghl_signature(mock_request)
+                end_time = time.perf_counter()
 
-            times.append(end_time - start_time)
+                times.append((end_time - start_time) / 500)
 
         # Timing should not vary significantly (within 50% of each other)
         max_time = max(times)

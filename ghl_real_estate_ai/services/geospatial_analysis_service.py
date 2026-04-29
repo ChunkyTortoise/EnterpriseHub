@@ -16,16 +16,67 @@ Accuracy: Sub-meter precision for location analysis
 """
 
 import math
+import types
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
-import pyproj
-import shapely.geometry as geom
-from geopy.distance import geodesic
-from geopy.geocoders import Nominatim
+
+try:
+    from geopy.distance import geodesic
+    from geopy.geocoders import Nominatim
+except ModuleNotFoundError:
+
+    class _Distance:
+        def __init__(self, kilometers: float):
+            self.kilometers = kilometers
+
+    def geodesic(point_a: Tuple[float, float], point_b: Tuple[float, float]):
+        lat1, lon1 = map(math.radians, point_a)
+        lat2, lon2 = map(math.radians, point_b)
+        delta_lat = lat2 - lat1
+        delta_lon = lon2 - lon1
+        haversine = math.sin(delta_lat / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin(delta_lon / 2) ** 2
+        kilometers = 6371.0 * 2 * math.atan2(math.sqrt(haversine), math.sqrt(1 - haversine))
+        return _Distance(kilometers)
+
+    class Nominatim:
+        def __init__(self, *args, **kwargs):
+            pass
+
+
+try:
+    import shapely.geometry as geom
+except ModuleNotFoundError:
+
+    class _Point:
+        def __init__(self, x: float, y: float):
+            self.x = x
+            self.y = y
+
+        def buffer(self, radius: float):
+            return types.SimpleNamespace(area=math.pi * radius * radius)
+
+    geom = types.SimpleNamespace(Point=_Point)
+
+try:
+    import pyproj
+except ModuleNotFoundError:
+
+    class _CRS:
+        def __init__(self, code: str):
+            self.code = code
+
+        def __repr__(self) -> str:
+            return f"CRS({self.code!r})"
+
+    class pyproj:
+        """Small fallback for import-time CRS labels when pyproj is unavailable."""
+
+        CRS = _CRS
+
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.cache_service import get_cache_service

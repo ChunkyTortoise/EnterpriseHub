@@ -25,9 +25,20 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
 import pytest
-from hypothesis import HealthCheck, assume, example, given, settings
-from hypothesis import strategies as st
-from hypothesis.stateful import Bundle, RuleBasedStateMachine, initialize, invariant, rule
+
+hypothesis = pytest.importorskip("hypothesis", reason="property-based tests require hypothesis")
+HealthCheck = hypothesis.HealthCheck
+assume = hypothesis.assume
+example = hypothesis.example
+given = hypothesis.given
+settings = hypothesis.settings
+st = pytest.importorskip("hypothesis.strategies", reason="property-based tests require hypothesis")
+stateful = pytest.importorskip("hypothesis.stateful", reason="property-based tests require hypothesis")
+Bundle = stateful.Bundle
+RuleBasedStateMachine = stateful.RuleBasedStateMachine
+initialize = stateful.initialize
+invariant = stateful.invariant
+rule = stateful.rule
 
 from ghl_real_estate_ai.services.enhanced_lead_intelligence import EnhancedLeadIntelligence
 from ghl_real_estate_ai.services.lead_scorer import LeadScorer

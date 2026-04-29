@@ -13,6 +13,21 @@ from utils.data_loader import calculate_indicators, get_stock_data
 from utils.exceptions import DataFetchError, DataProcessingError, InvalidTickerError
 
 
+@pytest.fixture
+def sample_stock_data():
+    dates = pd.date_range("2023-01-01", periods=30)
+    return pd.DataFrame(
+        {
+            "Open": [100.0 + i for i in range(30)],
+            "High": [105.0 + i for i in range(30)],
+            "Low": [95.0 + i for i in range(30)],
+            "Close": [102.0 + i for i in range(30)],
+            "Volume": [1_000_000 + i * 1_000 for i in range(30)],
+        },
+        index=dates,
+    )
+
+
 class TestGetStockData:
     """Test suite for get_stock_data function."""
 

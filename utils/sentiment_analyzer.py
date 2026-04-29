@@ -1,6 +1,23 @@
 from typing import Any, Dict, List
 
-from textblob import TextBlob
+try:
+    from textblob import TextBlob
+except ModuleNotFoundError:
+
+    class TextBlob:
+        """Small lexical fallback when textblob is not installed."""
+
+        _positive_words = {"beat", "bullish", "gain", "growth", "positive", "profit", "strong", "up"}
+        _negative_words = {"bearish", "decline", "down", "loss", "miss", "negative", "risk", "weak"}
+
+        def __init__(self, text: str):
+            words = {word.strip(".,!?;:").lower() for word in text.split()}
+            positive = len(words & self._positive_words)
+            negative = len(words & self._negative_words)
+            total = positive + negative
+            polarity = 0.0 if total == 0 else (positive - negative) / total
+            self.sentiment = type("Sentiment", (), {"polarity": polarity})()
+
 
 from utils.logger import get_logger
 

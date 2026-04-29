@@ -183,7 +183,7 @@ class HitMissRatio:
 
     hits: int
     misses: int
-    timeframe: str
+    timeframe: str = "1h"
 
     @property
     def total(self) -> int:
