@@ -3,7 +3,7 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-6%2C662_collectible-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-7%2C721_collectible-brightgreen)](tests/)
 [![CI Tests](https://img.shields.io/badge/CI_verified-1%2C100+-blue)](tests/)
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
 [![Eval Gate](https://img.shields.io/badge/eval_gate-active-46E3B7)](evals/)
@@ -17,38 +17,35 @@
 
 ## Executive Summary
 
-Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots — so no lead goes cold. Built for real estate brokerages and agencies; production-validated with 6,662 collectible tests and a full observability stack.
+Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots so no lead goes cold. Built for real estate brokerages and agencies; current local verification collects 7,721 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
 
 ---
 
 ## Business Impact
 
-EnterpriseHub delivers quantified outcomes based on production deployment (Case Study CS001):
+EnterpriseHub includes a case-study-backed production story plus modeled benchmark targets. The table below labels whether each number is measured, projected, or synthetic so reviewers can trust the claims.
 
-| Outcome | Result | How Measured |
-|---------|--------|--------------|
-| **95% Faster Lead Response** | 45 min → 2 min qualification | Time from lead submission to Q0-Q4 score |
-| **$240K Annual Savings** | Automated qualification vs. manual review | Agent hourly rate × hours saved × annual volume |
-| **133% Conversion Increase** | 12% → 28% lead-to-appointment rate | Qualified leads converted to appointments/closed deals |
-| **89% Token Cost Reduction** | 93K → 7.8K tokens per workflow | Token usage before/after 3-tier cache |
-| **88% Cache Hit Rate** | L1 59% + L2 21% + L3 8% | Validated Feb 11, 2026 |
-| **92% Qualification Accuracy** | Q0-Q4 framework correctness | Validated Feb 11, 2026 |
-| **3x Agent Productivity** | Agents focus on high-value prospects | 45 min → 2 min per lead |
+| Signal | Result | Evidence type |
+|---------|--------|---------------|
+| **Production run** | ~3 months, 500+ CRM leads | Case-study reported; raw client CRM export is not public |
+| **Lead response workflow** | 45 min manual baseline to ~2 min automated qualification target | Workflow projection from the case study |
+| **Agent productivity** | Agents focus on high-value prospects after bot qualification | Operational case-study outcome |
+| **LLM cache target** | L1 60% + L2 20% + L3 8% design target | Synthetic benchmark / architecture target |
+| **Token cost model** | 93K to 7.8K tokens per 100-query modeled workload | Projection; not quoted as live billing measurement |
+| **Eval coverage** | 50 golden cases across qualification, edge cases, and compliance | Repository artifact in `evals/` |
+| **Test collection** | 7,721 collected, 38 skipped on Apr 29, 2026 | Local `pytest --collect-only --override-ini='addopts='` |
 
-See [CASE_STUDY.md](CASE_STUDY.md) and [BENCHMARK_VALIDATION_REPORT.md](BENCHMARK_VALIDATION_REPORT.md) for methodology.
+See [CASE_STUDY.md](CASE_STUDY.md), [BENCHMARKS.md](BENCHMARKS.md), and [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md) for methodology and claim provenance.
 
 ---
 
-## Production Metrics
+## Evidence Snapshot
 
-Verified operational data from production deployment:
+The strongest evidence is architectural and reproducible. Some older benchmark documents are preserved as historical artifacts; the claim ledger is the source of truth for public wording.
 
-| System | Metric | Value | How Verified |
-|--------|--------|-------|-------------|
-| **3-Tier Cache** | Token cost reduction | 89% (93K to 7.8K tokens/workflow) | Before/after token counts per workflow |
-| **Cache L1** (in-memory) | Hit rate | 59% | `cache_service.py` hit/miss counters |
-| **Cache L2** (Redis TTL) | Hit rate | 21% | Redis `GET` success rate |
-| **Cache L3** (PostgreSQL) | Hit rate | 8% | DB query fallback rate |
+| System | Evidence | Value | Where to inspect |
+|--------|----------|-------|------------------|
+| **3-Tier Cache** | Architecture target and synthetic benchmark | L1/L2/L3 design target: 60% / 20% / 8% | `BENCHMARKS.md`, ADR-0001 |
 | **Agent Mesh** | Registered agents | 22 | `agent_mesh_coordinator.py` registry |
 | **Agent Mesh** | Routing dimensions | 4 (success 40%, load 25%, cost 20%, latency 15%) | Weighted scoring function |
 | **Agent Mesh** | Emergency shutdown | $100/hr spend threshold | `emergency_shutdown()` cancels all tasks |
@@ -58,7 +55,7 @@ Verified operational data from production deployment:
 | **A/B Testing** | Method | Two-proportion z-test | `ab_testing_service.py` statistical engine |
 | **A/B Testing** | Assignment | Deterministic SHA-256 bucketing | `experiment_id + contact_id` hash |
 | **Compliance** | Pipeline stages | 7 (language, TCPA, compliance, translation, truncation) | `response_pipeline/factory.py` |
-| **Test Coverage** | Total collectible | 8,212+ | `pytest --collect-only` count |
+| **Test Surface** | Current collectible count | 7,721 collected / 38 skipped | `pytest --collect-only --override-ini='addopts='` on Apr 29, 2026 |
 | **ADRs** | Documented decisions | 10 | `docs/adr/0001-0010` |
 
 ---
@@ -158,7 +155,7 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 
 **Files:** `ghl_real_estate_ai/services/claude_orchestrator.py` (1,935 lines), `ghl_real_estate_ai/services/cache_service.py`, ADR: `docs/adr/0001-three-tier-redis-caching.md`
 
-**Problem:** A single lead qualification workflow without caching consumes ~93K tokens. With hundreds of concurrent conversations referencing the same property data and market context, the cost compounds quickly.
+**Problem:** Repeated lead qualification workflows can reprocess the same property, market, and conversation context. Without caching, the modeled workload in `BENCHMARKS.md` uses roughly 93K tokens per 100 queries, so cost compounds quickly as conversation volume grows.
 
 **Pattern:**
 - **L1 (in-memory LRU):** `MemoryCache` with 1,000-item capacity and LRU eviction. Sub-1ms access. Handles repeated lookups within the same active qualification session.
@@ -167,7 +164,7 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 
 A background task promotes frequently accessed L1 keys to L2.
 
-**Outcome:** 89% token cost reduction (93K to 7.8K tokens per workflow); 88% overall hit rate (L1 59% + L2 21% + L3 8%). P95 latency for cached queries drops from 800ms to under 200ms.
+**Outcome:** The synthetic benchmark models a 60% / 20% / 8% L1/L2/L3 hit distribution and a roughly 89% token reduction for that workload. Treat this as an architecture target until fresh live cache counters are published.
 
 **Training foundation:** Duke LLMOps (48h) — multi-tier caching, cost optimization, token budgeting. IBM GenAI Engineering (144h) — LangChain orchestration, model strategy patterns.
 
@@ -238,6 +235,8 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 ## For Hiring Managers
 
+Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUIDE.md). For the candid audit, see [docs/HIRING_CONVERSION_AUDIT.md](docs/HIRING_CONVERSION_AUDIT.md) and the evidence map in [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md).
+
 | If you're evaluating for... | Where to look | Training behind it |
 |-----------------------------|--------------|-------------------|
 | **AI / ML Engineer** | Claude orchestrator ([`services/claude_orchestrator.py`](ghl_real_estate_ai/services/claude_orchestrator.py)), 3-tier LLM cache, multi-strategy parsing | IBM GenAI Engineering (144h), Microsoft AI & ML Engineering (75h) |
@@ -254,7 +253,7 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 |--------------------------|------------------|
 | ![Platform Overview](assets/screenshots/platform-overview.png) | ![Lead Intelligence](assets/screenshots/lead-intelligence.png) |
 
-**3-Tier Cache Performance — 89% token cost reduction (93K → 7.8K tokens/workflow)**
+**3-Tier Cache Performance — synthetic 89% token-reduction model**
 
 ![Cache Performance](assets/screenshots/cache-performance.png)
 
@@ -329,7 +328,7 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 6,662 tests collectible (unit + integration + security)
+├── tests/                        # 7,721 tests collectible locally on Apr 29, 2026
 ├── conftest.py                   # Shared test fixtures
 ├── render.yaml                   # Render deployment config
 └── docker-compose.yml            # Container orchestration
@@ -383,10 +382,10 @@ pytest --tb=short
 
 | Capability | Implementation | Key Metric |
 |-----------|----------------|------------|
-| **Token Cost Optimization** | 3-tier cache (L1 memory, L2 Redis, L3 PostgreSQL) + model routing | 93K → 7.8K tokens/workflow (89% reduction) |
+| **Token Cost Optimization** | 3-tier cache (L1 memory, L2 Redis, L3 PostgreSQL) + model routing | Synthetic 93K → 7.8K token model |
 | **Latency Monitoring** | `PerformanceTracker` — P50/P95/P99 percentiles, SLA compliance | Lead Bot P95 < 2,000ms |
 | **Alerting** | `AlertingService` — 7 default rules, configurable cooldowns | Error rate, latency, cache, handoff, tokens |
-| **Per-Bot Metrics** | `BotMetricsCollector` — throughput, cache hits, error categorization | 87% cache hit rate |
+| **Per-Bot Metrics** | `BotMetricsCollector` — throughput, cache hits, error categorization | Needs fresh live counter snapshot before quoting hit rate |
 | **Health Checks** | `/health/aggregate` endpoint checks all services | Bot + DB + Redis + CRM status |
 
 See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) and [BENCHMARKS.md](BENCHMARKS.md) for details.

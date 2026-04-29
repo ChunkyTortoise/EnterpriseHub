@@ -96,7 +96,7 @@ This is what "eval-driven AI delivery" actually looks like at the IC level. Most
 | Leads processed | 500+ | Counted in CRM |
 | Languages supported | EN + ES | Full bilingual flows |
 | Bot count | 3 specialized + handoff service | Lead, Buyer, Seller |
-| Tests | 8,212 across the test suite | Unit / integration / security / compliance / adversarial |
+| Tests | 7,721 collected locally on Apr 29, 2026; 38 skipped | `pytest --collect-only --override-ini='addopts='` |
 | Eval golden cases | 50, with regression baseline + nightly cron | `evals/` |
 | Prompt versions tracked | 25+ in `PROMPT_CHANGELOG.md` | PostgreSQL `prompt_versions` table |
 | Compliance regulations covered | FHA, RESPA, TCPA, CCPA, SB-243 | 7-stage pipeline + adversarial tests |
