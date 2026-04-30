@@ -11,10 +11,11 @@ if str(project_root) not in sys.path:
 from ghl_real_estate_ai.services.demo_state import DemoStateManager
 from ghl_real_estate_ai.services.property_matcher import PropertyMatcher
 from ghl_real_estate_ai.services.telemetry_service import TelemetryService
+from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 
 # Page config - Mobile style
 st.set_page_config(
-    page_title="Architectural Portal - Lyrio.io", page_icon="🏘️", layout="centered", initial_sidebar_state="collapsed"
+    page_title="EnterpriseHub | Property Portal", page_icon="🏘️", layout="centered", initial_sidebar_state="collapsed"
 )
 
 # Initialize Services

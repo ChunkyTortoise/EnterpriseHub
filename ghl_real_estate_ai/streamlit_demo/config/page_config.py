@@ -24,11 +24,11 @@ except ImportError:
 def configure_page():
     """Set Streamlit page config. MUST be the first Streamlit call in the app."""
     st.set_page_config(
-        page_title="Lyrio AI | Obsidian Command",
+        page_title="EnterpriseHub | Real Estate AI",
         page_icon="🏠",
         layout="wide",
         initial_sidebar_state="expanded",
-        menu_items={"About": "Lyrio AI - Obsidian Edition | Real Estate Intelligence"},
+        menu_items={"About": "EnterpriseHub — AI-powered lead qualification for real estate"},
     )
     # Suppress all warnings for professional demo presentation
     warnings.filterwarnings("ignore")
