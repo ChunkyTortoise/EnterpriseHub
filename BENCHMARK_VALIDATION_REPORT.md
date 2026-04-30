@@ -19,7 +19,7 @@ This report used to state that all performance metrics were validated and operat
 | Orchestrator/sql safety | `pytest tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py --override-ini='addopts=' -q` passed 123/123. | Strong targeted backend/security proof. |
 | Cache hit rate | `BENCHMARKS.md` models a 60% / 20% / 8% L1/L2/L3 distribution. | Present as synthetic benchmark/design target unless fresh live counters are published. |
 | Token savings | `BENCHMARKS.md` models a 93K to 7.8K token reduction for a synthetic workload. | Present as projection/model, not measured billing savings. |
-| Latency/throughput | Older values in this report are not currently backed by a fresh reproducible run in the audit. | Re-run benchmarks before quoting as current. |
+| Latency/throughput | Older P50/P95/P99 values in this report are not backed by a committed reproducible run. k6 scripts are in `benchmarks/`; `benchmarks/results/2026-W17/README.md` says "results pending." | Do not quote any latency/throughput number until a JSON result is committed to `benchmarks/results/`. |
 | Health routes | `pytest tests/api/test_health_routes.py --override-ini='addopts=' -q` failed 7/14 locally. | Do not headline health-check readiness until fixed. |
 | Webhook security tests | `pytest tests/security/test_webhook_signatures.py --override-ini='addopts=' -q` failed 17/36 locally. | Do not headline webhook test coverage until stale paths/fixtures are repaired. |
 | Lint/format | `ruff check .` and `ruff format --check .` failed locally. | Treat as P0 credibility work before claiming linter-clean status. |
@@ -41,6 +41,6 @@ Avoid wording like this until fresh live evidence is added:
 1. Fix global lint and format blockers.
 2. Repair targeted health and webhook-signature tests.
 3. Add a command-backed benchmark output file under `reports/`.
-4. Add a live-counter snapshot script for cache hit/miss metrics.
+4. Run `benchmarks/bench_cache_live.py` (script exists; reads real L1/L2 hit/miss counters) and commit the JSON output to `benchmarks/results/` before quoting any live hit-rate numbers.
 5. Update README metrics only from generated artifacts or the claim ledger.
 

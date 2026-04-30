@@ -10,12 +10,12 @@ A real-estate-vertical lead qualification platform that took inbound SMS/web lea
 
 The core engineering bets:
 - **Three specialized bots** instead of one monolith — domain-specific prompts produced measurably better qualification scores
-- **3-tier cache** (in-memory + Redis + Postgres) to keep LLM cost per qualification at roughly one-tenth of the naive baseline
+- **3-tier cache** (in-memory + Redis + Postgres) to keep LLM cost per qualification at roughly one-tenth of the naive baseline (modeled/projected: `benchmarks/bench_cache.py` synthetic simulation; no committed live billing measurement)
 - **Compliance as a pipeline**, not a check — every outbound message passes through ordered stages that can short-circuit before the LLM ever runs
 - **A versioned prompt registry** with golden-dataset evals + nightly regression — every prompt change has a reviewable diff and a quality-delta number attached
 - **An evaluation harness** with 50 hand-curated test cases, LLM-as-judge across 4 rubrics, and a CI gate that blocks PRs below a 0.85 quality threshold
 
-The system ran in production for ~3 months processing 500+ real leads in English and Spanish before the engagement ended.
+The system ran in production for ~3 months processing 500+ real leads in English and Spanish before the engagement ended. *(Self-reported / operator-attested; no exported CRM artifact is checked into this repo.)*
 
 ---
 
@@ -43,11 +43,11 @@ The naive baseline of one Claude call per lead qualification costs roughly $0.15
 
 **Design-target hit-rate distribution:** L1 60% / L2 20% / L3 8% / miss 12% (88% combined).
 
-**Important honesty caveat:** the 88% number was the *design target* under an expected workload, not a measurement of the running system. The simulation in `benchmarks/bench_cache.py` validates the latency model under that distribution; a live measurement tool reading real hit/miss counters from `LLMObservabilityService` is the correct way to evidence the achieved rate, and it's the next item on the roadmap. I'm flagging this here because the original case study quoted the design target as if it were measured, and that conflation is exactly the sort of thing senior reviewers screen for.
+**Important honesty caveat:** the 88% number is the *design target* under an expected workload (`benchmarks/bench_cache.py` — synthetic Monte Carlo), not a measurement of the running system. A live measurement script now exists at `benchmarks/bench_cache_live.py` (reads real L1/L2 hit/miss counters from `LLMObservabilityService`), but no committed result artifact is in the repo yet — the numbers from that script should not be quoted here until a JSON output is checked into `benchmarks/results/`. I'm flagging this because quoting design targets as measurements is exactly the conflation senior reviewers screen for.
 
 ### Cross-Bot Handoff with Confidence Thresholds
 
-The Lead bot uses a Q0-Q4 framework. The Seller bot uses an FRS/PCS scoring rubric. The Buyer bot uses a financial-readiness assessment. Mixing these into a single prompt degraded qualification accuracy by ~15% in testing, so I built a handoff service.
+The Lead bot uses a Q0-Q4 framework. The Seller bot uses an FRS/PCS scoring rubric. The Buyer bot uses a financial-readiness assessment. Mixing these into a single prompt degraded qualification accuracy by ~15% in internal testing (observed during development; no published A/B eval artifact), so I built a handoff service.
 
 **The handoff layer:**
 - Asymmetric thresholds per route (Lead→Buyer/Seller: 0.7, Buyer→Seller: 0.8, Seller→Buyer: 0.6) — empirical, not symmetric
@@ -79,7 +79,7 @@ This is the part that's harder to see from the README but matters more than the 
 
 - **`evals/golden_dataset.json`** — 50 hand-curated test cases covering seller qualification (15), buyer scheduling (10), lead intake (10), edge cases (10), and compliance scenarios (5). Every case has expected output properties (max length, no URLs, no AI disclosure leakage, persona maintained, topic boundary) that a correct response must satisfy.
 - **`evals/judge.py`** — LLM-as-judge over 4 rubrics, plus deterministic property checks. Returns a quality score per case.
-- **`evals/baseline.json`** — regression baseline. Every PR runs against it; >10% drop fails CI and auto-creates a GitHub issue.
+- **`evals/baseline.json`** — regression baseline. Every PR runs against it; >10% drop fails CI (`evals/compare_baseline.py:33`) and auto-creates a GitHub issue (`.github/workflows/nightly-eval.yml:64-75`).
 - **`PROMPT_CHANGELOG.md`** — every prompt version is documented with rationale, the dataset run that validated it, and the quality delta.
 - **`tests/adversarial/`** — 18 prompt-injection / jailbreak / topic-boundary cases with CI integration.
 - **`.github/workflows/nightly-eval.yml`** — 2 a.m. UTC cron that re-runs the golden set against the current main branch, posts a regression report.
@@ -92,15 +92,15 @@ This is what "eval-driven AI delivery" actually looks like at the IC level. Most
 
 | Metric | Value | How it was measured |
 |---|---|---|
-| Production duration | ~3 months | Real customer traffic |
-| Leads processed | 500+ | Counted in CRM |
+| Production duration | ~3 months | Self-reported / operator-attested |
+| Leads processed | 500+ | Self-reported / operator-attested (no CRM export in repo) |
 | Languages supported | EN + ES | Full bilingual flows |
 | Bot count | 3 specialized + handoff service | Lead, Buyer, Seller |
 | Tests | 7,721 collected locally on Apr 29, 2026; 38 skipped | `pytest --collect-only --override-ini='addopts='` |
 | Eval golden cases | 50, with regression baseline + nightly cron | `evals/` |
-| Prompt versions tracked | 25+ in `PROMPT_CHANGELOG.md` | PostgreSQL `prompt_versions` table |
+| Prompt versions tracked | 31 in `PROMPT_CHANGELOG.md` | Counted: 31 `###`-headed entries as of Apr 29, 2026 |
 | Compliance regulations covered | FHA, RESPA, TCPA, CCPA, SB-243 | 7-stage pipeline + adversarial tests |
-| ADRs documenting non-obvious tradeoffs | 13 | `docs/adr/` |
+| ADRs documenting non-obvious tradeoffs | 10 | `docs/adr/` (0001–0010, counted Apr 29, 2026) |
 
 **What I am NOT claiming:** specific live throughput numbers (the 150 req/s figure in earlier docs was unbacked by reproducible artifacts; honest k6 load tests are pending). Specific live cache-hit measurements (see honesty caveat above). Specific dollar savings (the $93K → $7.8K figure was a workflow-projection estimate, not a measurement of the bill).
 
@@ -108,7 +108,7 @@ This is what "eval-driven AI delivery" actually looks like at the IC level. Most
 
 ## Technical Highlights
 
-- **Agent Mesh Coordinator** — 22 domain agents, weighted routing on cost / success rate / load / latency, emergency shutdown at $100/hr spend threshold (some scaling verbs are scaffolded; documented in ADR rather than dressed up).
+- **Agent Mesh Coordinator** — 22 domain agents (per `docs/adr/0004-agent-mesh-coordinator.md:9`), weighted routing on cost / success rate / load / latency, emergency shutdown at $100/hr spend threshold (`ghl_real_estate_ai/services/agent_mesh_coordinator.py:164`; some scaling verbs are scaffolded — documented in ADR rather than dressed up).
 - **A/B testing service** — deterministic variant assignment (SHA-256 hash), z-test statistical significance, sample-size calculator. 4 prebuilt experiments.
 - **Security baseline** — parameterized SQL throughout, Ed25519 + HMAC webhook signature verification, JWT auth with fail-closed secret loading, Fernet PII encryption, Redis-backed rate limiting.
 - **Observability** — structlog structured logging, Prometheus-shaped metrics, OTLP-instrumented (collector wiring is a Wave 1 task).
