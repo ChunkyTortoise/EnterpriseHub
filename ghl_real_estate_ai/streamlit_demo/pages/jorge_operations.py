@@ -15,6 +15,7 @@ Sections:
 7. GHL Integration Health
 """
 
+import os
 import random
 import time
 from datetime import datetime, timedelta
@@ -28,6 +29,8 @@ from plotly.subplots import make_subplots
 
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
+DEMO_MODE = os.getenv("DEMO_MODE", "").lower() in ("true", "1")
+
 # Import bot services and config with graceful fallback
 try:
     from ghl_real_estate_ai.ghl_utils.jorge_config import (
@@ -39,7 +42,7 @@ try:
 
     SUCCESS_METRICS = JorgeSellerConfig.SUCCESS_METRICS
     PERFORMANCE_THRESHOLDS = JorgeSellerConfig.PERFORMANCE_THRESHOLDS
-except ImportError:
+except (ImportError, SystemExit, Exception):
     # Fallback values matching jorge_config.py
     SUCCESS_METRICS = {
         "qualification_completion_rate": 0.60,
@@ -57,7 +60,7 @@ except ImportError:
 
 try:
     from ghl_real_estate_ai.services.analytics_service import AnalyticsService
-except ImportError:
+except (ImportError, SystemExit, Exception):
     AnalyticsService = None
 
 # ---------------------------------------------------------------------------

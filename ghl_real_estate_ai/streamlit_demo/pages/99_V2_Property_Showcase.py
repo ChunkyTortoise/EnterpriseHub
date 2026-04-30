@@ -1,10 +1,21 @@
 import asyncio
+import os
 
 import streamlit as st
 
-from ghl_real_estate_ai.agent_system.v2.conductor import process_request
-from ghl_real_estate_ai.services.performance_monitoring_service import performance_monitor
-from ghl_real_estate_ai.services.property_visualizer import PropertyVisualizer
+DEMO_MODE = os.getenv("DEMO_MODE", "").lower() in ("true", "1")
+
+if not DEMO_MODE:
+    try:
+        from ghl_real_estate_ai.agent_system.v2.conductor import process_request
+        from ghl_real_estate_ai.services.performance_monitoring_service import performance_monitor
+    except (Exception, SystemExit):
+        DEMO_MODE = True
+
+try:
+    from ghl_real_estate_ai.services.property_visualizer import PropertyVisualizer
+except (Exception, SystemExit):
+    PropertyVisualizer = None  # type: ignore[assignment,misc]
 
 st.set_page_config(page_title="V2 Agentic Property Showcase", layout="wide")
 
@@ -69,20 +80,65 @@ with st.sidebar:
 
     # Live Platform Metrics
     st.markdown("### 📊 Platform Health")
-    stats = performance_monitor.get_summary_metrics()
-    if stats.get("status") != "No data":
-        st.metric("Avg Latency", f"{stats['avg_latency']}s")
-        st.metric("Data Moat Size", f"{stats['moat_size']} samples")
-        st.metric("Total Est. Cost", f"${stats['total_estimated_cost']}")
+    if DEMO_MODE:
+        st.metric("Avg Latency", "1.24s")
+        st.metric("Data Moat Size", "42 samples")
+        st.metric("Total Est. Cost", "$0.18")
     else:
-        st.info("No runs logged yet.")
+        stats = performance_monitor.get_summary_metrics()
+        if stats.get("status") != "No data":
+            st.metric("Avg Latency", f"{stats['avg_latency']}s")
+            st.metric("Data Moat Size", f"{stats['moat_size']} samples")
+            st.metric("Total Est. Cost", f"${stats['total_estimated_cost']}")
+        else:
+            st.info("No runs logged yet.")
+
+_MOCK_RESULT = {
+    "errors": [],
+    "executive_summary": {
+        "investment_verdict": "STRONG BUY",
+        "executive_summary": "Demo mode: This Rancho Cucamonga property shows strong investment fundamentals with "
+        "above-market appreciation potential and high buyer demand.",
+    },
+    "analysis_results": {
+        "financials": {"list_price": 649000, "arv": 720000, "gross_yield": 0.062},
+        "competitive_landscape": {
+            "competitor_count": 7,
+            "threat_level": "Moderate",
+            "strategic_advantage": "Prime location with school district premium",
+        },
+    },
+    "matched_leads": [
+        {"first_name": "Maria", "last_name": "Garcia", "match_score": 94},
+        {"first_name": "James", "last_name": "Chen", "match_score": 87},
+    ],
+    "evaluations": {"overall_platform_score": 0.91},
+    "design_data": {"staged_rooms": [{"color_palette": ["#0A0E14", "#00E5FF"]}]},
+    "staged_images": [],
+    "research_data": {
+        "market_context": {
+            "neighborhood": "Alta Loma",
+            "price_trend": "+6.2% YoY",
+            "inventory_level": "Low (1.8 months)",
+        }
+    },
+    "service6_insights": {"recovery_analysis": []},
+    "marketing_campaigns": {
+        "campaign_name": "Alta Loma Luxury Q2 2026",
+        "sms_copy": "Hi {name}, a stunning 4BR in Alta Loma just hit the market at $649K — matches your wishlist. Reply TOUR for a showing!",
+        "email_body": "Dear {name},\n\nWe found a property that checks every box on your wishlist...",
+    },
+}
 
 if run_button:
     with st.status("🛠️ Orchestrating Enterprise Agents...", expanded=True) as status:
         st.write("🔍 Researching Market Data...")
         try:
-            # We use a wrapper to handle asyncio in streamlit
-            result = asyncio.run(process_request(address, "full_pipeline", market))
+            if DEMO_MODE:
+                result = _MOCK_RESULT
+            else:
+                # We use a wrapper to handle asyncio in streamlit
+                result = asyncio.run(process_request(address, "full_pipeline", market))
 
             if result.get("errors"):
                 st.error(f"Pipeline encountered errors: {result['errors']}")
@@ -156,9 +212,12 @@ if run_button:
 
                 st.markdown("---")
                 st.markdown("### <span class='agent-badge'>VISUALIZER</span> 3D Digital Twin", unsafe_allow_html=True)
-                viz = PropertyVisualizer()
-                html = viz.generate_threejs_html(address)
-                st.components.v1.html(html, height=400)
+                if PropertyVisualizer is not None:
+                    viz = PropertyVisualizer()
+                    html = viz.generate_threejs_html(address)
+                    st.components.v1.html(html, height=400)
+                else:
+                    st.info("3D visualizer unavailable in demo mode.")
 
             with tab_market:
                 col_m1, col_m2 = st.columns(2)
