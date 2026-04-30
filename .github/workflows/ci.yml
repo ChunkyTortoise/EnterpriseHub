@@ -252,6 +252,14 @@ jobs:
           GHL_API_KEY: ${{ secrets.GHL_API_KEY_CI }}
           GHL_LOCATION_ID: ${{ secrets.GHL_LOCATION_ID_CI }}
         run: python3 -m pytest evals/ -v --tb=short
+      - name: Generate reliability diagram
+        run: python3 scripts/generate_reliability_diagram.py
+      - name: Upload reliability diagram
+        uses: actions/upload-artifact@v4
+        with:
+          name: reliability-diagram
+          path: assets/screenshots/reliability-diagram.png
+          retention-days: 90
   build:
     name: Build Check
     runs-on: ubuntu-latest

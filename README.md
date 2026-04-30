@@ -257,6 +257,12 @@ Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUI
 
 ![Cache Performance](assets/screenshots/cache-performance.png)
 
+**Eval Reliability Baseline — 50 golden cases, 4 LLM-as-judge rubrics**
+
+![Reliability Diagram](assets/screenshots/reliability-diagram.png)
+
+→ [Eval harness details](evals/README.md) · [Prompt changelog](PROMPT_CHANGELOG.md)
+
 ---
 
 ## Tech Stack
