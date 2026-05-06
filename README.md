@@ -3,21 +3,33 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-7%2C721_collectible-brightgreen)](tests/)
-[![CI Tests](https://img.shields.io/badge/CI_verified-1%2C100+-blue)](tests/)
+[![Tests](https://img.shields.io/badge/tests-7%2C669_collectible-brightgreen)](tests/)
+[![Reviewer Gate](https://img.shields.io/badge/reviewer_gate-make_verify--public-blue)](HIRING_REVIEW_GUIDE.md#local-verification-commands)
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
 [![Eval Gate](https://img.shields.io/badge/eval_gate-active-46E3B7)](evals/)
 [![Security](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/security-scan.yml?label=security)](https://github.com/ChunkyTortoise/EnterpriseHub/actions/workflows/security-scan.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Demo](https://img.shields.io/badge/demo-live-FF4B4B.svg?logo=streamlit&logoColor=white)](https://ct-enterprise-ai.streamlit.app)
+[![Demo](https://img.shields.io/badge/demo-Streamlit_Cloud-FF4B4B.svg?logo=streamlit&logoColor=white)](https://ct-enterprise-ai.streamlit.app)
+
+---
+
+## For Hiring Managers
+
+**30-second pitch:** EnterpriseHub is a production-oriented multi-agent AI operations platform for lead qualification, CRM sync, routing, eval gates, and cost controls. It is built to show how I design LLM systems that can fail safely, stay observable, and remain testable under real business workflows.
+
+**Key proof:** 22 registered agents, 4-dimension routing, circuit-breaker failover, $100/hr spend kill-switch, 50-case golden eval set, 7,669 locally collectible tests, and a Streamlit demo at [ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app).
+
+**Engineering signals:** FastAPI backend, PostgreSQL/Redis state, LangGraph orchestration, prompt versioning, eval-gated CI, security scans, OpenTelemetry-oriented cost tracking, and documented architecture decisions.
+
+**Hiring fit:** Applied AI Engineer, Agentic AI Engineer, AI Backend Engineer, LLMOps / AI Platform Engineer.
 
 ---
 
 ## Executive Summary
 
-Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots so no lead goes cold. Built for real estate brokerages and agencies; current local verification collects 7,721 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
+Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots so no lead goes cold. Built for real estate brokerages and agencies; current local verification collects 7,669 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
 
 ---
 
@@ -33,9 +45,9 @@ EnterpriseHub includes a case-study-backed production story plus modeled benchma
 | **LLM cache target** | L1 60% + L2 20% + L3 8% design target | Synthetic benchmark / architecture target |
 | **Token cost model** | 93K to 7.8K tokens per 100-query modeled workload | Projection; not quoted as live billing measurement |
 | **Eval coverage** | 50 golden cases across qualification, edge cases, and compliance | Repository artifact in `evals/` |
-| **Test collection** | 7,721 collected, 38 skipped on Apr 29, 2026 | Local `pytest --collect-only --override-ini='addopts='` |
+| **Test collection** | 7,669 collected on May 6, 2026 | Local `pytest --collect-only --override-ini='addopts=' -q` |
 
-See [CASE_STUDY.md](CASE_STUDY.md), [BENCHMARKS.md](BENCHMARKS.md), and [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md) for methodology and claim provenance.
+See [CASE_STUDY.md](CASE_STUDY.md), [BENCHMARKS.md](BENCHMARKS.md), [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md), [docs/evidence/demo-evidence-pack.md](docs/evidence/demo-evidence-pack.md), and [docs/security/env-and-secret-policy.md](docs/security/env-and-secret-policy.md) for methodology, demo status, secret policy, and claim provenance.
 
 ---
 
@@ -55,7 +67,7 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | **A/B Testing** | Method | Two-proportion z-test | `ab_testing_service.py` statistical engine |
 | **A/B Testing** | Assignment | Deterministic SHA-256 bucketing | `experiment_id + contact_id` hash |
 | **Compliance** | Pipeline stages | 7 (language, TCPA, compliance, translation, truncation) | `response_pipeline/factory.py` |
-| **Test Surface** | Current collectible count | 7,721 collected / 38 skipped | `pytest --collect-only --override-ini='addopts='` on Apr 29, 2026 |
+| **Test Surface** | Current collectible count | 7,669 collected | `pytest --collect-only --override-ini='addopts=' -q` on May 6, 2026 |
 | **ADRs** | Documented decisions | 10 | `docs/adr/0001-0010` |
 
 ---
@@ -120,12 +132,14 @@ graph TB
 |--|--|
 | **Dashboard** | https://ct-enterprise-ai.streamlit.app |
 | **API Docs** | Swagger UI (40+ routes, available on local/staging deploy) |
-| **Demo login** | `demo_user` / `Demo1234!` |
-| **Admin login** | `admin` / `Admin1234!` |
+| **Local/API demo login** | `demo_user` / `Demo1234!` |
+| **Local/API admin login** | `admin` / `Admin1234!` |
 
-> These credentials are for the public demo instance only. They access synthetic data and are not production secrets.
+> The Streamlit Cloud viewer may require allowlist access depending on deployment settings. The credentials above are for the local/API demo auth layer and synthetic data only; they are not production secrets.
 
 > **Deploying your own instance?** See [Deployment](#deployment) below. Run `python scripts/seed_demo.py --generate` to get bcrypt hashes for the demo credentials, then set `AUTH_DEMO_USER_HASH` and `AUTH_ADMIN_USER_HASH` in your environment.
+
+Current demo evidence, screenshots, limits, and secret-handling expectations are tracked in [docs/evidence/demo-evidence-pack.md](docs/evidence/demo-evidence-pack.md) and [docs/security/env-and-secret-policy.md](docs/security/env-and-secret-policy.md).
 
 ---
 
@@ -235,13 +249,13 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 ## For Hiring Managers
 
-Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUIDE.md). For the candid audit, see [docs/HIRING_CONVERSION_AUDIT.md](docs/HIRING_CONVERSION_AUDIT.md) and the evidence map in [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md).
+Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUIDE.md). For repository orientation, see [docs/repo-map.md](docs/repo-map.md). For the candid audit, see [docs/HIRING_CONVERSION_AUDIT.md](docs/HIRING_CONVERSION_AUDIT.md) and the evidence map in [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md).
 
 | If you're evaluating for... | Where to look | Training behind it |
 |-----------------------------|--------------|-------------------|
 | **AI / ML Engineer** | Claude orchestrator ([`services/claude_orchestrator.py`](ghl_real_estate_ai/services/claude_orchestrator.py)), 3-tier LLM cache, multi-strategy parsing | IBM GenAI Engineering (144h), Microsoft AI & ML Engineering (75h) |
 | **Multi-Agent / Agentic AI** | Agent mesh coordinator ([`services/agent_mesh_coordinator.py`](ghl_real_estate_ai/services/agent_mesh_coordinator.py)), capability routing, governance, audit trails | Duke LLMOps (48h), Vanderbilt Prompt Engineering (18h) |
-| **Backend / Systems Engineer** | FastAPI app ([`app.py`](ghl_real_estate_ai/app.py)), Alembic migrations, Redis L1/L2/L3 cache, PostgreSQL | DeepLearning.AI Deep Learning (120h), Meta Back-End Developer (75h) |
+| **Backend / Systems Engineer** | FastAPI app ([`api/main.py`](ghl_real_estate_ai/api/main.py)), Alembic migrations, Redis L1/L2/L3 cache, PostgreSQL | DeepLearning.AI Deep Learning (120h), Meta Back-End Developer (75h) |
 | **RAG / Retrieval Engineer** | Advanced RAG system ([`advanced_rag_system/`](advanced_rag_system/)), BM25 + dense + RRF hybrid retrieval, ChromaDB | IBM RAG & Agentic AI (24h), Google Cloud GenAI (25h) |
 | **MLOps / LLMOps** | A/B testing service, experiment tracking, model routing (Haiku/Sonnet/Opus), observability ([`services/llm_observability.py`](ghl_real_estate_ai/services/llm_observability.py)) | Duke LLMOps (48h), Google Advanced Data Analytics (200h) |
 
@@ -334,7 +348,7 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 7,721 tests collectible locally on Apr 29, 2026
+├── tests/                        # 7,669 tests collectible locally on May 6, 2026
 ├── conftest.py                   # Shared test fixtures
 ├── render.yaml                   # Render deployment config
 └── docker-compose.yml            # Container orchestration

@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from portal_api.dependencies import Services, get_services, require_demo_api_key
 from portal_api.models import ApiErrorResponse, VapiToolCallPayload, VapiToolPayload, VapiToolResponse
@@ -22,7 +22,7 @@ def _parse_tool_arguments(tool_call: VapiToolCallPayload) -> Dict[str, Any]:
     return {}
 
 
-@router.post("/check-availability", response_model=VapiToolResponse)
+@router.post("/check-availability", response_model=VapiToolResponse, status_code=status.HTTP_200_OK)
 async def vapi_check_availability(
     payload: VapiToolPayload, services: Services = Depends(get_services)
 ) -> VapiToolResponse:
@@ -36,6 +36,7 @@ async def vapi_check_availability(
 @router.post(
     "/book-tour",
     response_model=VapiToolResponse,
+    status_code=status.HTTP_200_OK,
     dependencies=[Depends(require_demo_api_key)],
     responses={
         401: {

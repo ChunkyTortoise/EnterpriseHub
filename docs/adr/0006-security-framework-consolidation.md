@@ -10,7 +10,7 @@ EnterpriseHub grew three independent auth implementations across different devel
 
 1. **`api/middleware/jwt_auth.py` (JWTAuth class)** — The primary system. JWT access tokens (30-min expiry), refresh tokens (7-day), bcrypt password hashing, JTI revocation tracking via Redis. Secret loaded from `JWT_SECRET_KEY` env var; raises `ValueError` at import if missing or under 32 characters. Used by all billing and user-facing routes via `Depends(get_current_user)`.
 
-2. **`services/auth_service.py` (AuthService class)** — An older file-based system from the initial prototype. Uses HMAC-SHA256 for password hashing with a static salt derived from the application secret key (not per-user salts). Stores the JWT secret in `data/.jwt_secret` instead of environment variables. Not wired into production routes.
+2. **`services/auth_service.py` (AuthService class)** — An older Streamlit/session-auth system from the initial prototype. Uses HMAC-SHA256 for password hashing with a static salt derived from the application secret key (not per-user salts). It now reads `JWT_SECRET_KEY` from the environment or uses a process-local development secret without writing secret files. Not wired into production routes.
 
 3. **`services/security_framework.py` (SecurityFramework class)** — A third implementation focused on webhook signature verification (GHL, Twilio, SendGrid, Vapi, Apollo) and Redis-backed rate limiting. Its token generation logic overlaps with JWTAuth but is only used for webhook auth, not user sessions.
 

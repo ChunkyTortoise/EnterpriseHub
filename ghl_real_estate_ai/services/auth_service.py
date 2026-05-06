@@ -66,27 +66,16 @@ class AuthService:
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
 
     def _get_secret_key(self) -> str:
-        """Get or generate JWT secret key."""
-        key_file = os.path.join("data", ".jwt_secret")
+        """Get JWT secret from env or generate a process-local development key."""
+        env_secret = os.getenv("JWT_SECRET_KEY")
+        if env_secret:
+            return env_secret
 
-        if os.path.exists(key_file):
-            try:
-                with open(key_file, "r") as f:
-                    return f.read().strip()
-            except Exception as e:
-                logger.warning(f"Could not read JWT secret file: {e}")
-
-        # Generate new secret key
-        secret = secrets.token_urlsafe(64)
-        try:
-            os.makedirs("data", exist_ok=True)
-            with open(key_file, "w") as f:
-                f.write(secret)
-            os.chmod(key_file, 0o600)  # Owner read/write only
-        except Exception as e:
-            logger.warning(f"Could not save JWT secret file: {e}")
-
-        return secret
+        logger.warning(
+            "JWT_SECRET_KEY not set for AuthService; using a process-local "
+            "development secret. Set JWT_SECRET_KEY for persistent sessions."
+        )
+        return secrets.token_urlsafe(64)
 
     def _hash_password(self, password: str) -> str:
         """

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from portal_api.dependencies import Services, get_services, require_demo_api_key
 from portal_api.models import ApiErrorResponse, DeckResponse, Interaction, SwipeResponse
@@ -6,7 +6,7 @@ from portal_api.models import ApiErrorResponse, DeckResponse, Interaction, Swipe
 router = APIRouter(prefix="/portal", tags=["portal"])
 
 
-@router.get("/deck", response_model=DeckResponse)
+@router.get("/deck", response_model=DeckResponse, status_code=status.HTTP_200_OK)
 async def get_smart_deck(contact_id: str, services: Services = Depends(get_services)) -> DeckResponse:
     deck = services.inventory.get_smart_deck(contact_id)
     return DeckResponse(deck=deck)
@@ -15,6 +15,7 @@ async def get_smart_deck(contact_id: str, services: Services = Depends(get_servi
 @router.post(
     "/swipe",
     response_model=SwipeResponse,
+    status_code=status.HTTP_200_OK,
     dependencies=[Depends(require_demo_api_key)],
     responses={
         401: {

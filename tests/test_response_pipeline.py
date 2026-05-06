@@ -322,15 +322,16 @@ class TestFullPipeline:
         pipeline = create_default_pipeline()
         ctx = _make_context(contact_id="log_test_1", user_message="Hello")
         result = await pipeline.process("Reply", ctx)
-        assert len(result.stage_log) == 6  # all 6 stages ran (incl. language_mirror, response_translation)
+        assert len(result.stage_log) == 7
 
-    def test_stage_order_repair_disabled(self, monkeypatch):
+    def test_stage_order_repair_env_unset(self, monkeypatch):
         monkeypatch.delenv("CONVERSATION_REPAIR_ENABLED", raising=False)
         pipeline = create_default_pipeline()
         stage_names = [stage.name for stage in pipeline._stages]
         assert stage_names == [
             "language_mirror",
             "tcpa_opt_out",
+            "conversation_repair",
             "compliance_check",
             "ai_disclosure",
             "response_translation",

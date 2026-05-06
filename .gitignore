@@ -59,10 +59,14 @@ venv312/
 .env.service6.production
 *.env.backup*
 ghl_real_estate_ai/.env
+deploy/*.env
+configs/production/secrets.production.yml
 
 # Keep templates only
 !.env*.template
 !.env*.example
+!deploy/*.env.template
+!configs/production/*.template.yml
 
 # Streamlit
 .streamlit/
@@ -223,6 +227,12 @@ multi_market_*.json
 # Playwright MCP screenshots
 .playwright-mcp/
 
+# Browser/test traces and local automation artifacts
+playwright-report/
+test-results/
+trace.zip
+*.webm
+
 # Obsidian vault (local knowledge base)
 .obsidian-vault/
 scripts/chrome_copy/
@@ -247,7 +257,23 @@ assets/screenshots/processed_batch_1/
 
 # Test model artifacts
 test_models/
+*.joblib
 
 # Prevent backup files from being committed
 *.backup
 *.dump
+infrastructure/backups/*.sql
+infrastructure/backups/*.rdb
+infrastructure/backups/*.tar.gz
+infrastructure/backups/*.gpg
+infrastructure/backups/*.enc
+
+# Local vector stores and generated embeddings
+.debug_chroma/
+data/embeddings/chroma_db/
+
+# Generated bundles/releases belong in release storage, not source review
+content/gumroad/zips/*.zip
+
+# Local audit scratch output
+bare_except_audit.md

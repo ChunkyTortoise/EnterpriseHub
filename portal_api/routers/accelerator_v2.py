@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import JSONResponse
 
 from portal_api.accelerator.schemas import (
@@ -27,6 +27,7 @@ router = APIRouter(prefix="/api/v2", tags=["integration-accelerator"])
 @router.post(
     "/intake/diagnose",
     response_model=IntakeDiagnosisResponse,
+    status_code=status.HTTP_200_OK,
     dependencies=[Depends(require_demo_api_key)],
     responses={
         401: {"model": ApiErrorResponse, "description": "API key missing or invalid"},
@@ -42,6 +43,7 @@ async def diagnose_intake(
 @router.post(
     "/workflows/bootstrap",
     response_model=WorkflowBootstrapResponse,
+    status_code=status.HTTP_200_OK,
     dependencies=[Depends(require_demo_api_key)],
     responses={
         401: {"model": ApiErrorResponse, "description": "API key missing or invalid"},
@@ -66,6 +68,7 @@ async def bootstrap_workflow(
 @router.post(
     "/reports/proof-pack",
     response_model=ProofPackGenerationResponse,
+    status_code=status.HTTP_200_OK,
     dependencies=[Depends(require_demo_api_key)],
     responses={
         401: {"model": ApiErrorResponse, "description": "API key missing or invalid"},
@@ -103,6 +106,7 @@ async def generate_proof_pack(
 @router.get(
     "/reports/{engagement_id}",
     response_model=ProofPackFetchResponse,
+    status_code=status.HTTP_200_OK,
     responses={
         404: {"model": ApiErrorResponse, "description": "Report not found"},
     },
