@@ -6,7 +6,23 @@ EnterpriseHub is a portfolio monorepo. This map explains what matters to reviewe
 
 ## Reviewer Path
 
-Start with `README.md`, `HIRING_REVIEW_GUIDE.md`, `docs/CLAIM_LEDGER.md`, `docs/evidence/demo-evidence-pack.md`, `docs/security/env-and-secret-policy.md`, and `docs/adr/`. Then inspect the main implementation in `ghl_real_estate_ai/`, the eval surface in `evals/`, and targeted tests in `tests/`.
+Start with current, reviewer-facing evidence:
+
+- `README.md`
+- `HIRING_REVIEW_GUIDE.md`
+- `docs/CLAIM_LEDGER.md`
+- `docs/evidence/demo-evidence-pack.md`
+- `docs/security/env-and-secret-policy.md`
+- `docs/adr/`
+
+Then inspect the main implementation in `ghl_real_estate_ai/`, the eval surface in `evals/`, and targeted tests in `tests/`.
+
+Use historical or generated material only after the current path is clear:
+
+- `docs/project_status/` contains historical implementation logs, handoffs, client drafts, and older generated status reports.
+- `docs/handoffs/`, `docs/delivery/`, `docs/reports/`, `docs/swarm/`, and older project specs are preserved context, not current proof.
+- `reports/`, older benchmark outputs, and sandbox artifacts are dated outputs, not current verification unless cited by the claim ledger.
+- `content/` and commercial proposal materials are business context, not engineering proof.
 
 ## Top-Level Map
 
@@ -21,7 +37,11 @@ Start with `README.md`, `HIRING_REVIEW_GUIDE.md`, `docs/CLAIM_LEDGER.md`, `docs/
 | `docs/evidence/` | Evidence | Curated, dated proof packs for demo status, screenshots, and reviewer-visible claims. Prefer these over older generated reports. |
 | `docs/security/` | Evidence | Reviewer-facing security and secret-handling policy. |
 | `docs/specs/audits/` | Audit history | Prior hiring/security/architecture audits. Useful context, not current verification unless dated. |
-| `docs/project_status/` | Historical status | Preserved implementation notes with older/client-specific wording. Do not treat as current public claim source. |
+| `docs/project_status/` | Historical status | Archived implementation notes, handoffs, client drafts, and generated status reports. Start with `docs/project_status/README.md`; do not treat these files as current public claim sources. |
+| `docs/handoffs/` and `docs/delivery/` | Historical delivery context | Preserved session handoffs and client delivery packages. Useful for timeline/provenance; verify any readiness claims against current evidence before quoting. |
+| `docs/reports/` | Historical/generated reports | Older evaluation and status reports. Treat as dated context unless a current reviewer doc explicitly cites them. |
+| `docs/swarm/` and `docs/modular-agentic-powerhouse/` | Generated/speculative planning | Agent-swarm plans and architecture explorations. Useful for design history, not current verification. |
+| `docs/gumroad/`, `docs/PORTFOLIO_*`, `docs/SPEC_*` | Commercial/speculative collateral | Portfolio, product, and packaging materials. These may contain marketing language and should not be used as engineering proof. |
 | `CASE_STUDY.md` | Evidence | Case-study narrative. Claims should remain labeled case-study reported unless backed by public raw data. |
 | `BENCHMARKS.md` and `benchmarks/` | Evidence/modeling | Synthetic and local benchmark scripts. Do not present as live production measurements. |
 | `advanced_rag_system/` | Supporting package | RAG subsystem and experiments. Important for retrieval review, but not the main app entrypoint. |

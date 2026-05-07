@@ -10,7 +10,7 @@ This guide is intentionally short. It points reviewers to the strongest evidence
 - **Backend system:** FastAPI services coordinate lead, buyer, and seller bot workflows with CRM persistence and webhook handling.
 - **AI system:** prompt registry, golden dataset, deterministic checks, LLM-as-judge harness, adversarial tests, and nightly eval workflow.
 - **Production judgment:** ADRs, security scanning, structured logging, health checks, Docker/Compose deploy paths, Redis/Postgres cache design, and CI gates.
-- **Current caveat:** public claims must stay tied to [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md), and secret handling follows [docs/security/env-and-secret-policy.md](docs/security/env-and-secret-policy.md). Some older benchmark and case-study materials preserve historical language, so prefer the current README and claim ledger.
+- **Current caveat:** public claims must stay tied to [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md), and secret handling follows [docs/security/env-and-secret-policy.md](docs/security/env-and-secret-policy.md). Some older benchmark, handoff, delivery, and project-status materials preserve historical or marketing language, so prefer the current README, repo map, evidence docs, and claim ledger.
 
 ## 5-Minute Review Path
 
@@ -58,4 +58,5 @@ pytest tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py --ov
 - FastAPI route metadata is uneven: an AST scan found 702 route decorators, 427 without `response_model`, and 677 without explicit `status_code`.
 - Some security/health targeted tests have historically failed locally, indicating either test drift, route drift, or environment assumptions that need tightening.
 - Secret-shaped tracked files and historical generated artifacts are tracked as owner-decision items in the maintainer audit.
+- Historical docs under `docs/project_status/`, `docs/handoffs/`, `docs/delivery/`, and `docs/reports/` are preserved for timeline/provenance and should not be read as current verification.
 - The strongest proof is not "big repo size"; it is the combination of orchestration, compliance, eval discipline, and honest production tradeoffs.

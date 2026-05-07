@@ -2,6 +2,8 @@
 
 **Complete client onboarding and operational documentation for enterprise success**
 
+> **Historical/supporting doc:** This page is an older Customer Intelligence Platform documentation index. For current reviewer-facing EnterpriseHub evidence, use [`../README.md`](../README.md), [`../HIRING_REVIEW_GUIDE.md`](../HIRING_REVIEW_GUIDE.md), [`repo-map.md`](repo-map.md), [`CLAIM_LEDGER.md`](CLAIM_LEDGER.md), [`evidence/demo-evidence-pack.md`](evidence/demo-evidence-pack.md), and [`security/env-and-secret-policy.md`](security/env-and-secret-policy.md). Treat deployment claims, credentials, contact details, and readiness language below as historical/demo context until verified against current docs and code.
+
 ---
 
 ## 🎯 Documentation Overview
@@ -42,7 +44,7 @@ This comprehensive documentation suite provides everything needed for successful
 ### For Technical Teams
 
 1. **Deploy**: [Technical Implementation Guide](TECHNICAL_IMPLEMENTATION_GUIDE.md)
-   - Enterprise-grade deployment procedures
+   - Deployment procedures
    - Database setup and optimization
    - Security configuration and monitoring
 
@@ -139,7 +141,7 @@ Customer Intelligence Platform:
 - **🎯 Real-Time Analytics**: Live customer intelligence and insights
 - **👥 Customer Segmentation**: AI-powered customer grouping and analysis  
 - **🗺️ Journey Mapping**: Visual customer journey tracking and optimization
-- **🏢 Multi-Tenant Architecture**: Enterprise-grade tenant isolation
+- **🏢 Multi-Tenant Architecture**: Tenant isolation
 - **🔐 Role-Based Access**: Granular permissions and security controls
 - **📊 Advanced Reporting**: Customizable reports and data exports
 - **🔗 CRM Integration**: Seamless integration with major CRM platforms
@@ -182,42 +184,11 @@ docker-compose pull && docker-compose up -d --force-recreate
 
 ### Default Credentials
 
-```yaml
-# Demo/Development Credentials
-Admin User:
-  Username: admin
-  Password: admin123
-  Role: Administrator
-
-Analyst User:  
-  Username: analyst
-  Password: analyst123
-  Role: Analyst
-
-Viewer User:
-  Username: viewer  
-  Password: viewer123
-  Role: Viewer
-
-# Default Tenant
-Tenant ID: demo_tenant
-```
+This historical guide previously listed sample development credentials. Use the current demo-auth notes in [`../README.md`](../README.md#live-demo), [`evidence/demo-evidence-pack.md`](evidence/demo-evidence-pack.md), and [`security/env-and-secret-policy.md`](security/env-and-secret-policy.md) instead.
 
 ### Support Contacts
 
-```yaml
-Emergency Support:
-  Phone: +1-800-PLATFORM (24/7)
-  Email: emergency@platform-support.com
-  
-Technical Support:
-  Email: support@platform.com
-  Chat: Available 8AM-8PM EST
-  
-Documentation:
-  Help Center: help.platform.com
-  Video Library: videos.platform.com
-```
+Placeholder support contacts from the original client-documentation draft were removed from this historical index. Use the repository issue tracker or the current reviewer guide for project context.
 
 ---
 
@@ -353,9 +324,7 @@ Emergency Maintenance:
   Duration: Typically < 1 hour
   
 Status Updates:
-  Page: status.platform.com
-  Email: status@platform.com
-  Slack: #platform-status
+  Use the current deployment status page or project issue tracker.
 ```
 
 ---
@@ -366,15 +335,11 @@ Status Updates:
 
 #### 🆘 Emergency Support (24/7)
 - **Critical Issues**: Platform down, data loss, security breach
-- **Phone**: +1-800-PLATFORM-911
-- **Email**: emergency@platform-support.com
-- **Response**: 15 minutes
+- Historical placeholder section; verify current operational contacts before reuse.
 
 #### 💬 Standard Support (Business Hours)
 - **Questions & Issues**: Feature help, configuration assistance
-- **Chat**: Available 8AM-8PM EST
-- **Email**: support@platform.com  
-- **Response**: 4 hours
+- Historical placeholder section; use current project channels instead.
 
 #### 📚 Self-Service Resources
 - **Documentation**: Complete guides and references
@@ -395,24 +360,7 @@ Status Updates:
 
 ### Typical Client Outcomes
 
-#### 📈 Performance Improvements
-- **80% Faster Insights**: From days to hours for actionable intelligence
-- **65% Reduced Manual Work**: Automated reporting and analytics
-- **40% Better Decision Making**: Data-driven insights and recommendations
-- **90% User Adoption**: High engagement across all user roles
-
-#### 💰 Financial Impact
-- **Average ROI**: 350% within 12 months
-- **Cost Savings**: $50K+ annually in operational efficiency  
-- **Revenue Growth**: 25% increase in data-driven revenue
-- **Time Savings**: 20 hours per week per analyst
-
-#### 🎯 Client Testimonials
-> *"The Customer Intelligence Platform transformed how we understand our customers. We went from gut-feeling decisions to data-driven strategies that deliver real results."*  
-> — **Sarah Johnson**, VP of Analytics, TechCorp
-
-> *"Implementation was seamless, and our team was productive within the first week. The ROI exceeded our expectations by 200%."*  
-> — **Michael Chen**, CTO, GrowthCo
+The original client-documentation draft included illustrative ROI figures and sample testimonials. Do not treat that material as current EnterpriseHub proof. Use [`CLAIM_LEDGER.md`](CLAIM_LEDGER.md) and [`evidence/demo-evidence-pack.md`](evidence/demo-evidence-pack.md) for reviewer-safe claims and dated evidence.
 
 ---
 
@@ -429,7 +377,7 @@ This documentation suite is actively maintained and updated:
 
 ### Contributing to Documentation
 
-- **Feedback**: Send suggestions to docs@platform.com
+- **Feedback**: Use the current repository issue tracker or project channels
 - **Corrections**: Report errors or outdated information
 - **Improvements**: Suggest additional content or clarifications
 - **Recognition**: Contributors acknowledged in release notes
@@ -465,4 +413,4 @@ Based on your role and needs, here's your recommended next action:
 *Version 1.0 - January 2026*  
 *© 2026 - Complete Implementation Guide*  
 
-**Questions?** Contact us at support@platform.com or visit help.platform.com
+**Questions?** Start with the current root README, hiring review guide, and repo map.

@@ -2,6 +2,8 @@
 
 This directory contains technical documentation for developers and contributors.
 
+> **Reviewer note:** For current hiring/client-review evidence, start with [`../README.md`](../README.md), [`../HIRING_REVIEW_GUIDE.md`](../HIRING_REVIEW_GUIDE.md), [`repo-map.md`](repo-map.md), and [`CLAIM_LEDGER.md`](CLAIM_LEDGER.md). Some docs in this tree are historical, generated, or commercial collateral; verify readiness, metrics, deployment, and security claims against the current evidence path before quoting them.
+
 ---
 
 ## 📚 Documentation Index
@@ -51,6 +53,9 @@ Located in `modules/`:
 
 ### Handoffs & Reports
 Located in `docs/handoffs/` and `docs/reports/`:
+
+> These files are preserved for timeline and provenance. They are not current verification unless a current reviewer-facing doc cites them.
+
 - **[HANDOFF_CLEANUP_SESSION.md](handoffs/HANDOFF_CLEANUP_SESSION.md)** - Summary of cleanup and optimization (Dec 31, 2025)
 
 ### Scenario Templates
