@@ -1,6 +1,6 @@
 # 📋 Customer Intelligence Platform - Documentation Suite
 
-**Complete client onboarding and operational documentation for enterprise success**
+**Historical client onboarding and operational documentation index**
 
 > **Historical/supporting doc:** This page is an older Customer Intelligence Platform documentation index. For current reviewer-facing EnterpriseHub evidence, use [`../README.md`](../README.md), [`../HIRING_REVIEW_GUIDE.md`](../HIRING_REVIEW_GUIDE.md), [`repo-map.md`](repo-map.md), [`CLAIM_LEDGER.md`](CLAIM_LEDGER.md), [`evidence/demo-evidence-pack.md`](evidence/demo-evidence-pack.md), and [`security/env-and-secret-policy.md`](security/env-and-secret-policy.md). Treat deployment claims, credentials, contact details, and readiness language below as historical/demo context until verified against current docs and code.
 
@@ -8,7 +8,7 @@
 
 ## 🎯 Documentation Overview
 
-This comprehensive documentation suite provides everything needed for successful Customer Intelligence Platform deployment, user onboarding, and ongoing operations. The documentation is designed for different stakeholders and use cases across the entire client lifecycle.
+This historical documentation suite preserves earlier Customer Intelligence Platform onboarding, user-training, and operational drafts. Use it for context, then verify any deployment or success claim against the current reviewer-facing evidence linked above.
 
 ### 📚 Document Structure
 
@@ -262,7 +262,7 @@ python scripts/create_admin_user.py
 | **Time to Insight** | <2 hours | Faster decision making |
 | **Data Quality Score** | 95%+ | Improved data reliability |
 | **Process Automation** | 50%+ | Reduced manual work |
-| **ROI Achievement** | 300%+ | Business value delivery |
+| **ROI Evidence** | Verify in current evidence docs | Business value claims require dated support |
 
 ### Technical Performance Metrics
 
@@ -405,7 +405,7 @@ Based on your role and needs, here's your recommended next action:
 
 ---
 
-**Ready to get started?** Choose your path above and begin your Customer Intelligence Platform journey! 🚀
+**Before reuse:** confirm the relevant setup, deployment, and claim language against the current root README, hiring review guide, repo map, claim ledger, and evidence pack.
 
 ---
 
