@@ -153,6 +153,13 @@ mcp_config.json
 .agent/workflows/*jailbreak*.md
 evaluation_prompt.md
 
+# Local agent/plugin state
+.kilo/
+AGENT_MEMORY_STRATEGY.md
+
+# Local resolver output; requirements.txt is authoritative for this repo
+uv.lock
+
 # Generated images (recreatable)
 # *.png
 !docs/screenshots/.gitkeep
