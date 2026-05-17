@@ -178,6 +178,18 @@ Defined in `.claude/quality-gates.yaml`:
 
 - **Hooks**: < 500ms max latency, < 100ms average
 - **Skills**: < 1000ms load time, < 5000 tokens
+
+## Hard vs Advisory Jobs
+
+Reviewer-facing claims must be backed by hard gates. Jobs or steps marked `continue-on-error: true` are advisory only and should not be used as headline evidence until they become blocking.
+
+Current advisory examples:
+
+- Revenue ops artifact QA in `ci.yml`: business artifact quality, not a source-code gate.
+- Pilot data persistence smoke in `ci.yml`: depends on integration-style environment assumptions.
+- Extended `tests/unit/` run in `ci.yml`: advisory until optional dependency collection drift is resolved.
+- Dependency vulnerability scan in `ci.yml`: advisory for newly disclosed CVEs that require triage.
+- Safety check in `security-scan.yml`: advisory companion to the blocking `pip-audit` step.
 - **API**: < 2000ms max response, < 500ms average
 - **Tests**: < 100ms per unit test, < 10min full suite
 

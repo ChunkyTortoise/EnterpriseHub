@@ -244,7 +244,7 @@ stringData:
   openai-api-key: "sk-PLACEHOLDER-OPENAI-KEY"
 
   # JWT Configuration
-  jwt-secret: "jorge-phase7-jwt-secret-key-2024"
+  jwt-secret: "<JWT_SECRET>"
   jwt-algorithm: "HS256"
   jwt-expiration: "3600"
 

@@ -3,8 +3,8 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-7%2C669_collectible-brightgreen)](tests/)
-[![Reviewer Gate](https://img.shields.io/badge/reviewer_gate-make_verify--public-blue)](HIRING_REVIEW_GUIDE.md#local-verification-commands)
+[![Tests](https://img.shields.io/badge/tests-7%2C740_collectible-brightgreen)](tests/)
+[![Reviewer Gate](https://img.shields.io/badge/reviewer_gate-make_verify--reviewer-blue)](HIRING_REVIEW_GUIDE.md#local-verification-commands)
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
 [![Eval Gate](https://img.shields.io/badge/eval_gate-active-46E3B7)](evals/)
 [![Security](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/security-scan.yml?label=security)](https://github.com/ChunkyTortoise/EnterpriseHub/actions/workflows/security-scan.yml)
@@ -19,17 +19,19 @@
 
 **30-second pitch:** EnterpriseHub is a production-oriented multi-agent AI operations platform for lead qualification, CRM sync, routing, eval gates, and cost controls. It is built to show how I design LLM systems that can fail safely, stay observable, and remain testable under real business workflows.
 
-**Key proof:** 22 registered agents, 4-dimension routing, circuit-breaker failover, $100/hr spend kill-switch, 50-case golden eval set, 7,669 locally collectible tests, and a Streamlit demo at [ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app).
+**Key proof:** 22 registered agents, 4-dimension routing, circuit-breaker failover, $100/hr spend kill-switch, 50-case golden eval set, 7,740 locally collectible tests, and a Streamlit demo at [ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app).
 
 **Engineering signals:** FastAPI backend, PostgreSQL/Redis state, LangGraph orchestration, prompt versioning, eval-gated CI, security scans, OpenTelemetry-oriented cost tracking, and documented architecture decisions.
 
 **Hiring fit:** Applied AI Engineer, Agentic AI Engineer, AI Backend Engineer, LLMOps / AI Platform Engineer.
 
+**What to inspect in an interview:** webhook security, eval discipline, compliance pipeline design, cache/cost controls, and route metadata ratcheting. See [docs/reviewer-scorecard.md](docs/reviewer-scorecard.md) and [docs/interview-deep-dives](docs/interview-deep-dives).
+
 ---
 
 ## Executive Summary
 
-Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots so no lead goes cold. Built for real estate brokerages and agencies; current local verification collects 7,669 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
+Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots so no lead goes cold. Built for real estate brokerages and agencies; current local verification collects 7,740 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
 
 ---
 
@@ -45,7 +47,7 @@ EnterpriseHub includes a case-study-backed production story plus modeled benchma
 | **LLM cache target** | L1 60% + L2 20% + L3 8% design target | Synthetic benchmark / architecture target |
 | **Token cost model** | 93K to 7.8K tokens per 100-query modeled workload | Projection; not quoted as live billing measurement |
 | **Eval coverage** | 50 golden cases across qualification, edge cases, and compliance | Repository artifact in `evals/` |
-| **Test collection** | 7,669 collected on May 6, 2026 | Local `pytest --collect-only --override-ini='addopts=' -q` |
+| **Test collection** | 7,740 collected on May 17, 2026 | Local `python3 scripts/ci/collect_tests_summary.py` |
 
 See [CASE_STUDY.md](CASE_STUDY.md), [BENCHMARKS.md](BENCHMARKS.md), [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md), [docs/evidence/demo-evidence-pack.md](docs/evidence/demo-evidence-pack.md), and [docs/security/env-and-secret-policy.md](docs/security/env-and-secret-policy.md) for methodology, demo status, secret policy, and claim provenance.
 
@@ -67,7 +69,7 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | **A/B Testing** | Method | Two-proportion z-test | `ab_testing_service.py` statistical engine |
 | **A/B Testing** | Assignment | Deterministic SHA-256 bucketing | `experiment_id + contact_id` hash |
 | **Compliance** | Pipeline stages | 7 (language, TCPA, compliance, translation, truncation) | `response_pipeline/factory.py` |
-| **Test Surface** | Current collectible count | 7,669 collected | `pytest --collect-only --override-ini='addopts=' -q` on May 6, 2026 |
+| **Test Surface** | Current collectible count | 7,740 collected | `python3 scripts/ci/collect_tests_summary.py` on May 17, 2026 |
 | **ADRs** | Documented decisions | 10 | `docs/adr/0001-0010` |
 
 ---
@@ -348,7 +350,7 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 7,669 tests collectible locally on May 6, 2026
+├── tests/                        # 7,740 tests collectible locally on May 17, 2026
 ├── conftest.py                   # Shared test fixtures
 ├── render.yaml                   # Render deployment config
 └── docker-compose.yml            # Container orchestration

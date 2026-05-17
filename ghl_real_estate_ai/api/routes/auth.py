@@ -37,6 +37,13 @@ class TokenResponse(BaseModel):
     expires_in: int = 1800  # 30 minutes
 
 
+class CurrentUserResponse(BaseModel):
+    """Authenticated user response model."""
+
+    user_id: str
+    authenticated: bool = True
+
+
 # Load credentials from environment variables
 DEMO_USER_HASH = os.getenv("AUTH_DEMO_USER_HASH")
 ADMIN_USER_HASH = os.getenv("AUTH_ADMIN_USER_HASH")
@@ -63,7 +70,7 @@ USERS_DB = {
 }
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
 async def login(credentials: LoginRequest):
     """
     Authenticate user and return JWT token.
@@ -91,7 +98,7 @@ async def login(credentials: LoginRequest):
     return TokenResponse(access_token=access_token, token_type="bearer", expires_in=1800)
 
 
-@router.post("/token", response_model=TokenResponse)
+@router.post("/token", response_model=TokenResponse, status_code=status.HTTP_200_OK)
 async def get_token(credentials: LoginRequest):
     """
     Alternative token endpoint (OAuth2 compatible).
@@ -99,10 +106,10 @@ async def get_token(credentials: LoginRequest):
     return await login(credentials)
 
 
-@router.get("/me")
+@router.get("/me", response_model=CurrentUserResponse, status_code=status.HTTP_200_OK)
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """
     Get current authenticated user information.
     Requires valid JWT token in Authorization header.
     """
-    return {"user_id": current_user["user_id"], "authenticated": True}
+    return CurrentUserResponse(user_id=current_user["user_id"], authenticated=True)

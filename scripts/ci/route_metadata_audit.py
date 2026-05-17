@@ -100,6 +100,16 @@ def audit_targets(raw_targets: list[str]) -> list[RouteMetadata]:
     return sorted(routes, key=lambda route: (str(route.path), route.line, route.method, route.route_path))
 
 
+def _read_targets_file(path: Path) -> list[str]:
+    targets: list[str] = []
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        targets.append(line)
+    return targets
+
+
 def _relative(path: Path) -> str:
     try:
         return str(path.relative_to(Path.cwd()))
@@ -133,16 +143,26 @@ def print_report(routes: list[RouteMetadata]) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("targets", nargs="*", default=DEFAULT_TARGETS)
+    parser.add_argument("targets", nargs="*")
+    parser.add_argument(
+        "--targets-file",
+        type=Path,
+        help="Optional newline-delimited target file. Blank lines and # comments are ignored.",
+    )
     parser.add_argument(
         "--fail-on-missing",
         action="store_true",
         help="Exit non-zero when any scanned route is missing response_model or status_code.",
     )
     args = parser.parse_args()
+    targets = list(args.targets)
+    if args.targets_file:
+        targets.extend(_read_targets_file(args.targets_file))
+    if not targets:
+        targets = DEFAULT_TARGETS
 
     try:
-        routes = audit_targets(args.targets)
+        routes = audit_targets(targets)
     except SyntaxError as exc:
         print(f"Route metadata audit failed to parse {exc.filename}: {exc.msg}", file=sys.stderr)
         return 2

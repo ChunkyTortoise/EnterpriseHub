@@ -16,7 +16,6 @@ Key Features:
 - Performance monitoring for integration test health
 """
 
-import asyncio
 import logging
 import os
 import sys
@@ -37,15 +36,6 @@ logger = logging.getLogger(__name__)
 # Test configuration
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "postgresql://postgres:password@localhost:5432/test_ghl_real_estate")
 TEST_REDIS_URL = os.getenv("TEST_REDIS_URL", "redis://localhost:6379/1")
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for the test session."""
-    policy = asyncio.get_event_loop_policy()
-    loop = policy.new_event_loop()
-    yield loop
-    loop.close()
 
 
 @pytest.fixture(scope="session")

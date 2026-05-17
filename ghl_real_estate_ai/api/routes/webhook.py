@@ -461,7 +461,7 @@ async def _get_tenant_ghl_client(
     return ghl_client_default
 
 
-@router.post("/tag-webhook", response_model=GHLWebhookResponse)
+@router.post("/tag-webhook", response_model=GHLWebhookResponse, status_code=status.HTTP_200_OK)
 async def handle_ghl_tag_webhook(
     request: Request,
     event: GHLTagWebhookEvent,
@@ -558,7 +558,7 @@ async def handle_ghl_tag_webhook(
     return GHLWebhookResponse(success=True, message=outreach_message, actions=tag_actions)
 
 
-@router.post("/webhook", response_model=GHLWebhookResponse)
+@router.post("/webhook", response_model=GHLWebhookResponse, status_code=status.HTTP_200_OK)
 async def handle_ghl_webhook(
     request: Request,
     event: GHLWebhookEvent,
@@ -2345,7 +2345,7 @@ class InitiateQualificationRequest(BaseModel):
     location_id: str
 
 
-@router.post("/initiate-qualification")
+@router.post("/initiate-qualification", response_model=GHLWebhookResponse, status_code=status.HTTP_200_OK)
 async def initiate_qualification(
     request: Request,
     body: InitiateQualificationRequest,
@@ -2397,7 +2397,7 @@ async def initiate_qualification(
         )
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict[str, Any], status_code=status.HTTP_200_OK)
 async def health_check():
     """
     Health check endpoint for Railway deployment.

@@ -1,6 +1,6 @@
 # Makefile for Enterprise Hub
 
-.PHONY: help install install-dev test lint format type-check clean run demo build verify-public verify-focused verify-full artifact-policy-check route-metadata-audit ghl-setup ghl-setup-check ghl-setup-guide compile-check no-mock-check metrics-snapshot weekly-pilot-kpis weekly-proof-pack persist-pilot-data pilot-proof-pack pilot-proof-pack-sync revenue-ops-qa
+.PHONY: help install install-dev test lint format type-check clean run demo build verify-public verify-reviewer verify-focused verify-full artifact-policy-check secret-scan route-metadata-audit route-metadata-reviewer ghl-setup ghl-setup-check ghl-setup-guide compile-check no-mock-check metrics-snapshot weekly-pilot-kpis weekly-proof-pack persist-pilot-data pilot-proof-pack pilot-proof-pack-sync revenue-ops-qa
 
 help:  ## Show this help message
 	@echo 'Usage: make [target]'
@@ -34,16 +34,32 @@ no-mock-check:  ## Guard v2 production routes against mock/fallback logic
 artifact-policy-check:  ## Guard against tracked local artifacts and secret-shaped files
 	python3 scripts/ci/tracked_artifact_policy.py
 
+secret-scan:  ## Scan tracked text files for real-looking committed secrets
+	python3 scripts/ci/secret_scan.py
+
 route-metadata-audit:  ## Enforce FastAPI response_model and status_code coverage for portal_api
 	python3 scripts/ci/route_metadata_audit.py portal_api --fail-on-missing
 
+route-metadata-reviewer:  ## Enforce route metadata on reviewer-facing FastAPI route ratchet
+	python3 scripts/ci/route_metadata_audit.py --targets-file config/reviewer_route_targets.txt --fail-on-missing
+
 verify-public:  ## Fast reviewer-facing gate: lint, compile, and test collection
+	python3 scripts/ci/secret_scan.py
 	ruff check .
 	python3 scripts/ci/compile_check.py
 	python3 scripts/ci/route_metadata_audit.py portal_api --fail-on-missing
 	python3 scripts/ci/tracked_artifact_policy.py
 	pytest --collect-only --override-ini='addopts=' -q
 	python3 scripts/ci/tracked_artifact_policy.py
+
+verify-reviewer:  ## Quiet reviewer gate: secret scan, route audit, lint, focused tests, summarized collection
+	python3 scripts/ci/secret_scan.py
+	python3 scripts/ci/tracked_artifact_policy.py
+	python3 scripts/ci/compile_check.py
+	python3 scripts/ci/route_metadata_audit.py --targets-file config/reviewer_route_targets.txt --fail-on-missing
+	ruff check .
+	pytest tests/test_eval_harness.py tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py tests/test_response_pipeline.py tests/smoke/test_reviewer_smoke.py tests/test_secret_scan.py --override-ini='addopts=' -q
+	python3 scripts/ci/collect_tests_summary.py
 
 verify-focused:  ## Reviewer-focused targeted tests for evals, orchestration, SQL safety, and Jorge pipeline
 	pytest tests/test_eval_harness.py tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py tests/test_response_pipeline.py --override-ini='addopts=' -q

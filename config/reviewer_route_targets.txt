@@ -1,0 +1,6 @@
+# FastAPI route groups that are part of the reviewer-facing route metadata ratchet.
+portal_api
+ghl_real_estate_ai/api/routes/auth.py
+ghl_real_estate_ai/api/routes/health.py
+ghl_real_estate_ai/api/routes/webhook.py
+ghl_real_estate_ai/api/routes/bot_management.py

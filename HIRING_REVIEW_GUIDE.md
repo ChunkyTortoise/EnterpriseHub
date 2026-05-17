@@ -41,19 +41,20 @@ This guide is intentionally short. It points reviewers to the strongest evidence
 
 ## Local Verification Commands
 
-These commands are the intended reviewer path as of May 6, 2026.
+These commands are the intended reviewer path as of May 17, 2026. Start with the quiet reviewer gate; it includes secret scanning, artifact policy, compile checks, reviewer route metadata audit, linting, focused tests, and a summarized pytest collection.
 
 ```bash
+make verify-reviewer
 make verify-public
 make verify-focused
-pytest --collect-only --override-ini='addopts='
+python3 scripts/ci/collect_tests_summary.py
 pytest tests/test_eval_harness.py --override-ini='addopts=' -q
 pytest tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py --override-ini='addopts=' -q
 ```
 
 ## Known Review Caveats
 
-- `pytest --collect-only --override-ini='addopts=' -q` collected 7,669 tests on May 6, 2026; public test-count claims should use dated command output.
+- `python3 scripts/ci/collect_tests_summary.py` collected 7,740 tests on May 17, 2026; public test-count claims should use dated command output.
 - Full-repo mypy is intentionally not the fast reviewer gate yet; the repo still has broad suppressions that need staged tightening.
 - FastAPI route metadata is uneven: an AST scan found 702 route decorators, 427 without `response_model`, and 677 without explicit `status_code`.
 - Some security/health targeted tests have historically failed locally, indicating either test drift, route drift, or environment assumptions that need tightening.

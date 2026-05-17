@@ -25,6 +25,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Run reviewer secret scanner
+        run: python3 scripts/ci/secret_scan.py
+
       - name: Scan for hardcoded credentials
         run: |
           # Scan Python source for potential secrets

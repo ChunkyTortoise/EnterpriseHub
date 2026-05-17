@@ -4,6 +4,12 @@ Last updated: 2026-05-06
 
 EnterpriseHub keeps reviewer checks runnable without production credentials.
 
+## 2026-05-17 Secret Scanner Update
+
+Reviewer gates now include `python3 scripts/ci/secret_scan.py`, which scans tracked Python, Markdown, YAML, JSON, TOML, and related text files for real-looking API keys and credential assignments. Public docs must use placeholders such as `<OPENROUTER_API_KEY>` instead of realistic key-shaped values.
+
+If any real credential was ever committed, rotate it in the provider console before treating the repo as clean. Removing the value from the current tree does not invalidate the exposed credential.
+
 ## Reviewer Checks
 
 These commands must not require production secrets:
