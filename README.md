@@ -303,7 +303,7 @@ See [`.github/workflows/security-scan.yml`](.github/workflows/security-scan.yml)
 |-----|-------|--------|
 | [ADR-0001](docs/adr/0001-three-tier-redis-caching.md) | Three-Tier Redis Caching Strategy | Accepted |
 | [ADR-0002](docs/adr/0002-multi-crm-protocol-pattern.md) | Multi-CRM Protocol Pattern | Accepted |
-| [ADR-0003](docs/adr/0003-jorge-handoff-architecture.md) | Jorge Handoff Architecture | Accepted |
+| [ADR-0003](docs/adr/0003-jorge-handoff-architecture.md) | Multi-Bot Handoff Architecture | Accepted |
 | [ADR-0004](docs/adr/0004-agent-mesh-coordinator.md) | Agent Mesh Coordinator | Accepted |
 | [ADR-0005](docs/adr/0005-pydantic-v2-migration.md) | Pydantic V2 Migration | Accepted |
 | [ADR-0006](docs/adr/0006-security-framework-consolidation.md) | Security Framework Consolidation | Accepted |
