@@ -235,7 +235,7 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 ## For Hiring Managers
 
-Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUIDE.md). For the candid audit, see [docs/HIRING_CONVERSION_AUDIT.md](docs/HIRING_CONVERSION_AUDIT.md) and the evidence map in [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md).
+Start with the compact reviewer path: [docs/internal/HIRING_REVIEW_GUIDE.md](docs/internal/HIRING_REVIEW_GUIDE.md). For the candid audit, see [docs/HIRING_CONVERSION_AUDIT.md](docs/HIRING_CONVERSION_AUDIT.md) and the evidence map in [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md).
 
 | If you're evaluating for... | Where to look | Training behind it |
 |-----------------------------|--------------|-------------------|
@@ -398,7 +398,17 @@ See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) and [BENCHMARKS.md](BENCHMARK
 
 ---
 
-## Related Projects
+## Showcase Sub-Projects
+
+Five standalone products live inside this monorepo. Each has its own README, CI workflow, and test suite — they are not folders of scratch work.
+
+- [`auto-claude/`](auto-claude/README.md) — Autonomous multi-agent coding framework that plans, builds, and validates software. CI: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (root).
+- [`agentforge/`](agentforge/README.md) — Agent orchestration library, **published to PyPI** ([`agentforge`](https://pypi.org/project/agentforge/)). CI: [`.github/workflows/agentforge-tests.yml`](.github/workflows/agentforge-tests.yml).
+- [`voice-ai-platform/`](voice-ai-platform/README.md) — Standalone voice AI product (20+ tests, 60%+ coverage). CI: [`.github/workflows/ci-voice-ai.yml`](.github/workflows/ci-voice-ai.yml).
+- [`ai-devops-suite/`](ai-devops-suite/README.md) — Agent monitoring, prompt registry, and data pipeline tools. CI: [`.github/workflows/ci-devops-suite.yml`](.github/workflows/ci-devops-suite.yml).
+- [`rag-as-a-service/`](rag-as-a-service/README.md) — Multi-tenant RAG with hybrid search, PII detection, and Stripe metered billing. CI: [`.github/workflows/ci-rag-service.yml`](.github/workflows/ci-rag-service.yml).
+
+## Related Projects (external repos)
 
 - [jorge_real_estate_bots](https://github.com/ChunkyTortoise/jorge_real_estate_bots) — Three-bot lead qualification system (Lead, Buyer, Seller) - live production
 - [docextract](https://github.com/ChunkyTortoise/docextract) — Production RAG pipeline: PDF upload, async processing, pgvector hybrid search, citation-aware answers

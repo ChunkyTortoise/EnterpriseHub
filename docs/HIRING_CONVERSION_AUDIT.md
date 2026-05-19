@@ -93,7 +93,7 @@ Commands run locally on 2026-04-29:
 
 ### P2: Portfolio Polish
 
-- Keep `HIRING_REVIEW_GUIDE.md` linked from the README near "For Hiring Managers".
+- Keep `docs/internal/HIRING_REVIEW_GUIDE.md` linked from the README near "For Hiring Managers".
 - Move stale delivery/client/proposal docs out of the default reviewer path or add an index that marks them as historical.
 - Add a small "What to inspect in an interview" section with the five strongest files and two tradeoff prompts.
 - Reduce badge/metric density at the top of README so the first viewport feels focused and credible.
