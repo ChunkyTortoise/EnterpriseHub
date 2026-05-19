@@ -120,12 +120,11 @@ async def test_no_slot_offer_when_below_hot_threshold() -> None:
 
     # Response should not contain the slot-offer phrasing
     msg = result.get("message", "")
-    assert "Reply with 1, 2, or 3" not in msg, (
-        "Slot offer must not appear for a below-HOT seller"
-    )
-    assert result.get("temperature") in ("cold", "warm"), (
-        f"Expected cold or warm temperature, got: {result.get('temperature')!r}"
-    )
+    assert "Reply with 1, 2, or 3" not in msg, "Slot offer must not appear for a below-HOT seller"
+    assert result.get("temperature") in (
+        "cold",
+        "warm",
+    ), f"Expected cold or warm temperature, got: {result.get('temperature')!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -175,9 +174,7 @@ async def test_no_duplicate_slot_offer_when_appointment_already_pending() -> Non
     mock_sched_factory.assert_not_called()
 
     msg = result.get("message", "")
-    assert "Reply with 1, 2, or 3" not in msg, (
-        "Slot offer must not repeat when a pending appointment already exists"
-    )
+    assert "Reply with 1, 2, or 3" not in msg, "Slot offer must not repeat when a pending appointment already exists"
 
 
 # ---------------------------------------------------------------------------
@@ -244,9 +241,9 @@ async def test_double_booking_suppressed_on_second_hot_turn() -> None:
     mock_sched_factory.assert_not_called()
 
     for i, r in enumerate([r1, r2], start=1):
-        assert "Reply with 1, 2, or 3" not in r.get("message", ""), (
-            f"Turn {i} should not re-offer slots when pending_appointment exists"
-        )
+        assert "Reply with 1, 2, or 3" not in r.get(
+            "message", ""
+        ), f"Turn {i} should not re-offer slots when pending_appointment exists"
 
 
 # ---------------------------------------------------------------------------
@@ -284,9 +281,7 @@ async def test_out_of_hours_empty_slots_falls_through_to_text_response() -> None
         )
 
     msg = result.get("message", "")
-    assert "Reply with 1, 2, or 3" not in msg, (
-        "No slot offer should appear when get_available_slots returns []"
-    )
+    assert "Reply with 1, 2, or 3" not in msg, "No slot offer should appear when get_available_slots returns []"
     assert len(msg) > 0, "Engine must still produce a non-empty response"
     assert not isinstance(result, Exception), f"Engine raised an exception: {result}"
 
@@ -325,11 +320,9 @@ async def test_no_slot_offer_when_calendar_not_configured() -> None:
         )
 
     msg = result.get("message", "")
-    assert "Reply with 1, 2, or 3" not in msg, (
-        "Slot offer must not appear when calendar integration is unavailable"
-    )
+    assert "Reply with 1, 2, or 3" not in msg, "Slot offer must not appear when calendar integration is unavailable"
     assert len(msg) > 0, "Engine must produce a fallback response even with no calendar"
     # No exception bubbled up
-    assert "error" not in result or result.get("temperature") is not None, (
-        "process_seller_response must not surface calendar errors to callers"
-    )
+    assert (
+        "error" not in result or result.get("temperature") is not None
+    ), "process_seller_response must not surface calendar errors to callers"

@@ -9,7 +9,7 @@ description = "A unified platform for market analysis and enterprise tooling"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Cayman Roden", email = ""},
+    {name = "Cayman Roden", email = "chunktort@gmail.com"},
 ]
 requires-python = ">=3.12"
 classifiers = [
