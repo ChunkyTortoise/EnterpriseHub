@@ -180,3 +180,90 @@ Existing related issues:
 - [Phase 4 roadmap (binding)](audits/2026-04-27/04-roadmap.md) — wave-by-wave detail
 - [Companion research file](2026-04-27-enterprisehub-hireability-research.md) — cached external findings
 - Source plan: `~/.claude/plans/create-a-deep-spec-cosmic-cascade.md`
+
+---
+
+## Refresh 2026-05-19 — Maintenance audit + new findings
+
+This supplement records the delta between 2026-04-27 baseline state and 2026-05-19 audit, plus net-new blockers/findings that surfaced during a repo cleanup pass on branch `chore/maintenance-2026-05-17`. The 2026-04-27 master body above remains canonical for Waves 0–6 structure.
+
+### R1. Closed since 2026-04-27 baseline
+
+- **Wave 0 fully closed** (commits 2026-05-01 / `47082eb2`):
+  - W0-1 demo public ✅
+  - W0-2 AI-track resume cert-triage to ≤6 ✅
+  - W0-3 resume rotated on LinkedIn/Indeed/Upwork ✅
+  - W0-4 ATS baseline against 7 fresh postings, average ≥84% (Slingshot + GeoDelphi at 94%); results in `ats-scores-2026-05-01.md` ✅
+- **Wave 1 partial close**:
+  - W1-5 (asyncio handoff fix) ✅
+  - W1-6 (`otel-collector-config.yaml` present) ✅
+  - W1-8 (visual audit + 3 hanging Streamlit pages fixed: commit `590985ca`) ✅
+- **Wave 0 + Wave 1 epics force-closed 2026-05-01** to unblock Wave 2 / 3 / 5.
+
+### R2. Still open from 2026-04-27 baseline
+
+The four remaining W1 REQs carry forward unchanged:
+- **W1-1** — `python -m benchmarks.bench_cache_live` against running stack (real hit/miss from `LLMObservabilityService`).
+- **W1-2** — k6 scripts in `benchmarks/k6/{qualification_load,burst,sustained}.js` + results in `benchmarks/results/2026-W17/`.
+- **W1-3** — `.github/workflows/evals.yml` running promptfoo against golden datasets, reliability diagram PNG output.
+- **W1-7** — case-study honesty pass (88% cache claim, 150 req/s claim).
+
+### R3. New findings (2026-05-19 audit)
+
+| ID | Finding | Severity | Resolution status | Senior-tier gap |
+|---|---|---|---|---|
+| H-1 | `pyproject.toml` author email empty → blocks `uv` and modern Python tooling | BLOCKER | ✅ Resolved 2026-05-19 (`698f7b1b`) | tooling correctness |
+| H-2 | 4 CI checks red on PR #50 (Code Quality, Dependency Audit, Static Security, Unit Tests 3.12) | BLOCKER | Code Quality fixed (`698f7b1b`); other 3 carried forward — see R4 | eval harness + security audit |
+| H-3 | 17 root `.md` files mixed public + internal | HIGH | Partial: 15 → 13 root files (`b207cec5`); 2 internal docs relocated to `docs/internal/` | demo / narrative polish |
+| H-4 | 55 top-level directories dilute the hero story | HIGH | Mitigated via README "Showcase Sub-Projects" section (`b207cec5`); no folder moves | demo / narrative polish |
+| H-5 | 3 tracked `deploy/phase*.env` files (workflow IDs only, no real secrets) | HIGH | ✅ Resolved 2026-05-19 (`a40328e2`): renamed `.env` → `.env.example` via `git mv`, history preserved, `.gitignore` updated | security audit |
+| H-6 | 24+ commented-out imports in core services (churn_prediction_engine, analytics route, etc.) | MEDIUM | Open — new beads task under `td5t` | real ML / code hygiene |
+| H-7 | 427 of 702 FastAPI routes missing `response_model`; 677 missing explicit `status_code` | MEDIUM | Open — see REQ-W2-2 candidate below | senior-tier API surface |
+| H-8 | `content/` (~11 MB marketing) + `reports/` (executive proof packs) live in repo root | MEDIUM | Deferred: 16 scripts depend on these paths; batch with script updates | demo / narrative polish |
+| H-9 | No live demo screenshot/GIF in `README.md` Screenshots section | MEDIUM | Open — see REQ-W3-1 candidate below | demo video gap |
+| H-10 | Five strong nested sub-projects (`auto-claude`, `agentforge` [PyPI], `voice-ai-platform`, `ai-devops-suite`, `rag-as-a-service`) were invisible on README skim | LOW | ✅ Resolved 2026-05-19 (`b207cec5`): "Showcase Sub-Projects" section with per-project README + CI workflow links | showcase breadth |
+| H-11 | `.mypy_cache/` is 1.0 GB on disk (untracked, regenerable); total cache 1.2 GB | LOW | Deferred — sandbox blocked `rm -rf` on directories; user can `rm -rf htmlcov node_modules .mypy_cache .pytest_cache .ruff_cache .playwright-mcp` manually | tooling / DX |
+| H-12 | 2 stale local branches (1 merged-orphan `master`, 1 large stash with 30+ data files) | LOW | Partial: 3 merged branches deleted, small Makefile stash dropped, big stash and `master` preserved for manual review | n/a (housekeeping) |
+
+### R4. Wave-mapping update from R3
+
+- **Resolves into existing W1**:
+  - H-2 partial → expands W1-3 acceptance: eval CI workflow should also gate Code Quality / Dependency Audit / Static Security / Unit Tests, not only promptfoo. Carry into W1-3 close criteria.
+- **New REQ candidates for Wave 2**:
+  - **REQ-W2-2** (FastAPI surface polish): when an API endpoint is added or modified, it shall declare `response_model` and explicit `status_code`. Backfill the 427 + 677 gaps in phased PRs.
+- **New REQ candidates for Wave 3**:
+  - **REQ-W3-1** (demo video): record a 90-second screen capture of the public Streamlit dashboard, embed in README Screenshots section as MP4/GIF.
+- **Hygiene tasks (no new REQ, just beads)**:
+  - H-6 commented-import cleanup
+  - H-8 content/+reports/ relocation with script updates
+  - H-11 local cache eviction one-liner
+
+### R5. Senior-tier delta status (from `td5t` epic body)
+
+| Senior gap | Status | Closing REQ |
+|---|---|---|
+| Eval harness | Partially shipped (Phase 1 evals exist per commit `e2e5311f`); CI gating still open | W1-3 (extended per R4) |
+| OTLP export | Shipped (commit closing W1-6) | ✅ W1-6 |
+| k6 load tests | Open | W1-2 |
+| Real ML | Open; H-6 commented imports hint at gap | TBD (Wave 3) |
+| Security audit | Partial: H-5 closed (env redaction); H-2 static-sec CI red still open | W1-3 extended + H-2 followup |
+| Design system | Open | TBD (Wave 4) |
+| Demo video | Open | REQ-W3-1 (new) |
+| Blog series | Open | TBD (Wave 6) |
+
+### R6. New beads sub-issues to create
+
+(One per open finding; all `bd dep add <new-id> EnterpriseHub-td5t`):
+1. `Hygiene: rm -rf local cache dirs to free 1.2 GB` (H-11) — P3
+2. `Hygiene: relocate content/ and reports/ + update 16 scripts` (H-8) — P3
+3. `Hygiene: clean 24+ commented-out imports in core services` (H-6) — P2
+4. `REQ-W2-2: FastAPI response_model + status_code coverage` (H-7) — P2
+5. `REQ-W3-1: 90-sec demo video for README Screenshots section` (H-9) — P2
+6. `Investigate residual CI reds: Dependency Audit, Static Security, Unit Tests 3.12` (H-2 followup) — P1
+
+### R7. What this refresh did NOT do
+
+- Did **not** invoke `spec-creator --deep` again — 2026-04-27 audit + 6-stage research remains current. Reserve `--deep` for Cycle 2 (months 4–6 per Section 6).
+- Did **not** rewrite git history — `.git/` stays 384 MB (user choice, preserves 8 open PRs).
+- Did **not** move sub-projects to separate repos — user chose nested with clear signposting.
+- Did **not** relocate `content/` or `reports/` folders — script dependency blocker.
