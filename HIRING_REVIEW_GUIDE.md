@@ -47,7 +47,7 @@ pytest tests/security/test_webhook_signatures.py --override-ini='addopts=' -q
 
 - Global lint and format checks currently fail because of parse errors and formatting drift, concentrated heavily in `advanced_rag_system`.
 - Full-repo mypy did not complete locally during the audit; create a bounded type-check command for the flagship API/services.
-- `pytest --collect-only --override-ini='addopts='` currently collects 7,721 tests with 38 skipped; public test-count claims should use the current reproducible count.
+- `pytest --collect-only --override-ini='addopts='` currently collects 7,665 tests on 2026-05-19; public test-count claims should use the current reproducible count.
 - FastAPI route metadata is uneven: an AST scan found 702 route decorators, 427 without `response_model`, and 677 without explicit `status_code`.
 - Some security/health targeted tests fail locally, indicating either test drift, route drift, or environment assumptions that need tightening.
 - The strongest proof is not "big repo size"; it is the combination of orchestration, compliance, eval discipline, and honest production tradeoffs.
