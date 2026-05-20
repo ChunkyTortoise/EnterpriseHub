@@ -43,15 +43,15 @@ from ghl_real_estate_ai.services.compliance_guard import (
 # Fixtures
 # ---------------------------------------------------------------------------
 
-PHASE1_ENV_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "deploy", "phase1_seller_only.env")
+PHASE1_ENV_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "deploy", "phase1_seller_only.env.example")
 
 
 def _load_phase1_env() -> Dict[str, str]:
-    """Parse deploy/phase1_seller_only.env into a dict."""
+    """Parse deploy/phase1_seller_only.env.example into a dict."""
     env = {}
     path = os.path.normpath(PHASE1_ENV_PATH)
     if not os.path.exists(path):
-        pytest.skip("phase1_seller_only.env not found")
+        pytest.skip("phase1_seller_only.env.example not found")
     with open(path) as f:
         for line in f:
             line = line.strip()
@@ -146,7 +146,7 @@ def outbound_webhook_payload() -> Dict[str, Any]:
 
 
 class TestPhase1Configuration:
-    """Validate that deploy/phase1_seller_only.env contains all required IDs."""
+    """Validate that deploy/phase1_seller_only.env.example contains all required IDs."""
 
     def test_ghl_api_key_format(self, phase1_env):
         """API key starts with 'pit-' (Private Integration Token)."""

@@ -30,8 +30,10 @@ from typing import Any
 # TieredCacheService uses a class-level singleton. Reset it before each run
 # so the metrics counters start at zero.
 
+
 def _reset_singleton() -> None:
     from ghl_real_estate_ai.services import tiered_cache_service as _mod
+
     _mod.TieredCacheService._instance = None
 
 
@@ -105,6 +107,7 @@ async def run_live_benchmark(
 
     # Reset metrics so warm phase doesn't count
     from ghl_real_estate_ai.services.tiered_cache_service import CacheMetrics
+
     cache.metrics = CacheMetrics()
     cache.l1_cache.set_metrics_ref(cache.metrics)
 
@@ -143,7 +146,7 @@ async def run_live_benchmark(
 # ---------------------------------------------------------------------------
 
 TARGETS = {
-    "l1_hit_rate": 0.60,   # ≥60% of reads served from memory
+    "l1_hit_rate": 0.60,  # ≥60% of reads served from memory
     "overall_hit_rate": 0.85,  # ≥85% overall (L1 + L2)
 }
 
@@ -170,17 +173,20 @@ def print_results(r: LiveBenchResult) -> None:
     print(f"  Ops measured      : {r.ops:,}")
     print(f"  Wall time         : {r.wall_time_s:.2f}s  ({r.ops / r.wall_time_s:,.0f} ops/s)")
     print()
-    print(f"  L1 (memory)  hits={r.l1_hits:,}  misses={r.l1_misses:,}  "
-          f"hit_rate={r.l1_hit_rate:.1%}  "
-          f"[{'PASS' if ok['l1_hit_rate'] else 'FAIL'} ≥{TARGETS['l1_hit_rate']:.0%}]")
+    print(
+        f"  L1 (memory)  hits={r.l1_hits:,}  misses={r.l1_misses:,}  "
+        f"hit_rate={r.l1_hit_rate:.1%}  "
+        f"[{'PASS' if ok['l1_hit_rate'] else 'FAIL'} ≥{TARGETS['l1_hit_rate']:.0%}]"
+    )
     if r.l2_enabled:
-        print(f"  L2 (Redis)   hits={r.l2_hits:,}  misses={r.l2_misses:,}  "
-              f"hit_rate={r.l2_hit_rate:.1%}")
+        print(f"  L2 (Redis)   hits={r.l2_hits:,}  misses={r.l2_misses:,}  " f"hit_rate={r.l2_hit_rate:.1%}")
     else:
         print(f"  L2 (Redis)   {l2_note.strip()}")
     print()
-    print(f"  Overall hit rate  : {r.overall_hit_rate:.1%}  "
-          f"[{'PASS' if ok['overall_hit_rate'] else 'FAIL'} ≥{TARGETS['overall_hit_rate']:.0%}]")
+    print(
+        f"  Overall hit rate  : {r.overall_hit_rate:.1%}  "
+        f"[{'PASS' if ok['overall_hit_rate'] else 'FAIL'} ≥{TARGETS['overall_hit_rate']:.0%}]"
+    )
     print("=" * 64)
 
     failed = [k for k, v in ok.items() if not v]

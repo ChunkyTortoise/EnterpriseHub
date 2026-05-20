@@ -1,3 +1,8 @@
+# Maintenance / tooling artifacts
+.maintenance/
+.kilo/
+uv.lock
+
 # Next.js
 node_modules/
 .next/
@@ -59,10 +64,13 @@ venv312/
 .env.service6.production
 *.env.backup*
 ghl_real_estate_ai/.env
+deploy/*.env
 
 # Keep templates only
 !.env*.template
 !.env*.example
+!deploy/*.env.example
+!deploy/*.env.template
 
 # Streamlit
 .streamlit/

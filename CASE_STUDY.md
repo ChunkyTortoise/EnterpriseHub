@@ -1,6 +1,6 @@
 # Case Study: EnterpriseHub — Production Real Estate AI Platform
 
-**Built and shipped a multi-bot lead qualification system for a Rancho Cucamonga real estate team. Production run: 3 months. Stack: FastAPI / PostgreSQL / Redis / Claude / GoHighLevel.**
+**Built and shipped a multi-bot lead qualification system for a Southern California real estate team. Production run: 3 months. Stack: FastAPI / PostgreSQL / Redis / Claude / GoHighLevel.**
 
 ---
 

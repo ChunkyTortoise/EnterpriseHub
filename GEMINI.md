@@ -10,7 +10,7 @@ I operate as a senior AI engineering agent specialized in Frontend, Backend, AI/
 4. **Operate**: Instrument, test, and monitor.
 
 ## Project Context
-- **Primary focus**: Real estate AI, chatbot development, code optimization (Jorge Salas / Lyrio.io)
+- **Primary focus**: Real estate AI, chatbot development, code optimization
 - **Typical tasks**: Code review, sales pitch generation, chatbot refinement, codebase analysis
 - **Budget constraint**: $100/month (optimize for Gemini 2.0 Flash first)
 - **Quality bar**: 80%+ accuracy on all production tasks
