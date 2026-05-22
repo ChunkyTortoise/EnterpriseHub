@@ -196,8 +196,9 @@ class BaseTool(ABC):
 
             # Add description from docstring if available
             if self.execute.__doc__:
-                # TODO: Parse docstring for parameter descriptions
-                pass
+                param_descriptions = self._parse_docstring_args(self.execute.__doc__)
+                if param_name in param_descriptions:
+                    prop["description"] = param_descriptions[param_name]
 
             properties[param_name] = prop
 
@@ -206,6 +207,91 @@ class BaseTool(ABC):
                 required.append(param_name)
 
         return ToolSchema(properties=properties, required=required)
+
+    @staticmethod
+    def _parse_docstring_args(docstring: str) -> dict[str, str]:
+        """Parse a Google-style ``Args:`` section from a docstring.
+
+        Extracts parameter descriptions from the ``Args:`` block. Supports
+        multi-line descriptions (continuation lines indented deeper than the
+        parameter line) and the optional ``name (type):`` form. Parsing stops
+        at the next section header (``Returns:``, ``Raises:``, ``Yields:``,
+        ``Examples:``, etc.) or the end of the docstring.
+
+        Args:
+            docstring: The raw ``__doc__`` string to parse.
+
+        Returns:
+            Mapping of parameter name to its description. Empty if no
+            ``Args:`` section is present or no descriptions are found.
+        """
+        descriptions: dict[str, str] = {}
+        section_headers = {
+            "args",
+            "arguments",
+            "returns",
+            "return",
+            "raises",
+            "yields",
+            "examples",
+            "example",
+            "note",
+            "notes",
+            "attributes",
+        }
+
+        lines = inspect.cleandoc(docstring).splitlines()
+
+        in_args = False
+        args_indent: int | None = None
+        current_param: str | None = None
+
+        for line in lines:
+            stripped = line.strip()
+
+            if not in_args:
+                if stripped.rstrip(":").lower() in {"args", "arguments"} and stripped.endswith(":"):
+                    in_args = True
+                continue
+
+            # A new section header at the start of a line ends the Args block.
+            header = stripped.rstrip(":").lower()
+            if stripped.endswith(":") and " " not in header and header in section_headers:
+                break
+
+            if not stripped:
+                # Blank lines are allowed within the Args block.
+                continue
+
+            indent = len(line) - len(line.lstrip())
+            if args_indent is None:
+                args_indent = indent
+
+            is_continuation = (
+                current_param is not None
+                and indent > args_indent
+            )
+
+            if is_continuation:
+                descriptions[current_param] += " " + stripped
+                continue
+
+            # Expect a "name: description" or "name (type): description" entry.
+            name_part, sep, desc_part = stripped.partition(":")
+            if not sep:
+                # Not a recognizable parameter line; skip it.
+                continue
+
+            name = name_part.split("(", 1)[0].strip()
+            description = desc_part.strip()
+            if not name or not description:
+                current_param = None
+                continue
+
+            descriptions[name] = description
+            current_param = name
+
+        return descriptions
 
     @staticmethod
     def _type_to_schema(python_type: type) -> dict[str, Any]:
