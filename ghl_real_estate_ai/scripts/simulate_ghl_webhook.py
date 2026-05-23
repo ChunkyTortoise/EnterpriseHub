@@ -60,7 +60,7 @@ def simulate_inactive_contact(url):
 def send_payload(url, payload):
     """Sends the JSON payload to the specified webhook endpoint."""
     try:
-        response = requests.post(url, json=payload, headers={"Content-Type": "application/json"})
+        response = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=10)
 
         print(f"Status Code: {response.status_code}")
         try:

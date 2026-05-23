@@ -55,7 +55,7 @@ class JorgeAnalyticsAPIClient:
         """Get unified analytics dashboard metrics."""
         try:
             if REQUESTS_AVAILABLE:
-                response = requests.get(f"{self.base_url}/jorge-analytics/dashboard/metrics")
+                response = requests.get(f"{self.base_url}/jorge-analytics/dashboard/metrics", timeout=10)
                 if response.status_code == 200:
                     return response.json()
         except Exception as e:

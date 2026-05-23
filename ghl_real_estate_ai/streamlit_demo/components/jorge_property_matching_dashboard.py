@@ -53,7 +53,7 @@ class JorgePropertyMatchingAPIClient:
         """Get unified property matching dashboard metrics."""
         try:
             if REQUESTS_AVAILABLE:
-                response = requests.get(f"{self.base_url}/jorge-property-matching/dashboard/metrics")
+                response = requests.get(f"{self.base_url}/jorge-property-matching/dashboard/metrics", timeout=10)
                 if response.status_code == 200:
                     return response.json()
         except (requests.RequestException, ValueError) as e:
