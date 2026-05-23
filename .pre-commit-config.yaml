@@ -2,7 +2,7 @@
 # Integrated with .claude/hooks/ for comprehensive validation
 # See https://pre-commit.com for more information
 
-default_stages: [commit, push]
+default_stages: [pre-commit, pre-push]
 fail_fast: false
 
 repos:
@@ -138,7 +138,7 @@ repos:
         language: system
         files: ^\.claude/hooks/.*\.(md|yaml|sh)$
         pass_filenames: false
-        stages: [commit]
+        stages: [pre-commit]
 
 # Integration with .claude/hooks/
 # This configuration works alongside Claude Code's hook system:
