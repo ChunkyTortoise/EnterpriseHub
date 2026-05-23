@@ -1,7 +1,6 @@
 """Tests for Advanced Parser module."""
 
 import pytest
-
 from src.core.exceptions import RetrievalError
 from src.query.advanced_parser import (
     AdvancedQueryParser,

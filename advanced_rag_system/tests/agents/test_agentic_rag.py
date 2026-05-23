@@ -1,7 +1,6 @@
 """Tests for the agentic RAG pipeline orchestrator."""
 
 import pytest
-
 from src.agents.agentic_rag import (
     AgenticRAG,
     AgenticRAGConfig,

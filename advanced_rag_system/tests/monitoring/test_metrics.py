@@ -18,7 +18,6 @@ from unittest.mock import Mock
 
 import pytest
 from prometheus_client.core import CollectorRegistry
-
 from src.monitoring.metrics import MetricsCollector, track_latency
 
 # =============================================================================

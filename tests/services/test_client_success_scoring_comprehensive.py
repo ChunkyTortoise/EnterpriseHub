@@ -29,15 +29,22 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 try:
+    from ghl_real_estate_ai.services.client_success_integration_service import (
+        ClientSuccessIntegrationService,
+        PerformanceSnapshot,
+    )
+    from ghl_real_estate_ai.services.premium_service_justification_engine import (
+        GuaranteeType,
+        PremiumServiceJustificationEngine,
+        PricingRecommendation,
+    )
+    from ghl_real_estate_ai.services.premium_service_justification_engine import ServiceTier as PremiumServiceTier
+
     from ghl_real_estate_ai.services.client_outcome_verification_service import (
         ClientOutcomeVerificationService,
         TransactionVerification,
         VerificationLevel,
         VerificationSource,
-    )
-    from ghl_real_estate_ai.services.client_success_integration_service import (
-        ClientSuccessIntegrationService,
-        PerformanceSnapshot,
     )
     from ghl_real_estate_ai.services.client_success_scoring_service import (
         AgentPerformanceReport,
@@ -46,12 +53,6 @@ try:
         SuccessMetric,
         VerificationStatus,
     )
-    from ghl_real_estate_ai.services.premium_service_justification_engine import (
-        GuaranteeType,
-        PremiumServiceJustificationEngine,
-        PricingRecommendation,
-    )
-    from ghl_real_estate_ai.services.premium_service_justification_engine import ServiceTier as PremiumServiceTier
     from ghl_real_estate_ai.services.value_justification_calculator import (
         CompetitorType,
         ServiceTier,

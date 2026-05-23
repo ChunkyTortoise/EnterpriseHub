@@ -12,7 +12,6 @@ import statistics
 import time
 
 import pytest
-
 from src.retrieval.query import (
     ExpansionConfig,
     HyDEConfig,

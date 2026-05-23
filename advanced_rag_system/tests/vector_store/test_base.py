@@ -4,7 +4,6 @@ from typing import List, Optional
 from uuid import UUID, uuid4
 
 import pytest
-
 from src.core.exceptions import VectorStoreError
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.vector_store.base import SearchOptions, VectorStore, VectorStoreConfig

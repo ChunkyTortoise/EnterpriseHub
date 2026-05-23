@@ -18,7 +18,6 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
 import pytest
-
 from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.core.types import QueryType as CoreQueryType

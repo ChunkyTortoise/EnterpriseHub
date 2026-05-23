@@ -1,7 +1,6 @@
 """Tests for the reflection and self-correction engine."""
 
 import pytest
-
 from src.agents.query_planner import (
     IntentAnalysis,
     QueryIntent,

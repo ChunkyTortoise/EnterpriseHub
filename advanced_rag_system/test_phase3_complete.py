@@ -13,7 +13,6 @@ import uuid
 from typing import List
 
 import pytest
-
 from src.core.types import DocumentChunk
 from src.reranking import ReRankingConfig, ReRankingStrategy
 from src.retrieval.advanced_hybrid_searcher import AdvancedHybridSearcher, AdvancedSearchConfig

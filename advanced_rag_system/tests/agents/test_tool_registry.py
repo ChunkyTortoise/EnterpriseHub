@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 import pytest
-
 from src.agents.tool_registry import (
     CalculatorTool,
     ToolMetadata,
