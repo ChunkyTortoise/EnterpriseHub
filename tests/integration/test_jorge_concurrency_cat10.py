@@ -77,12 +77,7 @@ def _build_engine(cm=None) -> "JorgeSellerEngine":
 
 def _is_valid_response(r) -> bool:
     """Return True if r looks like a well-formed engine response dict."""
-    return (
-        isinstance(r, dict)
-        and "message" in r
-        and isinstance(r["message"], str)
-        and len(r["message"]) > 0
-    )
+    return isinstance(r, dict) and "message" in r and isinstance(r["message"], str) and len(r["message"]) > 0
 
 
 # ---------------------------------------------------------------------------
@@ -112,12 +107,8 @@ async def test_two_simultaneous_messages_both_return_valid_responses() -> None:
     )
 
     for i, r in enumerate(results):
-        assert not isinstance(r, Exception), (
-            f"Concurrent call {i} raised an exception: {r}"
-        )
-        assert _is_valid_response(r), (
-            f"Concurrent call {i} returned an invalid response dict: {r!r}"
-        )
+        assert not isinstance(r, Exception), f"Concurrent call {i} raised an exception: {r}"
+        assert _is_valid_response(r), f"Concurrent call {i} returned an invalid response dict: {r!r}"
         # Temperature must be a known value — not None or garbage
         assert r.get("temperature") in ("hot", "warm", "cold"), (
             f"Concurrent call {i} produced unknown temperature: {r.get('temperature')!r}"
@@ -148,22 +139,15 @@ async def test_rapid_fire_five_concurrent_turns_all_succeed() -> None:
     engine = _build_engine()
 
     results = await asyncio.gather(
-        *[
-            engine.process_seller_response(contact_id, msg, "loc-cat10")
-            for msg in messages
-        ],
+        *[engine.process_seller_response(contact_id, msg, "loc-cat10") for msg in messages],
         return_exceptions=True,
     )
 
     exceptions = [r for r in results if isinstance(r, Exception)]
-    assert len(exceptions) == 0, (
-        f"Rapid-fire calls raised {len(exceptions)} exception(s): {exceptions}"
-    )
+    assert len(exceptions) == 0, f"Rapid-fire calls raised {len(exceptions)} exception(s): {exceptions}"
 
     for i, r in enumerate(results):
-        assert _is_valid_response(r), (
-            f"Rapid-fire call {i} returned invalid response: {r!r}"
-        )
+        assert _is_valid_response(r), f"Rapid-fire call {i} returned invalid response: {r!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -194,9 +178,7 @@ async def test_concurrent_calls_do_not_silently_drop_extracted_fields() -> None:
     )
 
     for i, r in enumerate(results):
-        assert not isinstance(r, Exception), (
-            f"Call {i} raised: {r}"
-        )
+        assert not isinstance(r, Exception), f"Call {i} raised: {r}"
         assert _is_valid_response(r), f"Call {i} invalid response: {r!r}"
 
     # update_context must have been called at least twice — once per serialised turn
@@ -244,13 +226,9 @@ async def test_session_isolation_between_contacts() -> None:
     # Contact A's conversation manager must never receive contact B's ID
     for call_args in cm_a.update_context.await_args_list:
         cid = call_args.args[0] if call_args.args else call_args.kwargs.get("contact_id")
-        assert cid == contact_a, (
-            f"Contact A's CM received update for wrong contact ID: {cid!r}"
-        )
+        assert cid == contact_a, f"Contact A's CM received update for wrong contact ID: {cid!r}"
 
     # Contact B's conversation manager must never receive contact A's ID
     for call_args in cm_b.update_context.await_args_list:
         cid = call_args.args[0] if call_args.args else call_args.kwargs.get("contact_id")
-        assert cid == contact_b, (
-            f"Contact B's CM received update for wrong contact ID: {cid!r}"
-        )
+        assert cid == contact_b, f"Contact B's CM received update for wrong contact ID: {cid!r}"

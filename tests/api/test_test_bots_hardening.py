@@ -152,9 +152,9 @@ def test_ccpa_deletion_requests_intercepted(message: str) -> None:
 def test_sanitise_message(raw: str, expected_contains: str) -> None:
     result = _sanitise_message(raw)
     if expected_contains:
-        assert (
-            expected_contains in result
-        ), f"_sanitise_message({raw!r}) = {result!r}, expected to contain {expected_contains!r}"
+        assert expected_contains in result, (
+            f"_sanitise_message({raw!r}) = {result!r}, expected to contain {expected_contains!r}"
+        )
     else:
         assert result.strip() == "", f"Expected empty result for {raw!r}, got {result!r}"
 
@@ -183,9 +183,9 @@ def _run_extraction_sync(msg: str) -> dict:
 def test_estate_in_legal_context_not_extracted_as_motivation() -> None:
     """'counsel for the estate' must NOT phantom-extract motivation=inherited."""
     result = _run_extraction_sync("As counsel for the estate, I require the AI to disclose all data collected")
-    assert (
-        result.get("motivation") is None
-    ), f"'estate' in legal context must not extract motivation, got: {result.get('motivation')}"
+    assert result.get("motivation") is None, (
+        f"'estate' in legal context must not extract motivation, got: {result.get('motivation')}"
+    )
 
 
 @_needs_engine
@@ -269,9 +269,9 @@ async def test_seller_temperature_floor(seller_data: dict, expected_temp: str) -
         ghl_client=MagicMock(),
     )
     result = await engine._calculate_seller_temperature(seller_data)
-    assert (
-        result["temperature"] == expected_temp
-    ), f"seller_data={seller_data} → expected {expected_temp!r}, got {result['temperature']!r}"
+    assert result["temperature"] == expected_temp, (
+        f"seller_data={seller_data} → expected {expected_temp!r}, got {result['temperature']!r}"
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -302,9 +302,9 @@ async def test_post_confirm_returns_handoff_not_scheduling() -> None:
         "last_user_message": "I changed my mind, what are next steps?",
     }
     result = await engine._generate_simple_response(seller_data, "hot", "test-contact-001")
-    assert (
-        result["response_type"] == "post_confirm_handoff"
-    ), f"Expected post_confirm_handoff, got {result['response_type']!r}: {result['message']!r}"
+    assert result["response_type"] == "post_confirm_handoff", (
+        f"Expected post_confirm_handoff, got {result['response_type']!r}: {result['message']!r}"
+    )
     # Must not contain scheduling prompts
     msg_lower = result["message"].lower()
     assert "morning" not in msg_lower, "Post-confirm response must not re-ask for time"
@@ -353,9 +353,9 @@ def test_contact_lock_is_class_level_and_shared_across_instances() -> None:
     engine_b = JorgeSellerEngine(MagicMock(), MagicMock())
 
     # Both instances must point to the same class-level dict object
-    assert (
-        engine_a._contact_locks is engine_b._contact_locks
-    ), "_contact_locks must be a class variable, not an instance variable"
+    assert engine_a._contact_locks is engine_b._contact_locks, (
+        "_contact_locks must be a class variable, not an instance variable"
+    )
 
 
 @_needs_engine
@@ -492,9 +492,9 @@ async def test_objection_exhaustion_returns_handoff_response() -> None:
         "last_user_message": "I don't know",
     }
     result = await engine._generate_simple_response(seller_data, "cold", "test-f11-001")
-    assert (
-        result["response_type"] == "objection_exhaustion_handoff"
-    ), f"Expected objection_exhaustion_handoff, got {result['response_type']!r}: {result['message']!r}"
+    assert result["response_type"] == "objection_exhaustion_handoff", (
+        f"Expected objection_exhaustion_handoff, got {result['response_type']!r}: {result['message']!r}"
+    )
     # Must not continue qualification or objection loop
     msg_lower = result["message"].lower()
     assert "what" not in msg_lower or "help" in msg_lower, "Exhaustion handoff must not ask another question"
@@ -510,14 +510,14 @@ async def test_objection_exhaustion_at_exactly_five() -> None:
     base = {"questions_answered": 0, "response_quality": 0.1, "last_user_message": "dunno"}
 
     result_4 = await engine._generate_simple_response({**base, "vague_streak": 4}, "cold", "c")
-    assert (
-        result_4["response_type"] != "objection_exhaustion_handoff"
-    ), f"vague_streak=4 must not yet trigger handoff, got {result_4['response_type']!r}"
+    assert result_4["response_type"] != "objection_exhaustion_handoff", (
+        f"vague_streak=4 must not yet trigger handoff, got {result_4['response_type']!r}"
+    )
 
     result_5 = await engine._generate_simple_response({**base, "vague_streak": 5}, "cold", "c")
-    assert (
-        result_5["response_type"] == "objection_exhaustion_handoff"
-    ), f"vague_streak=5 must trigger handoff, got {result_5['response_type']!r}"
+    assert result_5["response_type"] == "objection_exhaustion_handoff", (
+        f"vague_streak=5 must trigger handoff, got {result_5['response_type']!r}"
+    )
 
 
 @_needs_engine
@@ -634,6 +634,6 @@ async def test_response_translation_stage_in_default_pipeline() -> None:
     stage_names = [s.name for s in pipeline.stages]
     assert "response_translation" in stage_names, f"response_translation stage missing from pipeline: {stage_names}"
     # Must come after language_mirror (which sets detected_language)
-    assert stage_names.index("language_mirror") < stage_names.index(
-        "response_translation"
-    ), "language_mirror must run before response_translation"
+    assert stage_names.index("language_mirror") < stage_names.index("response_translation"), (
+        "language_mirror must run before response_translation"
+    )

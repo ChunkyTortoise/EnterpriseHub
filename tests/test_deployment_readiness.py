@@ -212,9 +212,9 @@ class TestDeploymentReadiness:
         ]
 
         for tag in expected_tags:
-            assert (
-                tag in config_content or tag in webhook_content
-            ), f"Tag '{tag}' not found in jorge_config.py or webhook.py"
+            assert tag in config_content or tag in webhook_content, (
+                f"Tag '{tag}' not found in jorge_config.py or webhook.py"
+            )
 
         # Verify deactivation tags are used consistently
         deactivation_tags = ["AI-Off", "Qualified", "Stop-Bot", "AI-Qualified"]

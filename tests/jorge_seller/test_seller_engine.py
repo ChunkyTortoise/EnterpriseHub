@@ -269,9 +269,9 @@ async def test_configurable_thresholds_custom_hot():
     temperature_result = await seller_engine._calculate_seller_temperature(seller_data)
 
     # Assert - should be HOT with custom thresholds (3 questions >= 3, quality 0.65 >= 0.6, timeline True)
-    assert (
-        temperature_result["temperature"] == "hot"
-    ), f"Expected 'hot' but got '{temperature_result['temperature']}' with custom thresholds"
+    assert temperature_result["temperature"] == "hot", (
+        f"Expected 'hot' but got '{temperature_result['temperature']}' with custom thresholds"
+    )
 
     # Verify thresholds were applied
     assert "analytics" in temperature_result
@@ -309,9 +309,9 @@ async def test_configurable_thresholds_custom_warm():
     temperature_result = await seller_engine._calculate_seller_temperature(seller_data)
 
     # Assert - should be WARM with custom thresholds (2 questions >= 2, quality 0.45 >= 0.4)
-    assert (
-        temperature_result["temperature"] == "warm"
-    ), f"Expected 'warm' but got '{temperature_result['temperature']}' with custom thresholds"
+    assert temperature_result["temperature"] == "warm", (
+        f"Expected 'warm' but got '{temperature_result['temperature']}' with custom thresholds"
+    )
 
     # Verify thresholds were applied
     assert "analytics" in temperature_result
@@ -389,9 +389,9 @@ class TestSellerMotivationRegexOverride:
             message,
             {"motivation": "other"},  # LLM fallback already present
         )
-        assert (
-            result.get("motivation") == "relocation"
-        ), f"Expected 'relocation' but got {result.get('motivation')!r} for: {message!r}"
+        assert result.get("motivation") == "relocation", (
+            f"Expected 'relocation' but got {result.get('motivation')!r} for: {message!r}"
+        )
 
     @pytest.mark.parametrize("message", _RELOCATION_MESSAGES)
     def test_relocation_overrides_none_motivation(self, engine, message):

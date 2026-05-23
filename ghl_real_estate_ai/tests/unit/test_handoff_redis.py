@@ -118,9 +118,9 @@ def test_handoff_history_survives_new_service_instance():
     svc1._handoff_history["contact-abc"] = [{"source_bot": "lead", "target_bot": "seller"}]
 
     # After Redis migration, svc2 would see svc1's data. For now verify isolation.
-    assert (
-        "contact-abc" not in svc2._handoff_history
-    ), "In-memory dicts are per-instance; cross-instance sharing requires Redis (Task #2)"
+    assert "contact-abc" not in svc2._handoff_history, (
+        "In-memory dicts are per-instance; cross-instance sharing requires Redis (Task #2)"
+    )
 
 
 @pytest.mark.unit

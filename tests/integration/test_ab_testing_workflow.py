@@ -47,9 +47,9 @@ class TestABTestingWorkflow:
         # Call get_variant 9 more times for the same contact
         for i in range(9):
             variant = await service.get_variant("greeting_style", contact_id)
-            assert (
-                variant == first_variant
-            ), f"Variant changed on call {i + 2}: expected '{first_variant}', got '{variant}'"
+            assert variant == first_variant, (
+                f"Variant changed on call {i + 2}: expected '{first_variant}', got '{variant}'"
+            )
 
         # Verify the contact appears exactly once in the assignments
         # (get_variant deduplicates assignment tracking)

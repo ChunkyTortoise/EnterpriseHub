@@ -372,9 +372,9 @@ class TestFallbackMessageValidation:
         """Seller fallback itself must pass compliance."""
         guard.llm_client.agenerate.return_value = llm_passed_response
         status, reason, violations = await guard.audit_message(SELLER_FALLBACK)
-        assert (
-            status == ComplianceStatus.PASSED
-        ), f"Seller fallback failed compliance: {reason}, violations={violations}"
+        assert status == ComplianceStatus.PASSED, (
+            f"Seller fallback failed compliance: {reason}, violations={violations}"
+        )
 
     async def test_buyer_fallback_passes_compliance(self, guard, llm_passed_response):
         """Buyer fallback itself must pass compliance."""

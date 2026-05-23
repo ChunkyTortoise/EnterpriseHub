@@ -78,7 +78,9 @@ with col1:
 
 with col2:
     st.metric(
-        "Cache Savings", f"${total_savings:.2f}", delta=f"{total_savings/(total_cost+total_savings)*100:.0f}% saved"
+        "Cache Savings",
+        f"${total_savings:.2f}",
+        delta=f"{total_savings / (total_cost + total_savings) * 100:.0f}% saved",
     )
 
 with col3:

@@ -151,16 +151,16 @@ async def test_message_template_selection():
 
     # Test 24h template
     msg_24h = engine.get_message_for_trigger(ReengagementTrigger.HOURS_24, contact_name="Sarah", action="buy")
-    assert (
-        "still a priority" in msg_24h.lower() or "still interested" in msg_24h.lower()
-    ), "24h message should ask about priority"
+    assert "still a priority" in msg_24h.lower() or "still interested" in msg_24h.lower(), (
+        "24h message should ask about priority"
+    )
     print(f"  24h message: {msg_24h}")
 
     # Test 48h template
     msg_48h = engine.get_message_for_trigger(ReengagementTrigger.HOURS_48, contact_name="Mike", action="sell")
-    assert (
-        "close your file" in msg_48h.lower() or "still looking" in msg_48h.lower()
-    ), "48h message should mention closing file"
+    assert "close your file" in msg_48h.lower() or "still looking" in msg_48h.lower(), (
+        "48h message should mention closing file"
+    )
     print(f"  48h message: {msg_48h}")
 
     # Test 72h template

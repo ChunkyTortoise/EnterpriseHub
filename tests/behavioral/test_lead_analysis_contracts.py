@@ -119,26 +119,26 @@ class TestHighIntentLeadContracts:
         reasoning = self.scorer.calculate_with_reasoning(context)
 
         # THEN: Business contract must be satisfied
-        assert (
-            score >= self.high_intent_contract.expected_score_range[0]
-        ), f"High-intent lead scored too low: {score} < {self.high_intent_contract.expected_score_range[0]}"
+        assert score >= self.high_intent_contract.expected_score_range[0], (
+            f"High-intent lead scored too low: {score} < {self.high_intent_contract.expected_score_range[0]}"
+        )
 
-        assert (
-            classification == self.high_intent_contract.expected_classification
-        ), f"High-intent lead misclassified as '{classification}', expected '{self.high_intent_contract.expected_classification}'"
+        assert classification == self.high_intent_contract.expected_classification, (
+            f"High-intent lead misclassified as '{classification}', expected '{self.high_intent_contract.expected_classification}'"
+        )
 
         # Business outcome validation
         recommended_actions = reasoning.get("recommended_actions", [])
-        assert any(
-            "immediately" in action.lower() or "SMS" in action for action in recommended_actions
-        ), f"High-intent lead missing immediate action: {recommended_actions}"
+        assert any("immediately" in action.lower() or "SMS" in action for action in recommended_actions), (
+            f"High-intent lead missing immediate action: {recommended_actions}"
+        )
 
         # Data quality validation
         answered_questions = len([k for k, v in immediate_buyer.items() if v and str(v).strip()])
         data_quality = answered_questions / 7.0  # 7 total possible questions
-        assert (
-            data_quality >= self.high_intent_contract.minimum_data_quality
-        ), f"High-intent lead data quality too low: {data_quality} < {self.high_intent_contract.minimum_data_quality}"
+        assert data_quality >= self.high_intent_contract.minimum_data_quality, (
+            f"High-intent lead data quality too low: {data_quality} < {self.high_intent_contract.minimum_data_quality}"
+        )
 
     @pytest.mark.critical
     def test_qualified_buyer_with_urgency_contract(self):
@@ -275,9 +275,9 @@ class TestLeadTemperatureConsistency:
 
         # THEN: Progressive warming must occur
         for i in range(1, len(scores)):
-            assert (
-                scores[i] >= scores[i - 1]
-            ), f"Score decreased from stage {i - 1} to {i}: {scores[i - 1]} -> {scores[i]}"
+            assert scores[i] >= scores[i - 1], (
+                f"Score decreased from stage {i - 1} to {i}: {scores[i - 1]} -> {scores[i]}"
+            )
 
         # Validate expected temperature transitions
         expected_progression = ["cold", "cold", "warm", "hot", "hot", "hot"]
@@ -373,9 +373,9 @@ class TestPropertyRecommendationContracts:
 
             except Exception as e:
                 # Contract: System should handle property analysis gracefully
-                assert (
-                    "budget" in str(e).lower() or "analysis" in str(e).lower()
-                ), f"Unexpected error in property analysis: {e}"
+                assert "budget" in str(e).lower() or "analysis" in str(e).lower(), (
+                    f"Unexpected error in property analysis: {e}"
+                )
 
 
 class TestBusinessOutcomeValidation:
@@ -504,9 +504,9 @@ class TestBusinessOutcomeValidation:
                     aggressive_word in a.lower() for aggressive_word in ["immediately", "pressure", "close", "urgent"]
                 )
             ]
-            assert (
-                len(aggressive_actions) == 0
-            ), f"{profile_data['profile']} has inappropriate aggressive actions: {aggressive_actions}"
+            assert len(aggressive_actions) == 0, (
+                f"{profile_data['profile']} has inappropriate aggressive actions: {aggressive_actions}"
+            )
 
 
 class TestCrossServiceBehavioralConsistency:
@@ -593,9 +593,9 @@ class TestCrossServiceBehavioralConsistency:
             reasoning = self.scorer.calculate_with_reasoning(context)
 
             # THEN: Actions must align with score level
-            assert (
-                score == scenario["expected_score"]
-            ), f"{scenario['name']} score mismatch: {score} vs {scenario['expected_score']}"
+            assert score == scenario["expected_score"], (
+                f"{scenario['name']} score mismatch: {score} vs {scenario['expected_score']}"
+            )
 
             actions = reasoning.get("recommended_actions", [])
             action_text = " ".join(actions).lower()
@@ -644,9 +644,9 @@ class TestBusinessRuleCompliance:
         assert len(unique_scores) == 1, f"Discriminatory scoring detected: {scores}"
 
         expected_score = 4  # budget + timeline + location + bedrooms
-        assert all(
-            score == expected_score for score in scores
-        ), f"Fair housing compliance failed: expected {expected_score}, got {scores}"
+        assert all(score == expected_score for score in scores), (
+            f"Fair housing compliance failed: expected {expected_score}, got {scores}"
+        )
 
     def test_data_privacy_contract(self):
         """
