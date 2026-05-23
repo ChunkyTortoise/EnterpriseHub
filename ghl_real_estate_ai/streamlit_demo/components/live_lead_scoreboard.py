@@ -99,7 +99,7 @@ class LiveLeadScoreboard:
         ]
         import hashlib
 
-        hash_val = int(hashlib.md5(lead_id.encode()).hexdigest(), 16)
+        hash_val = int(hashlib.md5(lead_id.encode(), usedforsecurity=False).hexdigest(), 16)
         return names[hash_val % len(names)]
 
     def _get_score_status(self, score: int) -> str:

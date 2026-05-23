@@ -1157,7 +1157,7 @@ class NeuralInferenceEngine:
         }
 
         key_str = json.dumps(key_data, sort_keys=True)
-        return hashlib.md5(key_str.encode()).hexdigest()
+        return hashlib.md5(key_str.encode(), usedforsecurity=False).hexdigest()
 
     def get_performance_metrics(self) -> InferenceMetrics:
         """Get current performance metrics."""

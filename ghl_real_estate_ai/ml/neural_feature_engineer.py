@@ -1309,7 +1309,7 @@ class NeuralFeatureEngineer:
         """Create hash of data for caching."""
         # Create a simplified hash of the data
         data_str = json.dumps(data, sort_keys=True, default=str)
-        return hashlib.md5(data_str.encode()).hexdigest()[:16]
+        return hashlib.md5(data_str.encode(), usedforsecurity=False).hexdigest()[:16]
 
     def get_feature_statistics(self) -> Dict[str, Any]:
         """Get statistics about feature engineering pipeline."""

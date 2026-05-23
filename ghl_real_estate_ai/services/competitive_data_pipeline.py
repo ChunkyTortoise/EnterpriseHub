@@ -107,7 +107,7 @@ class CompetitorDataPoint:
     """Single competitive data point with metadata."""
 
     # Data identification
-    data_id: str = field(default_factory=lambda: hashlib.md5(f"{datetime.now().isoformat()}".encode()).hexdigest()[:12])
+    data_id: str = field(default_factory=lambda: hashlib.md5(f"{datetime.now().isoformat()}".encode(), usedforsecurity=False).hexdigest()[:12])
     competitor_id: str = ""
     data_source: DataSource = DataSource.WEB_SCRAPING
     data_type: DataType = DataType.PRICING
@@ -145,7 +145,7 @@ class MarketInsight:
     """Market intelligence insight from data analysis."""
 
     insight_id: str = field(
-        default_factory=lambda: hashlib.md5(f"{datetime.now().isoformat()}".encode()).hexdigest()[:12]
+        default_factory=lambda: hashlib.md5(f"{datetime.now().isoformat()}".encode(), usedforsecurity=False).hexdigest()[:12]
     )
     insight_type: str = "market_trend"
     market_area: str = ""
@@ -177,7 +177,7 @@ class ThreatAssessment:
     """Competitive threat assessment result."""
 
     threat_id: str = field(
-        default_factory=lambda: hashlib.md5(f"{datetime.now().isoformat()}".encode()).hexdigest()[:12]
+        default_factory=lambda: hashlib.md5(f"{datetime.now().isoformat()}".encode(), usedforsecurity=False).hexdigest()[:12]
     )
     competitor_id: str = ""
     threat_level: ThreatLevel = ThreatLevel.LOW

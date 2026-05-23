@@ -86,12 +86,15 @@ class InferenceRequest:
         # Create stable hash from lead data and conversation
         content = {
             "lead_id": self.lead_id,
-            "lead_data_hash": hashlib.md5(json.dumps(self.lead_data, sort_keys=True, default=str).encode()).hexdigest(),
+            "lead_data_hash": hashlib.md5(
+                json.dumps(self.lead_data, sort_keys=True, default=str).encode(), usedforsecurity=False
+            ).hexdigest(),
             "conversation_hash": hashlib.md5(
-                json.dumps(self.conversation_history, sort_keys=True, default=str).encode()
+                json.dumps(self.conversation_history, sort_keys=True, default=str).encode(),
+                usedforsecurity=False,
             ).hexdigest(),
         }
-        return f"inference_v2:{hashlib.md5(json.dumps(content, sort_keys=True).encode()).hexdigest()}"
+        return f"inference_v2:{hashlib.md5(json.dumps(content, sort_keys=True).encode(), usedforsecurity=False).hexdigest()}"
 
 
 @dataclass

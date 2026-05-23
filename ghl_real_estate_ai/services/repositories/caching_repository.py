@@ -423,7 +423,7 @@ class CachingRepository(IPropertyRepository):
 
         # Create hash from deterministic representation
         query_json = json.dumps(query_dict, sort_keys=True, default=str)
-        query_hash = hashlib.md5(query_json.encode()).hexdigest()
+        query_hash = hashlib.md5(query_json.encode(), usedforsecurity=False).hexdigest()
 
         return f"query:{query_hash}"
 

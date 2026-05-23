@@ -282,7 +282,7 @@ class BICacheService:
         """Generate cache key for analytics query."""
         # Sort params for consistent key generation
         sorted_params = json.dumps(query_params, sort_keys=True, default=str)
-        param_hash = hashlib.md5(sorted_params.encode()).hexdigest()[:8]
+        param_hash = hashlib.md5(sorted_params.encode(), usedforsecurity=False).hexdigest()[:8]
         return f"bi:analytics:{query_type}:{param_hash}"
 
     def _generate_query_hash(self, query_type: str, query_params: Dict[str, Any]) -> str:

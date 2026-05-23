@@ -136,7 +136,7 @@ class SHAPAnalyticsEnhanced:
                 "comparison": include_comparison,
                 "comparison_ids": sorted(comparison_lead_ids) if comparison_lead_ids else None,
             }
-            cache_key = f"shap:waterfall:{hashlib.md5(json.dumps(cache_key_data, sort_keys=True).encode()).hexdigest()}"
+            cache_key = f"shap:waterfall:{hashlib.md5(json.dumps(cache_key_data, sort_keys=True).encode(), usedforsecurity=False).hexdigest()}"
 
             # Check cache first for performance
             cached_result = await self.cache_service.get(cache_key)

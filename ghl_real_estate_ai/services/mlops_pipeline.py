@@ -960,7 +960,7 @@ class ModelTrainingPipeline:
                 model_type=config["model_type"],
                 algorithm=config.get("algorithm", "random_forest"),
                 framework="sklearn",
-                training_data_hash=hashlib.md5(str(config.get("training_data_config", "")).encode()).hexdigest(),
+                training_data_hash=hashlib.md5(str(config.get("training_data_config", "")).encode(), usedforsecurity=False).hexdigest(),
                 training_samples=config.get("training_samples", 1000),
                 feature_count=config.get("feature_count", 10),
                 training_duration_seconds=5.0,

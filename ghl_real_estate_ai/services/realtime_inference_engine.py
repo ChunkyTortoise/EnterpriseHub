@@ -579,7 +579,7 @@ class ModelManager:
         sorted_features = sorted(features.items())
         feature_str = json.dumps(sorted_features, sort_keys=True)
 
-        return hashlib.md5(f"{model_id}:{feature_str}".encode()).hexdigest()
+        return hashlib.md5(f"{model_id}:{feature_str}".encode(), usedforsecurity=False).hexdigest()
 
     async def get_model_health(self) -> Dict[str, Any]:
         """Get health status of all models"""
@@ -867,7 +867,7 @@ class RealTimeInferenceEngine:
         if not request.cache_key:
             # Generate cache key if not provided
             feature_str = json.dumps(request.features, sort_keys=True)
-            request.cache_key = hashlib.md5(f"{request.model_type}:{feature_str}".encode()).hexdigest()
+            request.cache_key = hashlib.md5(f"{request.model_type}:{feature_str}".encode(), usedforsecurity=False).hexdigest()
 
         cached_response = await self.cache.get(f"inference:{request.cache_key}")
 

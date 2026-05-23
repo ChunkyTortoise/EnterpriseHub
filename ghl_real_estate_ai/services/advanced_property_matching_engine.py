@@ -784,7 +784,7 @@ class AdvancedPropertyMatchingEngine:
         """Generate cache key from lead ID and preferences."""
         # Create stable hash of preferences
         prefs_str = json.dumps(preferences, sort_keys=True)
-        prefs_hash = hashlib.md5(prefs_str.encode()).hexdigest()[:8]
+        prefs_hash = hashlib.md5(prefs_str.encode(), usedforsecurity=False).hexdigest()[:8]
 
         return f"behavioral_matches:{lead_id}:{prefs_hash}"
 

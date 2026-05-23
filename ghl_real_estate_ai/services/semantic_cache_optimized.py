@@ -115,7 +115,7 @@ class SemanticResponseCacheOptimized:
         uncached_indices = []
 
         for i, text in enumerate(texts):
-            text_hash = hashlib.md5(text.encode()).hexdigest()
+            text_hash = hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()
             if text_hash in self.embeddings_cache:
                 cached_embeddings.append((i, self.embeddings_cache[text_hash]))
             else:
@@ -142,7 +142,7 @@ class SemanticResponseCacheOptimized:
 
             # Cache all new embeddings
             for text, emb in zip(uncached_texts, new_embeddings):
-                text_hash = hashlib.md5(text.encode()).hexdigest()
+                text_hash = hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()
                 self.embeddings_cache[text_hash] = emb
 
                 # Also cache in Redis

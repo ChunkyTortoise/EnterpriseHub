@@ -1001,7 +1001,7 @@ class TemplateLibraryService:
                     return None
 
                 # Use consistent hashing to assign template
-                hash_value = int(hashlib.md5(f"{test_id}:{user_hash}".encode()).hexdigest(), 16)
+                hash_value = int(hashlib.md5(f"{test_id}:{user_hash}".encode(), usedforsecurity=False).hexdigest(), 16)
                 normalized_hash = (hash_value % 100) / 100.0
 
                 if normalized_hash < test_row["traffic_split"]:

@@ -505,7 +505,7 @@ class AdvancedAnalyticsVisualizationEngine:
 
             # Cache insights for future reference
             insight_key = (
-                f"predictive_insights:{metric_type.value}:{hashlib.md5(str(historical_data).encode()).hexdigest()}"
+                f"predictive_insights:{metric_type.value}:{hashlib.md5(str(historical_data).encode(), usedforsecurity=False).hexdigest()}"
             )
             await self.cache.set(
                 insight_key,
@@ -967,7 +967,7 @@ class AdvancedAnalyticsVisualizationEngine:
     def _generate_query_hash(self, query: AnalyticsQuery) -> str:
         """Generate unique hash for query caching"""
         query_string = f"{query.metrics}_{query.dimensions}_{query.filters}_{query.start_date}_{query.end_date}"
-        return hashlib.md5(query_string.encode()).hexdigest()
+        return hashlib.md5(query_string.encode(), usedforsecurity=False).hexdigest()
 
 
 # Global instance

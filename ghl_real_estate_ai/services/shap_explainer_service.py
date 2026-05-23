@@ -750,7 +750,7 @@ class SHAPExplainerService:
 
     def _generate_cache_key(self, lead_id: str, features: np.ndarray) -> str:
         """Generate cache key based on lead ID and feature values"""
-        feature_hash = hashlib.md5(features.tobytes()).hexdigest()[:8]
+        feature_hash = hashlib.md5(features.tobytes(), usedforsecurity=False).hexdigest()[:8]
         return f"shap_explanation:{lead_id}:{feature_hash}"
 
     def _prepare_waterfall_data(

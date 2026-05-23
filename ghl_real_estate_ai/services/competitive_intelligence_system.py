@@ -952,7 +952,7 @@ class CompetitiveIntelligenceSystem:
     ) -> IntelligenceReport:
         """Build comprehensive intelligence report from insights."""
         try:
-            report_id = hashlib.md5(f"{'-'.join(market_areas)}{datetime.now().isoformat()}".encode()).hexdigest()[:12]
+            report_id = hashlib.md5(f"{'-'.join(market_areas)}{datetime.now().isoformat()}".encode(), usedforsecurity=False).hexdigest()[:12]
 
             # Analyze insights for executive summary
             high_priority_insights = [i for i in insights if i.action_required and i.urgency == "immediate"]
