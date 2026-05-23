@@ -114,7 +114,7 @@ class WebhookRetryManager:
         if not event_id:
             import hashlib
 
-            event_id = hashlib.md5(json.dumps(payload, sort_keys=True).encode()).hexdigest()
+            event_id = hashlib.md5(json.dumps(payload, sort_keys=True).encode(), usedforsecurity=False).hexdigest()
 
         # Check if already at max attempts
         if attempt >= self.MAX_TOTAL_ATTEMPTS:

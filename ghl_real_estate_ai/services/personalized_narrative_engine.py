@@ -542,11 +542,11 @@ Generate ONLY the narrative text - no headers, bullet points, or additional form
         lifestyle_hash = ""
         if lifestyle_scores:
             lifestyle_data = f"{lifestyle_scores.overall_score}_{lifestyle_scores.schools.overall_score}_{lifestyle_scores.commute.overall_score}"
-            lifestyle_hash = hashlib.md5(lifestyle_data.encode()).hexdigest()[:8]
+            lifestyle_hash = hashlib.md5(lifestyle_data.encode(), usedforsecurity=False).hexdigest()[:8]
 
         # Include key lead preferences
         preferences_data = str(lead_data.get("lifestyle_priorities", []) + [lead_data.get("family_status", "")])
-        preferences_hash = hashlib.md5(preferences_data.encode()).hexdigest()[:8]
+        preferences_hash = hashlib.md5(preferences_data.encode(), usedforsecurity=False).hexdigest()[:8]
 
         cache_key = (
             f"narrative_{property_id}_{lead_id}_{lifestyle_hash}_{preferences_hash}_{style.value}_{length.value}"

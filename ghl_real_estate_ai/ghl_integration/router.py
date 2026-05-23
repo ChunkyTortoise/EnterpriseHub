@@ -269,7 +269,7 @@ async def handle_ghl_webhook(
         # Extract event ID for deduplication
         event_id = payload.get("trace_id") or payload.get("data", {}).get("id") or payload.get("event_id")
         if not event_id:
-            event_id = hashlib.md5(body).hexdigest()
+            event_id = hashlib.md5(body, usedforsecurity=False).hexdigest()
 
         # Check deduplication
         is_duplicate = await _ghl_router.check_deduplication(event_id, event_type)

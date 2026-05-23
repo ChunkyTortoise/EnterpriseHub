@@ -140,7 +140,7 @@ def create_optimized_chart(chart_type: str, data_hash: str, config: Dict[str, An
 @lru_cache(maxsize=128)
 def generate_data_hash(filters_str: str) -> str:
     """Generate hash for filter combinations (LRU cached)"""
-    return hashlib.md5(filters_str.encode()).hexdigest()[:8]
+    return hashlib.md5(filters_str.encode(), usedforsecurity=False).hexdigest()[:8]
 
 
 class OptimizedChartRenderer:

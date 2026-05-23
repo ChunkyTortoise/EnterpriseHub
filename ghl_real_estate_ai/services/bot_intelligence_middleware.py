@@ -145,7 +145,7 @@ class BotIntelligenceMiddleware:
         """Create consistent cache key for intelligence context."""
         # Include conversation context hash for cache invalidation on changes
         key_data = f"bot_intel:{lead_id}:{location_id}:{bot_type}"
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
 
     async def enhance_bot_context(
         self,

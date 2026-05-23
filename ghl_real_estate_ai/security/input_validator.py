@@ -285,7 +285,7 @@ class InputValidator:
             # Check for dangerous patterns
             if parsed.hostname:
                 # Block private/localhost addresses in production
-                dangerous_hosts = ["localhost", "127.0.0.1", "0.0.0.0", "::1"]
+                dangerous_hosts = ["localhost", "127.0.0.1", "0.0.0.0", "::1"]  # nosec B104 - string is in a blocklist, not a bind target
                 if parsed.hostname.lower() in dangerous_hosts:
                     return ValidationResult(
                         is_valid=False,

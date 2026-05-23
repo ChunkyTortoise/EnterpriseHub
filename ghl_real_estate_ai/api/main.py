@@ -1122,7 +1122,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "api.main:app",
-        host="0.0.0.0",
+        host="0.0.0.0",  # nosec B104 - container deployment expects bind-all
         port=8000,
         reload=settings.environment == "development",
         log_level=settings.log_level.lower(),

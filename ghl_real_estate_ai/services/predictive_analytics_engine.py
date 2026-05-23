@@ -972,7 +972,7 @@ class ABTestingFramework:
         import hashlib
 
         hash_input = f"{lead_id}{experiment_id}".encode()
-        hash_value = int(hashlib.md5(hash_input).hexdigest(), 16)
+        hash_value = int(hashlib.md5(hash_input, usedforsecurity=False).hexdigest(), 16)
 
         # Determine variation based on hash
         num_variations = len(experiment["test_groups"]) + 1  # +1 for control

@@ -545,7 +545,7 @@ class MLScoringService:
         import hashlib
 
         content = f"{request.lead_id}:{request.message_content}:{request.source}:{user_id}:{tenant_id}"
-        return f"ml_score:{hashlib.md5(content.encode()).hexdigest()}"
+        return f"ml_score:{hashlib.md5(content.encode(), usedforsecurity=False).hexdigest()}"
 
     async def _send_scoring_event(self, response: LeadScoringResponse):
         """Send WebSocket event for lead scoring"""

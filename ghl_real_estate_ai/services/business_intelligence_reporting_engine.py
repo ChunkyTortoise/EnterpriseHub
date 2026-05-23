@@ -622,7 +622,9 @@ class BusinessIntelligenceReportingEngine:
             }
 
             # Cache results
-            cache_key = f"competitive_intelligence:{hashlib.md5(str(competitors).encode()).hexdigest()}"
+            cache_key = (
+                f"competitive_intelligence:{hashlib.md5(str(competitors).encode(), usedforsecurity=False).hexdigest()}"
+            )
             await self.cache.set(
                 cache_key,
                 json.dumps(result, default=str),

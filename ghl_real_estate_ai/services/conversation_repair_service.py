@@ -690,7 +690,7 @@ class ConversationRepairService:
             return False
 
         # Hash pairs for efficient comparison
-        hashed_pairs = [hashlib.md5(f"{q}:{a}".encode()).hexdigest()[:8] for q, a in pairs]
+        hashed_pairs = [hashlib.md5(f"{q}:{a}".encode(), usedforsecurity=False).hexdigest()[:8] for q, a in pairs]
 
         # Check for duplicates
         counter = Counter(hashed_pairs)

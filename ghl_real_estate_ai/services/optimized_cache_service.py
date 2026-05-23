@@ -825,7 +825,7 @@ def cached(ttl: int = 300, priority: str = "normal", key_prefix: str = ""):
                 cache_key += f":{':'.join(str(a) for a in args)}"
             if kwargs:
                 sorted_kwargs = json.dumps(kwargs, sort_keys=True, default=str)
-                cache_key += f":{hashlib.md5(sorted_kwargs.encode()).hexdigest()[:8]}"
+                cache_key += f":{hashlib.md5(sorted_kwargs.encode(), usedforsecurity=False).hexdigest()[:8]}"
 
             cache = get_enhanced_cache_service()
 

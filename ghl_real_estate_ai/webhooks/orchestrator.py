@@ -559,7 +559,7 @@ class WebhookOrchestrator:
         elif "contact_id" in event.payload:
             key_data += f"_{event.payload['contact_id']}"
 
-        return hashlib.md5(key_data.encode()).hexdigest()
+        return hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()
 
     async def _is_duplicate_event(self, dedup_key: str, event: WebhookEvent) -> bool:
         """Check if event is duplicate within deduplication window"""

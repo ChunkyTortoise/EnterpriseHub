@@ -361,7 +361,7 @@ class ClaudeAssistantOptimized:
 
         # Create deterministic hash
         key_str = f"{normalized_query}|{json.dumps(key_context, sort_keys=True)}"
-        return hashlib.md5(key_str.encode()).hexdigest()
+        return hashlib.md5(key_str.encode(), usedforsecurity=False).hexdigest()
 
     # ============================================================================
     # OPTIMIZED: Streaming Support for Perceived Speed

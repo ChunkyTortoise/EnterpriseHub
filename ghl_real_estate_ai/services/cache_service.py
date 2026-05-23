@@ -886,7 +886,7 @@ class CacheService:
             # Convert args and kwargs to a stable string
             key_data = {"args": args, "kwargs": kwargs}
             key_str = json.dumps(key_data, sort_keys=True, default=str)
-            key_hash = hashlib.md5(key_str.encode()).hexdigest()
+            key_hash = hashlib.md5(key_str.encode(), usedforsecurity=False).hexdigest()
             cache_key = f"{cache_prefix}:{key_hash}"
 
             return await self.cached_computation(cache_key, func, ttl, *args, **kwargs)

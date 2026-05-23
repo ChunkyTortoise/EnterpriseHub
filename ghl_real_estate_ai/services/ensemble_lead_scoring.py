@@ -782,7 +782,7 @@ class EnsembleLeadScoringService:
         # Hash features for consistent key
         if features:
             features_str = json.dumps(features, sort_keys=True)
-            features_hash = hashlib.md5(features_str.encode()).hexdigest()[:8]
+            features_hash = hashlib.md5(features_str.encode(), usedforsecurity=False).hexdigest()[:8]
         else:
             features_hash = "default"
 

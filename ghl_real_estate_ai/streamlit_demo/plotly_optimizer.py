@@ -31,7 +31,7 @@ class PlotlyOptimizer:
 
         param_summary = json.dumps(params, sort_keys=True)
         combined = f"{data_summary}-{param_summary}"
-        return hashlib.md5(combined.encode()).hexdigest()
+        return hashlib.md5(combined.encode(), usedforsecurity=False).hexdigest()
 
     @staticmethod
     def decimate_data(df: pd.DataFrame, max_points: int = 1000) -> pd.DataFrame:

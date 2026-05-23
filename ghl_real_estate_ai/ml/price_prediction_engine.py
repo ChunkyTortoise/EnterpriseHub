@@ -554,7 +554,7 @@ class PricePredictionEngine:
         # Create hash of features for cache key
         features_dict = asdict(features)
         features_str = json.dumps(features_dict, sort_keys=True, default=str)
-        features_hash = hashlib.md5(features_str.encode()).hexdigest()[:12]
+        features_hash = hashlib.md5(features_str.encode(), usedforsecurity=False).hexdigest()[:12]
 
         return f"price_prediction:{features_hash}:{timeframe.value}"
 

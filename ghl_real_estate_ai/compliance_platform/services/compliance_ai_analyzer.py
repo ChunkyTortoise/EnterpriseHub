@@ -679,7 +679,7 @@ Focus on: overall compliance posture, key risks, regulatory exposure, and recomm
         """
         key_parts = [method] + [str(arg) for arg in args]
         key_string = "|".join(key_parts)
-        return hashlib.md5(key_string.encode()).hexdigest()
+        return hashlib.md5(key_string.encode(), usedforsecurity=False).hexdigest()
 
     async def _cached_generate(
         self,

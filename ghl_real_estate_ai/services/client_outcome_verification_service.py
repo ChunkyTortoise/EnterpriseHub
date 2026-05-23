@@ -619,7 +619,9 @@ class ClientOutcomeVerificationService:
             evidence.append(
                 VerificationEvidence(
                     source=VerificationSource.MLS_DATA,
-                    data_hash=hashlib.md5(str(verification_data["mls_sold_price"]).encode()).hexdigest(),
+                    data_hash=hashlib.md5(
+                        str(verification_data["mls_sold_price"]).encode(), usedforsecurity=False
+                    ).hexdigest(),
                     timestamp=datetime.now(),
                     confidence_score=0.95,
                 )
@@ -629,7 +631,9 @@ class ClientOutcomeVerificationService:
             evidence.append(
                 VerificationEvidence(
                     source=VerificationSource.COUNTY_RECORDS,
-                    data_hash=hashlib.md5(str(verification_data["county_sold_price"]).encode()).hexdigest(),
+                    data_hash=hashlib.md5(
+                        str(verification_data["county_sold_price"]).encode(), usedforsecurity=False
+                    ).hexdigest(),
                     timestamp=datetime.now(),
                     confidence_score=0.90,
                 )
@@ -672,7 +676,8 @@ class ClientOutcomeVerificationService:
                 VerificationEvidence(
                     source=VerificationSource.MLS_DATA,
                     data_hash=hashlib.md5(
-                        f"{verification_data['mls_listing_date']}_{verification_data['mls_sold_date']}".encode()
+                        f"{verification_data['mls_listing_date']}_{verification_data['mls_sold_date']}".encode(),
+                        usedforsecurity=False,
                     ).hexdigest(),
                     timestamp=datetime.now(),
                     confidence_score=0.95,
@@ -713,7 +718,9 @@ class ClientOutcomeVerificationService:
             evidence.append(
                 VerificationEvidence(
                     source=VerificationSource.TITLE_COMPANY,
-                    data_hash=hashlib.md5(str(verification_data["title_company_commission"]).encode()).hexdigest(),
+                    data_hash=hashlib.md5(
+                        str(verification_data["title_company_commission"]).encode(), usedforsecurity=False
+                    ).hexdigest(),
                     timestamp=datetime.now(),
                     confidence_score=0.90,
                 )
@@ -913,7 +920,7 @@ class ClientOutcomeVerificationService:
         return [
             VerificationEvidence(
                 source=VerificationSource.TRANSACTION_RECORDS,
-                data_hash=hashlib.md5(f"{metric_type}_{len(transactions)}".encode()).hexdigest(),
+                data_hash=hashlib.md5(f"{metric_type}_{len(transactions)}".encode(), usedforsecurity=False).hexdigest(),
                 timestamp=datetime.now(),
                 confidence_score=0.9,
             )

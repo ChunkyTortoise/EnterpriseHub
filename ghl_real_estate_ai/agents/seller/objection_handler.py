@@ -91,7 +91,7 @@ class ObjectionHandler:
                 try:
                     seller_id = state.get("lead_id", "unknown")
                     # Use contact ID hash to deterministically assign variant
-                    hash_val = int(hashlib.md5(seller_id.encode()).hexdigest(), 16)
+                    hash_val = int(hashlib.md5(seller_id.encode(), usedforsecurity=False).hexdigest(), 16)
 
                     # Get current graduation level
                     grad_level_idx = engine.get_graduation_level(seller_id, detection.objection_type)

@@ -104,7 +104,7 @@ class EnhancedPromptCaching:
 
         # Include relevant metadata in cache key for proper invalidation
         key_data = {
-            "content_hash": hashlib.md5(content.encode()).hexdigest(),
+            "content_hash": hashlib.md5(content.encode(), usedforsecurity=False).hexdigest(),
             "cache_type": cache_type.value,
             "metadata": metadata,
         }

@@ -72,7 +72,7 @@ class EventDeduplicator:
         import json
 
         payload_str = json.dumps(payload, sort_keys=True)
-        content_hash = hashlib.md5(payload_str.encode()).hexdigest()
+        content_hash = hashlib.md5(payload_str.encode(), usedforsecurity=False).hexdigest()
         return f"ghl:dedup:{event_type}:{content_hash}"
 
     async def is_duplicate(self, key: str) -> bool:

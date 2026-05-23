@@ -112,7 +112,7 @@ _PROPERTY_TYPES = ["single_family", "condo", "townhouse"]
 
 def _seeded_random(seed: str) -> random.Random:
     """Deterministic random from a string seed for reproducible demo data."""
-    h = int(hashlib.md5(seed.encode()).hexdigest(), 16)
+    h = int(hashlib.md5(seed.encode(), usedforsecurity=False).hexdigest(), 16)
     return random.Random(h)
 
 

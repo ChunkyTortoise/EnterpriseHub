@@ -40,7 +40,7 @@ class LeadScorer:
         """Generate a stable cache key from dictionary data."""
         # Sort keys to ensure stability
         data_str = json.dumps(data, sort_keys=True, default=str)
-        data_hash = hashlib.md5(data_str.encode()).hexdigest()
+        data_hash = hashlib.md5(data_str.encode(), usedforsecurity=False).hexdigest()
         return f"lead_scorer:{prefix}:{data_hash}"
 
     async def calculate(self, context: Dict[str, Any]) -> int:

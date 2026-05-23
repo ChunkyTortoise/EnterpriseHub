@@ -16,6 +16,7 @@ from __future__ import annotations
 import copy
 import json
 import os
+import tempfile
 from threading import Lock
 from typing import Any, Optional
 
@@ -23,7 +24,7 @@ from ghl_real_estate_ai.ghl_utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-_PERSIST_PATH = os.getenv("BOT_SETTINGS_PATH", "/tmp/jorge_bot_settings.json")
+_PERSIST_PATH = os.getenv("BOT_SETTINGS_PATH", os.path.join(tempfile.gettempdir(), "jorge_bot_settings.json"))
 _REDIS_KEY = os.getenv("JORGE_BOT_SETTINGS_KEY", "jorge:bot_settings")
 _REDIS_TTL = 0  # 0 = no expiry (persist indefinitely)
 

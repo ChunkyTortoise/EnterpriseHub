@@ -28,7 +28,7 @@ def render_knowledge_base_uploader():
         )
         if uploaded_files:
             for file in uploaded_files:
-                file_hash = hashlib.md5(file.read()).hexdigest()
+                file_hash = hashlib.md5(file.read(), usedforsecurity=False).hexdigest()
                 file.seek(0)
                 if not any((doc["hash"] == file_hash for doc in st.session_state.knowledge_base)):
                     doc_info = process_document(file, file_hash)

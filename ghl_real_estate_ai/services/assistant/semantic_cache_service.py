@@ -89,7 +89,7 @@ class SemanticCacheMatchService:
         }
 
         key_str = json.dumps(key_features, sort_keys=True)
-        return hashlib.md5(key_str.encode()).hexdigest()
+        return hashlib.md5(key_str.encode(), usedforsecurity=False).hexdigest()
 
     def _normalize_price(self, price: Union[int, float, str]) -> str:
         """Normalize price to ranges for semantic similarity."""
@@ -195,7 +195,7 @@ class SemanticResponseCache:
 
     async def _compute_embedding(self, text: str) -> Optional[list]:
         """Compute embedding for text with caching."""
-        text_hash = hashlib.md5(text.encode()).hexdigest()
+        text_hash = hashlib.md5(text.encode(), usedforsecurity=False).hexdigest()
         if text_hash in self.embeddings_cache:
             return self.embeddings_cache[text_hash]
 

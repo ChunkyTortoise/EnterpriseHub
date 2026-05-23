@@ -21,6 +21,7 @@ Created: 2026-01-18
 import asyncio
 import gc
 import json
+import tempfile
 import threading
 import time
 from collections import defaultdict, deque
@@ -286,7 +287,7 @@ class ModelOptimizer:
             }
 
             # Export to ONNX
-            onnx_path = Path("/tmp/neural_matcher.onnx")
+            onnx_path = Path(tempfile.gettempdir()) / "neural_matcher.onnx"
 
             # Create a wrapper for ONNX export
             class ONNXWrapper(nn.Module):
@@ -1157,7 +1158,7 @@ class NeuralInferenceEngine:
         }
 
         key_str = json.dumps(key_data, sort_keys=True)
-        return hashlib.md5(key_str.encode()).hexdigest()
+        return hashlib.md5(key_str.encode(), usedforsecurity=False).hexdigest()
 
     def get_performance_metrics(self) -> InferenceMetrics:
         """Get current performance metrics."""

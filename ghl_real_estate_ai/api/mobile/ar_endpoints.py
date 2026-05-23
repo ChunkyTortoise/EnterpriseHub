@@ -131,7 +131,7 @@ class ARVisualizationService:
         """Generate AR overlays for a property based on device capabilities and user context."""
         try:
             cache = await self._get_cache()
-            cache_key = f"ar_overlays:{property_id}:{hashlib.md5(json.dumps(device_capabilities, sort_keys=True).encode()).hexdigest()}"
+            cache_key = f"ar_overlays:{property_id}:{hashlib.md5(json.dumps(device_capabilities, sort_keys=True).encode(), usedforsecurity=False).hexdigest()}"
 
             # Check cache first
             cached_overlays = await cache.get(cache_key)

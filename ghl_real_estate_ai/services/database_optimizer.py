@@ -734,14 +734,14 @@ class ProductionQueryOptimizer:
         import hashlib
 
         params_str = json.dumps(search_params, sort_keys=True)
-        return hashlib.md5(params_str.encode()).hexdigest()[:16]
+        return hashlib.md5(params_str.encode(), usedforsecurity=False).hexdigest()[:16]
 
     def _generate_analytics_id(self, query_params: Dict[str, Any]) -> str:
         """Generate unique ID for analytics query parameters."""
         import hashlib
 
         params_str = json.dumps(query_params, sort_keys=True)
-        return hashlib.md5(params_str.encode()).hexdigest()[:16]
+        return hashlib.md5(params_str.encode(), usedforsecurity=False).hexdigest()[:16]
 
     async def get_optimization_report(self) -> Dict[str, Any]:
         """Get comprehensive database optimization performance report."""
@@ -882,7 +882,7 @@ class MLScoringOptimizer:
             import hashlib
 
             item_str = json.dumps(item, sort_keys=True, default=str)
-            return hashlib.md5(item_str.encode()).hexdigest()[:16]
+            return hashlib.md5(item_str.encode(), usedforsecurity=False).hexdigest()[:16]
 
     def _extract_features(self, item: Any) -> Dict[str, Any]:
         """

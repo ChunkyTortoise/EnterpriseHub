@@ -193,7 +193,7 @@ def create_session_cache_key(*args, prefix: str = "") -> str:
         key_string = f"{prefix}:{key_string}"
 
     # Hash for consistent length
-    key_hash = hashlib.md5(key_string.encode()).hexdigest()[:16]
+    key_hash = hashlib.md5(key_string.encode(), usedforsecurity=False).hexdigest()[:16]
     return f"{prefix}_{key_hash}" if prefix else key_hash
 
 

@@ -487,7 +487,8 @@ class ProactiveConversationIntelligence:
                 return []
 
             messages_hash = hashlib.md5(
-                json.dumps([msg.get("content", "") for msg in messages[-5:]], sort_keys=True).encode()
+                json.dumps([msg.get("content", "") for msg in messages[-5:]], sort_keys=True).encode(),
+                usedforsecurity=False,
             ).hexdigest()
 
             cache_key_with_hash = f"{cache_key}:{messages_hash}"

@@ -623,14 +623,14 @@ Be specific about dollar amounts, timeframes, and ROI where possible.
         import hashlib
 
         # Create hash of image data
-        image_hash = hashlib.md5(image_data).hexdigest()[:16]
+        image_hash = hashlib.md5(image_data, usedforsecurity=False).hexdigest()[:16]
 
         # Add location/address to key if available
         location_key = ""
         if location:
             location_key = f"_{location['lat']:.4f}_{location['lng']:.4f}"
         elif address:
-            location_key = f"_{hashlib.md5(address.encode()).hexdigest()[:8]}"
+            location_key = f"_{hashlib.md5(address.encode(), usedforsecurity=False).hexdigest()[:8]}"
 
         return f"property_analysis_{image_hash}{location_key}"
 
