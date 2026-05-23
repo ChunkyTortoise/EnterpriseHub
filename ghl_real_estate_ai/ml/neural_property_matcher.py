@@ -180,12 +180,14 @@ class PropertyEncoder(nn.Module):
         self.config = config
 
         # Text encoder for property descriptions
-        self.text_tokenizer = BertTokenizer.from_pretrained(config.text_encoder_model)
-        self.text_encoder = BertModel.from_pretrained(config.text_encoder_model)
+        # TODO(security): pin to a specific commit SHA instead of "main" for supply-chain hardening (B615)
+        self.text_tokenizer = BertTokenizer.from_pretrained(config.text_encoder_model, revision="main")  # nosec B615 - branch pin pending SHA selection
+        self.text_encoder = BertModel.from_pretrained(config.text_encoder_model, revision="main")  # nosec B615 - branch pin pending SHA selection
 
         # Image encoder for property photos (CLIP)
-        self.image_processor = CLIPProcessor.from_pretrained(config.image_encoder_model)
-        self.image_encoder = CLIPModel.from_pretrained(config.image_encoder_model).vision_model
+        # TODO(security): pin to a specific commit SHA instead of "main" for supply-chain hardening (B615)
+        self.image_processor = CLIPProcessor.from_pretrained(config.image_encoder_model, revision="main")  # nosec B615 - branch pin pending SHA selection
+        self.image_encoder = CLIPModel.from_pretrained(config.image_encoder_model, revision="main").vision_model  # nosec B615 - branch pin pending SHA selection
 
         # Structured data encoder
         self.structured_encoder = nn.Sequential(

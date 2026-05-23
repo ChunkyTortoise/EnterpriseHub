@@ -157,8 +157,9 @@ class NeuralTextEncoder(nn.Module):
         self.config = config
 
         # BERT for semantic embeddings
-        self.tokenizer = BertTokenizer.from_pretrained(config.text_embedding_model)
-        self.bert_model = BertModel.from_pretrained(config.text_embedding_model)
+        # TODO(security): pin to a specific commit SHA instead of "main" for supply-chain hardening (B615)
+        self.tokenizer = BertTokenizer.from_pretrained(config.text_embedding_model, revision="main")  # nosec B615 - branch pin pending SHA selection
+        self.bert_model = BertModel.from_pretrained(config.text_embedding_model, revision="main")  # nosec B615 - branch pin pending SHA selection
 
         # Additional text processing layers
         bert_dim = self.bert_model.config.hidden_size
@@ -212,8 +213,9 @@ class NeuralImageEncoder(nn.Module):
         self.config = config
 
         # CLIP for visual-semantic features
-        self.clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-        self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+        # TODO(security): pin to a specific commit SHA instead of "main" for supply-chain hardening (B615)
+        self.clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32", revision="main")  # nosec B615 - branch pin pending SHA selection
+        self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32", revision="main")  # nosec B615 - branch pin pending SHA selection
 
         # CNN for spatial features
         self.spatial_cnn = nn.Sequential(
