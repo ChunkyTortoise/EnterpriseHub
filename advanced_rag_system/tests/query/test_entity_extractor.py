@@ -1,7 +1,6 @@
 """Tests for Entity Extractor module."""
 
 import pytest
-
 from src.query.entity_extractor import (
     Entity,
     EntityExtractor,

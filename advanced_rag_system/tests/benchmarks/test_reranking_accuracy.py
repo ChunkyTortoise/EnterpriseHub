@@ -14,7 +14,6 @@ from typing import List
 from uuid import uuid4
 
 import pytest
-
 from src.core.types import DocumentChunk, Metadata, SearchResult
 from src.reranking.base import (
     MockReRanker,

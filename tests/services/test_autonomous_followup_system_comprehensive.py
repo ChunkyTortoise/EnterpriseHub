@@ -28,6 +28,12 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 try:
+    from ghl_real_estate_ai.services.autonomous_integration_orchestrator import (
+        AutonomousIntegrationOrchestrator,
+        SystemComponent,
+        get_autonomous_integration_orchestrator,
+    )
+
     from ghl_real_estate_ai.services.advanced_analytics_engine import (
         AdvancedAnalyticsEngine,
         MetricType,
@@ -45,11 +51,6 @@ try:
         AutonomousFollowUpEngine,
         FollowUpChannel,
         get_autonomous_followup_engine,
-    )
-    from ghl_real_estate_ai.services.autonomous_integration_orchestrator import (
-        AutonomousIntegrationOrchestrator,
-        SystemComponent,
-        get_autonomous_integration_orchestrator,
     )
     from ghl_real_estate_ai.services.autonomous_objection_handler import (
         AutonomousObjectionHandler,

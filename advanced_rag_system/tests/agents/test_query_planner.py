@@ -3,7 +3,6 @@
 from uuid import uuid4
 
 import pytest
-
 from src.agents.query_planner import (
     IntentAnalysis,
     QueryIntent,

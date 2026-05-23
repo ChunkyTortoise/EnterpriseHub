@@ -4,7 +4,6 @@ import math
 from typing import List
 
 import pytest
-
 from src.core.exceptions import EmbeddingError
 from src.embeddings.base import EmbeddingConfig, EmbeddingProvider
 

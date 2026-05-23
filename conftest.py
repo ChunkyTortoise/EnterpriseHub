@@ -62,7 +62,6 @@ async def database_connection_pool():
     try:
         # Import database modules
         import asyncpg
-
         from ghl_real_estate_ai.core.database import DatabaseConfig
 
         # Create test database config

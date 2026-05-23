@@ -43,8 +43,6 @@ import numpy as np
 import psutil
 import pytest
 
-from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
-
 # Jorge Bot imports
 from ghl_real_estate_ai.agents.jorge_seller_bot_enhanced import (
     EnhancedJorgeSellerBot,
@@ -52,6 +50,8 @@ from ghl_real_estate_ai.agents.jorge_seller_bot_enhanced import (
     SellerProfile,
     StallType,
 )
+
+from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
 from ghl_real_estate_ai.agents.lead_bot import LeadBot
 from ghl_real_estate_ai.services.jorge_analytics_service import JorgeAnalyticsService
 from ghl_real_estate_ai.services.performance_monitor import PerformanceMonitor

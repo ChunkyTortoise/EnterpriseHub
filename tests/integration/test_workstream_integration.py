@@ -22,11 +22,12 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 try:
+    from ghl_real_estate_ai.services.content_personalization_swarm import ContentPersonalizationSwarm
+
     from ghl_real_estate_ai.services.autonomous_followup_engine import AutonomousFollowupEngine
     from ghl_real_estate_ai.services.behavioral_trigger_engine import BehavioralTriggerEngine
     from ghl_real_estate_ai.services.cache_service import CacheService
     from ghl_real_estate_ai.services.claude_assistant import ClaudeAssistant
-    from ghl_real_estate_ai.services.content_personalization_swarm import ContentPersonalizationSwarm
     from ghl_real_estate_ai.services.database_service import DatabaseService
 except (ImportError, TypeError, AttributeError, Exception):
     pytest.skip("required imports unavailable", allow_module_level=True)

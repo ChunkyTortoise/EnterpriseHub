@@ -10,7 +10,6 @@ from typing import List
 from uuid import uuid4
 
 import pytest
-
 from src.core.types import DocumentChunk, Metadata
 from src.retrieval import (
     BM25Config,
