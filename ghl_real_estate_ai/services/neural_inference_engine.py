@@ -21,6 +21,7 @@ Created: 2026-01-18
 import asyncio
 import gc
 import json
+import tempfile
 import threading
 import time
 from collections import defaultdict, deque
@@ -286,7 +287,7 @@ class ModelOptimizer:
             }
 
             # Export to ONNX
-            onnx_path = Path("/tmp/neural_matcher.onnx")
+            onnx_path = Path(tempfile.gettempdir()) / "neural_matcher.onnx"
 
             # Create a wrapper for ONNX export
             class ONNXWrapper(nn.Module):

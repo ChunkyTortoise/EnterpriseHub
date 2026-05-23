@@ -373,8 +373,9 @@ class FailsafeMetricsCollector:
         """Fallback: Write metrics to local log file"""
         try:
             import os
+            import tempfile
 
-            log_dir = "/tmp/service6_metrics"
+            log_dir = os.path.join(tempfile.gettempdir(), "service6_metrics")
             os.makedirs(log_dir, exist_ok=True)
 
             timestamp = datetime.now().strftime("%Y%m%d_%H")
