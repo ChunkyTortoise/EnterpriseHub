@@ -374,9 +374,9 @@ class TestRedisResilienceUnderChaos:
 
                 # Performance should be degraded but within acceptable limits
                 avg_analysis_time = sum(analysis_times) / len(analysis_times)
-                assert (
-                    avg_analysis_time < experiment.recovery_time_limit
-                ), f"Performance degradation too severe: {avg_analysis_time}s"
+                assert avg_analysis_time < experiment.recovery_time_limit, (
+                    f"Performance degradation too severe: {avg_analysis_time}s"
+                )
 
 
 class TestCascadingFailurePrevention:
@@ -540,9 +540,9 @@ class TestBusinessContinuityUnderChaos:
             reasoning = self.scorer.calculate_with_reasoning(context)
 
             # THEN: Business logic should be unaffected by infrastructure
-            assert (
-                score >= scenario["expected_min_score"]
-            ), f"{scenario['name']} core scoring degraded: {score} < {scenario['expected_min_score']}"
+            assert score >= scenario["expected_min_score"], (
+                f"{scenario['name']} core scoring degraded: {score} < {scenario['expected_min_score']}"
+            )
 
             assert classification in [
                 "hot",
@@ -550,9 +550,9 @@ class TestBusinessContinuityUnderChaos:
                 "cold",
             ], f"{scenario['name']} invalid classification during chaos: {classification}"
 
-            assert (
-                len(reasoning.get("recommended_actions", [])) > 0
-            ), f"{scenario['name']} no recommended actions during chaos"
+            assert len(reasoning.get("recommended_actions", [])) > 0, (
+                f"{scenario['name']} no recommended actions during chaos"
+            )
 
             # Business continuity validation
             assert reasoning.get("score") == score, f"{scenario['name']} score consistency broken during chaos"

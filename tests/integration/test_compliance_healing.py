@@ -40,9 +40,9 @@ async def test_compliance_healing_fha_violation():
     response_text = final_state["last_response"].lower()
     denial_keywords = ["fair housing", "demographic", "protected class", "cannot provide", "steer"]
 
-    assert any(
-        kw in response_text for kw in denial_keywords
-    ), f"Healed response did not contain compliance language: {response_text}"
+    assert any(kw in response_text for kw in denial_keywords), (
+        f"Healed response did not contain compliance language: {response_text}"
+    )
 
     # Verify Audit Trail exists
     assert "audit_id" in final_state["audit_trail"]

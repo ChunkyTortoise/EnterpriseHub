@@ -451,9 +451,9 @@ class TestSellerAcceptanceFeatureExtractor:
                 psychology_profile=psychology,
             )
 
-            assert (
-                features.urgency_score == expected_score
-            ), f"Urgency level {urgency_level} should map to {expected_score}"
+            assert features.urgency_score == expected_score, (
+                f"Urgency level {urgency_level} should map to {expected_score}"
+            )
 
     def test_motivation_type_mapping(self, extractor):
         """Test all motivation type mappings."""
@@ -483,9 +483,9 @@ class TestSellerAcceptanceFeatureExtractor:
                 psychology_profile=psychology,
             )
 
-            assert (
-                features.motivation_intensity == expected_score
-            ), f"Motivation type {motivation_type} should map to {expected_score}"
+            assert features.motivation_intensity == expected_score, (
+                f"Motivation type {motivation_type} should map to {expected_score}"
+            )
 
     def test_seasonal_factors(self, extractor):
         """Test seasonal factor calculations for all months."""
@@ -516,9 +516,9 @@ class TestSellerAcceptanceFeatureExtractor:
                 market_data=market_data,
             )
 
-            assert (
-                features.seasonal_factor == expected_factor
-            ), f"Month {month} should have seasonal factor {expected_factor}"
+            assert features.seasonal_factor == expected_factor, (
+                f"Month {month} should have seasonal factor {expected_factor}"
+            )
 
     def test_statistics_tracking(
         self,

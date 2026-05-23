@@ -31,9 +31,7 @@ def compare(results_path: str, baseline_path: str) -> None:
     # Check overall pass rate against average baseline
     avg_baseline = sum(baseline_rubrics.values()) / len(baseline_rubrics)
     if pass_rate < avg_baseline - 0.10:
-        regressions.append(
-            f"Overall pass rate {pass_rate:.2f} dropped >10% below " f"baseline average {avg_baseline:.2f}"
-        )
+        regressions.append(f"Overall pass rate {pass_rate:.2f} dropped >10% below baseline average {avg_baseline:.2f}")
 
     if regressions:
         print("\nREGRESSIONS DETECTED:")

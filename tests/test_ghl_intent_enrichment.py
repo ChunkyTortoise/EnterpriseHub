@@ -307,9 +307,9 @@ class TestCustomFieldBoosting:
         )
 
         # Low budget should not boost beyond baseline
-        assert (
-            profile_with_low_budget.frs.total_score <= profile_no_budget.frs.total_score + 5
-        ), "Budget < $500k should not boost FRS"
+        assert profile_with_low_budget.frs.total_score <= profile_no_budget.frs.total_score + 5, (
+            "Budget < $500k should not boost FRS"
+        )
 
     @pytest.mark.asyncio
     async def test_timeline_immediate(self, decoder, base_conversation):

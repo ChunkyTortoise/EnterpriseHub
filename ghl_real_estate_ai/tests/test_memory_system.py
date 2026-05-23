@@ -78,9 +78,9 @@ async def test_memory_persistence():
 
     # 6. Get context in new session
     context = await cm2.get_context(test_contact_id)
-    assert (
-        len(context["conversation_history"]) == 2
-    ), f"History lost! Found {len(context['conversation_history'])} messages."
+    assert len(context["conversation_history"]) == 2, (
+        f"History lost! Found {len(context['conversation_history'])} messages."
+    )
     assert context["extracted_preferences"]["bedrooms"] == 3, "Preferences lost!"
     print("✅ History and preferences successfully reloaded from file.")
 

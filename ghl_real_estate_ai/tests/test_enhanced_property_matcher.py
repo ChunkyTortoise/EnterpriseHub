@@ -573,9 +573,9 @@ class TestEnhancedPropertyMatcher:
             # Check confidence intervals
             confidence_interval = match.confidence_interval
             assert len(confidence_interval) == 2, "Should have confidence interval tuple"
-            assert (
-                confidence_interval[0] <= match.overall_score <= confidence_interval[1]
-            ), "Score should be within confidence interval"
+            assert confidence_interval[0] <= match.overall_score <= confidence_interval[1], (
+                "Score should be within confidence interval"
+            )
 
             # Check prediction metrics
             assert 0 <= match.predicted_engagement <= 1, "Engagement prediction should be 0-1"

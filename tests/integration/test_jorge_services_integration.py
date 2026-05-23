@@ -179,9 +179,9 @@ class TestJorgeServicesIntegration:
         overall = summary["overall"]
 
         # Confirm the error rate exceeds the 5% threshold
-        assert (
-            overall["error_rate"] > 0.05
-        ), f"Expected error_rate > 0.05 for alert trigger, got {overall['error_rate']}"
+        assert overall["error_rate"] > 0.05, (
+            f"Expected error_rate > 0.05 for alert trigger, got {overall['error_rate']}"
+        )
 
         # Build a stats dict shaped for the alerting rules
         alert_stats = {

@@ -131,9 +131,9 @@ async def test_buyer_bot_workflow():
         has_response = bool(result.get("response_content"))
         has_scheduled = result.get("follow_up_scheduled", False)
         has_next_action = bool(result.get("next_action"))
-        assert (
-            has_response or has_scheduled or has_next_action
-        ), "Workflow produced no response, no scheduled action, and no next action"
+        assert has_response or has_scheduled or has_next_action, (
+            "Workflow produced no response, no scheduled action, and no next action"
+        )
 
         print("\nAll buyer bot E2E assertions passed!")
         return result

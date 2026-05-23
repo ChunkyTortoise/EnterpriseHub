@@ -672,9 +672,9 @@ class TestEnduranceAndRecovery:
                     degradation_ratio = late_avg / early_avg if early_avg > 0 else 1.0
 
                     print(f"\nPerformance degradation ratio: {degradation_ratio:.2f}x")
-                    assert (
-                        degradation_ratio <= 1.5
-                    ), f"Performance degraded by {degradation_ratio:.2f}x (should be <=1.5x)"
+                    assert degradation_ratio <= 1.5, (
+                        f"Performance degraded by {degradation_ratio:.2f}x (should be <=1.5x)"
+                    )
 
                 # Overall performance should remain strong
                 metrics.assert_performance_targets(max_p95_ms=150, max_p99_ms=300, min_success_rate=0.98)
@@ -768,9 +768,9 @@ class TestThroughputAndCapacity:
                 print(f"\n=== Maximum Sustainable Throughput: {sustainable_throughput:.1f} req/s ===")
 
                 # Should handle at least 100 requests/second
-                assert (
-                    sustainable_throughput >= 100
-                ), f"Throughput {sustainable_throughput:.1f} req/s should be >=100 req/s"
+                assert sustainable_throughput >= 100, (
+                    f"Throughput {sustainable_throughput:.1f} req/s should be >=100 req/s"
+                )
 
 
 # Performance test configuration

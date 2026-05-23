@@ -171,9 +171,7 @@ else:
                                 final_prompt = final_prompt.replace(f"{{{{{k}}}}}", str(v))
 
                             response = run_async(
-                                client.agenerate(
-                                    prompt=final_prompt, system_prompt=persona, model="gemini-1.5-flash"
-                                )
+                                client.agenerate(prompt=final_prompt, system_prompt=persona, model="gemini-1.5-flash")
                             )
 
                             st.markdown(f"**Model:** {response.model}")
@@ -205,17 +203,13 @@ else:
             with col_a:
                 st.markdown("### Variant A")
                 name_a = st.selectbox("Prompt A", prompt_names, key="name_a")
-                ver_a = st.selectbox(
-                    "Version A", [v["version"] for v in prompts if v["name"] == name_a], key="ver_a"
-                )
+                ver_a = st.selectbox("Version A", [v["version"] for v in prompts if v["name"] == name_a], key="ver_a")
                 p_a = next(v for v in prompts if v["name"] == name_a and v["version"] == ver_a)
 
             with col_b:
                 st.markdown("### Variant B")
                 name_b = st.selectbox("Prompt B", prompt_names, key="name_b")
-                ver_b = st.selectbox(
-                    "Version B", [v["version"] for v in prompts if v["name"] == name_b], key="ver_b"
-                )
+                ver_b = st.selectbox("Version B", [v["version"] for v in prompts if v["name"] == name_b], key="ver_b")
                 p_b = next(v for v in prompts if v["name"] == name_b and v["version"] == ver_b)
 
             st.divider()

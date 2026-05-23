@@ -119,9 +119,9 @@ class TestLeadScoringInvariants:
         # Specific mapping invariants based on Jorge's requirements
         expected_mappings = {0: 5, 1: 15, 2: 30, 3: 50, 4: 65, 5: 75, 6: 85, 7: 100}
         expected_score = expected_mappings.get(question_count, 0)
-        assert (
-            percentage_score == expected_score
-        ), f"Question count {question_count} should map to {expected_score}% but got {percentage_score}%"
+        assert percentage_score == expected_score, (
+            f"Question count {question_count} should map to {expected_score}% but got {percentage_score}%"
+        )
 
     @given(
         st.dictionaries(
@@ -206,12 +206,12 @@ class TestLeadScoringInvariants:
         enhanced_score = self.scorer.calculate(enhanced_context)
 
         # Monotonic property: more info = same or higher score
-        assert (
-            enhanced_score >= base_score
-        ), f"Adding {additional_key} decreased score from {base_score} to {enhanced_score}"
-        assert (
-            enhanced_score <= base_score + 1
-        ), f"Adding {additional_key} increased score too much: {base_score} to {enhanced_score}"
+        assert enhanced_score >= base_score, (
+            f"Adding {additional_key} decreased score from {base_score} to {enhanced_score}"
+        )
+        assert enhanced_score <= base_score + 1, (
+            f"Adding {additional_key} increased score too much: {base_score} to {enhanced_score}"
+        )
 
     @given(
         st.dictionaries(
@@ -331,12 +331,12 @@ class TestLeadScoringInvariants:
             reasoning_result = self.scorer.calculate_with_reasoning(context)
 
             # Consistency between methods
-            assert (
-                score == reasoning_result["score"]
-            ), f"Inconsistency between calculate methods: {score} vs {reasoning_result['score']}"
-            assert (
-                score == reasoning_result["questions_answered"]
-            ), f"Score should equal questions_answered: {score} vs {reasoning_result['questions_answered']}"
+            assert score == reasoning_result["score"], (
+                f"Inconsistency between calculate methods: {score} vs {reasoning_result['score']}"
+            )
+            assert score == reasoning_result["questions_answered"], (
+                f"Score should equal questions_answered: {score} vs {reasoning_result['questions_answered']}"
+            )
 
         except Exception as e:
             pytest.fail(f"Scorer failed on valid context: {e}")
@@ -536,9 +536,9 @@ class TestEnhancedLeadIntelligenceProperties:
                 assert value >= 0, f"Negative metric value: {key} = {value}"
 
         # Cache hit rate should be between 0 and 1
-        assert (
-            0 <= initial_metrics["cache_hit_rate"] <= 1
-        ), f"Invalid cache hit rate: {initial_metrics['cache_hit_rate']}"
+        assert 0 <= initial_metrics["cache_hit_rate"] <= 1, (
+            f"Invalid cache hit rate: {initial_metrics['cache_hit_rate']}"
+        )
 
 
 # Performance benchmarking with property-based inputs

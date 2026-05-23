@@ -255,5 +255,5 @@ st.markdown("""
 
 st.markdown("---")
 st.caption(
-    "EnterpriseHub Agent Trace Viewer v2026.1 | " "Data: demo mode (production reads from AgentMeshCoordinator metrics)"
+    "EnterpriseHub Agent Trace Viewer v2026.1 | Data: demo mode (production reads from AgentMeshCoordinator metrics)"
 )
