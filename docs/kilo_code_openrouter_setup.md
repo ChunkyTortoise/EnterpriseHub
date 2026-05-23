@@ -12,7 +12,7 @@ Add these settings to your VS Code `settings.json`:
 ```json
 {
   "kilocode.apiProvider": "openrouter",
-  "kilocode.openRouterApiKey": "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",
+  "kilocode.openRouterApiKey": "sk-or-v1-YOUR_KEY_HERE",
   "kilocode.openRouterModel": "anthropic/claude-3.5-sonnet",
   "kilocode.apiBaseUrl": "https://openrouter.ai/api/v1"
 }
@@ -23,7 +23,7 @@ Add these settings to your VS Code `settings.json`:
 2. Search for "Kilo Code"
 3. Configure:
    - **API Provider**: Select "OpenRouter" or "Custom"
-   - **API Key**: `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`
+   - **API Key**: `sk-or-v1-YOUR_KEY_HERE`
    - **Model**: `anthropic/claude-3.5-sonnet`
    - **Base URL**: `https://openrouter.ai/api/v1`
 
@@ -34,7 +34,7 @@ Some tools work better with OpenAI-compatible settings:
 ```json
 {
   "kilocode.apiProvider": "openai",
-  "kilocode.openai.apiKey": "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",
+  "kilocode.openai.apiKey": "sk-or-v1-YOUR_KEY_HERE",
   "kilocode.openai.baseURL": "https://openrouter.ai/api/v1",
   "kilocode.model": "anthropic/claude-3.5-sonnet"
 }
