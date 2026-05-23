@@ -504,9 +504,7 @@ class AdvancedAnalyticsVisualizationEngine:
             }
 
             # Cache insights for future reference
-            insight_key = (
-                f"predictive_insights:{metric_type.value}:{hashlib.md5(str(historical_data).encode(), usedforsecurity=False).hexdigest()}"
-            )
+            insight_key = f"predictive_insights:{metric_type.value}:{hashlib.md5(str(historical_data).encode(), usedforsecurity=False).hexdigest()}"
             await self.cache.set(
                 insight_key,
                 json.dumps(result, default=str),

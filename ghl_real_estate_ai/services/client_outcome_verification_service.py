@@ -619,7 +619,9 @@ class ClientOutcomeVerificationService:
             evidence.append(
                 VerificationEvidence(
                     source=VerificationSource.MLS_DATA,
-                    data_hash=hashlib.md5(str(verification_data["mls_sold_price"]).encode(), usedforsecurity=False).hexdigest(),
+                    data_hash=hashlib.md5(
+                        str(verification_data["mls_sold_price"]).encode(), usedforsecurity=False
+                    ).hexdigest(),
                     timestamp=datetime.now(),
                     confidence_score=0.95,
                 )
@@ -629,7 +631,9 @@ class ClientOutcomeVerificationService:
             evidence.append(
                 VerificationEvidence(
                     source=VerificationSource.COUNTY_RECORDS,
-                    data_hash=hashlib.md5(str(verification_data["county_sold_price"]).encode(), usedforsecurity=False).hexdigest(),
+                    data_hash=hashlib.md5(
+                        str(verification_data["county_sold_price"]).encode(), usedforsecurity=False
+                    ).hexdigest(),
                     timestamp=datetime.now(),
                     confidence_score=0.90,
                 )
@@ -714,7 +718,9 @@ class ClientOutcomeVerificationService:
             evidence.append(
                 VerificationEvidence(
                     source=VerificationSource.TITLE_COMPANY,
-                    data_hash=hashlib.md5(str(verification_data["title_company_commission"]).encode(), usedforsecurity=False).hexdigest(),
+                    data_hash=hashlib.md5(
+                        str(verification_data["title_company_commission"]).encode(), usedforsecurity=False
+                    ).hexdigest(),
                     timestamp=datetime.now(),
                     confidence_score=0.90,
                 )

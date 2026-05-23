@@ -867,7 +867,9 @@ class RealTimeInferenceEngine:
         if not request.cache_key:
             # Generate cache key if not provided
             feature_str = json.dumps(request.features, sort_keys=True)
-            request.cache_key = hashlib.md5(f"{request.model_type}:{feature_str}".encode(), usedforsecurity=False).hexdigest()
+            request.cache_key = hashlib.md5(
+                f"{request.model_type}:{feature_str}".encode(), usedforsecurity=False
+            ).hexdigest()
 
         cached_response = await self.cache.get(f"inference:{request.cache_key}")
 
