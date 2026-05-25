@@ -1,7 +1,7 @@
 streamlit==1.57.0
 # chromadb has pydantic v1 incompatibility with Python 3.14+; use >=0.5.0 for cloud
 chromadb>=0.5.0,<0.7.0
-pypdf==6.10.2
+pypdf==6.12.1
 httpx==0.28.1
 beautifulsoup4==4.14.3
 anthropic==0.104.1
