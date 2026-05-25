@@ -85,9 +85,12 @@ jobs:
       - name: Run Bandit
         run: |
           pip install 'bandit[toml]==1.9.4'
+          # JSON report for the upload-artifact step. bandit exits 1 on any finding
+          # in this mode (no severity gate); mask so bash -e does not kill the script
+          # before the gated check below runs.
           bandit -r ghl_real_estate_ai/ -f json -o bandit-report.json \
             -s B101 \
-            --exclude "*/tests/*"
+            --exclude "*/tests/*" || true
           # Text summary — MEDIUM+ severity, blocking. Baseline pins known findings
           # (see bandit.baseline.json + .maintenance/eh-bandit-triage-2026-05-23.md);
           # new findings still fail CI.
