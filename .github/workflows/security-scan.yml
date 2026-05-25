@@ -1,5 +1,4 @@
 name: Security Scan
-
 on:
   push:
     branches: [main]
@@ -11,12 +10,10 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 2 * * 1'  # Weekly on Monday at 2 AM UTC
+    - cron: '0 2 * * 1' # Weekly on Monday at 2 AM UTC
   workflow_dispatch:
-
 env:
   PYTHON_VERSION: '3.12'
-
 jobs:
   secrets-detection:
     name: Secrets Detection
@@ -24,7 +21,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
-
       - name: Scan for hardcoded credentials
         run: |
           # Scan Python source for potential secrets
@@ -75,89 +71,79 @@ jobs:
           fi
 
           echo "No secrets detected"
-
   python-security:
     name: Static Security Analysis
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
-
       - name: Run Bandit
         run: |
-          pip install bandit[toml]
+          pip install 'bandit[toml]==1.9.4'
           bandit -r ghl_real_estate_ai/ -f json -o bandit-report.json \
             -s B101 \
             --exclude "*/tests/*"
-          # Text summary — MEDIUM+ severity, blocking
-          bandit -r ghl_real_estate_ai/ -s B101 --exclude "*/tests/*" -ll
-
+          # Text summary — MEDIUM+ severity, blocking. Baseline pins known findings
+          # (see bandit.baseline.json + .maintenance/eh-bandit-triage-2026-05-23.md);
+          # new findings still fail CI.
+          bandit -r ghl_real_estate_ai/ -s B101 --exclude "*/tests/*" -ll \
+            --baseline bandit.baseline.json
       - name: Upload Bandit report
         uses: actions/upload-artifact@v7
         if: always()
         with:
           name: bandit-report
           path: bandit-report.json
-
   semgrep:
     name: Semgrep SAST
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
-
       - name: Run Semgrep
         run: |
           pip install semgrep
           semgrep --config .semgrep.yml --error --severity ERROR ghl_real_estate_ai/
           semgrep --config .semgrep.yml ghl_real_estate_ai/ --json > semgrep-report.json || true
-
       - name: Upload Semgrep report
         uses: actions/upload-artifact@v7
         if: always()
         with:
           name: semgrep-report
           path: semgrep-report.json
-
   dependency-audit:
     name: Dependency Audit
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
-
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
-
       - name: Audit Python dependencies
         run: |
           pip install pip-audit
           pip install -r requirements.txt
           pip-audit --format json --output pip-audit-report.json
           pip-audit
-
       - name: Run Safety check
         run: |
           pip install safety
           safety check --output json > safety-report.json || true
           safety check
         continue-on-error: true
-
       - name: Upload audit report
         uses: actions/upload-artifact@v7
         if: always()
@@ -166,14 +152,12 @@ jobs:
           path: |
             pip-audit-report.json
             safety-report.json
-
   sql-injection-check:
     name: SQL Injection Detection
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
-
       - name: Check for SQL injection patterns
         run: |
           echo "Scanning for SQL injection patterns..."
@@ -206,14 +190,12 @@ jobs:
           fi
 
           echo "No SQL injection patterns detected"
-
   infrastructure-security:
     name: Infrastructure Config Check
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
-
       - name: Scan Docker Compose for security issues
         run: |
           pip install checkov
@@ -223,7 +205,6 @@ jobs:
               checkov -f "$f" --framework docker_compose --soft-fail || true
             fi
           done
-
       - name: Check for secrets in infrastructure files
         run: |
           FOUND=0
@@ -236,14 +217,12 @@ jobs:
           if [ "$FOUND" -eq 0 ]; then
             echo "No secrets found in infrastructure files"
           fi
-
   compliance-check:
     name: Compliance Check
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
-
       - name: Fair housing compliance
         run: |
           # Check for demographic filtering in business logic (not test files)
@@ -254,7 +233,6 @@ jobs:
           else
             echo "No demographic filtering patterns found"
           fi
-
       - name: Verify .env is gitignored
         run: |
           if grep -q "^\.env$" .gitignore; then
@@ -263,7 +241,6 @@ jobs:
             echo "::error::.env is not in .gitignore"
             exit 1
           fi
-
   summary:
     name: Security Summary
     runs-on: ubuntu-latest
@@ -276,7 +253,6 @@ jobs:
       - infrastructure-security
       - compliance-check
     if: always()
-
     steps:
       - name: Generate summary
         run: |
