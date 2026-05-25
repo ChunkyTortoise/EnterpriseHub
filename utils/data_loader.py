@@ -106,7 +106,7 @@ def get_stock_data(
 
     try:
         # Fetch data from Yahoo Finance
-        df = yf.download(ticker, period=period, interval=interval, progress=False, show_errors=False)
+        df = yf.download(ticker, period=period, interval=interval, progress=False)
 
         # Check if data was returned
         if df.empty:
