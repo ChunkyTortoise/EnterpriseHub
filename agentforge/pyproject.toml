@@ -18,9 +18,12 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Application Frameworks",
 ]
 
-# Single required dependency - zero beyond Pydantic for base install
+# Base runtime dependencies
+# pydantic: models and validation
+# pyyaml: required by agentforge.config.loader and agentforge.config.pipeline at import time
 dependencies = [
     "pydantic>=2.0,<3.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
