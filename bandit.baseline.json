@@ -9,7 +9,7 @@
       "reason": "syntax error while parsing AST from file"
     }
   ],
-  "generated_at": "2026-05-25T02:38:11Z",
+  "generated_at": "2026-05-25T23:45:36Z",
   "metrics": {
     "_totals": {
       "CONFIDENCE.HIGH": 743,
@@ -20,9 +20,9 @@
       "SEVERITY.LOW": 784,
       "SEVERITY.MEDIUM": 44,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 432718,
+      "loc": 432746,
       "nosec": 0,
-      "skipped_tests": 11
+      "skipped_tests": 3
     },
     "ghl_real_estate_ai/__init__.py": {
       "CONFIDENCE.HIGH": 0,
@@ -5298,9 +5298,9 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 1012,
+      "loc": 1026,
       "nosec": 0,
-      "skipped_tests": 4
+      "skipped_tests": 0
     },
     "ghl_real_estate_ai/ml/neural_ml_integration.py": {
       "CONFIDENCE.HIGH": 0,
@@ -5324,9 +5324,9 @@
       "SEVERITY.LOW": 0,
       "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
-      "loc": 1080,
+      "loc": 1094,
       "nosec": 0,
-      "skipped_tests": 4
+      "skipped_tests": 0
     },
     "ghl_real_estate_ai/ml/predictive_lead_scoring_engine.py": {
       "CONFIDENCE.HIGH": 0,
