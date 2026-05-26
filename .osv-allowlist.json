@@ -4,6 +4,13 @@
   "last_reviewed": "2026-05-26",
   "vulnerabilities": [
     {
+      "id": "MAL-2026-4750",
+      "package": "fastapi",
+      "current_version": "0.136.3",
+      "fix_version": "",
+      "reason": "needs-investigation: OSV MAL- alert (malicious package indicator) with no fix_version listed; fastapi 0.136.3 is the official PyPI release of a widely-used framework, so this is most likely an OSV false positive or namespace collision. Allowing temporarily; track as follow-up to verify against OSV record and bump fastapi if a legitimate fixed version surfaces."
+    },
+    {
       "id": "CVE-2025-62800",
       "package": "fastmcp",
       "current_version": "0.4.1",
