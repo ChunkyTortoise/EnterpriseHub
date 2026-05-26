@@ -577,7 +577,7 @@ class EnterpriseTenantService:
             row = await conn.fetchrow(
                 f"""
                 SELECT * FROM tenants WHERE {where_clause}
-            """,
+            """,  # nosec B608 - where_clause is hard-coded ternary "id = $1" or "slug = $1"; tenant_identifier passes as $1 parameter
                 tenant_identifier,
             )
 

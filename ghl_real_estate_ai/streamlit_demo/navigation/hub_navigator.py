@@ -208,7 +208,7 @@ def render_hub_navigator(sparkline_fn):
                     default_index = 0
 
                 category_selection = st.radio(
-                    f"Select from {category_name}:",
+                    f"Select from {category_name}:",  # nosec B608 - st.radio label string, not SQL; false positive
                     category_hubs,
                     index=default_index if current_hub in category_hubs else None,
                     key=f"category_{category_name}",
