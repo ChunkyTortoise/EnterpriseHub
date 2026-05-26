@@ -3,7 +3,7 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-7%2C721_collectible-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-7%2C665_collectible-brightgreen)](tests/)
 [![CI Tests](https://img.shields.io/badge/CI_verified-1%2C100+-blue)](tests/)
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
 [![Eval Gate](https://img.shields.io/badge/eval_gate-active-46E3B7)](evals/)
@@ -17,7 +17,7 @@
 
 ## Executive Summary
 
-Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots so no lead goes cold. Built for real estate brokerages and agencies; current local verification collects 7,721 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
+Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots so no lead goes cold. Built for real estate brokerages and agencies; current local verification collects 7,665 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
 
 ---
 
@@ -33,7 +33,7 @@ EnterpriseHub includes a case-study-backed production story plus modeled benchma
 | **LLM cache target** | L1 60% + L2 20% + L3 8% design target | Synthetic benchmark / architecture target |
 | **Token cost model** | 93K to 7.8K tokens per 100-query modeled workload | Projection; not quoted as live billing measurement |
 | **Eval coverage** | 50 golden cases across qualification, edge cases, and compliance | Repository artifact in `evals/` |
-| **Test collection** | 7,721 collected, 38 skipped on Apr 29, 2026 | Local `pytest --collect-only --override-ini='addopts='` |
+| **Test collection** | 7,665 collected on May 19, 2026 | Local `pytest --collect-only --override-ini='addopts='` |
 
 See [CASE_STUDY.md](CASE_STUDY.md), [BENCHMARKS.md](BENCHMARKS.md), and [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md) for methodology and claim provenance.
 
@@ -55,7 +55,7 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | **A/B Testing** | Method | Two-proportion z-test | `ab_testing_service.py` statistical engine |
 | **A/B Testing** | Assignment | Deterministic SHA-256 bucketing | `experiment_id + contact_id` hash |
 | **Compliance** | Pipeline stages | 7 (language, TCPA, compliance, translation, truncation) | `response_pipeline/factory.py` |
-| **Test Surface** | Current collectible count | 7,721 collected / 38 skipped | `pytest --collect-only --override-ini='addopts='` on Apr 29, 2026 |
+| **Test Surface** | Current collectible count | 7,665 collected | `pytest --collect-only --override-ini='addopts='` on May 19, 2026 |
 | **ADRs** | Documented decisions | 10 | `docs/adr/0001-0010` |
 
 ---
@@ -118,7 +118,7 @@ graph TB
 
 | | |
 |--|--|
-| **Dashboard** | https://ct-enterprise-ai.streamlit.app |
+| **Dashboard** | <https://ct-enterprise-ai.streamlit.app> |
 | **API Docs** | Swagger UI (40+ routes, available on local/staging deploy) |
 | **Demo login** | `demo_user` / `Demo1234!` |
 | **Admin login** | `admin` / `Admin1234!` |
@@ -158,6 +158,7 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 **Problem:** Repeated lead qualification workflows can reprocess the same property, market, and conversation context. Without caching, the modeled workload in `BENCHMARKS.md` uses roughly 93K tokens per 100 queries, so cost compounds quickly as conversation volume grows.
 
 **Pattern:**
+
 - **L1 (in-memory LRU):** `MemoryCache` with 1,000-item capacity and LRU eviction. Sub-1ms access. Handles repeated lookups within the same active qualification session.
 - **L2 (Redis):** Shared across all FastAPI workers. Under 5ms access. Default 15-minute TTL for conversation context, 1 hour for market data. Handles cross-request deduplication.
 - **L3 (PostgreSQL):** Persistent, under 20ms access. Stores historical results for analytics and A/B comparisons. Cache keys incorporate `conversation_id + message_hash + model_version` to prevent stale reads after model upgrades.
@@ -201,6 +202,7 @@ A background task promotes frequently accessed L1 keys to L2.
 **Key classes:** `JorgeHandoffService`, `HandoffDecision`, `EnrichedHandoffContext`, `HandoffRouter`
 
 **Pattern:**
+
 - **Confidence thresholds per direction:** Lead-to-Buyer/Seller at 0.7; Buyer-to-Seller at 0.8; Seller-to-Buyer at 0.6
 - **Circular prevention:** Same source-to-target pair is blocked within a 30-minute window
 - **Rate limiting:** 3 handoffs per hour, 10 per day per contact
@@ -241,9 +243,9 @@ Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUI
 |-----------------------------|--------------|-------------------|
 | **AI / ML Engineer** | Claude orchestrator ([`services/claude_orchestrator.py`](ghl_real_estate_ai/services/claude_orchestrator.py)), 3-tier LLM cache, multi-strategy parsing | IBM GenAI Engineering (144h), Microsoft AI & ML Engineering (75h) |
 | **Multi-Agent / Agentic AI** | Agent mesh coordinator ([`services/agent_mesh_coordinator.py`](ghl_real_estate_ai/services/agent_mesh_coordinator.py)), capability routing, governance, audit trails | Duke LLMOps (48h), Vanderbilt Prompt Engineering (18h) |
-| **Backend / Systems Engineer** | FastAPI app ([`app.py`](ghl_real_estate_ai/app.py)), Alembic migrations, Redis L1/L2/L3 cache, PostgreSQL | DeepLearning.AI Deep Learning (120h), Meta Back-End Developer (75h) |
+| **Backend / Systems Engineer** | FastAPI app ([`api/main.py`](ghl_real_estate_ai/api/main.py)), Alembic migrations, Redis L1/L2/L3 cache, PostgreSQL | DeepLearning.AI Deep Learning (120h), Meta Back-End Developer (75h) |
 | **RAG / Retrieval Engineer** | Advanced RAG system ([`advanced_rag_system/`](advanced_rag_system/)), BM25 + dense + RRF hybrid retrieval, ChromaDB | IBM RAG & Agentic AI (24h), Google Cloud GenAI (25h) |
-| **MLOps / LLMOps** | A/B testing service, experiment tracking, model routing (Haiku/Sonnet/Opus), observability ([`services/llm_observability.py`](ghl_real_estate_ai/services/llm_observability.py)) | Duke LLMOps (48h), Google Advanced Data Analytics (200h) |
+| **MLOps / LLMOps** | A/B testing service ([`services/jorge/ab_testing_service.py`](ghl_real_estate_ai/services/jorge/ab_testing_service.py)), per-bot cost tracking ([`services/jorge/cost_tracker.py`](ghl_real_estate_ai/services/jorge/cost_tracker.py)), model routing (Haiku/Sonnet/Opus). End-to-end OTel tracing is planned; see [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for the design and current scope. | Duke LLMOps (48h), Google Advanced Data Analytics (200h) |
 
 ---
 
@@ -320,13 +322,12 @@ See [`.github/workflows/security-scan.yml`](.github/workflows/security-scan.yml)
 EnterpriseHub/
 ├── ghl_real_estate_ai/           # Main application
 │   ├── agents/                   # Bot implementations (Lead, Buyer, Seller)
-│   ├── api/routes/               # FastAPI endpoints
+│   ├── api/                      # FastAPI entry (main.py) + routes
 │   ├── services/                 # Business logic layer
 │   │   ├── claude_orchestrator.py    # Multi-LLM coordination + caching
 │   │   ├── agent_mesh_coordinator.py # Agent fleet management
-│   │   ├── llm_observability.py      # LLM cost tracking + tracing
 │   │   ├── enhanced_ghl_client.py    # CRM integration (rate-limited)
-│   │   └── jorge/                    # Bot services (handoff, A/B, metrics)
+│   │   └── jorge/                    # Bot services (handoff, A/B, cost, metrics)
 │   ├── models/                   # SQLAlchemy models, Pydantic schemas
 │   └── streamlit_demo/           # Dashboard UI components
 ├── advanced_rag_system/          # RAG pipeline (BM25, dense search, ChromaDB)
@@ -334,7 +335,7 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 7,721 tests collectible locally on Apr 29, 2026
+├── tests/                        # 7,665 tests collectible locally on May 19, 2026
 ├── conftest.py                   # Shared test fixtures
 ├── render.yaml                   # Render deployment config
 └── docker-compose.yml            # Container orchestration

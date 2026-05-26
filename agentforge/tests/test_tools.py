@@ -17,6 +17,7 @@ import pytest
 from pydantic import BaseModel
 
 from agentforge.tools import (
+    BaseTool,
     FunctionTool,
     ToolConfig,
     ToolExecutionError,
@@ -967,6 +968,96 @@ class TestIntegration:
         result = await search.execute(query="test", limit=3)
         assert len(result) == 3
         assert "test" in result[0]
+
+
+# =============================================================================
+# Test Docstring Parameter Descriptions (BaseTool._generate_schema)
+# =============================================================================
+
+
+class TestDocstringParamDescriptions:
+    """Tests for parsing Google-style Args docstrings into schema descriptions."""
+
+    def test_args_descriptions_applied_to_schema(self):
+        """Args section descriptions appear on the generated schema properties."""
+
+        class DocumentedTool(BaseTool):
+            async def execute(self, query: str, limit: int = 10) -> str:
+                """Search for information.
+
+                Args:
+                    query: The search query string.
+                    limit: Maximum number of results to return.
+
+                Returns:
+                    A formatted result string.
+                """
+                return f"Results for: {query}"
+
+            def get_parameters_schema(self) -> dict[str, Any]:
+                return {}
+
+        tool_instance = DocumentedTool(ToolConfig(name="documented"))
+        schema = tool_instance._generate_schema()
+
+        assert schema.properties["query"]["description"] == "The search query string."
+        assert (
+            schema.properties["limit"]["description"]
+            == "Maximum number of results to return."
+        )
+
+    def test_no_docstring_adds_no_description(self):
+        """A tool whose execute has no docstring gets no description keys."""
+
+        class UndocumentedTool(BaseTool):
+            async def execute(self, query: str, limit: int = 10) -> str:
+                return f"Results for: {query}"
+
+            def get_parameters_schema(self) -> dict[str, Any]:
+                return {}
+
+        tool_instance = UndocumentedTool(ToolConfig(name="undocumented"))
+        schema = tool_instance._generate_schema()
+
+        assert "description" not in schema.properties["query"]
+        assert "description" not in schema.properties["limit"]
+
+    def test_no_args_section_adds_no_description(self):
+        """A docstring without an Args section adds no description keys."""
+
+        class NoArgsTool(BaseTool):
+            async def execute(self, query: str) -> str:
+                """Search for information without documented arguments."""
+                return f"Results for: {query}"
+
+            def get_parameters_schema(self) -> dict[str, Any]:
+                return {}
+
+        tool_instance = NoArgsTool(ToolConfig(name="no_args"))
+        schema = tool_instance._generate_schema()
+
+        assert "description" not in schema.properties["query"]
+
+    def test_undocumented_param_keeps_no_description(self):
+        """A parameter omitted from the Args section gets no description key."""
+
+        class PartialDocTool(BaseTool):
+            async def execute(self, query: str, limit: int = 10) -> str:
+                """Search for information.
+
+                Args:
+                    query: The search query string.
+                """
+                return f"Results for: {query}"
+
+            def get_parameters_schema(self) -> dict[str, Any]:
+                return {}
+
+        tool_instance = PartialDocTool(ToolConfig(name="partial"))
+        schema = tool_instance._generate_schema()
+
+        assert schema.properties["query"]["description"] == "The search query string."
+        assert "description" not in schema.properties["limit"]
 
 
 if __name__ == "__main__":
