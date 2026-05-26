@@ -95,6 +95,8 @@ class FeatureExtractionConfig:
     # Text processing
     max_text_length: int = 512
     text_embedding_model: str = "bert-base-uncased"
+    # Pinned commit SHA for supply-chain safety (B615). Refresh via HF Hub API when bumping.
+    text_embedding_model_revision: str = "86b5e0934494bd15c9632b12f734a8a67f723594"
     use_semantic_chunking: bool = True
     extract_entities: bool = True
     extract_sentiment: bool = True
@@ -156,10 +158,15 @@ class NeuralTextEncoder(nn.Module):
         super().__init__()
         self.config = config
 
-        # BERT for semantic embeddings
-        # TODO(security): pin to a specific commit SHA instead of "main" for supply-chain hardening (B615)
-        self.tokenizer = BertTokenizer.from_pretrained(config.text_embedding_model, revision="main")  # nosec B615 - branch pin pending SHA selection
-        self.bert_model = BertModel.from_pretrained(config.text_embedding_model, revision="main")  # nosec B615 - branch pin pending SHA selection
+        # BERT for semantic embeddings (HF commit SHA pinned via config; B615)
+        self.tokenizer = BertTokenizer.from_pretrained(
+            config.text_embedding_model,
+            revision=config.text_embedding_model_revision,
+        )
+        self.bert_model = BertModel.from_pretrained(
+            config.text_embedding_model,
+            revision=config.text_embedding_model_revision,
+        )
 
         # Additional text processing layers
         bert_dim = self.bert_model.config.hidden_size
@@ -214,8 +221,16 @@ class NeuralImageEncoder(nn.Module):
 
         # CLIP for visual-semantic features
         # TODO(security): pin to a specific commit SHA instead of "main" for supply-chain hardening (B615)
-        self.clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32", revision="main")  # nosec B615 - branch pin pending SHA selection
-        self.clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32", revision="main")  # nosec B615 - branch pin pending SHA selection
+        # HF commit SHA pinned for supply-chain safety (B615). Refresh via HF Hub API when bumping.
+        _clip_revision = "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268"
+        self.clip_processor = CLIPProcessor.from_pretrained(
+            "openai/clip-vit-base-patch32",
+            revision=_clip_revision,
+        )
+        self.clip_model = CLIPModel.from_pretrained(
+            "openai/clip-vit-base-patch32",
+            revision=_clip_revision,
+        )
 
         # CNN for spatial features
         self.spatial_cnn = nn.Sequential(
