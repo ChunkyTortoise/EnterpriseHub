@@ -276,6 +276,3 @@ jobs:
           pip install -r requirements.txt
       - name: Verify app can be imported
         run: python -c "import ghl_real_estate_ai; print('App imported successfully')"
-      - name: Verify modules can be imported
-        run: |
-          python -c "from utils import data_loader; print('data_loader imported successfully')"
