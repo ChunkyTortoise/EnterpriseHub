@@ -155,15 +155,15 @@ class CLI:
 
         # report command
         report_parser = subparsers.add_parser("report", help="Generate observability reports")
-        report_subparsers = report_parser.add_subparsers(
-            dest="report_command", help="Report type"
-        )
+        report_subparsers = report_parser.add_subparsers(dest="report_command", help="Report type")
 
         report_validate = report_subparsers.add_parser(
             "validate-runlog", help="Validate a run log file"
         )
         report_validate.add_argument("--input", required=True, help="Path to run log JSON file")
-        report_validate.add_argument("--output", required=True, help="Path to write markdown report")
+        report_validate.add_argument(
+            "--output", required=True, help="Path to write markdown report"
+        )
 
         report_daily = report_subparsers.add_parser(
             "daily-errors", help="Render daily error report"
@@ -193,9 +193,7 @@ class CLI:
 
         # bundle command
         bundle_parser = subparsers.add_parser("bundle", help="Generate handoff bundles")
-        bundle_subparsers = bundle_parser.add_subparsers(
-            dest="bundle_command", help="Bundle type"
-        )
+        bundle_subparsers = bundle_parser.add_subparsers(dest="bundle_command", help="Bundle type")
 
         bundle_handoff = bundle_subparsers.add_parser(
             "handoff", help="Render the client handoff document bundle"
@@ -495,9 +493,7 @@ def {args.name}(*args, **kwargs) -> str:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         documents = {
-            "architecture.md": generate_architecture_md(
-                args.project, args.execution_profile
-            ),
+            "architecture.md": generate_architecture_md(args.project, args.execution_profile),
             "api-contract-summary.md": generate_api_contract_summary_md(args.project),
             "operations-checklist.md": generate_operations_checklist_md(args.project),
         }
