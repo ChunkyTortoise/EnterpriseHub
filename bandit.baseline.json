@@ -9,20 +9,20 @@
       "reason": "syntax error while parsing AST from file"
     }
   ],
-  "generated_at": "2026-05-25T23:45:36Z",
+  "generated_at": "2026-05-26T02:44:22Z",
   "metrics": {
     "_totals": {
       "CONFIDENCE.HIGH": 743,
-      "CONFIDENCE.LOW": 27,
+      "CONFIDENCE.LOW": 19,
       "CONFIDENCE.MEDIUM": 58,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 784,
-      "SEVERITY.MEDIUM": 44,
+      "SEVERITY.MEDIUM": 36,
       "SEVERITY.UNDEFINED": 0,
       "loc": 432746,
       "nosec": 0,
-      "skipped_tests": 3
+      "skipped_tests": 11
     },
     "ghl_real_estate_ai/__init__.py": {
       "CONFIDENCE.HIGH": 0,
@@ -8434,16 +8434,16 @@
     },
     "ghl_real_estate_ai/services/enterprise_tenant_service.py": {
       "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 2,
+      "CONFIDENCE.LOW": 1,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 2,
+      "SEVERITY.MEDIUM": 1,
       "SEVERITY.UNDEFINED": 0,
       "loc": 822,
       "nosec": 0,
-      "skipped_tests": 0
+      "skipped_tests": 1
     },
     "ghl_real_estate_ai/services/error_monitoring_service.py": {
       "CONFIDENCE.HIGH": 0,
@@ -11541,16 +11541,16 @@
     },
     "ghl_real_estate_ai/services/simple_db_service.py": {
       "CONFIDENCE.HIGH": 0,
-      "CONFIDENCE.LOW": 6,
+      "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 0,
-      "SEVERITY.MEDIUM": 6,
+      "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 252,
       "nosec": 0,
-      "skipped_tests": 0
+      "skipped_tests": 6
     },
     "ghl_real_estate_ai/services/simulated_mls_feed.py": {
       "CONFIDENCE.HIGH": 2,
@@ -14609,16 +14609,16 @@
     },
     "ghl_real_estate_ai/streamlit_demo/navigation/hub_navigator.py": {
       "CONFIDENCE.HIGH": 1,
-      "CONFIDENCE.LOW": 1,
+      "CONFIDENCE.LOW": 0,
       "CONFIDENCE.MEDIUM": 0,
       "CONFIDENCE.UNDEFINED": 0,
       "SEVERITY.HIGH": 0,
       "SEVERITY.LOW": 1,
-      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.MEDIUM": 0,
       "SEVERITY.UNDEFINED": 0,
       "loc": 385,
       "nosec": 0,
-      "skipped_tests": 0
+      "skipped_tests": 1
     },
     "ghl_real_estate_ai/streamlit_demo/obsidian_theme.py": {
       "CONFIDENCE.HIGH": 0,
@@ -20048,28 +20048,6 @@
       "test_name": "blacklist"
     },
     {
-      "code": "577             row = await conn.fetchrow(\n578                 f\"\"\"\n579                 SELECT * FROM tenants WHERE {where_clause}\n580             \"\"\",\n581                 tenant_identifier,\n",
-      "col_offset": 20,
-      "end_col_offset": 44,
-      "filename": "ghl_real_estate_ai/services/enterprise_tenant_service.py",
-      "issue_confidence": "LOW",
-      "issue_cwe": {
-        "id": 89,
-        "link": "https://cwe.mitre.org/data/definitions/89.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 578,
-      "line_range": [
-        578,
-        579,
-        580
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
-      "test_id": "B608",
-      "test_name": "hardcoded_sql_expressions"
-    },
-    {
       "code": "663 \n664                 query = f\"\"\"\n665                     UPDATE tenants \n666                     SET {\", \".join(set_clauses)}\n667                     WHERE id = ${param_count}\n668                 \"\"\"\n669 \n",
       "col_offset": 28,
       "end_col_offset": 24,
@@ -22338,179 +22316,6 @@
         700,
         701,
         702
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
-      "test_id": "B608",
-      "test_name": "hardcoded_sql_expressions"
-    },
-    {
-      "code": "53                 # Get lead interaction metrics\n54                 lead_metrics = await conn.fetchrow(f\"\"\"\n55                     SELECT\n56                         COUNT(*) as total_interactions,\n57                         COUNT(CASE WHEN event_type LIKE '%qualification%' THEN 1 END) as qualified_leads,\n58                         COUNT(CASE WHEN lead_temperature = 'hot' THEN 1 END) as hot_leads,\n59                         AVG(processing_time_ms) as avg_response_time,\n60                         COUNT(CASE WHEN bot_type = 'jorge-seller' THEN 1 END) as jorge_seller_interactions,\n61                         COUNT(CASE WHEN bot_type = 'jorge-buyer' THEN 1 END) as jorge_buyer_interactions\n62                     FROM fact_lead_interactions\n63                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'\n64                 \"\"\")\n65 \n",
-      "col_offset": 55,
-      "end_col_offset": 57,
-      "filename": "ghl_real_estate_ai/services/simple_db_service.py",
-      "issue_confidence": "LOW",
-      "issue_cwe": {
-        "id": 89,
-        "link": "https://cwe.mitre.org/data/definitions/89.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 54,
-      "line_range": [
-        54,
-        55,
-        56,
-        57,
-        58,
-        59,
-        60,
-        61,
-        62,
-        63,
-        64
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
-      "test_id": "B608",
-      "test_name": "hardcoded_sql_expressions"
-    },
-    {
-      "code": "66                 # Get commission data\n67                 commission_data = await conn.fetchrow(f\"\"\"\n68                     SELECT\n69                         COALESCE(SUM(jorge_pipeline_value), 0) as total_pipeline_value,\n70                         COALESCE(SUM(commission_amount), 0) as total_commission,\n71                         COUNT(*) as commission_events\n72                     FROM fact_commission_events\n73                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'\n74                 \"\"\")\n75 \n",
-      "col_offset": 58,
-      "end_col_offset": 57,
-      "filename": "ghl_real_estate_ai/services/simple_db_service.py",
-      "issue_confidence": "LOW",
-      "issue_cwe": {
-        "id": 89,
-        "link": "https://cwe.mitre.org/data/definitions/89.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 67,
-      "line_range": [
-        67,
-        68,
-        69,
-        70,
-        71,
-        72,
-        73,
-        74
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
-      "test_id": "B608",
-      "test_name": "hardcoded_sql_expressions"
-    },
-    {
-      "code": "76                 # Get bot performance\n77                 bot_performance = await conn.fetchrow(f\"\"\"\n78                     SELECT\n79                         AVG(processing_time_ms) as avg_bot_response_time,\n80                         AVG(CASE WHEN success THEN 1.0 ELSE 0.0 END) as bot_success_rate,\n81                         COUNT(*) as bot_operations\n82                     FROM fact_bot_performance\n83                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'\n84                 \"\"\")\n85 \n",
-      "col_offset": 58,
-      "end_col_offset": 57,
-      "filename": "ghl_real_estate_ai/services/simple_db_service.py",
-      "issue_confidence": "LOW",
-      "issue_cwe": {
-        "id": 89,
-        "link": "https://cwe.mitre.org/data/definitions/89.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 77,
-      "line_range": [
-        77,
-        78,
-        79,
-        80,
-        81,
-        82,
-        83,
-        84
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
-      "test_id": "B608",
-      "test_name": "hardcoded_sql_expressions"
-    },
-    {
-      "code": "138                 # Get bot performance by type\n139                 bot_data = await conn.fetch(f\"\"\"\n140                     SELECT\n141                         bot_type,\n142                         COUNT(*) as interactions,\n143                         AVG(processing_time_ms) as avg_response_time_ms,\n144                         AVG(CASE WHEN success THEN 1.0 ELSE 0.0 END) as success_rate,\n145                         AVG(confidence_score) as avg_confidence_score\n146                     FROM fact_bot_performance\n147                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'\n148                     GROUP BY bot_type\n149                     ORDER BY interactions DESC\n150                 \"\"\")\n151 \n",
-      "col_offset": 48,
-      "end_col_offset": 57,
-      "filename": "ghl_real_estate_ai/services/simple_db_service.py",
-      "issue_confidence": "LOW",
-      "issue_cwe": {
-        "id": 89,
-        "link": "https://cwe.mitre.org/data/definitions/89.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 139,
-      "line_range": [
-        139,
-        140,
-        141,
-        142,
-        143,
-        144,
-        145,
-        146,
-        147,
-        148,
-        149,
-        150
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
-      "test_id": "B608",
-      "test_name": "hardcoded_sql_expressions"
-    },
-    {
-      "code": "207                 # Get revenue time series data (daily aggregation)\n208                 timeseries_data = await conn.fetch(f\"\"\"\n209                     SELECT\n210                         DATE(timestamp) as date,\n211                         SUM(jorge_pipeline_value) as daily_pipeline_value,\n212                         SUM(commission_amount) as daily_commission,\n213                         COUNT(*) as daily_deals\n214                     FROM fact_commission_events\n215                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'\n216                     GROUP BY DATE(timestamp)\n217                     ORDER BY date DESC\n218                 \"\"\")\n219 \n",
-      "col_offset": 55,
-      "end_col_offset": 57,
-      "filename": "ghl_real_estate_ai/services/simple_db_service.py",
-      "issue_confidence": "LOW",
-      "issue_cwe": {
-        "id": 89,
-        "link": "https://cwe.mitre.org/data/definitions/89.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 208,
-      "line_range": [
-        208,
-        209,
-        210,
-        211,
-        212,
-        213,
-        214,
-        215,
-        216,
-        217,
-        218
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
-      "test_id": "B608",
-      "test_name": "hardcoded_sql_expressions"
-    },
-    {
-      "code": "220                 # Get overall commission summary\n221                 commission_summary = await conn.fetchrow(f\"\"\"\n222                     SELECT\n223                         SUM(jorge_pipeline_value) as total_pipeline_value,\n224                         SUM(commission_amount) as total_commission,\n225                         COUNT(*) as total_deals,\n226                         AVG(jorge_pipeline_value) as avg_deal_value\n227                     FROM fact_commission_events\n228                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'\n229                 \"\"\")\n230 \n",
-      "col_offset": 61,
-      "end_col_offset": 57,
-      "filename": "ghl_real_estate_ai/services/simple_db_service.py",
-      "issue_confidence": "LOW",
-      "issue_cwe": {
-        "id": 89,
-        "link": "https://cwe.mitre.org/data/definitions/89.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 221,
-      "line_range": [
-        221,
-        222,
-        223,
-        224,
-        225,
-        226,
-        227,
-        228,
-        229
       ],
       "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
       "test_id": "B608",
@@ -31653,26 +31458,6 @@
       "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
       "test_id": "B110",
       "test_name": "try_except_pass"
-    },
-    {
-      "code": "210                 category_selection = st.radio(\n211                     f\"Select from {category_name}:\",\n212                     category_hubs,\n",
-      "col_offset": 22,
-      "end_col_offset": 34,
-      "filename": "ghl_real_estate_ai/streamlit_demo/navigation/hub_navigator.py",
-      "issue_confidence": "LOW",
-      "issue_cwe": {
-        "id": 89,
-        "link": "https://cwe.mitre.org/data/definitions/89.html"
-      },
-      "issue_severity": "MEDIUM",
-      "issue_text": "Possible SQL injection vector through string-based query construction.",
-      "line_number": 211,
-      "line_range": [
-        211
-      ],
-      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b608_hardcoded_sql_expressions.html",
-      "test_id": "B608",
-      "test_name": "hardcoded_sql_expressions"
     },
     {
       "code": "252 \n253                 except Exception:\n254                     pass\n255         else:\n",

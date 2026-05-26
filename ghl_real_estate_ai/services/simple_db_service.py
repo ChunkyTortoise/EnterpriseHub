@@ -61,7 +61,7 @@ class SimpleDatabaseService:
                         COUNT(CASE WHEN bot_type = 'jorge-buyer' THEN 1 END) as jorge_buyer_interactions
                     FROM fact_lead_interactions
                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'
-                """)
+                """)  # nosec B608 - hours = int(hours_map.get(timeframe, 24)); only internal dict values reach the f-string
 
                 # Get commission data
                 commission_data = await conn.fetchrow(f"""
@@ -71,7 +71,7 @@ class SimpleDatabaseService:
                         COUNT(*) as commission_events
                     FROM fact_commission_events
                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'
-                """)
+                """)  # nosec B608 - same hours int-from-dict guard as above
 
                 # Get bot performance
                 bot_performance = await conn.fetchrow(f"""
@@ -81,7 +81,7 @@ class SimpleDatabaseService:
                         COUNT(*) as bot_operations
                     FROM fact_bot_performance
                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'
-                """)
+                """)  # nosec B608 - same hours int-from-dict guard as above
 
                 # Calculate Jorge's commission (6%)
                 pipeline_value = float(commission_data["total_pipeline_value"] or 0)
@@ -147,7 +147,7 @@ class SimpleDatabaseService:
                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'
                     GROUP BY bot_type
                     ORDER BY interactions DESC
-                """)
+                """)  # nosec B608 - hours is from internal dict (values are int literals 24/168/720/2160)
 
                 # Get bot types info from dimension table
                 bot_types_info = await conn.fetch("""
@@ -215,7 +215,7 @@ class SimpleDatabaseService:
                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'
                     GROUP BY DATE(timestamp)
                     ORDER BY date DESC
-                """)
+                """)  # nosec B608 - hours is from internal dict (values are int literals)
 
                 # Get overall commission summary
                 commission_summary = await conn.fetchrow(f"""
@@ -226,7 +226,7 @@ class SimpleDatabaseService:
                         AVG(jorge_pipeline_value) as avg_deal_value
                     FROM fact_commission_events
                     WHERE timestamp >= NOW() - INTERVAL '{hours} hours'
-                """)
+                """)  # nosec B608 - hours is from internal dict (values are int literals)
 
                 # Format timeseries for frontend
                 timeseries = []
