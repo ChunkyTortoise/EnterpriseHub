@@ -1,0 +1,49 @@
+{
+  "version": "1.0.0",
+  "description": "Vulnerability allowlist for EnterpriseHub pip-audit gate. Each entry is reviewed and classified. CI fails if pip-audit reports an ID not in this list.",
+  "last_reviewed": "2026-05-26",
+  "vulnerabilities": [
+    {
+      "id": "CVE-2025-62800",
+      "package": "fastmcp",
+      "current_version": "0.4.1",
+      "fix_version": "2.13.0",
+      "reason": "breaking-bump-deferred: fix requires major version bump (0.x to 2.14+ minimum). MCP protocol changed between 0.x and 2.x; bumping touches mcp_server.py + 7 domain MCP servers + AgentForge tools. Tracked as separate migration spec."
+    },
+    {
+      "id": "CVE-2025-62801",
+      "package": "fastmcp",
+      "current_version": "0.4.1",
+      "fix_version": "2.13.0",
+      "reason": "breaking-bump-deferred: same fastmcp 0.x to 2.x major bump constraint as CVE-2025-62800."
+    },
+    {
+      "id": "GHSA-rcfx-77hg-w2wv",
+      "package": "fastmcp",
+      "current_version": "0.4.1",
+      "fix_version": "2.14.0",
+      "reason": "breaking-bump-deferred: same fastmcp 0.x to 2.x major bump constraint."
+    },
+    {
+      "id": "CVE-2025-69196",
+      "package": "fastmcp",
+      "current_version": "0.4.1",
+      "fix_version": "2.14.2",
+      "reason": "breaking-bump-deferred: same fastmcp 0.x to 2.x major bump constraint."
+    },
+    {
+      "id": "CVE-2025-64340",
+      "package": "fastmcp",
+      "current_version": "0.4.1",
+      "fix_version": "3.2.0",
+      "reason": "breaking-bump-deferred: fix requires bump to fastmcp 3.x (latest is 3.3.1). Same major-version constraint."
+    },
+    {
+      "id": "CVE-2026-27124",
+      "package": "fastmcp",
+      "current_version": "0.4.1",
+      "fix_version": "3.2.0",
+      "reason": "breaking-bump-deferred: fix requires bump to fastmcp 3.x. Same major-version constraint."
+    }
+  ]
+}

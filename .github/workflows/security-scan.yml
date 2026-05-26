@@ -139,8 +139,8 @@ jobs:
         run: |
           pip install pip-audit
           pip install -r requirements.txt
-          pip-audit --format json --output pip-audit-report.json
-          pip-audit
+          pip-audit --format json --output pip-audit-report.json || true
+          python3 scripts/ci/filter-pip-audit.py .osv-allowlist.json < pip-audit-report.json
       - name: Run Safety check
         run: |
           pip install safety
