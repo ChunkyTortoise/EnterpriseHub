@@ -11,7 +11,7 @@ Provides endpoints for:
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -64,7 +64,7 @@ class LifecycleMetrics(BaseModel):
 
 
 # Lead Stage Management
-@router.post("/stages/transition")
+@router.post("/stages/transition", response_model=dict, status_code=status.HTTP_200_OK)
 async def transition_lead_stage(location_id: str, transition: StageTransition, background_tasks: BackgroundTasks):
     """
     Manually transition a lead to a new stage.
@@ -108,7 +108,7 @@ async def transition_lead_stage(location_id: str, transition: StageTransition, b
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/stages/{location_id}/{contact_id}/history")
+@router.get("/stages/{location_id}/{contact_id}/history", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_stage_history(location_id: str, contact_id: str):
     """
     Get complete stage transition history for a lead.
@@ -143,7 +143,7 @@ async def get_stage_history(location_id: str, contact_id: str):
 
 
 # Lead Health Monitoring
-@router.get("/health/{location_id}/{contact_id}", response_model=LeadHealth)
+@router.get("/health/{location_id}/{contact_id}", response_model=LeadHealth, status_code=status.HTTP_200_OK)
 async def get_lead_health(location_id: str, contact_id: str):
     """
     Get health score and engagement metrics for a specific lead.
@@ -191,7 +191,7 @@ async def get_lead_health(location_id: str, contact_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/health/{location_id}/at-risk")
+@router.get("/health/{location_id}/at-risk", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_at_risk_leads(
     location_id: str,
     threshold: float = Query(default=0.3, description="Health score threshold (0-1)"),
@@ -222,7 +222,7 @@ async def get_at_risk_leads(
 
 
 # Re-engagement Campaigns
-@router.post("/reengage/campaign", status_code=202)
+@router.post("/reengage/campaign", response_model=dict, status_code=status.HTTP_202_ACCEPTED)
 async def create_reengagement_campaign(
     location_id: str, request: ReengagementRequest, background_tasks: BackgroundTasks
 ):
@@ -256,7 +256,7 @@ async def create_reengagement_campaign(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/reengage/{location_id}/eligible")
+@router.get("/reengage/{location_id}/eligible", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_eligible_for_reengagement(
     location_id: str,
     days_inactive: int = Query(default=30, description="Days since last contact"),
@@ -286,7 +286,7 @@ async def get_eligible_for_reengagement(
 
 
 # Lifecycle Metrics
-@router.get("/metrics/{location_id}", response_model=LifecycleMetrics)
+@router.get("/metrics/{location_id}", response_model=LifecycleMetrics, status_code=status.HTTP_200_OK)
 async def get_lifecycle_metrics(
     location_id: str,
     days: int = Query(default=30, description="Number of days to analyze"),
@@ -318,7 +318,7 @@ async def get_lifecycle_metrics(
 
 
 # Automated Nurture Sequences
-@router.post("/nurture/start")
+@router.post("/nurture/start", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def start_nurture_sequence(
     location_id: str,
     contact_id: str,
@@ -353,7 +353,7 @@ async def start_nurture_sequence(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/nurture/{sequence_id}/stop")
+@router.post("/nurture/{sequence_id}/stop", response_model=dict, status_code=status.HTTP_200_OK)
 async def stop_nurture_sequence(location_id: str, sequence_id: str):
     """
     Stop an active nurture sequence.
@@ -376,7 +376,7 @@ async def stop_nurture_sequence(location_id: str, sequence_id: str):
 
 
 # Health check
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def lifecycle_health():
     """Health check for lead lifecycle endpoints."""
     return {

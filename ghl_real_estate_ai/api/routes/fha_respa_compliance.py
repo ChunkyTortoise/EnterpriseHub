@@ -7,7 +7,7 @@ violation scanning, and RESPA disclosure checks.
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -60,7 +60,7 @@ class BatchEnforceRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/enforce", response_model=EnforceResponse)
+@router.post("/enforce", response_model=EnforceResponse, status_code=status.HTTP_200_OK)
 async def enforce_compliance(request: EnforceRequest):
     """Run FHA/RESPA compliance enforcement on an outbound message."""
     try:
@@ -92,7 +92,7 @@ async def enforce_compliance(request: EnforceRequest):
         raise HTTPException(500, f"Compliance enforcement error: {e}")
 
 
-@router.post("/enforce/batch")
+@router.post("/enforce/batch", response_model=dict, status_code=status.HTTP_200_OK)
 async def enforce_compliance_batch(request: BatchEnforceRequest):
     """Run compliance enforcement on multiple messages."""
     try:
@@ -127,7 +127,7 @@ async def enforce_compliance_batch(request: BatchEnforceRequest):
         raise HTTPException(500, f"Batch enforcement error: {e}")
 
 
-@router.delete("/history/{contact_id}")
+@router.delete("/history/{contact_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def clear_compliance_history(contact_id: str):
     """Clear conversation compliance history for a contact."""
     try:
@@ -139,7 +139,7 @@ async def clear_compliance_history(contact_id: str):
         raise HTTPException(500, f"Clear history error: {e}")
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def compliance_enforcement_health():
     """Health check for the FHA/RESPA compliance middleware."""
     try:

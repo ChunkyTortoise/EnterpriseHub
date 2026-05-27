@@ -38,7 +38,7 @@ from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Query, status
 from pydantic import BaseModel, Field, field_validator
 
 from ghl_real_estate_ai.analytics.competitive_intelligence_dashboard import (
@@ -226,7 +226,9 @@ class CompetitiveIntelResponse(BaseModel):
 # ================================================================================================
 
 
-@router.post("/touchpoints", status_code=201, summary="Track Customer Touchpoint")
+@router.post(
+    "/touchpoints", response_model=dict, status_code=status.HTTP_201_CREATED, summary="Track Customer Touchpoint"
+)
 async def track_touchpoint(touchpoint: TouchpointRequest):
     """
     Track a customer touchpoint for attribution analysis.
@@ -262,7 +264,7 @@ async def track_touchpoint(touchpoint: TouchpointRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/revenue-events", status_code=201, summary="Track Revenue Event")
+@router.post("/revenue-events", response_model=dict, status_code=status.HTTP_201_CREATED, summary="Track Revenue Event")
 async def track_revenue_event(revenue_event: RevenueEventRequest):
     """
     Track a revenue event for attribution analysis.
@@ -298,7 +300,12 @@ async def track_revenue_event(revenue_event: RevenueEventRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/attribution-report", response_model=AttributionReportResponse, summary="Generate Attribution Report")
+@router.post(
+    "/attribution-report",
+    response_model=AttributionReportResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Generate Attribution Report",
+)
 async def generate_attribution_report(request: AttributionReportRequest):
     """
     Generate comprehensive revenue attribution analysis report.
@@ -327,7 +334,12 @@ async def generate_attribution_report(request: AttributionReportRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/real-time-metrics", response_model=RealTimeMetricsResponse, summary="Get Real-Time Revenue Metrics")
+@router.get(
+    "/real-time-metrics",
+    response_model=RealTimeMetricsResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get Real-Time Revenue Metrics",
+)
 async def get_real_time_metrics():
     """
     Get real-time revenue attribution metrics for executive dashboard.
@@ -349,7 +361,12 @@ async def get_real_time_metrics():
 # ================================================================================================
 
 
-@router.get("/customers/{customer_id}/analysis", summary="Analyze Individual Customer")
+@router.get(
+    "/customers/{customer_id}/analysis",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+    summary="Analyze Individual Customer",
+)
 async def analyze_customer(
     customer_id: str = Path(..., description="Customer ID to analyze"),
     include_predictions: bool = Query(True, description="Include ML predictions"),
@@ -377,7 +394,12 @@ async def analyze_customer(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/clv-report", response_model=CLVReportResponse, summary="Generate CLV Analysis Report")
+@router.post(
+    "/clv-report",
+    response_model=CLVReportResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Generate CLV Analysis Report",
+)
 async def generate_clv_report(request: CLVAnalysisRequest):
     """
     Generate comprehensive customer lifetime value analysis report.
@@ -407,7 +429,9 @@ async def generate_clv_report(request: CLVAnalysisRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/customer-segments", summary="Get Customer Segment Profiles")
+@router.get(
+    "/customer-segments", response_model=dict, status_code=status.HTTP_200_OK, summary="Get Customer Segment Profiles"
+)
 async def get_customer_segments():
     """
     Get detailed profiles for all customer segments.
@@ -458,6 +482,7 @@ async def get_customer_segments():
 @router.post(
     "/competitive-intelligence",
     response_model=CompetitiveIntelResponse,
+    status_code=status.HTTP_200_OK,
     summary="Generate Competitive Intelligence Report",
 )
 async def generate_competitive_intelligence(request: CompetitiveIntelRequest):
@@ -486,7 +511,12 @@ async def generate_competitive_intelligence(request: CompetitiveIntelRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/competitive-alerts", summary="Get Real-Time Competitive Alerts")
+@router.get(
+    "/competitive-alerts",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+    summary="Get Real-Time Competitive Alerts",
+)
 async def get_competitive_alerts():
     """
     Get real-time competitive alerts and notifications.
@@ -514,7 +544,9 @@ async def get_competitive_alerts():
 # ================================================================================================
 
 
-@router.get("/executive-summary", summary="Get Executive Dashboard Summary")
+@router.get(
+    "/executive-summary", response_model=dict, status_code=status.HTTP_200_OK, summary="Get Executive Dashboard Summary"
+)
 async def get_executive_summary():
     """
     Get high-level executive summary for C-level dashboard.
@@ -608,7 +640,9 @@ async def get_executive_summary():
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/dashboard-data", summary="Get Complete Dashboard Data")
+@router.get(
+    "/dashboard-data", response_model=dict, status_code=status.HTTP_200_OK, summary="Get Complete Dashboard Data"
+)
 async def get_dashboard_data(time_range: int = Query(30, description="Time range in days", ge=1, le=365)):
     """
     Get comprehensive dashboard data for enterprise analytics interface.
@@ -653,7 +687,7 @@ async def get_dashboard_data(time_range: int = Query(30, description="Time range
 # ================================================================================================
 
 
-@router.get("/health", summary="Analytics Health Check")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK, summary="Analytics Health Check")
 async def analytics_health():
     """Health check for enterprise analytics services."""
     try:
@@ -694,7 +728,9 @@ async def analytics_health():
         }
 
 
-@router.get("/analytics-status", summary="Get Analytics Processing Status")
+@router.get(
+    "/analytics-status", response_model=dict, status_code=status.HTTP_200_OK, summary="Get Analytics Processing Status"
+)
 async def get_analytics_status():
     """Get current status of analytics processing and data freshness."""
     try:

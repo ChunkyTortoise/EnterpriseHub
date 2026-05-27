@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
@@ -32,7 +32,7 @@ router = APIRouter(prefix="/api/v1/negotiation", tags=["Negotiation Intelligence
 security = HTTPBearer()
 
 
-@router.post("/analyze", response_model=NegotiationIntelligence)
+@router.post("/analyze", response_model=NegotiationIntelligence, status_code=status.HTTP_200_OK)
 @rate_limit(calls=100, period=3600)  # 100 calls per hour
 async def analyze_negotiation_intelligence(
     request: NegotiationAnalysisRequest,
@@ -74,7 +74,7 @@ async def analyze_negotiation_intelligence(
         raise HTTPException(status_code=500, detail="Analysis failed")
 
 
-@router.post("/coaching", response_model=RealTimeCoachingResponse)
+@router.post("/coaching", response_model=RealTimeCoachingResponse, status_code=status.HTTP_200_OK)
 @rate_limit(calls=200, period=3600)  # 200 calls per hour
 async def get_realtime_coaching(
     request: RealTimeCoachingRequest, current_user: Dict[str, Any] = Depends(get_current_user)
@@ -104,7 +104,7 @@ async def get_realtime_coaching(
         raise HTTPException(status_code=500, detail="Coaching failed")
 
 
-@router.put("/strategy/{negotiation_id}", response_model=NegotiationIntelligence)
+@router.put("/strategy/{negotiation_id}", response_model=NegotiationIntelligence, status_code=status.HTTP_200_OK)
 @rate_limit(calls=50, period=3600)  # 50 calls per hour
 async def update_negotiation_strategy(
     negotiation_id: str, request: StrategyUpdateRequest, current_user: Dict[str, Any] = Depends(get_current_user)
@@ -141,7 +141,7 @@ async def update_negotiation_strategy(
         raise HTTPException(status_code=500, detail="Strategy update failed")
 
 
-@router.get("/active/{property_id}", response_model=Optional[NegotiationIntelligence])
+@router.get("/active/{property_id}", response_model=Optional[NegotiationIntelligence], status_code=status.HTTP_200_OK)
 async def get_active_negotiation(property_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     Get active negotiation intelligence for a property.
@@ -167,7 +167,7 @@ async def get_active_negotiation(property_id: str, current_user: Dict[str, Any] 
         raise HTTPException(status_code=500, detail="Failed to retrieve negotiation")
 
 
-@router.get("/metrics", response_model=NegotiationMetrics)
+@router.get("/metrics", response_model=NegotiationMetrics, status_code=status.HTTP_200_OK)
 async def get_negotiation_metrics(current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     Get system performance and negotiation metrics.
@@ -211,7 +211,7 @@ async def get_negotiation_metrics(current_user: Dict[str, Any] = Depends(get_cur
         raise HTTPException(status_code=500, detail="Failed to retrieve metrics")
 
 
-@router.delete("/active/{property_id}")
+@router.delete("/active/{property_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def end_negotiation(property_id: str, current_user: Dict[str, Any] = Depends(get_current_user)):
     """
     End an active negotiation session.
@@ -236,7 +236,7 @@ async def end_negotiation(property_id: str, current_user: Dict[str, Any] = Depen
         raise HTTPException(status_code=500, detail="Failed to end negotiation")
 
 
-@router.post("/webhooks/ghl/negotiation")
+@router.post("/webhooks/ghl/negotiation", response_model=dict, status_code=status.HTTP_200_OK)
 async def handle_ghl_negotiation_webhook(request: Request, background_tasks: BackgroundTasks):
     """
     Handle GHL webhook events for negotiation milestones.
@@ -262,7 +262,7 @@ async def handle_ghl_negotiation_webhook(request: Request, background_tasks: Bac
         raise HTTPException(status_code=400, detail="Invalid webhook data")
 
 
-@router.get("/scenarios/{property_id}")
+@router.get("/scenarios/{property_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_scenario_analysis(
     property_id: str,
     offer_percentage: Optional[float] = None,

@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, status
 
 from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
 from ghl_real_estate_ai.services.agent_state_sync import sync_service
@@ -8,19 +8,19 @@ from ghl_real_estate_ai.services.agent_state_sync import sync_service
 router = APIRouter(prefix="/agent-sync", tags=["Agent Sync"])
 
 
-@router.get("/state")
+@router.get("/state", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_current_state(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """Returns the full authoritative AI state"""
     return sync_service.get_state()
 
 
-@router.get("/delta")
+@router.get("/delta", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_state_delta(current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """Returns incremental changes since the last update (AG-UI Protocol)"""
     return {"type": "STATE_DELTA", "delta": sync_service.get_delta()}
 
 
-@router.post("/mock-update")
+@router.post("/mock-update", response_model=dict, status_code=status.HTTP_200_OK)
 async def mock_agent_update(
     path: str, value: Any, current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user)
 ):
@@ -29,7 +29,7 @@ async def mock_agent_update(
     return {"status": "updated", "path": path, "new_value": value}
 
 
-@router.post("/thought")
+@router.post("/thought", response_model=dict, status_code=status.HTTP_200_OK)
 async def record_thought(
     agent_id: str,
     thought: str,

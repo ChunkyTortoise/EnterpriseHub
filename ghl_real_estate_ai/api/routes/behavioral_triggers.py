@@ -7,7 +7,7 @@ hedging/commitment scoring, and Voss technique recommendations.
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -65,7 +65,7 @@ class BatchAnalyzeRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/analyze", response_model=BehavioralAnalysisResponse)
+@router.post("/analyze", response_model=BehavioralAnalysisResponse, status_code=status.HTTP_200_OK)
 async def analyze_message(request: AnalyzeMessageRequest):
     """Analyze a single message for behavioral triggers and negotiation signals."""
     try:
@@ -100,7 +100,7 @@ async def analyze_message(request: AnalyzeMessageRequest):
         raise HTTPException(500, f"Behavioral analysis error: {e}")
 
 
-@router.post("/analyze/batch")
+@router.post("/analyze/batch", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_messages_batch(request: BatchAnalyzeRequest):
     """Analyze multiple messages for behavioral triggers."""
     try:
@@ -130,7 +130,7 @@ async def analyze_messages_batch(request: BatchAnalyzeRequest):
         raise HTTPException(500, f"Batch analysis error: {e}")
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def behavioral_health():
     """Health check for the behavioral trigger detector."""
     try:

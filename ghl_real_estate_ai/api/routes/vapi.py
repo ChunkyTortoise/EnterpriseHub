@@ -9,7 +9,7 @@ Provides endpoints for Vapi.ai to call tools during voice conversations:
 import json
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -36,7 +36,7 @@ class ToolCallPayload(BaseModel):
     call: Optional[Dict[str, Any]] = None
 
 
-@router.post("/check-availability")
+@router.post("/check-availability", response_model=dict, status_code=status.HTTP_200_OK)
 @verify_webhook("vapi")
 async def vapi_check_availability(
     request: Request, payload: ToolCallPayload, scheduler: CalendarScheduler = Depends(get_vapi_scheduler)
@@ -68,7 +68,7 @@ async def vapi_check_availability(
         return {"results": [{"toolCallId": tool_call.get("id"), "error": str(e)}]}
 
 
-@router.post("/book-tour")
+@router.post("/book-tour", response_model=dict, status_code=status.HTTP_200_OK)
 @verify_webhook("vapi")
 async def vapi_book_tour(
     request: Request, payload: ToolCallPayload, scheduler: CalendarScheduler = Depends(get_vapi_scheduler)

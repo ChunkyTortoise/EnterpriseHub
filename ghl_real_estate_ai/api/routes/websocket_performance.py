@@ -12,7 +12,7 @@ import json
 from datetime import datetime
 from typing import Any, Dict, List
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from fastapi.responses import StreamingResponse
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -27,7 +27,7 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/api/v1/websocket-performance", tags=["WebSocket Performance"])
 
 
-@router.get("/latency-metrics")
+@router.get("/latency-metrics", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_latency_metrics() -> Dict[str, Any]:
     """
     Get comprehensive WebSocket latency metrics for performance monitoring.
@@ -75,7 +75,7 @@ async def get_latency_metrics() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/throughput-metrics")
+@router.get("/throughput-metrics", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_throughput_metrics() -> Dict[str, Any]:
     """
     Get real-time WebSocket throughput and connection metrics.
@@ -138,7 +138,7 @@ async def get_throughput_metrics() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/connection-health")
+@router.get("/connection-health", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_connection_health() -> Dict[str, Any]:
     """
     Get detailed WebSocket connection health and quality metrics.
@@ -219,7 +219,7 @@ async def get_connection_health() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/optimization-status")
+@router.get("/optimization-status", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_optimization_status() -> Dict[str, Any]:
     """
     Get current optimization status and recommendations for improving performance.
@@ -282,7 +282,7 @@ async def get_optimization_status() -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/live-metrics-stream")
+@router.get("/live-metrics-stream", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_live_metrics_stream():
     """
     Server-Sent Events stream for real-time performance monitoring.
@@ -315,7 +315,7 @@ async def get_live_metrics_stream():
     )
 
 
-@router.post("/trigger-performance-test")
+@router.post("/trigger-performance-test", response_model=dict, status_code=status.HTTP_200_OK)
 async def trigger_performance_test(
     event_count: int = 1000, background_tasks: BackgroundTasks = BackgroundTasks()
 ) -> Dict[str, Any]:

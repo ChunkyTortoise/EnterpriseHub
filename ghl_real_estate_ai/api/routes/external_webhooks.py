@@ -22,7 +22,7 @@ twilio_client = TwilioClient()
 sendgrid_client = SendGridClient()
 
 
-@router.post("/twilio/sms-status")
+@router.post("/twilio/sms-status", response_model=dict, status_code=status.HTTP_200_OK)
 @verify_webhook("twilio")
 async def handle_twilio_sms_status(request: Request):
     """
@@ -50,7 +50,7 @@ async def handle_twilio_sms_status(request: Request):
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable")
 
 
-@router.post("/twilio/sms-incoming")
+@router.post("/twilio/sms-incoming", response_model=dict, status_code=status.HTTP_200_OK)
 @verify_webhook("twilio")
 async def handle_twilio_sms_incoming(request: Request):
     """
@@ -79,7 +79,7 @@ async def handle_twilio_sms_incoming(request: Request):
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable")
 
 
-@router.post("/sendgrid/events")
+@router.post("/sendgrid/events", response_model=dict, status_code=status.HTTP_200_OK)
 @verify_webhook("sendgrid")
 async def handle_sendgrid_events(request: Request):
     """
@@ -106,7 +106,7 @@ async def handle_sendgrid_events(request: Request):
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Service temporarily unavailable")
 
 
-@router.post("/apollo/enrichment")
+@router.post("/apollo/enrichment", response_model=dict, status_code=status.HTTP_200_OK)
 @verify_webhook("apollo")
 async def handle_apollo_enrichment(request: Request):
     """

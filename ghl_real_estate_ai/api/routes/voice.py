@@ -4,7 +4,7 @@ Voice API Routes for GHL Real Estate AI.
 
 from functools import lru_cache
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Request, Response, status
 
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -30,7 +30,7 @@ def _get_ghl_client() -> GHLClient:
     return GHLClient()
 
 
-@router.post("/incoming")
+@router.post("/incoming", response_model=dict, status_code=status.HTTP_200_OK)
 async def handle_incoming_call(request: Request):
     """
     Handle an incoming voice call (e.g., from Twilio).
@@ -45,7 +45,7 @@ async def handle_incoming_call(request: Request):
     return Response(content=twiml, media_type="application/xml")
 
 
-@router.post("/process")
+@router.post("/process", response_model=dict, status_code=status.HTTP_200_OK)
 async def process_voice_input(
     request: Request,
     background_tasks: BackgroundTasks,

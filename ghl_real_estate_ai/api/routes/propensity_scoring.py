@@ -7,7 +7,7 @@ for lead conversion prediction.
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -108,7 +108,7 @@ class BatchScoreRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/score", response_model=PropensityScoreResponse)
+@router.post("/score", response_model=PropensityScoreResponse, status_code=status.HTTP_200_OK)
 async def score_lead(request: ScoreLeadRequest):
     """Score a lead's conversion propensity using life-event + behavioral signals."""
     try:
@@ -145,7 +145,7 @@ async def score_lead(request: ScoreLeadRequest):
         raise HTTPException(500, f"Propensity scoring error: {e}")
 
 
-@router.post("/explain", response_model=PropensityExplanationResponse)
+@router.post("/explain", response_model=PropensityExplanationResponse, status_code=status.HTTP_200_OK)
 async def explain_propensity(request: ScoreLeadRequest):
     """Generate SHAP explanation for a lead's propensity score."""
     try:
@@ -183,7 +183,7 @@ async def explain_propensity(request: ScoreLeadRequest):
         raise HTTPException(500, f"Propensity explanation error: {e}")
 
 
-@router.post("/score/batch")
+@router.post("/score/batch", response_model=dict, status_code=status.HTTP_200_OK)
 async def score_leads_batch(request: BatchScoreRequest):
     """Score multiple leads in a single request."""
     try:
@@ -213,7 +213,7 @@ async def score_leads_batch(request: BatchScoreRequest):
         raise HTTPException(500, f"Batch scoring error: {e}")
 
 
-@router.post("/train", response_model=TrainingMetricsResponse)
+@router.post("/train", response_model=TrainingMetricsResponse, status_code=status.HTTP_200_OK)
 async def train_model(request: TrainModelRequest):
     """Train the XGBoost propensity model on historical lead data."""
     try:
@@ -243,7 +243,7 @@ async def train_model(request: TrainModelRequest):
         raise HTTPException(500, f"Training error: {e}")
 
 
-@router.delete("/cache")
+@router.delete("/cache", response_model=dict, status_code=status.HTTP_200_OK)
 async def clear_propensity_cache():
     """Clear the in-memory propensity score cache."""
     engine = get_propensity_engine()
@@ -251,7 +251,7 @@ async def clear_propensity_cache():
     return {"status": "cleared"}
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def propensity_health():
     """Health check for the propensity scoring engine."""
     try:

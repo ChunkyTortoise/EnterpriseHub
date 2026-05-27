@@ -20,7 +20,7 @@ Performance: <50ms response time, real-time updates
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
@@ -86,7 +86,7 @@ error_monitoring = get_error_monitoring_service()
 # Error Metrics Endpoints
 
 
-@router.get("/metrics", response_model=ErrorMetricsResponse)
+@router.get("/metrics", response_model=ErrorMetricsResponse, status_code=status.HTTP_200_OK)
 async def get_error_metrics(
     timeframe_minutes: int = Query(default=60, ge=5, le=1440, description="Timeframe in minutes (5-1440)"),
     category_filter: Optional[str] = Query(default=None, description="Filter by error category"),
@@ -131,7 +131,7 @@ async def get_error_metrics(
         raise HTTPException(status_code=500, detail="Failed to fetch error metrics")
 
 
-@router.get("/trends", response_model=ErrorTrendResponse)
+@router.get("/trends", response_model=ErrorTrendResponse, status_code=status.HTTP_200_OK)
 async def get_error_trends(
     hours: int = Query(default=24, ge=1, le=168, description="Number of hours for trend analysis"),
     category: Optional[str] = Query(default=None, description="Filter by error category"),
@@ -181,7 +181,7 @@ async def get_error_trends(
         raise HTTPException(status_code=500, detail="Failed to fetch error trends")
 
 
-@router.get("/top-errors")
+@router.get("/top-errors", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_top_errors(
     timeframe_minutes: int = Query(default=60, ge=5, le=1440),
     limit: int = Query(default=10, ge=1, le=50),
@@ -238,7 +238,7 @@ async def get_top_errors(
         raise HTTPException(status_code=500, detail="Failed to fetch top errors")
 
 
-@router.get("/patterns")
+@router.get("/patterns", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_error_patterns(
     limit: int = Query(default=20, ge=1, le=100),
     category: Optional[str] = Query(default=None),
@@ -300,7 +300,7 @@ async def get_error_patterns(
         raise HTTPException(status_code=500, detail="Failed to fetch error patterns")
 
 
-@router.get("/dashboard", response_model=ErrorDashboardResponse)
+@router.get("/dashboard", response_model=ErrorDashboardResponse, status_code=status.HTTP_200_OK)
 async def get_error_dashboard(user=Depends(get_current_user)):
     """
     Get comprehensive error dashboard data.
@@ -323,7 +323,7 @@ async def get_error_dashboard(user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Failed to fetch dashboard data")
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_system_health(user=Depends(get_current_user)):
     """
     Get real-time system health status.
@@ -352,7 +352,7 @@ async def get_system_health(user=Depends(get_current_user)):
 # Error Resolution Endpoints
 
 
-@router.post("/errors/{error_id}/resolve")
+@router.post("/errors/{error_id}/resolve", response_model=dict, status_code=status.HTTP_200_OK)
 async def mark_error_resolved(
     error_id: str = Path(..., description="Error ID to mark as resolved"),
     resolution: ErrorResolutionRequest = None,
@@ -388,7 +388,7 @@ async def mark_error_resolved(
         raise HTTPException(status_code=500, detail="Failed to mark error as resolved")
 
 
-@router.get("/categories")
+@router.get("/categories", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_error_categories(user=Depends(get_current_user)):
     """Get list of available error categories for filtering."""
 

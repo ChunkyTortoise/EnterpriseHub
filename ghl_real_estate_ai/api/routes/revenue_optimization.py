@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
@@ -172,7 +172,7 @@ class A_BTestRequest(BaseModel):
 # API Routes
 
 
-@router.post("/pricing/optimize", response_model=PricingOptimizationResponse)
+@router.post("/pricing/optimize", response_model=PricingOptimizationResponse, status_code=status.HTTP_200_OK)
 async def optimize_pricing(
     request: PricingOptimizationRequest,
     background_tasks: BackgroundTasks,
@@ -273,7 +273,7 @@ async def create_campaign(request: CampaignCreationRequest, current_user: dict =
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.get("/campaigns/{campaign_id}", response_model=CampaignResponse)
+@router.get("/campaigns/{campaign_id}", response_model=CampaignResponse, status_code=status.HTTP_200_OK)
 async def get_campaign(campaign_id: str, current_user: dict = Depends(verify_jwt_token)):
     """Get detailed information about a specific campaign."""
 
@@ -304,7 +304,7 @@ async def get_campaign(campaign_id: str, current_user: dict = Depends(verify_jwt
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.get("/campaigns", response_model=List[CampaignResponse])
+@router.get("/campaigns", response_model=List[CampaignResponse], status_code=status.HTTP_200_OK)
 async def list_campaigns(
     status: Optional[str] = Query(None, description="Filter by campaign status"),
     campaign_type: Optional[str] = Query(None, description="Filter by campaign type"),
@@ -350,7 +350,7 @@ async def list_campaigns(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.post("/campaigns/{campaign_id}/execute")
+@router.post("/campaigns/{campaign_id}/execute", response_model=dict, status_code=status.HTTP_200_OK)
 async def execute_campaign(
     campaign_id: str, event_data: Dict[str, Any] = Body(...), current_user: dict = Depends(verify_jwt_token)
 ):
@@ -384,7 +384,7 @@ async def execute_campaign(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.post("/ml/train", response_model=MLModelTrainingResponse)
+@router.post("/ml/train", response_model=MLModelTrainingResponse, status_code=status.HTTP_200_OK)
 async def train_ml_model(
     request: MLModelTrainingRequest, background_tasks: BackgroundTasks, current_user: dict = Depends(verify_jwt_token)
 ):
@@ -425,7 +425,7 @@ async def train_ml_model(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.get("/ml/models/{job_id}/status", response_model=MLModelTrainingResponse)
+@router.get("/ml/models/{job_id}/status", response_model=MLModelTrainingResponse, status_code=status.HTTP_200_OK)
 async def get_model_training_status(job_id: str, current_user: dict = Depends(verify_jwt_token)):
     """Get the current status of a model training job."""
 
@@ -454,7 +454,7 @@ async def get_model_training_status(job_id: str, current_user: dict = Depends(ve
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.post("/competitive/analyze")
+@router.post("/competitive/analyze", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_competitive_landscape(
     request: CompetitiveIntelligenceRequest,
     background_tasks: BackgroundTasks,
@@ -495,7 +495,7 @@ async def analyze_competitive_landscape(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.get("/analytics/revenue")
+@router.get("/analytics/revenue", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_revenue_analytics(
     start_date: datetime = Query(..., description="Start date for analysis"),
     end_date: datetime = Query(..., description="End date for analysis"),
@@ -537,7 +537,7 @@ async def get_revenue_analytics(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.post("/ab-test", status_code=HTTP_201_CREATED)
+@router.post("/ab-test", response_model=dict, status_code=HTTP_201_CREATED)
 async def create_ab_test(request: A_BTestRequest, current_user: dict = Depends(verify_jwt_token)):
     """Create and start A/B test for revenue optimization."""
 
@@ -581,7 +581,7 @@ async def create_ab_test(request: A_BTestRequest, current_user: dict = Depends(v
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.get("/dashboard")
+@router.get("/dashboard", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_optimization_dashboard(current_user: dict = Depends(verify_jwt_token)):
     """Get comprehensive revenue optimization dashboard data."""
 
@@ -737,7 +737,7 @@ async def _calculate_revenue_analytics(
 # Health Check
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check():
     """Health check endpoint for revenue optimization services."""
 

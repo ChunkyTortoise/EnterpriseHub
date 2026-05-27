@@ -7,7 +7,7 @@ summary generation from pipeline data.
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -111,7 +111,7 @@ class ExecutiveSummaryResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/forecast", response_model=ForecastResponse)
+@router.post("/forecast", response_model=ForecastResponse, status_code=status.HTTP_200_OK)
 async def forecast_revenue(request: ForecastRequest):
     """Generate weighted revenue forecast from pipeline data."""
     try:
@@ -147,7 +147,7 @@ async def forecast_revenue(request: ForecastRequest):
         raise HTTPException(500, f"Forecast error: {e}")
 
 
-@router.post("/monte-carlo", response_model=MonteCarloResponse)
+@router.post("/monte-carlo", response_model=MonteCarloResponse, status_code=status.HTTP_200_OK)
 async def run_monte_carlo(request: MonteCarloRequest):
     """Run Monte Carlo simulation on pipeline to model revenue distribution."""
     try:
@@ -176,7 +176,7 @@ async def run_monte_carlo(request: MonteCarloRequest):
         raise HTTPException(500, f"Monte Carlo error: {e}")
 
 
-@router.post("/executive-summary", response_model=ExecutiveSummaryResponse)
+@router.post("/executive-summary", response_model=ExecutiveSummaryResponse, status_code=status.HTTP_200_OK)
 async def generate_executive_summary(request: ExecutiveSummaryRequest):
     """Generate executive reporting summary from pipeline data."""
     try:
@@ -228,7 +228,7 @@ async def generate_executive_summary(request: ExecutiveSummaryRequest):
         raise HTTPException(500, f"Executive summary error: {e}")
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def forecast_health():
     """Health check for the commission forecast engine."""
     try:

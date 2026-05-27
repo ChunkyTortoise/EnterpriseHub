@@ -820,6 +820,7 @@ scoring_service = MLScoringService()
 @router.post(
     "/score",
     response_model=LeadScoringResponse,
+    status_code=status.HTTP_200_OK,
     summary="Score individual lead",
     description="Score a single lead using ML Analytics Engine with <50ms target response time",
     responses={
@@ -860,6 +861,7 @@ async def score_lead(
 @router.post(
     "/score/optimized",
     response_model=LeadScoringResponse,
+    status_code=status.HTTP_200_OK,
     summary="Score individual lead (optimized)",
     description="OPTIMIZED: Score a single lead with <30ms target response time using performance optimizations",
     responses={
@@ -907,6 +909,7 @@ async def score_lead_optimized(
 @router.post(
     "/batch-score",
     response_model=BatchScoringResponse,
+    status_code=status.HTTP_200_OK,
     summary="Score multiple leads",
     description="Score multiple leads in batch with optional parallel processing",
     responses={
@@ -949,6 +952,7 @@ async def batch_score_leads(
 @router.get(
     "/score/{lead_id}",
     response_model=LeadScoringResponse,
+    status_code=status.HTTP_200_OK,
     summary="Get existing lead score",
     description="Retrieve the most recent score for a specific lead",
 )
@@ -978,6 +982,7 @@ async def get_lead_score(lead_id: str, current_user: dict = Depends(get_current_
 @router.get(
     "/health",
     response_model=HealthCheckResponse,
+    status_code=status.HTTP_200_OK,
     summary="ML service health check",
     description="Check the health status of ML scoring services",
     include_in_schema=True,
@@ -1045,6 +1050,7 @@ async def health_check():
 @router.get(
     "/model/status",
     response_model=MLModelStatus,
+    status_code=status.HTTP_200_OK,
     summary="ML model status",
     description="Get detailed status of the ML model",
     dependencies=[Depends(get_current_user)],
@@ -1090,6 +1096,8 @@ async def get_model_status():
 
 @router.get(
     "/performance/report",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
     summary="Performance optimization report",
     description="Get comprehensive performance optimization metrics and impact analysis",
     dependencies=[Depends(get_current_user)],

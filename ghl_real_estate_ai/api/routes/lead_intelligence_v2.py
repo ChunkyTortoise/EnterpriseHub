@@ -18,7 +18,7 @@ Follows established architecture patterns:
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Path, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Path, Query, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -60,7 +60,7 @@ class StandardResponse(BaseModel):
 # API Endpoints
 
 
-@router.post("/{location_id}/enhanced-scoring")
+@router.post("/{location_id}/enhanced-scoring", response_model=StandardResponse, status_code=status.HTTP_200_OK)
 async def enhanced_lead_scoring_analysis(
     location_id: str = Path(..., description="Location/tenant identifier"),
     request: EnhancedLeadScoreRequest = ...,
@@ -126,7 +126,7 @@ async def enhanced_lead_scoring_analysis(
         return StandardResponse(success=False, processing_time_ms=processing_time, error=str(e))
 
 
-@router.post("/{location_id}/generation-analysis")
+@router.post("/{location_id}/generation-analysis", response_model=StandardResponse, status_code=status.HTTP_200_OK)
 async def lead_generation_performance_analysis(
     location_id: str = Path(..., description="Location/tenant identifier"), request: LeadGenerationAnalysisRequest = ...
 ) -> StandardResponse:
@@ -196,7 +196,9 @@ async def lead_generation_performance_analysis(
         return StandardResponse(success=False, processing_time_ms=processing_time, error=str(e))
 
 
-@router.get("/{location_id}/lead-score-history/{contact_id}")
+@router.get(
+    "/{location_id}/lead-score-history/{contact_id}", response_model=StandardResponse, status_code=status.HTTP_200_OK
+)
 async def get_lead_scoring_history(
     location_id: str = Path(..., description="Location/tenant identifier"),
     contact_id: str = Path(..., description="Contact identifier"),
@@ -237,7 +239,7 @@ async def get_lead_scoring_history(
         return StandardResponse(success=False, processing_time_ms=processing_time, error=str(e))
 
 
-@router.get("/{location_id}/bulk-score")
+@router.get("/{location_id}/bulk-score", response_model=StandardResponse, status_code=status.HTTP_200_OK)
 async def bulk_lead_scoring(
     location_id: str = Path(..., description="Location/tenant identifier"),
     contact_ids: str = Query(..., description="Comma-separated contact IDs"),
@@ -296,7 +298,7 @@ async def bulk_lead_scoring(
         return StandardResponse(success=False, processing_time_ms=processing_time, error=str(e))
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check() -> Dict[str, Any]:
     """Health check for Lead Intelligence v2 services."""
     try:

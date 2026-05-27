@@ -4,7 +4,7 @@ Team API Routes for GHL Real Estate AI.
 
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -29,7 +29,7 @@ class AgentUpdate(BaseModel):
     status: Optional[str] = None
 
 
-@router.post("/{location_id}/agents")
+@router.post("/{location_id}/agents", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def add_agent(location_id: str, agent: AgentCreate):
     """Add a new agent to the team."""
     manager = TeamManager(location_id)
@@ -43,21 +43,21 @@ async def add_agent(location_id: str, agent: AgentCreate):
     return {"message": "Agent added successfully", "agent_id": agent.id}
 
 
-@router.get("/{location_id}/agents")
+@router.get("/{location_id}/agents", response_model=dict, status_code=status.HTTP_200_OK)
 async def list_agents(location_id: str, status: str = "active"):
     """List all agents in a location."""
     manager = TeamManager(location_id)
     return manager.list_agents(status=status)
 
 
-@router.get("/{location_id}/leaderboard")
+@router.get("/{location_id}/leaderboard", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_leaderboard(location_id: str):
     """Get the team leaderboard."""
     manager = TeamManager(location_id)
     return manager.get_leaderboard()
 
 
-@router.post("/{location_id}/assign")
+@router.post("/{location_id}/assign", response_model=dict, status_code=status.HTTP_200_OK)
 async def assign_lead(location_id: str, contact_id: str):
     """Assign a lead to an agent."""
     manager = TeamManager(location_id)
@@ -67,7 +67,7 @@ async def assign_lead(location_id: str, contact_id: str):
     return {"contact_id": contact_id, "assigned_to": agent_id}
 
 
-@router.post("/{location_id}/agents/{agent_id}/performance")
+@router.post("/{location_id}/agents/{agent_id}/performance", response_model=dict, status_code=status.HTTP_200_OK)
 async def update_performance(
     location_id: str,
     agent_id: str,

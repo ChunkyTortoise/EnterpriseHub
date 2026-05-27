@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 import structlog
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, Query, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.deps import get_current_user, get_location_access
@@ -85,7 +85,7 @@ class CrossTrackHandoffRequest(BaseModel):
 # =====================================================================================
 
 
-@router.post("/{location_id}/property-matching/analyze")
+@router.post("/{location_id}/property-matching/analyze", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_property_matches(
     location_id: str = Path(..., description="GHL Location ID"),
     request: PropertyMatchRequest = ...,
@@ -174,7 +174,9 @@ async def analyze_property_matches(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/{location_id}/property-matching/{lead_id}/behavioral-weights")
+@router.get(
+    "/{location_id}/property-matching/{lead_id}/behavioral-weights", response_model=dict, status_code=status.HTTP_200_OK
+)
 async def get_behavioral_matching_weights(
     location_id: str = Path(..., description="GHL Location ID"),
     lead_id: str = Path(..., description="Lead ID"),
@@ -216,7 +218,7 @@ async def get_behavioral_matching_weights(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.put("/{location_id}/property-matching/{lead_id}/feedback")
+@router.put("/{location_id}/property-matching/{lead_id}/feedback", response_model=dict, status_code=status.HTTP_200_OK)
 async def record_matching_feedback(
     location_id: str = Path(..., description="GHL Location ID"),
     lead_id: str = Path(..., description="Lead ID"),
@@ -280,7 +282,7 @@ async def record_matching_feedback(
 # =====================================================================================
 
 
-@router.post("/{location_id}/conversation-intelligence/analyze")
+@router.post("/{location_id}/conversation-intelligence/analyze", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_conversation(
     location_id: str = Path(..., description="GHL Location ID"),
     request: ConversationAnalysisRequest = ...,
@@ -398,7 +400,11 @@ async def analyze_conversation(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/{location_id}/conversation-intelligence/{conversation_id}/insights")
+@router.get(
+    "/{location_id}/conversation-intelligence/{conversation_id}/insights",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+)
 async def get_conversation_insights(
     location_id: str = Path(..., description="GHL Location ID"),
     conversation_id: str = Path(..., description="Conversation ID"),
@@ -455,7 +461,11 @@ async def get_conversation_insights(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/{location_id}/conversation-intelligence/coaching-opportunities")
+@router.get(
+    "/{location_id}/conversation-intelligence/coaching-opportunities",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+)
 async def get_coaching_opportunities(
     location_id: str = Path(..., description="GHL Location ID"),
     current_user: Dict[str, Any] = Depends(get_current_user),
@@ -497,7 +507,7 @@ async def get_coaching_opportunities(
 # =====================================================================================
 
 
-@router.post("/{location_id}/preference-learning/analyze")
+@router.post("/{location_id}/preference-learning/analyze", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_preferences_from_conversation(
     location_id: str = Path(..., description="GHL Location ID"),
     request: PreferenceLearningRequest = ...,
@@ -572,7 +582,9 @@ async def analyze_preferences_from_conversation(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/{location_id}/preference-learning/{client_id}/profile")
+@router.get(
+    "/{location_id}/preference-learning/{client_id}/profile", response_model=dict, status_code=status.HTTP_200_OK
+)
 async def get_client_preference_profile(
     location_id: str = Path(..., description="GHL Location ID"),
     client_id: str = Path(..., description="Client ID"),
@@ -623,7 +635,9 @@ async def get_client_preference_profile(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/{location_id}/preference-learning/{client_id}/predict-match")
+@router.post(
+    "/{location_id}/preference-learning/{client_id}/predict-match", response_model=dict, status_code=status.HTTP_200_OK
+)
 async def predict_preference_match(
     location_id: str = Path(..., description="GHL Location ID"),
     client_id: str = Path(..., description="Client ID"),
@@ -660,7 +674,7 @@ async def predict_preference_match(
 # =====================================================================================
 
 
-@router.post("/{location_id}/coordination/lead-to-client-handoff")
+@router.post("/{location_id}/coordination/lead-to-client-handoff", response_model=dict, status_code=status.HTTP_200_OK)
 async def coordinate_lead_to_client_handoff(
     location_id: str = Path(..., description="GHL Location ID"),
     request: CrossTrackHandoffRequest = ...,
@@ -763,7 +777,7 @@ async def coordinate_lead_to_client_handoff(
 # =====================================================================================
 
 
-@router.get("/{location_id}/health")
+@router.get("/{location_id}/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_phase2_intelligence_health(
     location_id: str = Path(..., description="GHL Location ID"),
     current_user: Dict[str, Any] = Depends(get_current_user),

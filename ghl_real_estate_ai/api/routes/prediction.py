@@ -15,7 +15,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel
 
 from ...prediction.business_forecasting_engine import BusinessForecastingEngine, ForecastTimeframe, GrowthStrategy
@@ -196,7 +196,7 @@ async def _fetch_business_profile(user_id: str) -> Dict[str, Any]:
 
 
 # Market Movement Prediction
-@router.post("/market-movement")
+@router.post("/market-movement", response_model=dict, status_code=status.HTTP_200_OK)
 async def predict_market_movement(request: MarketMovementRequest, current_user: Dict = Depends(get_current_user)):
     """
     Predict market movement for specific location and timeframe
@@ -231,7 +231,7 @@ async def predict_market_movement(request: MarketMovementRequest, current_user: 
 
 
 # Client Behavior Prediction
-@router.post("/client-behavior")
+@router.post("/client-behavior", response_model=dict, status_code=status.HTTP_200_OK)
 async def predict_client_behavior(request: ClientBehaviorRequest, current_user: Dict = Depends(get_current_user)):
     """
     Predict client behavior patterns and purchase timing
@@ -293,7 +293,7 @@ async def predict_client_behavior(request: ClientBehaviorRequest, current_user: 
 
 
 # Deal Outcome Prediction
-@router.post("/deal-outcome")
+@router.post("/deal-outcome", response_model=dict, status_code=status.HTTP_200_OK)
 async def predict_deal_outcome(request: DealOutcomeRequest, current_user: Dict = Depends(get_current_user)):
     """
     Predict deal outcome and closing probability
@@ -354,7 +354,7 @@ async def predict_deal_outcome(request: DealOutcomeRequest, current_user: Dict =
 
 
 # Business Forecasting
-@router.post("/business-forecast")
+@router.post("/business-forecast", response_model=dict, status_code=status.HTTP_200_OK)
 async def generate_business_forecast(request: BusinessForecastRequest, current_user: Dict = Depends(get_current_user)):
     """
     Generate comprehensive business forecasting and strategic planning
@@ -437,7 +437,7 @@ async def generate_business_forecast(request: BusinessForecastRequest, current_u
 
 
 # Bulk Predictions
-@router.post("/bulk")
+@router.post("/bulk", response_model=dict, status_code=status.HTTP_200_OK)
 async def process_bulk_predictions(
     request: BulkPredictionRequest, background_tasks: BackgroundTasks, current_user: Dict = Depends(get_current_user)
 ):
@@ -482,7 +482,7 @@ async def process_bulk_predictions(
 
 
 # Prediction Explanation
-@router.get("/explain/{prediction_id}")
+@router.get("/explain/{prediction_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def explain_prediction(prediction_id: str, current_user: Dict = Depends(get_current_user)):
     """
     Get detailed explanation of how a prediction was made
@@ -497,7 +497,7 @@ async def explain_prediction(prediction_id: str, current_user: Dict = Depends(ge
 
 
 # Update Prediction Accuracy
-@router.post("/accuracy")
+@router.post("/accuracy", response_model=dict, status_code=status.HTTP_200_OK)
 async def update_prediction_accuracy(
     request: PredictionAccuracyRequest, current_user: Dict = Depends(get_current_user)
 ):
@@ -619,7 +619,7 @@ async def continuous_prediction_monitoring():
 
 
 # Health check endpoint
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def prediction_health_check():
     """
     Health check for prediction services

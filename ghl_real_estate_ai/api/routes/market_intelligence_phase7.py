@@ -14,7 +14,7 @@ from datetime import datetime
 from functools import lru_cache
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 
 from ghl_real_estate_ai.intelligence.market_intelligence_automation import (
@@ -53,7 +53,7 @@ async def get_market_intelligence(
     return automation
 
 
-@router.get("/dashboard-data")
+@router.get("/dashboard-data", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_market_intelligence_dashboard(
     automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
@@ -81,7 +81,7 @@ async def get_market_intelligence_dashboard(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/market-trends")
+@router.get("/market-trends", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_current_market_trends(
     severity_filter: Optional[str] = None,
     market_area: Optional[str] = None,
@@ -141,7 +141,7 @@ async def get_current_market_trends(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/competitive-analysis")
+@router.get("/competitive-analysis", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_competitive_positioning(
     automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
@@ -196,7 +196,7 @@ async def get_competitive_positioning(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/market-opportunities")
+@router.get("/market-opportunities", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_market_opportunities(
     opportunity_type: Optional[str] = None,
     min_value: Optional[float] = None,
@@ -267,7 +267,7 @@ async def get_market_opportunities(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/strategic-insights")
+@router.get("/strategic-insights", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_strategic_insights(
     automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
@@ -295,7 +295,7 @@ async def get_strategic_insights(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/start-monitoring")
+@router.post("/start-monitoring", response_model=dict, status_code=status.HTTP_200_OK)
 async def start_automated_monitoring(
     background_tasks: BackgroundTasks,
     automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
@@ -329,7 +329,7 @@ async def start_automated_monitoring(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/stream/market-alerts")
+@router.get("/stream/market-alerts", response_model=dict, status_code=status.HTTP_200_OK)
 async def stream_market_alerts(automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence)):
     """
     Stream real-time market intelligence alerts
@@ -385,7 +385,7 @@ async def stream_market_alerts(automation: EnhancedMarketIntelligenceAutomation 
     )
 
 
-@router.get("/market-health-score")
+@router.get("/market-health-score", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_market_health_score(
     automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
@@ -455,7 +455,7 @@ async def get_market_health_score(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/jorge-performance-summary")
+@router.get("/jorge-performance-summary", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_jorge_performance_summary(
     automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:
@@ -523,7 +523,7 @@ async def get_jorge_performance_summary(
 
 
 # Health check endpoint
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def market_intelligence_health(
     automation: EnhancedMarketIntelligenceAutomation = Depends(get_market_intelligence),
 ) -> Dict[str, Any]:

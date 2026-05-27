@@ -37,7 +37,7 @@ class CheckoutSessionResponse(BaseModel):
 # ---------- Endpoints ----------
 
 
-@router.post("/create-session", response_model=CheckoutSessionResponse)
+@router.post("/create-session", response_model=CheckoutSessionResponse, status_code=status.HTTP_200_OK)
 async def create_checkout_session(request: CreateCheckoutSessionRequest):
     """Create a Stripe Checkout session for a one-time product purchase."""
     product = PRODUCT_CATALOG.get(request.product_slug)
@@ -93,7 +93,7 @@ async def create_checkout_session(request: CreateCheckoutSessionRequest):
     return CheckoutSessionResponse(session_id=session.id, checkout_url=session.url)
 
 
-@router.post("/webhook")
+@router.post("/webhook", response_model=dict, status_code=status.HTTP_200_OK)
 async def checkout_webhook(request: Request):
     """Handle Stripe webhook events for checkout session completions."""
     payload = await request.body()

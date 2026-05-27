@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, status
 
 from ghl_real_estate_ai.database.session import async_session_factory
 from ghl_real_estate_ai.services.cost_governance import CostTracker
@@ -17,7 +17,7 @@ router = APIRouter(tags=["Cost Governance"])
 _VALID_PERIODS = {"1h", "6h", "24h", "7d", "30d"}
 
 
-@router.get("/admin/cost-dashboard")
+@router.get("/admin/cost-dashboard", response_model=dict, status_code=status.HTTP_200_OK)
 async def cost_dashboard(period: str = Query("24h", description="Time period")) -> dict[str, Any]:
     """Return cost summary for the requested period."""
     if period not in _VALID_PERIODS:

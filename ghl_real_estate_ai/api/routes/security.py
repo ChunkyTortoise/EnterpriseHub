@@ -90,7 +90,7 @@ class SecurityHealthResponse(BaseModel):
 # Security Dashboard Endpoints
 
 
-@router.get("/dashboard", response_model=SecurityDashboardResponse)
+@router.get("/dashboard", response_model=SecurityDashboardResponse, status_code=status.HTTP_200_OK)
 async def get_security_dashboard(current_user=Depends(get_current_user)) -> SecurityDashboardResponse:
     """
     Get comprehensive security dashboard data.
@@ -124,7 +124,7 @@ async def get_security_dashboard(current_user=Depends(get_current_user)) -> Secu
         )
 
 
-@router.get("/events/search", response_model=List[SecurityEventResponse])
+@router.get("/events/search", response_model=List[SecurityEventResponse], status_code=status.HTTP_200_OK)
 async def search_security_events(
     start_date: Optional[datetime] = Query(None),
     end_date: Optional[datetime] = Query(None),
@@ -176,7 +176,7 @@ async def search_security_events(
         )
 
 
-@router.post("/events/log")
+@router.post("/events/log", response_model=dict, status_code=status.HTTP_200_OK)
 async def log_security_event(
     request: Request,
     event_type: EventType,
@@ -222,7 +222,7 @@ async def log_security_event(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to log security event")
 
 
-@router.get("/health", response_model=SecurityHealthResponse)
+@router.get("/health", response_model=SecurityHealthResponse, status_code=status.HTTP_200_OK)
 async def get_security_health(current_user=Depends(get_current_user)) -> SecurityHealthResponse:
     """
     Get security system health status.
@@ -301,7 +301,7 @@ async def get_security_health(current_user=Depends(get_current_user)) -> Securit
         )
 
 
-@router.post("/threat-response")
+@router.post("/threat-response", response_model=dict, status_code=status.HTTP_200_OK)
 async def handle_threat_response(response_request: ThreatResponse, current_user=Depends(get_current_user)):
     """
     Handle threat response actions.
@@ -395,7 +395,7 @@ async def handle_threat_response(response_request: ThreatResponse, current_user=
         )
 
 
-@router.get("/compliance/report")
+@router.get("/compliance/report", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_compliance_report(
     start_date: Optional[datetime] = Query(None),
     end_date: Optional[datetime] = Query(None),
@@ -472,7 +472,7 @@ async def get_compliance_report(
 # WebSocket Security Management
 
 
-@router.get("/websocket/connections")
+@router.get("/websocket/connections", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_websocket_connections(current_user=Depends(get_current_user)):
     """Get active WebSocket connections information."""
     if not getattr(current_user, "is_admin", False):

@@ -233,7 +233,7 @@ def create_error_response(error: str, message: str, status_code: int = 400) -> J
 # Main API endpoints
 
 
-@router.get("/neighborhoods/{neighborhood_id}/intelligence")
+@router.get("/neighborhoods/{neighborhood_id}/intelligence", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_neighborhood_intelligence(
     neighborhood_id: str = Path(..., description="Neighborhood identifier"),
     request: NeighborhoodIntelligenceRequest = Depends(),
@@ -274,7 +274,7 @@ async def get_neighborhood_intelligence(
         return create_error_response("internal_error", "Failed to generate intelligence report", 500)
 
 
-@router.get("/neighborhoods/{neighborhood_id}/metrics")
+@router.get("/neighborhoods/{neighborhood_id}/metrics", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_neighborhood_metrics(
     neighborhood_id: str = Path(..., description="Neighborhood identifier"),
     timeframe: str = Query("current", description="Metrics timeframe"),
@@ -305,7 +305,7 @@ async def get_neighborhood_metrics(
         return create_error_response("internal_error", "Failed to retrieve metrics", 500)
 
 
-@router.post("/neighborhoods/{neighborhood_id}/predictions")
+@router.post("/neighborhoods/{neighborhood_id}/predictions", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_price_predictions(
     neighborhood_id: str = Path(..., description="Neighborhood identifier"),
     request: PricePredictionRequest = Body(...),
@@ -402,7 +402,7 @@ async def get_price_predictions(
         return create_error_response("internal_error", "Failed to generate price predictions", 500)
 
 
-@router.post("/neighborhoods/search")
+@router.post("/neighborhoods/search", response_model=dict, status_code=status.HTTP_200_OK)
 async def search_neighborhoods(
     request: NeighborhoodSearchRequest = Body(...),
     intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service),
@@ -488,7 +488,7 @@ async def search_neighborhoods(
         return create_error_response("internal_error", "Failed to search neighborhoods", 500)
 
 
-@router.get("/market/alerts")
+@router.get("/market/alerts", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_market_alerts(
     neighborhood_ids: Optional[str] = Query(None, description="Comma-separated neighborhood IDs"),
     alert_types: Optional[str] = Query(None, description="Comma-separated alert types"),
@@ -572,7 +572,7 @@ async def get_market_alerts(
         return create_error_response("internal_error", "Failed to retrieve market alerts", 500)
 
 
-@router.post("/market/alerts/rules")
+@router.post("/market/alerts/rules", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def create_alert_rule(request: AlertRuleRequest = Body(...), alert_system=Depends(get_alert_system)):
     """
     Create a new market alert rule.
@@ -623,7 +623,7 @@ async def create_alert_rule(request: AlertRuleRequest = Body(...), alert_system=
         return create_error_response("internal_error", "Failed to create alert rule", 500)
 
 
-@router.post("/investment/opportunities")
+@router.post("/investment/opportunities", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_investment_opportunities(
     request: InvestmentAnalysisRequest = Body(...),
     intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service),
@@ -659,7 +659,7 @@ async def get_investment_opportunities(
         return create_error_response("internal_error", "Failed to analyze investment opportunities", 500)
 
 
-@router.post("/investment/heatmap")
+@router.post("/investment/heatmap", response_model=dict, status_code=status.HTTP_200_OK)
 async def generate_investment_heatmap(
     request: HeatmapRequest = Body(...),
     intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service),
@@ -693,7 +693,7 @@ async def generate_investment_heatmap(
         return create_error_response("internal_error", "Failed to generate investment heatmap", 500)
 
 
-@router.post("/geospatial/accessibility")
+@router.post("/geospatial/accessibility", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_accessibility(
     request: GeospatialAnalysisRequest = Body(...), geospatial_service=Depends(get_geospatial_service)
 ):
@@ -748,7 +748,7 @@ async def analyze_accessibility(
         return create_error_response("internal_error", "Failed to analyze accessibility", 500)
 
 
-@router.post("/geospatial/cluster")
+@router.post("/geospatial/cluster", response_model=dict, status_code=status.HTTP_200_OK)
 async def cluster_properties(
     request: PropertyClusterRequest = Body(...), geospatial_service=Depends(get_geospatial_service)
 ):
@@ -808,7 +808,7 @@ async def cluster_properties(
         return create_error_response("internal_error", "Failed to perform property clustering", 500)
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check():
     """
     Health check endpoint for monitoring service status.

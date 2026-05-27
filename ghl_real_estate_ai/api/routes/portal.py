@@ -6,7 +6,7 @@ Handles branded client portal interactions including swipe actions.
 
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -53,7 +53,7 @@ class SwipeResponse(BaseModel):
     error: Optional[str] = None
 
 
-@router.post("/swipe", response_model=SwipeResponse)
+@router.post("/swipe", response_model=SwipeResponse, status_code=status.HTTP_200_OK)
 async def handle_swipe(request: SwipeRequest):
     """
     Handle a swipe action (like or pass) from the client portal.
@@ -131,7 +131,7 @@ async def handle_swipe(request: SwipeRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/stats/{lead_id}")
+@router.get("/stats/{lead_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_lead_stats(lead_id: str):
     """
     Get swipe statistics for a specific lead.
@@ -170,7 +170,7 @@ async def get_lead_stats(lead_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/feedback-categories")
+@router.get("/feedback-categories", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_feedback_categories():
     """
     Get available feedback categories for pass actions.
@@ -190,7 +190,7 @@ async def get_feedback_categories():
     }
 
 
-@router.get("/interactions/{lead_id}")
+@router.get("/interactions/{lead_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_lead_interactions(lead_id: str, limit: int = 50):
     """
     Get recent interactions for a specific lead.
@@ -219,7 +219,7 @@ async def get_lead_interactions(lead_id: str, limit: int = 50):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/deck/{lead_id}")
+@router.get("/deck/{lead_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_smart_deck(lead_id: str, location_id: str, limit: int = 10, min_score: float = 0.5):
     """
     Get a smart, curated deck of properties for a lead.
@@ -306,7 +306,7 @@ async def get_smart_deck(lead_id: str, location_id: str, limit: int = 10, min_sc
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/smart-deck")
+@router.get("/smart-deck", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_smart_deck_legacy(contact_id: str, location_id: Optional[str] = None):
     """
     Legacy compatibility endpoint for SwipeDeck React component.

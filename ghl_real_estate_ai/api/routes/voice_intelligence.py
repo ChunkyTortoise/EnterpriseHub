@@ -7,7 +7,7 @@ pipeline via REST and webhook endpoints.
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -75,7 +75,7 @@ class CallEventResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/webhook")
+@router.post("/webhook", response_model=CallEventResponse, status_code=status.HTTP_200_OK)
 async def process_vapi_webhook(request: Request) -> CallEventResponse:
     """Process a Vapi.ai webhook event (call started, ended, transcript, etc.)."""
     try:
@@ -109,7 +109,7 @@ async def process_vapi_webhook(request: Request) -> CallEventResponse:
         raise HTTPException(500, f"Voice intelligence error: {e}")
 
 
-@router.post("/analyze-transcript", response_model=TranscriptAnalysisResponse)
+@router.post("/analyze-transcript", response_model=TranscriptAnalysisResponse, status_code=status.HTTP_200_OK)
 async def analyze_transcript(request: AnalyzeTranscriptRequest):
     """Analyze a completed call transcript for qualification signals."""
     try:
@@ -153,7 +153,7 @@ async def analyze_transcript(request: AnalyzeTranscriptRequest):
         raise HTTPException(500, f"Transcript analysis error: {e}")
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def voice_intelligence_health():
     """Health check for the voice intelligence service."""
     try:

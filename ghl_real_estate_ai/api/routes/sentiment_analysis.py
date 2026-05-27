@@ -7,7 +7,7 @@ conversation-level trends, and escalation risk detection.
 
 from typing import Dict, List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -67,7 +67,7 @@ class BatchSentimentRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/analyze", response_model=SentimentResponse)
+@router.post("/analyze", response_model=SentimentResponse, status_code=status.HTTP_200_OK)
 async def analyze_sentiment(request: AnalyzeSentimentRequest):
     """Analyze sentiment of a single message."""
     try:
@@ -92,7 +92,7 @@ async def analyze_sentiment(request: AnalyzeSentimentRequest):
         raise HTTPException(500, f"Sentiment analysis error: {e}")
 
 
-@router.post("/analyze/batch")
+@router.post("/analyze/batch", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_sentiment_batch(request: BatchSentimentRequest):
     """Analyze sentiment of multiple messages."""
     try:
@@ -121,6 +121,7 @@ async def analyze_sentiment_batch(request: BatchSentimentRequest):
 @router.get(
     "/conversation/{contact_id}",
     response_model=ConversationSentimentResponse,
+    status_code=status.HTTP_200_OK,
 )
 async def get_conversation_sentiment(contact_id: str):
     """Get aggregated sentiment for a contact's full conversation."""
@@ -144,7 +145,7 @@ async def get_conversation_sentiment(contact_id: str):
         raise HTTPException(500, f"Conversation sentiment error: {e}")
 
 
-@router.delete("/history/{contact_id}")
+@router.delete("/history/{contact_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def clear_sentiment_history(contact_id: str):
     """Clear sentiment history for a contact."""
     engine = get_sentiment_engine()
@@ -152,7 +153,7 @@ async def clear_sentiment_history(contact_id: str):
     return {"status": "cleared", "contact_id": contact_id}
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def sentiment_health():
     """Health check for the sentiment analysis engine."""
     try:

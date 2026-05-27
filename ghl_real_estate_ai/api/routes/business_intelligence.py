@@ -20,7 +20,7 @@ Performance: <100ms response time, caching enabled
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -103,7 +103,7 @@ class PredictiveInsight(BaseModel):
 # Dashboard KPI Endpoints
 
 
-@router.get("/dashboard-kpis", response_model=DashboardKPIResponse)
+@router.get("/dashboard-kpis", response_model=DashboardKPIResponse, status_code=status.HTTP_200_OK)
 async def get_dashboard_kpis(
     timeframe: str = Query(default="24h", pattern="^(24h|7d|30d|90d|1y)$"),
     location_id: str = Query(default="default"),
@@ -178,7 +178,7 @@ async def get_dashboard_kpis(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/revenue-intelligence", response_model=RevenueIntelligenceResponse)
+@router.get("/revenue-intelligence", response_model=RevenueIntelligenceResponse, status_code=status.HTTP_200_OK)
 async def get_revenue_intelligence(
     timeframe: str = Query(default="30d", pattern="^(7d|30d|90d|1y)$"),
     location_id: str = Query(default="default"),
@@ -242,7 +242,7 @@ async def get_revenue_intelligence(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/bot-performance", response_model=BotPerformanceResponse)
+@router.get("/bot-performance", response_model=BotPerformanceResponse, status_code=status.HTTP_200_OK)
 async def get_bot_performance_matrix(
     timeframe: str = Query(default="7d", pattern="^(24h|7d|30d|90d)$"),
     location_id: str = Query(default="default"),
@@ -297,7 +297,7 @@ async def get_bot_performance_matrix(
 # Interactive Drill-Down Endpoints
 
 
-@router.post("/drill-down")
+@router.post("/drill-down", response_model=dict, status_code=status.HTTP_200_OK)
 async def drill_down_analytics(
     query: DrillDownQuery, background_tasks: BackgroundTasks, current_user: Any = Depends(get_current_user)
 ):
@@ -345,7 +345,7 @@ async def drill_down_analytics(
 # Predictive Analytics Endpoints
 
 
-@router.get("/predictive-insights")
+@router.get("/predictive-insights", response_model=List[PredictiveInsight], status_code=status.HTTP_200_OK)
 async def get_predictive_insights(
     location_id: str = Query(default="default"),
     insight_types: Optional[str] = Query(default=None),
@@ -383,7 +383,7 @@ async def get_predictive_insights(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/anomaly-detection")
+@router.get("/anomaly-detection", response_model=dict, status_code=status.HTTP_200_OK)
 async def detect_anomalies(
     location_id: str = Query(default="default"),
     timeframe: str = Query(default="24h", pattern="^(24h|7d|30d)$"),
@@ -433,7 +433,7 @@ async def detect_anomalies(
 # Real-time Metrics Endpoints
 
 
-@router.get("/real-time-metrics")
+@router.get("/real-time-metrics", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_real_time_metrics(
     location_id: str = Query(default="default"),
     components: Optional[str] = Query(default=None),
@@ -468,7 +468,7 @@ async def get_real_time_metrics(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/trigger-aggregation")
+@router.post("/trigger-aggregation", response_model=dict, status_code=status.HTTP_200_OK)
 async def trigger_manual_aggregation(
     location_id: str = Query(default="default"),
     window_name: str = Query(default="5min", pattern="^(5min|1hr|24hr)$"),
@@ -509,7 +509,7 @@ async def trigger_manual_aggregation(
 # Cache Management Endpoints
 
 
-@router.get("/cache-analytics")
+@router.get("/cache-analytics", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_cache_analytics(current_user: Any = Depends(get_current_user)):
     """
     Get BI cache performance analytics and statistics.
@@ -527,7 +527,7 @@ async def get_cache_analytics(current_user: Any = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/warm-cache")
+@router.post("/warm-cache", response_model=dict, status_code=status.HTTP_200_OK)
 async def warm_dashboard_cache(
     background_tasks: BackgroundTasks,
     location_ids: Optional[str] = Query(default=None),

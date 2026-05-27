@@ -12,7 +12,7 @@ Provides comprehensive API endpoints for:
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -98,7 +98,7 @@ class MarketTimingRequest(BaseModel):
 # Market Metrics Endpoints
 
 
-@router.get("/metrics", response_model=MarketMetricsResponse)
+@router.get("/metrics", response_model=MarketMetricsResponse, status_code=status.HTTP_200_OK)
 async def get_market_metrics(
     neighborhood: Optional[str] = Query(None, description="Filter by neighborhood"),
     property_type: Optional[str] = Query(None, description="Filter by property type"),
@@ -146,7 +146,7 @@ async def get_market_metrics(
         raise HTTPException(500, f"Failed to retrieve market metrics: {str(e)}")
 
 
-@router.get("/neighborhoods")
+@router.get("/neighborhoods", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_neighborhood_list():
     """Get list of available Rancho Cucamonga neighborhoods with basic info."""
     try:
@@ -188,7 +188,7 @@ async def get_neighborhood_list():
         raise HTTPException(500, f"Failed to retrieve neighborhoods: {str(e)}")
 
 
-@router.get("/neighborhoods/{neighborhood_name}")
+@router.get("/neighborhoods/{neighborhood_name}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_neighborhood_analysis(neighborhood_name: str):
     """Get detailed analysis for a specific neighborhood."""
     try:
@@ -219,7 +219,7 @@ async def get_neighborhood_analysis(neighborhood_name: str):
 # Property Search and Recommendations
 
 
-@router.post("/properties/search")
+@router.post("/properties/search", response_model=dict, status_code=status.HTTP_200_OK)
 async def search_properties(request: PropertySearchRequest):
     """
     Search Rancho Cucamonga properties with comprehensive filtering.
@@ -293,7 +293,7 @@ async def search_properties(request: PropertySearchRequest):
         raise HTTPException(500, f"Property search failed: {str(e)}")
 
 
-@router.post("/properties/recommendations")
+@router.post("/properties/recommendations", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_property_recommendations(request: PropertyRecommendationRequest):
     """
     Get AI-powered property recommendations for a specific lead.
@@ -372,7 +372,7 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
 # Corporate Relocation Intelligence
 
 
-@router.post("/corporate-insights")
+@router.post("/corporate-insights", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_corporate_insights(request: CorporateInsightsRequest):
     """
     Get comprehensive corporate relocation insights for Rancho Cucamonga.
@@ -404,7 +404,7 @@ async def get_corporate_insights(request: CorporateInsightsRequest):
         raise HTTPException(500, f"Failed to get corporate insights: {str(e)}")
 
 
-@router.get("/corporate-employers")
+@router.get("/corporate-employers", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_corporate_employers():
     """Get list of major corporate employers in Rancho Cucamonga with basic stats."""
     try:
@@ -461,7 +461,7 @@ async def get_corporate_employers():
 # Market Timing and Analysis
 
 
-@router.post("/market-timing")
+@router.post("/market-timing", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_market_timing_advice(request: MarketTimingRequest):
     """
     Get personalized market timing advice for Rancho Cucamonga real estate.
@@ -510,7 +510,7 @@ async def get_market_timing_advice(request: MarketTimingRequest):
         raise HTTPException(500, f"Failed to get timing advice: {str(e)}")
 
 
-@router.get("/market-trends")
+@router.get("/market-trends", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_market_trends(
     period: str = Query("3m", description="Time period: 1m, 3m, 6m, 1y"),
     neighborhood: Optional[str] = Query(None, description="Specific neighborhood"),
@@ -567,7 +567,7 @@ async def get_market_trends(
 # Property Alerts Management
 
 
-@router.post("/alerts/setup")
+@router.post("/alerts/setup", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def setup_property_alerts(lead_id: str, criteria: PropertySearchRequest):
     """Set up automated property alerts for a lead."""
     try:
@@ -603,7 +603,7 @@ async def setup_property_alerts(lead_id: str, criteria: PropertySearchRequest):
         raise HTTPException(500, f"Failed to set up alerts: {str(e)}")
 
 
-@router.get("/alerts/{lead_id}/summary")
+@router.get("/alerts/{lead_id}/summary", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_alert_summary(lead_id: str):
     """Get alert summary and recent notifications for a lead."""
     try:
@@ -621,7 +621,7 @@ async def get_alert_summary(lead_id: str):
 # AI-Powered Insights
 
 
-@router.post("/ai-insights/lead-analysis")
+@router.post("/ai-insights/lead-analysis", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_ai_lead_analysis(lead_data: Dict[str, Any], conversation_history: Optional[List[Dict[str, Any]]] = None):
     """Get AI-powered analysis of a lead with Rancho Cucamonga market context."""
     try:
@@ -636,7 +636,7 @@ async def get_ai_lead_analysis(lead_data: Dict[str, Any], conversation_history: 
         raise HTTPException(500, f"AI analysis failed: {str(e)}")
 
 
-@router.post("/ai-insights/conversation")
+@router.post("/ai-insights/conversation", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_ai_conversation_response(
     query: str, lead_context: Dict[str, Any], conversation_history: Optional[List[Dict[str, Any]]] = None
 ):
@@ -664,7 +664,7 @@ async def get_ai_conversation_response(
 # Health and Status
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check():
     """Health check endpoint for market intelligence services."""
     try:

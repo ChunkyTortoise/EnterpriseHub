@@ -8,7 +8,7 @@ Integrates with frontend for sequence control and monitoring.
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import require_auth
@@ -76,7 +76,7 @@ async def get_scheduler_service():
 # API Routes
 
 
-@router.post("/sequences", response_model=SequenceResponse)
+@router.post("/sequences", response_model=SequenceResponse, status_code=status.HTTP_201_CREATED)
 async def create_sequence(
     request: CreateSequenceRequest, scheduler_service=Depends(get_scheduler_service), _auth=Depends(require_auth)
 ):
@@ -128,7 +128,7 @@ async def create_sequence(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/sequences/{lead_id}", response_model=SequenceStatusResponse)
+@router.get("/sequences/{lead_id}", response_model=SequenceStatusResponse, status_code=status.HTTP_200_OK)
 async def get_sequence_status(lead_id: str, _auth=Depends(require_auth)):
     """
     Get current status of a lead's sequence
@@ -214,7 +214,7 @@ async def get_sequence_status(lead_id: str, _auth=Depends(require_auth)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/sequences/{lead_id}/pause")
+@router.post("/sequences/{lead_id}/pause", response_model=dict, status_code=status.HTTP_200_OK)
 async def pause_sequence(lead_id: str, _auth=Depends(require_auth)):
     """
     Pause an active sequence
@@ -240,7 +240,7 @@ async def pause_sequence(lead_id: str, _auth=Depends(require_auth)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/sequences/{lead_id}/resume")
+@router.post("/sequences/{lead_id}/resume", response_model=dict, status_code=status.HTTP_200_OK)
 async def resume_sequence(lead_id: str, _auth=Depends(require_auth)):
     """
     Resume a paused sequence
@@ -266,7 +266,7 @@ async def resume_sequence(lead_id: str, _auth=Depends(require_auth)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/sequences/{lead_id}/cancel")
+@router.post("/sequences/{lead_id}/cancel", response_model=dict, status_code=status.HTTP_200_OK)
 async def cancel_sequence(lead_id: str, _auth=Depends(require_auth)):
     """
     Cancel an active sequence
@@ -292,7 +292,7 @@ async def cancel_sequence(lead_id: str, _auth=Depends(require_auth)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/scheduler/status", response_model=SchedulerHealthResponse)
+@router.get("/scheduler/status", response_model=SchedulerHealthResponse, status_code=status.HTTP_200_OK)
 async def get_scheduler_status(scheduler_service=Depends(get_scheduler_service), _auth=Depends(require_auth)):
     """
     Get scheduler health status and metrics
@@ -316,7 +316,7 @@ async def get_scheduler_status(scheduler_service=Depends(get_scheduler_service),
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/scheduler/restart")
+@router.post("/scheduler/restart", response_model=dict, status_code=status.HTTP_200_OK)
 async def restart_scheduler(scheduler_service=Depends(get_scheduler_service), _auth=Depends(require_auth)):
     """
     Restart the scheduler (admin function)
@@ -333,7 +333,7 @@ async def restart_scheduler(scheduler_service=Depends(get_scheduler_service), _a
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/manual-trigger", response_model=Dict[str, Any])
+@router.post("/manual-trigger", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def manual_trigger(
     request: ManualTriggerRequest, scheduler_service=Depends(get_scheduler_service), _auth=Depends(require_auth)
 ):
@@ -388,7 +388,7 @@ async def manual_trigger(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/test-sequence")
+@router.post("/test-sequence", response_model=dict, status_code=status.HTTP_200_OK)
 async def test_sequence(
     lead_id: str = Query(default="test-lead-1"),
     scheduler_service=Depends(get_scheduler_service),
@@ -408,7 +408,7 @@ async def test_sequence(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check(scheduler_service=Depends(get_scheduler_service)):
     """
     Simple health check for load balancers

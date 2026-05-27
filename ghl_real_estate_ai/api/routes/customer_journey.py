@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 
 from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user_optional
@@ -618,7 +618,7 @@ def generate_mock_analytics() -> JourneyAnalytics:
 # ============================================================================
 
 
-@router.get("/journeys")
+@router.get("/journeys", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_journeys(
     status: Optional[List[str]] = Query(default=None),
     type: Optional[List[str]] = Query(default=None),
@@ -672,7 +672,7 @@ async def get_journeys(
         raise HTTPException(status_code=500, detail="Failed to fetch journeys")
 
 
-@router.get("/journeys/{journey_id}", response_model=CustomerJourney)
+@router.get("/journeys/{journey_id}", response_model=CustomerJourney, status_code=status.HTTP_200_OK)
 async def get_journey(
     journey_id: str,
     current_user=Depends(get_current_user_optional),
@@ -700,7 +700,7 @@ async def get_journey(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/journeys", response_model=CustomerJourney)
+@router.post("/journeys", response_model=CustomerJourney, status_code=status.HTTP_201_CREATED)
 async def create_journey(
     request: CreateJourneyRequest,
     current_user=Depends(get_current_user_optional),
@@ -784,7 +784,7 @@ async def create_journey(
         raise HTTPException(status_code=500, detail="Failed to create journey")
 
 
-@router.put("/journeys/{journey_id}", response_model=CustomerJourney)
+@router.put("/journeys/{journey_id}", response_model=CustomerJourney, status_code=status.HTTP_200_OK)
 async def update_journey(
     journey_id: str,
     request: UpdateJourneyRequest,
@@ -851,7 +851,7 @@ async def update_journey(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.delete("/journeys/{journey_id}")
+@router.delete("/journeys/{journey_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def delete_journey(
     journey_id: str,
     current_user=Depends(get_current_user_optional),
@@ -891,7 +891,7 @@ async def delete_journey(
 # ============================================================================
 
 
-@router.put("/journeys/{journey_id}/steps/{step_id}", response_model=JourneyStep)
+@router.put("/journeys/{journey_id}/steps/{step_id}", response_model=JourneyStep, status_code=status.HTTP_200_OK)
 async def update_step(
     journey_id: str,
     step_id: str,
@@ -948,7 +948,7 @@ async def update_step(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/journeys/{journey_id}/steps/{step_id}/complete")
+@router.post("/journeys/{journey_id}/steps/{step_id}/complete", response_model=dict, status_code=status.HTTP_200_OK)
 async def complete_step(
     journey_id: str,
     step_id: str,
@@ -1001,7 +1001,7 @@ async def complete_step(
 # ============================================================================
 
 
-@router.get("/analytics", response_model=JourneyAnalytics)
+@router.get("/analytics", response_model=JourneyAnalytics, status_code=status.HTTP_200_OK)
 async def get_analytics(
     timeframe: str = Query(default="week", pattern="^(day|week|month|quarter)$"),
     current_user=Depends(get_current_user_optional),
@@ -1028,7 +1028,7 @@ async def get_analytics(
 # ============================================================================
 
 
-@router.get("/templates", response_model=List[JourneyTemplate])
+@router.get("/templates", response_model=List[JourneyTemplate], status_code=status.HTTP_200_OK)
 async def get_templates(type: Optional[str] = Query(default=None), current_user=Depends(get_current_user_optional)):
     """
     Get journey templates, optionally filtered by type.

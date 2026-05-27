@@ -5,7 +5,7 @@ Exposes the Modular Agentic Powerhouse analysis capabilities.
 
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.agent_system.v2.conductor import process_request
@@ -19,7 +19,7 @@ class PropertyAnalysisRequest(BaseModel):
     request_type: str = Field(default="full_pipeline", description="RESEARCH_ONLY, ANALYZE_ONLY, or FULL_PIPELINE")
 
 
-@router.post("/analyze")
+@router.post("/analyze", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_property(request: PropertyAnalysisRequest):
     """
     Trigger a full agentic analysis of a property.
@@ -54,6 +54,6 @@ async def analyze_property(request: PropertyAnalysisRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health():
     return {"status": "ok", "service": "properties_v2"}

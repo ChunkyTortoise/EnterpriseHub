@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -227,7 +227,7 @@ def convert_concierge_response(response: ConciergeResponse) -> ConciergeResponse
 # ============================================================================
 
 
-@router.post("/contextual-guidance", response_model=ConciergeResponseModel)
+@router.post("/contextual-guidance", response_model=ConciergeResponseModel, status_code=status.HTTP_200_OK)
 async def generate_contextual_guidance(
     request: PlatformContextRequest,
     mode: str = "proactive",
@@ -260,7 +260,7 @@ async def generate_contextual_guidance(
         raise HTTPException(status_code=500, detail="Internal server error generating guidance")
 
 
-@router.post("/live-guidance", response_model=ConciergeResponseModel)
+@router.post("/live-guidance", response_model=ConciergeResponseModel, status_code=status.HTTP_200_OK)
 async def generate_live_guidance(
     request: LiveGuidanceRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
@@ -291,7 +291,7 @@ async def generate_live_guidance(
         raise HTTPException(status_code=500, detail="Internal server error generating live guidance")
 
 
-@router.post("/chat")
+@router.post("/chat", response_model=dict, status_code=status.HTTP_200_OK)
 async def chat_with_concierge(
     request: ChatRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
@@ -366,7 +366,7 @@ async def chat_with_concierge(
         raise HTTPException(status_code=500, detail="Internal server error in chat")
 
 
-@router.post("/real-time-coaching", response_model=ConciergeResponseModel)
+@router.post("/real-time-coaching", response_model=ConciergeResponseModel, status_code=status.HTTP_200_OK)
 async def provide_real_time_coaching(
     request: CoachingRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
@@ -390,7 +390,7 @@ async def provide_real_time_coaching(
         raise HTTPException(status_code=500, detail="Internal server error providing coaching")
 
 
-@router.post("/bot-coordination", response_model=ConciergeResponseModel)
+@router.post("/bot-coordination", response_model=ConciergeResponseModel, status_code=status.HTTP_200_OK)
 async def coordinate_bot_ecosystem(
     request: BotHandoffRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
@@ -414,7 +414,7 @@ async def coordinate_bot_ecosystem(
         raise HTTPException(status_code=500, detail="Internal server error in bot coordination")
 
 
-@router.post("/field-assistance", response_model=ConciergeResponseModel)
+@router.post("/field-assistance", response_model=ConciergeResponseModel, status_code=status.HTTP_200_OK)
 async def generate_mobile_field_assistance(
     request: FieldAssistanceRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
@@ -438,7 +438,7 @@ async def generate_mobile_field_assistance(
         raise HTTPException(status_code=500, detail="Internal server error in field assistance")
 
 
-@router.post("/presentation-support", response_model=ConciergeResponseModel)
+@router.post("/presentation-support", response_model=ConciergeResponseModel, status_code=status.HTTP_200_OK)
 async def provide_client_presentation_support(
     request: PresentationSupportRequest,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
@@ -469,7 +469,7 @@ async def provide_client_presentation_support(
 # ============================================================================
 
 
-@router.post("/learn-decision")
+@router.post("/learn-decision", response_model=dict, status_code=status.HTTP_200_OK)
 async def learn_from_user_decision(
     request: LearningRequest,
     background_tasks: BackgroundTasks,
@@ -495,7 +495,7 @@ async def learn_from_user_decision(
         raise HTTPException(status_code=500, detail="Internal server error in learning system")
 
 
-@router.post("/predict-preference")
+@router.post("/predict-preference", response_model=dict, status_code=status.HTTP_200_OK)
 async def predict_jorge_preference(
     situation: Dict[str, Any],
     request: PlatformContextRequest,
@@ -522,7 +522,7 @@ async def predict_jorge_preference(
 # ============================================================================
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check():
     """Health check endpoint for the concierge service."""
     try:
@@ -549,7 +549,7 @@ async def health_check():
         raise HTTPException(status_code=500, detail="Service unhealthy")
 
 
-@router.get("/capabilities")
+@router.get("/capabilities", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_capabilities():
     """Get available capabilities and configuration."""
     return {
@@ -572,7 +572,7 @@ async def get_capabilities():
     }
 
 
-@router.get("/metrics")
+@router.get("/metrics", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_orchestrator_metrics(
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),
     current_user: User = Depends(get_current_user_optional),
@@ -597,7 +597,7 @@ async def get_orchestrator_metrics(
         raise HTTPException(status_code=500, detail="Internal server error getting metrics")
 
 
-@router.post("/reset-session")
+@router.post("/reset-session", response_model=dict, status_code=status.HTTP_200_OK)
 async def reset_concierge_session(
     session_id: str,
     orchestrator: ClaudeConciergeOrchestrator = Depends(get_concierge_orchestrator),

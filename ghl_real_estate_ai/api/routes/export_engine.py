@@ -7,7 +7,7 @@ and client presentation creation.
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
@@ -69,7 +69,7 @@ class ExportResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/market-report", response_model=ExportResponse)
+@router.post("/market-report", response_model=ExportResponse, status_code=status.HTTP_200_OK)
 async def generate_market_report(request: MarketReportRequest):
     """Generate a branded market report for a neighborhood."""
     try:
@@ -94,7 +94,7 @@ async def generate_market_report(request: MarketReportRequest):
         raise HTTPException(500, "Report generation failed")
 
 
-@router.post("/market-report/render")
+@router.post("/market-report/render", response_model=dict, status_code=status.HTTP_200_OK)
 async def render_market_report(request: MarketReportRequest):
     """Generate and render a market report as HTML."""
     try:
@@ -111,7 +111,7 @@ async def render_market_report(request: MarketReportRequest):
         raise HTTPException(500, "Report rendering failed")
 
 
-@router.post("/cma-report", response_model=ExportResponse)
+@router.post("/cma-report", response_model=ExportResponse, status_code=status.HTTP_200_OK)
 async def generate_cma_report(request: CMAReportRequest):
     """Generate a Comparative Market Analysis report."""
     try:
@@ -136,7 +136,7 @@ async def generate_cma_report(request: CMAReportRequest):
         raise HTTPException(500, "CMA report generation failed")
 
 
-@router.post("/leads-csv", response_model=ExportResponse)
+@router.post("/leads-csv", response_model=ExportResponse, status_code=status.HTTP_200_OK)
 async def export_leads_csv(request: LeadExportRequest):
     """Export leads data as CSV."""
     try:
@@ -156,7 +156,7 @@ async def export_leads_csv(request: LeadExportRequest):
         raise HTTPException(500, "Lead export failed")
 
 
-@router.post("/presentation", response_model=ExportResponse)
+@router.post("/presentation", response_model=ExportResponse, status_code=status.HTTP_200_OK)
 async def generate_presentation(request: PresentationRequest):
     """Generate an HTML client presentation."""
     try:
@@ -179,7 +179,7 @@ async def generate_presentation(request: PresentationRequest):
         raise HTTPException(500, "Presentation generation failed")
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def export_health():
     """Health check for the professional export engine."""
     try:

@@ -30,7 +30,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -236,7 +236,7 @@ def convert_roi_calculation_to_dict(roi_calc: RealTimeROICalculation) -> Dict[st
 # API Endpoints
 
 
-@router.get("/health", response_model=Dict[str, Any])
+@router.get("/health", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def health_check():
     """Health check endpoint for value justification API"""
     return {
@@ -247,7 +247,7 @@ async def health_check():
     }
 
 
-@router.post("/value/track", response_model=ValueTrackingResponse)
+@router.post("/value/track", response_model=ValueTrackingResponse, status_code=status.HTTP_200_OK)
 async def track_real_time_value(request: ValueTrackingRequest, value_engine=Depends(get_value_engine)):
     """
     Track real-time value across all dimensions
@@ -309,7 +309,7 @@ async def track_real_time_value(request: ValueTrackingRequest, value_engine=Depe
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/roi/calculate", response_model=ROICalculationResponse)
+@router.post("/roi/calculate", response_model=ROICalculationResponse, status_code=status.HTTP_200_OK)
 async def calculate_real_time_roi(request: ROICalculationRequest, value_engine=Depends(get_value_engine)):
     """
     Calculate comprehensive real-time ROI with all value dimensions
@@ -356,7 +356,7 @@ async def calculate_real_time_roi(request: ROICalculationRequest, value_engine=D
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/pricing/optimize", response_model=PricingOptimizationResponse)
+@router.post("/pricing/optimize", response_model=PricingOptimizationResponse, status_code=status.HTTP_200_OK)
 async def optimize_dynamic_pricing(request: PricingOptimizationRequest, value_engine=Depends(get_value_engine)):
     """
     Generate dynamic pricing recommendations based on value delivery
@@ -425,7 +425,11 @@ async def optimize_dynamic_pricing(request: PricingOptimizationRequest, value_en
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/communication/package/{agent_id}/{client_id}", response_model=ValueCommunicationResponse)
+@router.get(
+    "/communication/package/{agent_id}/{client_id}",
+    response_model=ValueCommunicationResponse,
+    status_code=status.HTTP_200_OK,
+)
 async def generate_value_communication_package(
     agent_id: str,
     client_id: str,
@@ -484,7 +488,7 @@ async def generate_value_communication_package(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/justification/document", response_model=JustificationDocumentResponse)
+@router.post("/justification/document", response_model=JustificationDocumentResponse, status_code=status.HTTP_200_OK)
 async def create_justification_documentation(
     request: JustificationDocumentRequest, value_engine=Depends(get_value_engine)
 ):
@@ -526,7 +530,7 @@ async def create_justification_documentation(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/dashboard/data/{agent_id}")
+@router.get("/dashboard/data/{agent_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_dashboard_data(
     agent_id: str,
     client_id: Optional[str] = Query(None, description="Client identifier for client-specific view"),
@@ -607,7 +611,7 @@ async def get_dashboard_data(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/messages/generate", response_model=MessageGenerationResponse)
+@router.post("/messages/generate", response_model=MessageGenerationResponse, status_code=status.HTTP_200_OK)
 async def generate_value_message(
     request: MessageGenerationRequest, communication_templates=Depends(get_communication_templates)
 ):
@@ -656,7 +660,7 @@ async def generate_value_message(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/templates/list")
+@router.get("/templates/list", response_model=dict, status_code=status.HTTP_200_OK)
 async def list_message_templates(
     message_type: Optional[str] = Query(None, description="Filter by message type"),
     communication_style: Optional[str] = Query(None, description="Filter by communication style"),

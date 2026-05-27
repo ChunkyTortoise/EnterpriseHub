@@ -21,7 +21,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -119,7 +119,7 @@ async def get_forecasting_engine() -> EnhancedRevenueForecastingEngine:
 
 
 # Core Revenue Forecasting Endpoints
-@router.post("/forecast", response_model=RevenueForecastResponse)
+@router.post("/forecast", response_model=RevenueForecastResponse, status_code=status.HTTP_200_OK)
 async def generate_advanced_revenue_forecast(
     request: RevenueForecastRequest, engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)
 ):
@@ -166,7 +166,7 @@ async def generate_advanced_revenue_forecast(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/deal-probability", response_model=DealProbabilityResponse)
+@router.post("/deal-probability", response_model=DealProbabilityResponse, status_code=status.HTTP_200_OK)
 async def analyze_deal_probabilities(
     request: DealProbabilityRequest, engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)
 ):
@@ -233,7 +233,7 @@ async def analyze_deal_probabilities(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/optimization-plan", response_model=RevenueOptimizationResponse)
+@router.post("/optimization-plan", response_model=RevenueOptimizationResponse, status_code=status.HTTP_200_OK)
 async def generate_revenue_optimization_plan(
     request: RevenueOptimizationRequest, engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)
 ):
@@ -288,7 +288,7 @@ async def generate_revenue_optimization_plan(
 
 
 # Real-time Intelligence Endpoints
-@router.get("/metrics/real-time", response_model=RevenueIntelligenceMetrics)
+@router.get("/metrics/real-time", response_model=RevenueIntelligenceMetrics, status_code=status.HTTP_200_OK)
 async def get_real_time_revenue_metrics(engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)):
     """
     Get real-time revenue intelligence metrics and alerts
@@ -367,7 +367,7 @@ async def get_real_time_revenue_metrics(engine: EnhancedRevenueForecastingEngine
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/stream/forecasts")
+@router.get("/stream/forecasts", response_model=dict, status_code=status.HTTP_200_OK)
 async def stream_revenue_forecasts():
     """
     Stream real-time revenue forecast updates via Server-Sent Events (SSE)
@@ -422,7 +422,7 @@ async def stream_revenue_forecasts():
 
 
 # Model Management Endpoints
-@router.get("/models/status")
+@router.get("/models/status", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_model_status(engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)):
     """
     Get status and performance metrics for all forecasting models
@@ -444,7 +444,7 @@ async def get_model_status(engine: EnhancedRevenueForecastingEngine = Depends(ge
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/models/retrain")
+@router.post("/models/retrain", response_model=dict, status_code=status.HTTP_200_OK)
 async def retrain_models(
     background_tasks: BackgroundTasks,
     models: List[ForecastModelType] = Query([]),
@@ -479,7 +479,7 @@ async def retrain_models(
 
 
 # Business Intelligence Endpoints
-@router.get("/insights/executive-summary")
+@router.get("/insights/executive-summary", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_executive_revenue_insights(
     timeframe: ForecastTimeframe = ForecastTimeframe.MONTHLY,
     engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine),
@@ -540,7 +540,7 @@ async def get_executive_revenue_insights(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/insights/market-intelligence")
+@router.get("/insights/market-intelligence", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_market_intelligence_insights(engine: EnhancedRevenueForecastingEngine = Depends(get_forecasting_engine)):
     """
     Get comprehensive market intelligence and competitive analysis
@@ -591,7 +591,7 @@ async def get_market_intelligence_insights(engine: EnhancedRevenueForecastingEng
 
 
 # Health check endpoint
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check():
     """Health check for revenue intelligence services"""
     try:

@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
@@ -155,7 +155,7 @@ class ModelPerformanceResponse(BaseModel):
 # API Endpoints
 
 
-@router.post("/score", response_model=PredictiveScoreResponse)
+@router.post("/score", response_model=PredictiveScoreResponse, status_code=status.HTTP_200_OK)
 async def get_predictive_score(request: ConversationContextRequest, current_user: dict = Depends(verify_jwt_token)):
     """
     Get comprehensive predictive score for a lead.
@@ -206,7 +206,7 @@ async def get_predictive_score(request: ConversationContextRequest, current_user
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/insights", response_model=LeadInsightsResponse)
+@router.post("/insights", response_model=LeadInsightsResponse, status_code=status.HTTP_200_OK)
 async def get_lead_insights(request: ConversationContextRequest, current_user: dict = Depends(verify_jwt_token)):
     """
     Get deep insights for lead decision making.
@@ -251,7 +251,7 @@ async def get_lead_insights(request: ConversationContextRequest, current_user: d
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/actions", response_model=List[ActionRecommendationResponse])
+@router.post("/actions", response_model=List[ActionRecommendationResponse], status_code=status.HTTP_200_OK)
 async def get_action_recommendations(
     request: ConversationContextRequest, limit: Optional[int] = 5, current_user: dict = Depends(verify_jwt_token)
 ):
@@ -310,7 +310,7 @@ async def get_action_recommendations(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/action-sequence")
+@router.post("/action-sequence", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_action_sequence(
     request: ConversationContextRequest,
     sequence_type: str = "conversion_focused",
@@ -372,7 +372,7 @@ async def get_action_sequence(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/timing-optimization")
+@router.post("/timing-optimization", response_model=dict, status_code=status.HTTP_200_OK)
 async def optimize_timing(
     request: ConversationContextRequest, action_type: str, current_user: dict = Depends(verify_jwt_token)
 ):
@@ -417,7 +417,7 @@ async def optimize_timing(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/model-performance", response_model=ModelPerformanceResponse)
+@router.get("/model-performance", response_model=ModelPerformanceResponse, status_code=status.HTTP_200_OK)
 async def get_model_performance(current_user: dict = Depends(verify_jwt_token)):
     """
     Get current ML model performance metrics.
@@ -465,7 +465,7 @@ async def get_model_performance(current_user: dict = Depends(verify_jwt_token)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/train-model")
+@router.post("/train-model", response_model=dict, status_code=status.HTTP_200_OK)
 async def train_model(
     background_tasks: BackgroundTasks, use_synthetic_data: bool = True, current_user: dict = Depends(verify_jwt_token)
 ):
@@ -517,7 +517,7 @@ async def train_model(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/pipeline-status")
+@router.get("/pipeline-status", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_pipeline_status(current_user: dict = Depends(verify_jwt_token)):
     """
     Get status of the predictive analytics pipeline.
@@ -564,7 +564,7 @@ async def get_pipeline_status(current_user: dict = Depends(verify_jwt_token)):
 
 
 # Batch operations for processing multiple leads
-@router.post("/batch-score")
+@router.post("/batch-score", response_model=dict, status_code=status.HTTP_200_OK)
 async def batch_score_leads(leads: List[ConversationContextRequest], current_user: dict = Depends(verify_jwt_token)):
     """
     Process multiple leads for batch scoring.

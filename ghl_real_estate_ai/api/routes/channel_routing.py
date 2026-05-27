@@ -7,7 +7,7 @@ cross-channel analytics, and delivery tracking.
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -66,7 +66,7 @@ class BatchSendRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/send", response_model=DeliveryResponse)
+@router.post("/send", response_model=DeliveryResponse, status_code=status.HTTP_200_OK)
 async def send_message(request: SendMessageRequest):
     """Route and deliver a message with compliance and sentiment checks."""
     try:
@@ -94,7 +94,7 @@ async def send_message(request: SendMessageRequest):
         raise HTTPException(500, f"Channel routing error: {e}")
 
 
-@router.post("/send/batch")
+@router.post("/send/batch", response_model=dict, status_code=status.HTTP_200_OK)
 async def send_messages_batch(request: BatchSendRequest):
     """Send messages to multiple contacts."""
     try:
@@ -125,7 +125,7 @@ async def send_messages_batch(request: BatchSendRequest):
         raise HTTPException(500, f"Batch delivery error: {e}")
 
 
-@router.get("/preference/{contact_id}")
+@router.get("/preference/{contact_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_channel_preference(contact_id: str):
     """Get the learned optimal channel for a contact."""
     router_service = get_channel_router()
@@ -136,7 +136,7 @@ async def get_channel_preference(contact_id: str):
     }
 
 
-@router.get("/analytics", response_model=ChannelAnalyticsResponse)
+@router.get("/analytics", response_model=ChannelAnalyticsResponse, status_code=status.HTTP_200_OK)
 async def get_channel_analytics():
     """Get cross-channel delivery analytics."""
     try:
@@ -155,7 +155,7 @@ async def get_channel_analytics():
         raise HTTPException(500, f"Analytics error: {e}")
 
 
-@router.delete("/analytics")
+@router.delete("/analytics", response_model=dict, status_code=status.HTTP_200_OK)
 async def clear_channel_analytics():
     """Clear channel routing analytics."""
     router_service = get_channel_router()
@@ -163,7 +163,7 @@ async def clear_channel_analytics():
     return {"status": "cleared"}
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def channel_routing_health():
     """Health check for the unified channel router."""
     try:

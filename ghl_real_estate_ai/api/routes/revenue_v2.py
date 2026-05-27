@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, Query, Response, status
 from fastapi.responses import StreamingResponse
 
 from ghl_real_estate_ai.api.schemas.revenue_v2 import (
@@ -216,7 +216,7 @@ def _render_proof_pack_markdown(tenant_id: str, row: Dict[str, Any]) -> str:
 """
 
 
-@router.get("/billing/subscriptions/{location_id}", response_model=RevenueV2Envelope)
+@router.get("/billing/subscriptions/{location_id}", response_model=RevenueV2Envelope, status_code=status.HTTP_200_OK)
 async def get_billing_subscription_v2(location_id: str, response: Response) -> RevenueV2Envelope:
     correlation_id = new_correlation_id()
     try:
@@ -280,7 +280,7 @@ async def get_billing_subscription_v2(location_id: str, response: Response) -> R
         return envelope
 
 
-@router.get("/prediction/deal-outcome/{deal_id}", response_model=RevenueV2Envelope)
+@router.get("/prediction/deal-outcome/{deal_id}", response_model=RevenueV2Envelope, status_code=status.HTTP_200_OK)
 async def get_prediction_deal_outcome_v2(
     deal_id: str,
     response: Response,
@@ -369,7 +369,7 @@ async def get_prediction_deal_outcome_v2(
         return envelope
 
 
-@router.get("/customer-journeys/{lead_id}", response_model=RevenueV2Envelope)
+@router.get("/customer-journeys/{lead_id}", response_model=RevenueV2Envelope, status_code=status.HTTP_200_OK)
 async def get_customer_journey_v2(
     lead_id: str,
     response: Response,
@@ -447,7 +447,7 @@ async def get_customer_journey_v2(
         return envelope
 
 
-@router.get("/property-intelligence/{property_id}", response_model=RevenueV2Envelope)
+@router.get("/property-intelligence/{property_id}", response_model=RevenueV2Envelope, status_code=status.HTTP_200_OK)
 async def get_property_intelligence_v2(
     property_id: str,
     response: Response,
@@ -537,7 +537,7 @@ async def get_property_intelligence_v2(
         return envelope
 
 
-@router.get("/sms-compliance/{location_id}", response_model=RevenueV2Envelope)
+@router.get("/sms-compliance/{location_id}", response_model=RevenueV2Envelope, status_code=status.HTTP_200_OK)
 async def get_sms_compliance_v2(
     location_id: str,
     response: Response,
@@ -613,7 +613,7 @@ async def get_sms_compliance_v2(
         return envelope
 
 
-@router.get("/market-intelligence/recommendations/stream")
+@router.get("/market-intelligence/recommendations/stream", response_model=dict, status_code=status.HTTP_200_OK)
 async def stream_market_recommendations_v2(
     market_id: str,
     lead_id: str,
@@ -710,7 +710,7 @@ async def stream_market_recommendations_v2(
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 
-@router.get("/reports/weekly-proof-pack", response_model=RevenueV2Envelope)
+@router.get("/reports/weekly-proof-pack", response_model=RevenueV2Envelope, status_code=status.HTTP_200_OK)
 async def get_weekly_proof_pack_v2(
     response: Response,
     tenant_id: str | None = Query(default=None, min_length=1),

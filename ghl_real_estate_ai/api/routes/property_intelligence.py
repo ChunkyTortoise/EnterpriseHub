@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.api.middleware.enhanced_auth import get_current_user
@@ -593,7 +593,7 @@ def generate_mock_realtime_data(property_id: str):
 # ============================================================================
 
 
-@router.post("/analyze", response_model=PropertyAnalysis)
+@router.post("/analyze", response_model=PropertyAnalysis, status_code=status.HTTP_200_OK)
 async def analyze_property(
     request: PropertyAnalysisRequest,
     current_user=Depends(get_current_user),
@@ -644,7 +644,7 @@ async def analyze_property(
         raise HTTPException(status_code=500, detail="Failed to analyze property")
 
 
-@router.get("/properties/{property_id}", response_model=PropertyAnalysis)
+@router.get("/properties/{property_id}", response_model=PropertyAnalysis, status_code=status.HTTP_200_OK)
 async def get_property_analysis(
     property_id: str,
     current_user=Depends(get_current_user),
@@ -675,7 +675,7 @@ async def get_property_analysis(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.put("/properties/{property_id}/update", response_model=PropertyAnalysis)
+@router.put("/properties/{property_id}/update", response_model=PropertyAnalysis, status_code=status.HTTP_200_OK)
 async def update_analysis(
     property_id: str,
     updates: PropertyAnalysisRequest,
@@ -710,7 +710,7 @@ async def update_analysis(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.delete("/properties/{property_id}")
+@router.delete("/properties/{property_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def delete_analysis(
     property_id: str,
     current_user=Depends(get_current_user),
@@ -748,7 +748,7 @@ async def delete_analysis(
 # ============================================================================
 
 
-@router.post("/compare", response_model=PropertyComparison)
+@router.post("/compare", response_model=PropertyComparison, status_code=status.HTTP_200_OK)
 async def compare_properties(
     property_ids: Dict[str, List[str]],  # {"propertyIds": [...]}
     current_user=Depends(get_current_user),
@@ -783,7 +783,7 @@ async def compare_properties(
         raise HTTPException(status_code=500, detail="Failed to compare properties")
 
 
-@router.get("/properties/{property_id}/benchmark")
+@router.get("/properties/{property_id}/benchmark", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_benchmark_analysis(property_id: str, radius: int = 5, current_user=Depends(get_current_user)):
     """
     Get benchmark analysis for a property against market comparables.
@@ -841,7 +841,7 @@ async def get_benchmark_analysis(property_id: str, radius: int = 5, current_user
 # ============================================================================
 
 
-@router.post("/market/insights")
+@router.post("/market/insights", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_market_insights(
     location_data: Dict[str, Any],  # {"location": {lat, lng}, "radius": int}
     current_user=Depends(get_current_user),
@@ -870,7 +870,7 @@ async def get_market_insights(
 # ============================================================================
 
 
-@router.get("/properties/{property_id}/realtime")
+@router.get("/properties/{property_id}/realtime", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_realtime_market_data(property_id: str, current_user=Depends(get_current_user)):
     """
     Get real-time market data for a property.
@@ -893,7 +893,7 @@ async def get_realtime_market_data(property_id: str, current_user=Depends(get_cu
 # ============================================================================
 
 
-@router.post("/portfolio/analyze")
+@router.post("/portfolio/analyze", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_portfolio(
     portfolio_data: Dict[str, List[str]],  # {"propertyIds": [...]}
     current_user=Depends(get_current_user),
@@ -945,7 +945,7 @@ async def analyze_portfolio(
 # ============================================================================
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check():
     """Health check for property intelligence service."""
     try:

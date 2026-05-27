@@ -8,7 +8,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -102,7 +102,7 @@ class PerformanceMetricsResponse(BaseModel):
 # ================================================================
 
 
-@router.post("/sessions", response_model=DemoSessionResponse)
+@router.post("/sessions", response_model=DemoSessionResponse, status_code=status.HTTP_201_CREATED)
 @rate_limit(requests=10, window=60)  # 10 demo sessions per minute
 async def create_demo_session(request: DemoSessionRequest, current_user: dict = Depends(get_current_user)):
     """
@@ -159,7 +159,7 @@ async def create_demo_session(request: DemoSessionRequest, current_user: dict = 
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/sessions/{session_id}", response_model=DemoSessionResponse)
+@router.get("/sessions/{session_id}", response_model=DemoSessionResponse, status_code=status.HTTP_200_OK)
 @rate_limit(requests=60, window=60)  # 60 requests per minute for session access
 async def get_demo_session(
     session_id: str = Path(..., description="Demo session ID"), current_user: dict = Depends(get_current_user)
@@ -199,7 +199,7 @@ async def get_demo_session(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/sessions/{session_id}/extend")
+@router.post("/sessions/{session_id}/extend", response_model=dict, status_code=status.HTTP_200_OK)
 @rate_limit(requests=10, window=60)
 async def extend_demo_session(
     session_id: str = Path(..., description="Demo session ID"),
@@ -234,7 +234,7 @@ async def extend_demo_session(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/sessions/{session_id}/reset", response_model=DemoSessionResponse)
+@router.post("/sessions/{session_id}/reset", response_model=DemoSessionResponse, status_code=status.HTTP_200_OK)
 @rate_limit(requests=5, window=60)
 async def reset_demo_session(
     session_id: str = Path(..., description="Demo session ID"), current_user: dict = Depends(get_current_user)
@@ -270,7 +270,7 @@ async def reset_demo_session(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.delete("/sessions/{session_id}")
+@router.delete("/sessions/{session_id}", response_model=dict, status_code=status.HTTP_200_OK)
 @rate_limit(requests=20, window=60)
 async def cleanup_demo_session(
     session_id: str = Path(..., description="Demo session ID"), current_user: dict = Depends(get_current_user)
@@ -305,7 +305,7 @@ async def cleanup_demo_session(
 # ================================================================
 
 
-@router.get("/sessions/{session_id}/roi", response_model=ROICalculationResponse)
+@router.get("/sessions/{session_id}/roi", response_model=ROICalculationResponse, status_code=status.HTTP_200_OK)
 @rate_limit(requests=60, window=60)
 async def get_roi_calculation(
     session_id: str = Path(..., description="Demo session ID"), current_user: dict = Depends(get_current_user)
@@ -339,7 +339,9 @@ async def get_roi_calculation(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/sessions/{session_id}/performance", response_model=PerformanceMetricsResponse)
+@router.get(
+    "/sessions/{session_id}/performance", response_model=PerformanceMetricsResponse, status_code=status.HTTP_200_OK
+)
 @rate_limit(requests=60, window=60)
 async def get_performance_metrics(
     session_id: str = Path(..., description="Demo session ID"), current_user: dict = Depends(get_current_user)
@@ -376,7 +378,7 @@ async def get_performance_metrics(
 # ================================================================
 
 
-@router.get("/scenarios")
+@router.get("/scenarios", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_available_scenarios(current_user: dict = Depends(get_current_user)):
     """
     Get list of available demonstration scenarios
@@ -430,7 +432,7 @@ async def get_available_scenarios(current_user: dict = Depends(get_current_user)
     return JSONResponse({"scenarios": scenarios, "total_available": len(scenarios)})
 
 
-@router.post("/sessions/cleanup-expired")
+@router.post("/sessions/cleanup-expired", response_model=dict, status_code=status.HTTP_200_OK)
 @rate_limit(requests=5, window=300)  # 5 requests per 5 minutes
 async def cleanup_expired_sessions(
     current_user: dict = Depends(verify_admin_access),  # Admin only
@@ -464,7 +466,7 @@ async def cleanup_expired_sessions(
 # ================================================================
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def demo_service_health():
     """
     Check demo service health status

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -32,13 +32,13 @@ class BotSettingsUpdate(BaseModel):
     questions: Optional[dict[str, str]] = None
 
 
-@router.get("/admin/settings")
+@router.get("/admin/settings", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_settings() -> dict[str, Any]:
     """Return current tone/question/phrase settings for all bots."""
     return get_all_settings()
 
 
-@router.put("/admin/settings/{bot}")
+@router.put("/admin/settings/{bot}", response_model=dict, status_code=status.HTTP_200_OK)
 async def update_settings(bot: str, body: BotSettingsUpdate) -> dict[str, Any]:
     """Partial update for seller or buyer bot settings. Returns updated settings."""
     if bot not in _VALID_BOTS:
@@ -49,7 +49,7 @@ async def update_settings(bot: str, body: BotSettingsUpdate) -> dict[str, Any]:
     return update_bot_settings(bot, partial)
 
 
-@router.delete("/api/jorge-{bot}/{contact_id}/state")
+@router.delete("/api/jorge-{bot}/{contact_id}/state", response_model=dict, status_code=status.HTTP_200_OK)
 async def reset_contact_state(
     bot: str,
     contact_id: str,

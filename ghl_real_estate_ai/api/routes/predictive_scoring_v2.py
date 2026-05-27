@@ -23,7 +23,7 @@ from datetime import datetime
 from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import verify_jwt_token
@@ -173,7 +173,7 @@ class PerformanceMetricsResponse(BaseModel):
 # API Endpoints
 
 
-@router.post("/score", response_model=EnhancedScoringResponse)
+@router.post("/score", response_model=EnhancedScoringResponse, status_code=status.HTTP_200_OK)
 async def score_lead_v2(
     request: LeadScoringRequest,
     x_api_version: Optional[str] = Header(default="2.0"),
@@ -291,7 +291,7 @@ async def score_lead_v2(
             raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/swarm-analysis", response_model=Dict[str, Any])
+@router.post("/swarm-analysis", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_swarm_analysis(
     lead_id: str, lead_data: Dict[str, Any], current_user: dict = Depends(verify_jwt_token)
 ) -> Dict[str, Any]:
@@ -331,7 +331,7 @@ async def get_swarm_analysis(
     }
 
 
-@router.post("/score-batch", response_model=BatchScoringResponse)
+@router.post("/score-batch", response_model=BatchScoringResponse, status_code=status.HTTP_200_OK)
 async def score_leads_batch(
     request: BatchScoringRequest, current_user: dict = Depends(verify_jwt_token)
 ) -> BatchScoringResponse:
@@ -458,7 +458,7 @@ async def score_leads_batch(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/behavioral-signals/{lead_id}")
+@router.get("/behavioral-signals/{lead_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_behavioral_signals(
     lead_id: str,
     lead_data: Dict[str, Any],
@@ -504,7 +504,7 @@ async def get_behavioral_signals(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/routing-recommendation")
+@router.post("/routing-recommendation", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_routing_recommendation(
     lead_id: str,
     lead_score: float,
@@ -546,7 +546,7 @@ async def get_routing_recommendation(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/performance-metrics", response_model=PerformanceMetricsResponse)
+@router.get("/performance-metrics", response_model=PerformanceMetricsResponse, status_code=status.HTTP_200_OK)
 async def get_performance_metrics(current_user: dict = Depends(verify_jwt_token)) -> PerformanceMetricsResponse:
     """
     Get comprehensive performance metrics for the V2 system.
@@ -608,7 +608,7 @@ async def get_performance_metrics(current_user: dict = Depends(verify_jwt_token)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/warm-cache")
+@router.post("/warm-cache", response_model=dict, status_code=status.HTTP_200_OK)
 async def warm_cache(
     sample_leads: List[Dict[str, Any]],
     background_tasks: BackgroundTasks,
@@ -656,7 +656,7 @@ async def warm_cache(
 # Backward Compatibility Endpoints
 
 
-@router.post("/legacy/score")
+@router.post("/legacy/score", response_model=dict, status_code=status.HTTP_200_OK)
 async def legacy_score_endpoint(
     lead_data: Dict[str, Any], current_user: dict = Depends(verify_jwt_token)
 ) -> Dict[str, Any]:
@@ -797,7 +797,7 @@ def _generate_behavioral_recommendations(signals: Dict[str, float]) -> List[str]
 
 
 # Health check endpoint
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check():
     """V2 system health check"""
     try:

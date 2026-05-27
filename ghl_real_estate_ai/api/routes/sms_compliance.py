@@ -6,7 +6,7 @@ Provides endpoints for processing incoming SMS messages and managing compliance.
 from datetime import datetime
 from typing import Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -60,7 +60,7 @@ class SMSSendRecord(BaseModel):
 # === WEBHOOK ENDPOINTS ===
 
 
-@router.post("/webhook/incoming-sms")
+@router.post("/webhook/incoming-sms", response_model=dict, status_code=status.HTTP_200_OK)
 async def handle_incoming_sms_webhook(request: IncomingSMSWebhook):
     """
     Handle incoming SMS webhook from GHL or SMS provider.
@@ -88,7 +88,7 @@ async def handle_incoming_sms_webhook(request: IncomingSMSWebhook):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/webhook/opt-out")
+@router.post("/webhook/opt-out", response_model=dict, status_code=status.HTTP_200_OK)
 async def handle_opt_out_webhook(request: Request):
     """
     Handle opt-out webhook from various sources.
@@ -127,7 +127,7 @@ async def handle_opt_out_webhook(request: Request):
 # === API ENDPOINTS ===
 
 
-@router.post("/validate-send")
+@router.post("/validate-send", response_model=dict, status_code=status.HTTP_200_OK)
 async def validate_sms_send(request: SMSValidationRequest, current_user: Dict = Depends(get_current_user)):
     """
     Validate SMS send against compliance rules.
@@ -154,7 +154,7 @@ async def validate_sms_send(request: SMSValidationRequest, current_user: Dict = 
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/record-send")
+@router.post("/record-send", response_model=dict, status_code=status.HTTP_200_OK)
 async def record_sms_send(request: SMSSendRecord, current_user: Dict = Depends(get_current_user)):
     """
     Record SMS send for frequency tracking and compliance.
@@ -182,7 +182,7 @@ async def record_sms_send(request: SMSSendRecord, current_user: Dict = Depends(g
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/manual-opt-out")
+@router.post("/manual-opt-out", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def manual_opt_out(request: OptOutRequest, current_user: Dict = Depends(get_current_user)):
     """
     Manually opt out a phone number.
@@ -225,7 +225,7 @@ async def manual_opt_out(request: OptOutRequest, current_user: Dict = Depends(ge
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/status/{phone_number}")
+@router.get("/status/{phone_number}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_compliance_status(
     phone_number: str = Path(..., description="Phone number to check"), current_user: Dict = Depends(get_current_user)
 ):
@@ -245,7 +245,7 @@ async def get_compliance_status(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/compliance-report")
+@router.get("/compliance-report", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_compliance_report(
     location_id: Optional[str] = Query(None, description="Filter by location ID"),
     days: int = Query(7, ge=1, le=30, description="Days to include in report"),
@@ -299,7 +299,7 @@ async def get_compliance_report(
 # === UTILITY ENDPOINTS ===
 
 
-@router.get("/stop-keywords")
+@router.get("/stop-keywords", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_stop_keywords():
     """Get list of recognized STOP keywords for SMS opt-out."""
     compliance_service = get_sms_compliance_service()
@@ -311,7 +311,7 @@ async def get_stop_keywords():
     }
 
 
-@router.get("/limits")
+@router.get("/limits", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_sms_limits():
     """Get SMS frequency limits and compliance settings."""
     compliance_service = get_sms_compliance_service()

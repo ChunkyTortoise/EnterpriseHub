@@ -13,7 +13,7 @@ import json
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -70,7 +70,7 @@ class OperationStatus(BaseModel):
 
 
 # Bulk Import Endpoints
-@router.post("/import", status_code=202)
+@router.post("/import", response_model=dict, status_code=status.HTTP_202_ACCEPTED)
 async def bulk_import_leads(location_id: str, request: BulkImportRequest, background_tasks: BackgroundTasks):
     """
     Import multiple leads in bulk.
@@ -99,7 +99,7 @@ async def bulk_import_leads(location_id: str, request: BulkImportRequest, backgr
         raise HTTPException(status_code=500, detail="Failed to start import")
 
 
-@router.post("/import/csv", status_code=202)
+@router.post("/import/csv", response_model=dict, status_code=status.HTTP_202_ACCEPTED)
 async def bulk_import_csv(
     location_id: str,
     file: UploadFile = File(...),
@@ -145,7 +145,7 @@ async def bulk_import_csv(
 
 
 # Bulk Export Endpoints
-@router.post("/export")
+@router.post("/export", response_model=dict, status_code=status.HTTP_200_OK)
 async def bulk_export_leads(location_id: str, request: BulkExportRequest):
     """
     Export leads to JSON.
@@ -173,7 +173,7 @@ async def bulk_export_leads(location_id: str, request: BulkExportRequest):
         raise HTTPException(status_code=500, detail="Failed to export leads")
 
 
-@router.post("/export/csv")
+@router.post("/export/csv", response_model=dict, status_code=status.HTTP_200_OK)
 async def bulk_export_csv(location_id: str, request: BulkExportRequest):
     """
     Export leads to CSV.
@@ -212,7 +212,7 @@ async def bulk_export_csv(location_id: str, request: BulkExportRequest):
 
 
 # Bulk SMS Campaign Endpoints
-@router.post("/sms/campaign", status_code=202)
+@router.post("/sms/campaign", response_model=dict, status_code=status.HTTP_202_ACCEPTED)
 async def create_bulk_sms_campaign(location_id: str, request: BulkSMSRequest, background_tasks: BackgroundTasks):
     """
     Send SMS to multiple contacts.
@@ -253,7 +253,7 @@ async def create_bulk_sms_campaign(location_id: str, request: BulkSMSRequest, ba
 
 
 # Bulk Tagging Endpoints
-@router.post("/tags/apply", status_code=202)
+@router.post("/tags/apply", response_model=dict, status_code=status.HTTP_202_ACCEPTED)
 async def bulk_apply_tags(location_id: str, request: BulkTagRequest, background_tasks: BackgroundTasks):
     """
     Apply or remove tags from multiple contacts.
@@ -292,7 +292,7 @@ async def bulk_apply_tags(location_id: str, request: BulkTagRequest, background_
 
 
 # Operation Status Endpoints
-@router.get("/operations/{operation_id}", response_model=OperationStatus)
+@router.get("/operations/{operation_id}", response_model=OperationStatus, status_code=status.HTTP_200_OK)
 async def get_operation_status(location_id: str, operation_id: str):
     """
     Get status of a bulk operation.
@@ -315,7 +315,7 @@ async def get_operation_status(location_id: str, operation_id: str):
         raise HTTPException(status_code=500, detail="Failed to fetch operation status")
 
 
-@router.get("/operations/{location_id}/list")
+@router.get("/operations/{location_id}/list", response_model=dict, status_code=status.HTTP_200_OK)
 async def list_operations(
     location_id: str,
     status: Optional[str] = Query(default=None, description="Filter by status"),
@@ -340,7 +340,7 @@ async def list_operations(
 
 
 # Health check
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def bulk_operations_health():
     """Health check for bulk operations endpoints."""
     return {

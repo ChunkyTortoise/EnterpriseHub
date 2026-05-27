@@ -6,7 +6,7 @@ Provides advanced behavioral forecasting and agentic re-engagement triggers.
 from functools import lru_cache
 from typing import Any, Dict
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, status
 
 from ghl_real_estate_ai.agents.intent_decoder import LeadIntentDecoder
 from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
@@ -44,7 +44,7 @@ def _get_intent_decoder() -> LeadIntentDecoder:
     return LeadIntentDecoder()
 
 
-@router.post("/analyze-intent", response_model=LeadIntentProfile)
+@router.post("/analyze-intent", response_model=LeadIntentProfile, status_code=status.HTTP_200_OK)
 async def analyze_lead_intent(
     payload: Dict[str, Any] = Body(...),
     current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user),
@@ -73,7 +73,7 @@ async def analyze_lead_intent(
     return profile
 
 
-@router.post("/score")
+@router.post("/score", response_model=dict, status_code=status.HTTP_200_OK)
 async def score_lead_intelligence(
     payload: Dict[str, Any] = Body(...),
     current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user),
@@ -100,7 +100,7 @@ async def score_lead_intelligence(
     return {"success": True, "prediction": prediction}
 
 
-@router.post("/trigger-recovery")
+@router.post("/trigger-recovery", response_model=dict, status_code=status.HTTP_200_OK)
 async def trigger_agentic_recovery(
     payload: Dict[str, Any] = Body(...),
     current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user),

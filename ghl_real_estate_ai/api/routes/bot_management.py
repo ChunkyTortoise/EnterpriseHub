@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import Any, AsyncGenerator, Dict, List, Literal, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -217,7 +217,7 @@ def get_handoff_service() -> JorgeHandoffService:
 
 
 # --- ENDPOINT 1: GET /api/bots/health ---
-@router.get("/bots/health")
+@router.get("/bots/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check(
     jorge: JorgeSellerBot = Depends(get_jorge_bot),
     lead: LeadBotWorkflow = Depends(get_lead_bot),
@@ -240,7 +240,7 @@ async def health_check(
 
 
 # --- ENDPOINT 2: GET /api/bots ---
-@router.get("/bots", response_model=List[BotStatusResponse])
+@router.get("/bots", response_model=List[BotStatusResponse], status_code=status.HTTP_200_OK)
 async def list_available_bots(cache: CacheService = Depends(get_cache_service)):
     """
     List all available bots with real-time status metrics.
@@ -283,7 +283,7 @@ async def list_available_bots(cache: CacheService = Depends(get_cache_service)):
 
 
 # --- ENDPOINT 3: POST /api/bots/{bot_id}/chat ---
-@router.post("/bots/{bot_id}/chat")
+@router.post("/bots/{bot_id}/chat", response_model=dict, status_code=status.HTTP_200_OK)
 async def stream_bot_conversation(
     bot_id: str,
     request: ChatMessageRequest,
@@ -424,7 +424,7 @@ async def stream_bot_conversation(
 
 
 # --- ENDPOINT 4: GET /api/bots/{bot_id}/status ---
-@router.get("/bots/{bot_id}/status", response_model=BotStatusResponse)
+@router.get("/bots/{bot_id}/status", response_model=BotStatusResponse, status_code=status.HTTP_200_OK)
 async def get_bot_status(bot_id: str, cache: CacheService = Depends(get_cache_service)):
     """
     Get individual bot health metrics.
@@ -463,7 +463,7 @@ async def get_bot_status(bot_id: str, cache: CacheService = Depends(get_cache_se
 
 
 # --- ENDPOINT 5: POST /api/jorge-seller/start ---
-@router.post("/jorge-seller/start")
+@router.post("/jorge-seller/start", response_model=dict, status_code=status.HTTP_200_OK)
 async def start_jorge_qualification(
     request: JorgeStartRequest,
     session_manager: ConversationSessionManager = Depends(get_session_manager),
@@ -506,7 +506,7 @@ async def start_jorge_qualification(
 
 
 # --- ENDPOINT 6: POST /api/lead-bot/{leadId}/schedule ---
-@router.post("/lead-bot/{leadId}/schedule")
+@router.post("/lead-bot/{leadId}/schedule", response_model=dict, status_code=status.HTTP_200_OK)
 async def trigger_lead_bot_sequence(
     leadId: str,
     request: ScheduleRequest,
@@ -550,7 +550,7 @@ async def trigger_lead_bot_sequence(
 
 
 # --- ENDPOINT 7: GET /api/intent-decoder/{leadId}/score ---
-@router.get("/intent-decoder/{leadId}/score", response_model=IntentScoreResponse)
+@router.get("/intent-decoder/{leadId}/score", response_model=IntentScoreResponse, status_code=status.HTTP_200_OK)
 async def get_lead_intent_score(
     leadId: str,
     cache: CacheService = Depends(get_cache_service),
@@ -649,7 +649,7 @@ class SellerChatResponse(BaseModel):
 
 
 # --- TEST ENDPOINT: POST /api/jorge-seller/test ---
-@router.post("/jorge-seller/test")
+@router.post("/jorge-seller/test", response_model=dict, status_code=status.HTTP_200_OK)
 async def test_seller_message_simple():
     """Quick test endpoint to verify Jorge bot is working - NO MIDDLEWARE"""
     try:
@@ -660,7 +660,7 @@ async def test_seller_message_simple():
 
 
 # --- ENDPOINT 8: POST /api/jorge-seller/process ---
-@router.post("/jorge-seller/process", response_model=SellerChatResponse)
+@router.post("/jorge-seller/process", response_model=SellerChatResponse, status_code=status.HTTP_200_OK)
 async def process_seller_message(
     request: SellerChatRequest,
     session_manager: ConversationSessionManager = Depends(get_session_manager),
@@ -1198,7 +1198,7 @@ class LeadAutomationResponse(BaseModel):
 
 
 # --- ENDPOINT 9: POST /api/lead-bot/automation ---
-@router.post("/lead-bot/automation", response_model=LeadAutomationResponse)
+@router.post("/lead-bot/automation", response_model=LeadAutomationResponse, status_code=status.HTTP_200_OK)
 async def trigger_lead_automation(
     request: LeadAutomationRequest,
     performance_monitor: PerformanceMonitor = Depends(get_performance_monitor),
@@ -1345,31 +1345,31 @@ async def trigger_lead_automation(
 # ========================================================================
 
 
-@router.get("/performance/summary")
+@router.get("/performance/summary", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_performance_summary(performance_monitor: PerformanceMonitor = Depends(get_performance_monitor)):
     """Get comprehensive Jorge Enterprise performance summary"""
     return performance_monitor.get_jorge_enterprise_summary()
 
 
-@router.get("/performance/jorge")
+@router.get("/performance/jorge", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_jorge_metrics(performance_monitor: PerformanceMonitor = Depends(get_performance_monitor)):
     """Get Jorge Seller Bot specific performance metrics"""
     return performance_monitor.get_jorge_metrics()
 
 
-@router.get("/performance/lead-automation")
+@router.get("/performance/lead-automation", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_lead_automation_metrics(performance_monitor: PerformanceMonitor = Depends(get_performance_monitor)):
     """Get Lead Bot automation performance metrics"""
     return performance_monitor.get_lead_automation_metrics()
 
 
-@router.get("/performance/websocket")
+@router.get("/performance/websocket", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_websocket_metrics(performance_monitor: PerformanceMonitor = Depends(get_performance_monitor)):
     """Get WebSocket coordination performance metrics"""
     return performance_monitor.get_websocket_metrics()
 
 
-@router.get("/performance/health")
+@router.get("/performance/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_system_health(performance_monitor: PerformanceMonitor = Depends(get_performance_monitor)):
     """Get comprehensive system health report"""
     return performance_monitor.get_health_report()
@@ -1380,7 +1380,7 @@ async def get_system_health(performance_monitor: PerformanceMonitor = Depends(ge
 # ========================================================================
 
 
-@router.get("/jorge-seller/{lead_id}/progress")
+@router.get("/jorge-seller/{lead_id}/progress", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_jorge_qualification_progress(
     lead_id: str,
     intent_decoder: LeadIntentDecoder = Depends(get_intent_decoder),
@@ -1451,7 +1451,7 @@ async def get_jorge_qualification_progress(
         raise HTTPException(status_code=500, detail="Failed to get qualification progress")
 
 
-@router.get("/jorge-seller/conversations/{conversation_id}")
+@router.get("/jorge-seller/conversations/{conversation_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_jorge_conversation_state(
     conversation_id: str,
     session_manager: ConversationSessionManager = Depends(get_session_manager),
@@ -1502,7 +1502,7 @@ async def get_jorge_conversation_state(
         raise HTTPException(status_code=500, detail="Failed to get conversation state")
 
 
-@router.post("/jorge-seller/{lead_id}/stall-breaker")
+@router.post("/jorge-seller/{lead_id}/stall-breaker", response_model=dict, status_code=status.HTTP_200_OK)
 async def apply_jorge_stall_breaker(lead_id: str, request: dict):
     """
     Apply Jorge's confrontational stall-breaker script.
@@ -1529,7 +1529,7 @@ async def apply_jorge_stall_breaker(lead_id: str, request: dict):
         raise HTTPException(status_code=500, detail="Failed to apply stall-breaker")
 
 
-@router.post("/jorge-seller/{lead_id}/handoff", response_model=HandoffResponse)
+@router.post("/jorge-seller/{lead_id}/handoff", response_model=HandoffResponse, status_code=status.HTTP_200_OK)
 async def trigger_jorge_handoff(
     lead_id: str,
     request: HandoffRequest,

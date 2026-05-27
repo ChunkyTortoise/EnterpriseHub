@@ -380,7 +380,7 @@ async def batch_detect_leads(
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Processing failed")
 
 
-@router.get("/filter", response_model=List[GoldenLeadScoreResponse])
+@router.get("/filter", response_model=List[GoldenLeadScoreResponse], status_code=HTTP_200_OK)
 async def filter_golden_leads(
     tier: Optional[str] = Query(None, description="Filter by tier: platinum, gold, silver, standard"),
     min_probability: float = Query(0.0, description="Minimum conversion probability", ge=0.0, le=1.0),
@@ -475,7 +475,7 @@ async def filter_golden_leads(
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Processing failed")
 
 
-@router.get("/lead/{lead_id}", response_model=Optional[GoldenLeadScoreResponse])
+@router.get("/lead/{lead_id}", response_model=Optional[GoldenLeadScoreResponse], status_code=HTTP_200_OK)
 async def get_lead_analysis(
     lead_id: str = Path(..., description="Lead identifier"),
     force_refresh: bool = Query(False, description="Force fresh analysis (bypass cache)"),
@@ -517,7 +517,7 @@ async def get_lead_analysis(
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Processing failed")
 
 
-@router.get("/metrics", response_model=PerformanceMetricsResponse)
+@router.get("/metrics", response_model=PerformanceMetricsResponse, status_code=HTTP_200_OK)
 async def get_performance_metrics(
     current_user: dict = Depends(require_auth), detector: GoldenLeadDetector = Depends(get_detector_service)
 ):
@@ -548,7 +548,7 @@ async def get_performance_metrics(
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Processing failed")
 
 
-@router.post("/circuit-breaker/reset")
+@router.post("/circuit-breaker/reset", response_model=dict, status_code=HTTP_200_OK)
 async def reset_circuit_breaker(
     current_user: dict = Depends(require_auth), detector: GoldenLeadDetector = Depends(get_detector_service)
 ):
@@ -585,7 +585,7 @@ async def reset_circuit_breaker(
         raise HTTPException(status_code=HTTP_422_UNPROCESSABLE_ENTITY, detail="Processing failed")
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=HTTP_200_OK)
 async def health_check():
     """
     ❤️ Golden Lead Detection System Health Check

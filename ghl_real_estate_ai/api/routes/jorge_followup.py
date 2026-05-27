@@ -11,7 +11,7 @@ import logging
 from functools import lru_cache
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 
 from ghl_real_estate_ai.core.conversation_manager import ConversationManager
 from ghl_real_estate_ai.services.analytics_service import AnalyticsService
@@ -42,7 +42,7 @@ def _get_scheduler() -> JorgeFollowUpScheduler:
     return JorgeFollowUpScheduler(_get_conversation_manager(), _get_ghl_client(), _get_analytics_service())
 
 
-@router.post("/webhook")
+@router.post("/webhook", response_model=dict, status_code=status.HTTP_200_OK)
 async def trigger_followup_webhook(
     payload: Dict[str, Any],
     background_tasks: BackgroundTasks,
@@ -72,7 +72,7 @@ async def trigger_followup_webhook(
     return {"status": "accepted", "message": "Follow-up processing initiated"}
 
 
-@router.post("/process-batch")
+@router.post("/process-batch", response_model=dict, status_code=status.HTTP_200_OK)
 async def process_batch_followups(
     batch_size: int = Query(default=50, ge=1, le=100),
     location_id: Optional[str] = None,
@@ -86,7 +86,7 @@ async def process_batch_followups(
     return results
 
 
-@router.get("/stats")
+@router.get("/stats", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_followup_stats(
     location_id: Optional[str] = None,
     days: int = Query(default=30, ge=1, le=90),
@@ -99,7 +99,7 @@ async def get_followup_stats(
     return stats
 
 
-@router.post("/setup-workflows/{location_id}")
+@router.post("/setup-workflows/{location_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def setup_ghl_workflows(
     location_id: str,
     scheduler: JorgeFollowUpScheduler = Depends(_get_scheduler),

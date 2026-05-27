@@ -18,7 +18,7 @@ Follows established architecture patterns:
 from datetime import datetime
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, Path, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Path, Query, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -70,7 +70,7 @@ class StandardResponse(BaseModel):
 # API Endpoints
 
 
-@router.post("/{location_id}/track-journey")
+@router.post("/{location_id}/track-journey", response_model=StandardResponse, status_code=status.HTTP_200_OK)
 async def track_client_journey(
     location_id: str = Path(..., description="Location/tenant identifier"),
     request: JourneyTrackingRequest = ...,
@@ -167,7 +167,7 @@ async def track_client_journey(
         return StandardResponse(success=False, processing_time_ms=processing_time, error=str(e))
 
 
-@router.post("/{location_id}/progress-milestone")
+@router.post("/{location_id}/progress-milestone", response_model=StandardResponse, status_code=status.HTTP_200_OK)
 async def progress_client_milestone(
     location_id: str = Path(..., description="Location/tenant identifier"),
     request: MilestoneProgressRequest = ...,
@@ -258,7 +258,7 @@ async def progress_client_milestone(
         return StandardResponse(success=False, processing_time_ms=processing_time, error=str(e))
 
 
-@router.put("/{location_id}/personalize-journey")
+@router.put("/{location_id}/personalize-journey", response_model=StandardResponse, status_code=status.HTTP_200_OK)
 async def personalize_client_journey(
     location_id: str = Path(..., description="Location/tenant identifier"), request: JourneyPersonalizationRequest = ...
 ) -> StandardResponse:
@@ -325,7 +325,9 @@ async def personalize_client_journey(
         return StandardResponse(success=False, processing_time_ms=processing_time, error=str(e))
 
 
-@router.get("/{location_id}/journey-insights/{client_id}")
+@router.get(
+    "/{location_id}/journey-insights/{client_id}", response_model=StandardResponse, status_code=status.HTTP_200_OK
+)
 async def get_client_journey_insights(
     location_id: str = Path(..., description="Location/tenant identifier"),
     client_id: str = Path(..., description="Client identifier"),
@@ -364,7 +366,7 @@ async def get_client_journey_insights(
         return StandardResponse(success=False, processing_time_ms=processing_time, error=str(e))
 
 
-@router.get("/{location_id}/journey-health")
+@router.get("/{location_id}/journey-health", response_model=StandardResponse, status_code=status.HTTP_200_OK)
 async def get_journey_health_summary(
     location_id: str = Path(..., description="Location/tenant identifier"),
     stage_filter: Optional[str] = Query(None, description="Filter by journey stage"),
@@ -412,7 +414,7 @@ async def get_journey_health_summary(
         return StandardResponse(success=False, processing_time_ms=processing_time, error=str(e))
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check() -> Dict[str, Any]:
     """Health check for Client Experience services."""
     try:

@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -696,7 +696,7 @@ async def get_real_agent_statuses() -> List[AgentStatus]:
 # ============================================================================
 
 
-@router.get("/statuses", response_model=List[AgentStatus])
+@router.get("/statuses", response_model=List[AgentStatus], status_code=status.HTTP_200_OK)
 async def get_agent_statuses(current_user=Depends(get_current_user_optional)):
     """
     Get current status of all agents in the ecosystem.
@@ -716,7 +716,7 @@ async def get_agent_statuses(current_user=Depends(get_current_user_optional)):
         raise HTTPException(status_code=500, detail="Failed to fetch agent statuses")
 
 
-@router.get("/status", response_model=List[SimpleAgentStatus])
+@router.get("/status", response_model=List[SimpleAgentStatus], status_code=status.HTTP_200_OK)
 async def get_simple_agent_statuses(current_user=Depends(get_current_user_optional)):
     """
     Lightweight agent status endpoint for dashboard polling.
@@ -738,7 +738,7 @@ async def get_simple_agent_statuses(current_user=Depends(get_current_user_option
         raise HTTPException(status_code=500, detail="Failed to fetch agent status summary")
 
 
-@router.get("/metrics", response_model=AgentMetrics)
+@router.get("/metrics", response_model=AgentMetrics, status_code=status.HTTP_200_OK)
 async def get_agent_metrics(current_user=Depends(get_current_user_optional)):
     """
     Get aggregated metrics for the agent ecosystem.
@@ -777,7 +777,7 @@ async def get_agent_metrics(current_user=Depends(get_current_user_optional)):
         raise HTTPException(status_code=500, detail="Failed to calculate agent metrics")
 
 
-@router.get("/{agent_id}", response_model=AgentStatus)
+@router.get("/{agent_id}", response_model=AgentStatus, status_code=status.HTTP_200_OK)
 async def get_agent_by_id(agent_id: str, current_user=Depends(get_current_user_optional)):
     """
     Get detailed status for a specific agent.
@@ -802,7 +802,7 @@ async def get_agent_by_id(agent_id: str, current_user=Depends(get_current_user_o
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.put("/{agent_id}/status")
+@router.put("/{agent_id}/status", response_model=dict, status_code=status.HTTP_200_OK)
 async def update_agent_status(
     agent_id: str, status_update: Dict[str, str], current_user=Depends(get_current_user_optional)
 ):
@@ -853,7 +853,7 @@ async def update_agent_status(
 # ============================================================================
 
 
-@router.get("/../platform/activities", response_model=List[PlatformActivity])
+@router.get("/../platform/activities", response_model=List[PlatformActivity], status_code=status.HTTP_200_OK)
 async def get_platform_activities(
     limit: int = Query(default=50, ge=1, le=1000), current_user=Depends(get_current_user_optional)
 ):
@@ -881,7 +881,7 @@ async def get_platform_activities(
 # ============================================================================
 
 
-@router.get("/coordinations/active", response_model=List[AgentCoordination])
+@router.get("/coordinations/active", response_model=List[AgentCoordination], status_code=status.HTTP_200_OK)
 async def get_active_coordinations(current_user=Depends(get_current_user_optional)):
     """
     Get active agent coordinations and handoffs.
@@ -900,7 +900,7 @@ async def get_active_coordinations(current_user=Depends(get_current_user_optiona
         raise HTTPException(status_code=500, detail="Failed to fetch active coordinations")
 
 
-@router.post("/coordinations")
+@router.post("/coordinations", response_model=dict, status_code=status.HTTP_200_OK)
 async def initiate_handoff(handoff_request: Dict[str, Any], current_user=Depends(get_current_user_optional)):
     """
     Initiate a handoff between agents.
@@ -966,7 +966,7 @@ async def initiate_handoff(handoff_request: Dict[str, Any], current_user=Depends
 # ============================================================================
 
 
-@router.post("/{agent_id}/pause")
+@router.post("/{agent_id}/pause", response_model=dict, status_code=status.HTTP_200_OK)
 async def pause_agent(agent_id: str, current_user=Depends(get_current_user_optional)):
     """
     Pause a specific agent.
@@ -1002,7 +1002,7 @@ async def pause_agent(agent_id: str, current_user=Depends(get_current_user_optio
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/{agent_id}/resume")
+@router.post("/{agent_id}/resume", response_model=dict, status_code=status.HTTP_200_OK)
 async def resume_agent(agent_id: str, current_user=Depends(get_current_user_optional)):
     """
     Resume a paused agent.
@@ -1038,7 +1038,7 @@ async def resume_agent(agent_id: str, current_user=Depends(get_current_user_opti
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/{agent_id}/restart")
+@router.post("/{agent_id}/restart", response_model=dict, status_code=status.HTTP_200_OK)
 async def restart_agent(
     agent_id: str,
     current_user=Depends(get_current_user_optional),
@@ -1099,7 +1099,7 @@ async def restart_agent(
 # ============================================================================
 
 
-@router.get("/performance")
+@router.get("/performance", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_performance_metrics(
     timeframe: str = Query(default="hour", pattern="^(hour|day|week)$"),
     current_user=Depends(get_current_user_optional),
@@ -1136,7 +1136,7 @@ async def get_performance_metrics(
 # ============================================================================
 
 
-@router.get("/../system/health")
+@router.get("/../system/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_system_health(current_user=Depends(get_current_user_optional)):
     """
     Get overall system health status.

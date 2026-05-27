@@ -414,7 +414,7 @@ async def deep_health_check(
         )
 
 
-@router.get("/metrics")
+@router.get("/metrics", response_model=dict, status_code=status.HTTP_200_OK)
 async def performance_metrics(
     current_user: UserDep,
     monitoring: MonitoringDep,
@@ -458,7 +458,7 @@ async def performance_metrics(
         raise HTTPException(status_code=500, detail="Metrics collection failed")
 
 
-@router.get("/dependencies")
+@router.get("/dependencies", response_model=dict, status_code=status.HTTP_200_OK)
 async def dependency_status(
     current_user: UserDep,
     db: DatabaseDep,
@@ -559,7 +559,7 @@ async def dependency_status(
         raise HTTPException(status_code=500, detail="Dependency check failed")
 
 
-@router.post("/alerts/test")
+@router.post("/alerts/test", response_model=dict, status_code=status.HTTP_200_OK)
 async def test_alerting(
     current_user: UserDep,
     monitoring: MonitoringDep,
@@ -590,7 +590,7 @@ async def test_alerting(
         raise HTTPException(status_code=500, detail="Alert test failed")
 
 
-@router.get("/status")
+@router.get("/status", response_model=dict, status_code=status.HTTP_200_OK)
 async def service_status(
     db: DatabaseDep,
     cache: CacheDep,
@@ -646,7 +646,7 @@ async def service_status(
         return JSONResponse(content={"message": "Service status check failed", "error": str(e)}, status_code=500)
 
 
-@router.get("/circuit-breakers")
+@router.get("/circuit-breakers", response_model=dict, status_code=status.HTTP_200_OK)
 async def circuit_breaker_status(current_user: UserDep):
     """
     Get status of all circuit breakers protecting external service calls.
@@ -754,7 +754,7 @@ def _generate_circuit_breaker_recommendations(stats: Dict[str, Any]) -> List[Dic
 # ── Prometheus metrics endpoint (unauthenticated, for scraping) ──────
 
 
-@router.get("/prometheus")
+@router.get("/prometheus", response_model=dict, status_code=status.HTTP_200_OK)
 async def prometheus_metrics():
     """
     Prometheus-compatible metrics endpoint.

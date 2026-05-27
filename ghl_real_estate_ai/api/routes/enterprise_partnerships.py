@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -167,7 +167,7 @@ def get_analytics_service() -> PartnershipAnalyticsService:
 # ===================================================================
 
 
-@router.post("/tenants", status_code=201)
+@router.post("/tenants", response_model=dict, status_code=201)
 async def create_enterprise_tenant(
     request: CreateTenantRequest, auth_service: EnterpriseAuthService = Depends(lambda: enterprise_auth_service)
 ):
@@ -185,7 +185,7 @@ async def create_enterprise_tenant(
         raise HTTPException(status_code=400, detail="Invalid request")
 
 
-@router.get("/auth/sso/login")
+@router.get("/auth/sso/login", response_model=dict, status_code=status.HTTP_200_OK)
 async def initiate_sso_login(
     ontario_mills: str = Query(..., description="Company ontario_mills"),
     redirect_uri: str = Query(..., description="Post-login redirect URI"),
@@ -219,7 +219,7 @@ async def initiate_sso_login(
         raise HTTPException(status_code=400, detail="Invalid request")
 
 
-@router.post("/auth/sso/callback")
+@router.post("/auth/sso/callback", response_model=dict, status_code=status.HTTP_200_OK)
 async def handle_sso_callback(
     code: str = Query(..., description="Authorization code"),
     state: str = Query(..., description="State parameter"),
@@ -234,7 +234,7 @@ async def handle_sso_callback(
         raise HTTPException(status_code=400, detail="Invalid request")
 
 
-@router.get("/auth/me")
+@router.get("/auth/me", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_current_user(auth_data: Dict[str, Any] = Depends(enterprise_auth_service.get_current_enterprise_user)):
     """Get current authenticated user information."""
     return {
@@ -253,7 +253,7 @@ async def get_current_user(auth_data: Dict[str, Any] = Depends(enterprise_auth_s
 # ===================================================================
 
 
-@router.post("/partnerships", status_code=201)
+@router.post("/partnerships", response_model=dict, status_code=201)
 async def create_partnership(
     request: CreatePartnershipRequest,
     partnership_service: CorporatePartnershipService = Depends(get_partnership_service),
@@ -270,7 +270,7 @@ async def create_partnership(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/partnerships/{partnership_id}")
+@router.get("/partnerships/{partnership_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_partnership(
     partnership_id: str = Path(..., description="Partnership ID"),
     partnership_service: CorporatePartnershipService = Depends(get_partnership_service),
@@ -288,7 +288,7 @@ async def get_partnership(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/partnerships/{partnership_id}/approve")
+@router.post("/partnerships/{partnership_id}/approve", response_model=dict, status_code=status.HTTP_200_OK)
 async def approve_partnership(
     partnership_id: str = Path(..., description="Partnership ID"),
     account_manager: str = Query(..., description="Account manager email"),
@@ -314,7 +314,7 @@ async def approve_partnership(
 # ===================================================================
 
 
-@router.post("/partnerships/{partnership_id}/relocations/bulk")
+@router.post("/partnerships/{partnership_id}/relocations/bulk", response_model=dict, status_code=status.HTTP_200_OK)
 async def process_bulk_relocations(
     partnership_id: str = Path(..., description="Partnership ID"),
     request: BulkRelocationRequest = ...,
@@ -332,7 +332,9 @@ async def process_bulk_relocations(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/partnerships/{partnership_id}/relocations/{employee_email}")
+@router.get(
+    "/partnerships/{partnership_id}/relocations/{employee_email}", response_model=dict, status_code=status.HTTP_200_OK
+)
 async def track_relocation(
     partnership_id: str = Path(..., description="Partnership ID"),
     employee_email: str = Path(..., description="Employee email"),
@@ -353,7 +355,7 @@ async def track_relocation(
 # ===================================================================
 
 
-@router.post("/contracts", status_code=201)
+@router.post("/contracts", response_model=dict, status_code=201)
 async def create_enterprise_contract(
     request: CreateContractRequest,
     billing_service: CorporateBillingService = Depends(get_billing_service),
@@ -370,7 +372,7 @@ async def create_enterprise_contract(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/contracts/{contract_id}/activate")
+@router.post("/contracts/{contract_id}/activate", response_model=dict, status_code=status.HTTP_200_OK)
 async def activate_contract(
     contract_id: str = Path(..., description="Contract ID"),
     billing_service: CorporateBillingService = Depends(get_billing_service),
@@ -387,7 +389,7 @@ async def activate_contract(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/contracts/{contract_id}/billing")
+@router.post("/contracts/{contract_id}/billing", response_model=dict, status_code=status.HTTP_200_OK)
 async def process_volume_billing(
     contract_id: str = Path(..., description="Contract ID"),
     billing_period_start: datetime = Query(..., description="Billing period start"),
@@ -408,7 +410,7 @@ async def process_volume_billing(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/contracts/{contract_id}/revenue-sharing")
+@router.get("/contracts/{contract_id}/revenue-sharing", response_model=dict, status_code=status.HTTP_200_OK)
 async def calculate_revenue_sharing(
     contract_id: str = Path(..., description="Contract ID"),
     period_start: datetime = Query(..., description="Revenue period start"),
@@ -427,7 +429,7 @@ async def calculate_revenue_sharing(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/contracts/{contract_id}/billing-report")
+@router.get("/contracts/{contract_id}/billing-report", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_billing_report(
     contract_id: str = Path(..., description="Contract ID"),
     report_period_months: int = Query(12, ge=1, le=24, description="Report period in months"),
@@ -450,7 +452,7 @@ async def get_billing_report(
 # ===================================================================
 
 
-@router.get("/partnerships/{partnership_id}/analytics")
+@router.get("/partnerships/{partnership_id}/analytics", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_partnership_analytics(
     partnership_id: str = Path(..., description="Partnership ID"),
     analysis_period_days: int = Query(90, ge=7, le=365, description="Analysis period in days"),
@@ -468,7 +470,11 @@ async def get_partnership_analytics(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/partnerships/{partnership_id}/analytics/relocation/{relocation_id}")
+@router.get(
+    "/partnerships/{partnership_id}/analytics/relocation/{relocation_id}",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+)
 async def get_relocation_metrics(
     partnership_id: str = Path(..., description="Partnership ID"),
     relocation_id: str = Path(..., description="Relocation ID"),
@@ -486,7 +492,7 @@ async def get_relocation_metrics(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/partnerships/{partnership_id}/revenue-attribution")
+@router.get("/partnerships/{partnership_id}/revenue-attribution", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_revenue_attribution(
     partnership_id: str = Path(..., description="Partnership ID"),
     attribution_period_months: int = Query(12, ge=1, le=24, description="Attribution period in months"),
@@ -506,7 +512,7 @@ async def get_revenue_attribution(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/partnerships/{partnership_id}/forecast")
+@router.get("/partnerships/{partnership_id}/forecast", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_partnership_forecast(
     partnership_id: str = Path(..., description="Partnership ID"),
     forecast_months: int = Query(12, ge=3, le=24, description="Forecast horizon in months"),
@@ -524,7 +530,7 @@ async def get_partnership_forecast(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/partnerships/{partnership_id}/competitive-analysis")
+@router.get("/partnerships/{partnership_id}/competitive-analysis", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_competitive_analysis(
     partnership_id: str = Path(..., description="Partnership ID"),
     analytics_service: PartnershipAnalyticsService = Depends(get_analytics_service),
@@ -541,7 +547,7 @@ async def get_competitive_analysis(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/dashboard/executive")
+@router.get("/dashboard/executive", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_executive_dashboard(
     time_period: str = Query("last_quarter", description="Time period for dashboard"),
     analytics_service: PartnershipAnalyticsService = Depends(get_analytics_service),
@@ -563,7 +569,7 @@ async def get_executive_dashboard(
 # ===================================================================
 
 
-@router.post("/tenants/{tenant_id}/users")
+@router.post("/tenants/{tenant_id}/users", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def provision_enterprise_user(
     tenant_id: str = Path(..., description="Tenant ID"),
     user_email: str = Query(..., description="User email"),
@@ -585,7 +591,7 @@ async def provision_enterprise_user(
         raise HTTPException(status_code=400, detail="Invalid request")
 
 
-@router.put("/tenants/{tenant_id}/users/{user_email}/roles")
+@router.put("/tenants/{tenant_id}/users/{user_email}/roles", response_model=dict, status_code=status.HTTP_200_OK)
 async def update_user_roles(
     tenant_id: str = Path(..., description="Tenant ID"),
     user_email: str = Path(..., description="User email"),
@@ -612,7 +618,7 @@ async def update_user_roles(
 # ===================================================================
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check():
     """Health check endpoint for enterprise services."""
     return {
@@ -627,7 +633,7 @@ async def health_check():
     }
 
 
-@router.get("/version")
+@router.get("/version", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_version():
     """Get enterprise platform version information."""
     return {

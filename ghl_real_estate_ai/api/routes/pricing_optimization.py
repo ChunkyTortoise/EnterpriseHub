@@ -196,7 +196,7 @@ async def get_pricing_analytics(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.post("/configure/{location_id}", status_code=HTTP_201_CREATED)
+@router.post("/configure/{location_id}", response_model=dict, status_code=HTTP_201_CREATED)
 async def update_pricing_configuration(
     location_id: str, config: PricingConfigRequest, current_user: Dict = Depends(get_current_user)
 ):
@@ -268,7 +268,7 @@ async def generate_roi_report(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.post("/savings-calculator", status_code=HTTP_200_OK)
+@router.post("/savings-calculator", response_model=dict, status_code=HTTP_200_OK)
 async def calculate_savings(request: SavingsCalculatorRequest, current_user: Dict = Depends(get_current_user)):
     """
     Interactive savings calculator for prospect evaluation
@@ -290,7 +290,7 @@ async def calculate_savings(request: SavingsCalculatorRequest, current_user: Dic
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.get("/human-vs-ai/{location_id}", status_code=HTTP_200_OK)
+@router.get("/human-vs-ai/{location_id}", response_model=dict, status_code=HTTP_200_OK)
 async def get_human_vs_ai_comparison(
     location_id: str,
     tasks: Optional[List[str]] = Query(None, description="Specific tasks to compare"),
@@ -326,7 +326,7 @@ async def get_human_vs_ai_comparison(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.post("/optimize/{location_id}", status_code=HTTP_200_OK)
+@router.post("/optimize/{location_id}", response_model=dict, status_code=HTTP_200_OK)
 async def optimize_pricing_model(
     location_id: str, background_tasks: BackgroundTasks, current_user: Dict = Depends(get_current_user)
 ):
@@ -356,7 +356,7 @@ async def optimize_pricing_model(
         raise HTTPException(status_code=HTTP_400_BAD_REQUEST, detail="Invalid request")
 
 
-@router.get("/export/{location_id}", status_code=HTTP_200_OK)
+@router.get("/export/{location_id}", response_model=dict, status_code=HTTP_200_OK)
 async def export_pricing_data(
     location_id: str,
     format: str = Query("json", pattern="^(json|csv|excel)$", description="Export format"),
@@ -405,7 +405,7 @@ async def export_pricing_data(
 
 
 # Health check endpoint
-@router.get("/health", status_code=HTTP_200_OK)
+@router.get("/health", response_model=dict, status_code=HTTP_200_OK)
 async def health_check():
     """Health check endpoint for monitoring"""
     try:

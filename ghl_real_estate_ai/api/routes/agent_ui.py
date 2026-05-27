@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict
 
-from fastapi import APIRouter, Body, Request
+from fastapi import APIRouter, Body, Request, status
 from fastapi.responses import StreamingResponse
 
 from ghl_real_estate_ai.agents.blackboard import SharedBlackboard
@@ -63,7 +63,7 @@ async def stream_ui_generation(
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
-@router.post("/record-feedback")
+@router.post("/record-feedback", response_model=dict, status_code=status.HTTP_200_OK)
 async def record_feedback(
     component_id: str = Body(...),
     user_id: str = Body(...),
@@ -129,7 +129,7 @@ async def stream_ui_updates(request: Request):
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
-@router.post("/trigger-ui-swarm")
+@router.post("/trigger-ui-swarm", response_model=dict, status_code=status.HTTP_200_OK)
 async def trigger_ui_swarm(objective: str, location_id: str = "global"):
     """
     Triggers the Agentic UI Swarm for a specific objective in the background.

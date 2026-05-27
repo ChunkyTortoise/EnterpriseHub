@@ -16,7 +16,7 @@ Key Features:
 from datetime import datetime, timedelta
 from typing import Annotated, Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -103,7 +103,7 @@ class TrendDataResponse(BaseModel):
     growth_rates: Dict[str, float]
 
 
-@router.get("/performance", response_model=List[SourcePerformanceResponse])
+@router.get("/performance", response_model=List[SourcePerformanceResponse], status_code=status.HTTP_200_OK)
 async def get_source_performance(
     lead_source_tracker: LeadSourceTrackerDep,
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
@@ -182,7 +182,7 @@ async def get_source_performance(
         raise HTTPException(status_code=500, detail="Failed to retrieve performance data")
 
 
-@router.get("/report", response_model=AttributionReportResponse)
+@router.get("/report", response_model=AttributionReportResponse, status_code=status.HTTP_200_OK)
 async def generate_attribution_report(
     attribution_analytics: AttributionAnalyticsDep,
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),
@@ -286,7 +286,7 @@ async def generate_attribution_report(
         raise HTTPException(status_code=500, detail="Failed to generate report")
 
 
-@router.get("/weekly-summary", response_model=WeeklySummaryResponse)
+@router.get("/weekly-summary", response_model=WeeklySummaryResponse, status_code=status.HTTP_200_OK)
 async def get_weekly_summary(
     attribution_analytics: AttributionAnalyticsDep,
     location_id: Optional[str] = Query(None, description="Location ID filter"),
@@ -315,7 +315,7 @@ async def get_weekly_summary(
         raise HTTPException(status_code=500, detail="Failed to generate weekly summary")
 
 
-@router.get("/trends", response_model=TrendDataResponse)
+@router.get("/trends", response_model=TrendDataResponse, status_code=status.HTTP_200_OK)
 async def get_monthly_trends(attribution_analytics: AttributionAnalyticsDep):
     """
     Get monthly trend analysis for dashboard charts.
@@ -341,7 +341,7 @@ async def get_monthly_trends(attribution_analytics: AttributionAnalyticsDep):
         raise HTTPException(status_code=500, detail="Failed to generate trends")
 
 
-@router.get("/alerts", response_model=List[AlertResponse])
+@router.get("/alerts", response_model=List[AlertResponse], status_code=status.HTTP_200_OK)
 async def get_active_alerts(
     attribution_analytics: AttributionAnalyticsDep,
     lead_source_tracker: LeadSourceTrackerDep,
@@ -409,7 +409,7 @@ async def get_active_alerts(
         raise HTTPException(status_code=500, detail="Failed to retrieve alerts")
 
 
-@router.get("/recommendations")
+@router.get("/recommendations", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_optimization_recommendations(lead_source_tracker: LeadSourceTrackerDep):
     """
     Get optimization recommendations for Jorge's marketing strategy.
@@ -428,7 +428,7 @@ async def get_optimization_recommendations(lead_source_tracker: LeadSourceTracke
         raise HTTPException(status_code=500, detail="Failed to generate recommendations")
 
 
-@router.get("/sources")
+@router.get("/sources", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_available_sources():
     """
     Get list of all available lead sources for filtering and configuration.
@@ -465,7 +465,7 @@ async def get_available_sources():
         raise HTTPException(status_code=500, detail="Failed to get sources")
 
 
-@router.post("/track-event")
+@router.post("/track-event", response_model=dict, status_code=status.HTTP_200_OK)
 async def track_attribution_event(
     lead_source_tracker: LeadSourceTrackerDep,
     source: str,
@@ -502,7 +502,7 @@ async def track_attribution_event(
         raise HTTPException(status_code=500, detail="Failed to track event")
 
 
-@router.get("/export/csv")
+@router.get("/export/csv", response_model=dict, status_code=status.HTTP_200_OK)
 async def export_performance_csv(
     lead_source_tracker: LeadSourceTrackerDep,
     start_date: Optional[str] = Query(None, description="Start date (YYYY-MM-DD)"),

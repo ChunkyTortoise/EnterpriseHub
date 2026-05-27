@@ -7,7 +7,7 @@ and neighborhood comparisons for the five core RC neighborhoods.
 
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -83,7 +83,7 @@ class PriceUpdateRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.get("/snapshot/{neighborhood}", response_model=MarketSnapshotResponse)
+@router.get("/snapshot/{neighborhood}", response_model=MarketSnapshotResponse, status_code=status.HTTP_200_OK)
 async def get_market_snapshot(neighborhood: str):
     """Get current market conditions for a Rancho Cucamonga neighborhood."""
     try:
@@ -104,7 +104,7 @@ async def get_market_snapshot(neighborhood: str):
         raise HTTPException(500, f"Market snapshot error: {e}")
 
 
-@router.get("/trends/{neighborhood}", response_model=PriceTrendResponse)
+@router.get("/trends/{neighborhood}", response_model=PriceTrendResponse, status_code=status.HTTP_200_OK)
 async def get_price_trends(
     neighborhood: str,
     days: int = Query(90, ge=7, le=365, description="Trend period in days"),
@@ -129,7 +129,7 @@ async def get_price_trends(
         raise HTTPException(500, f"Price trends error: {e}")
 
 
-@router.get("/opportunities")
+@router.get("/opportunities", response_model=dict, status_code=status.HTTP_200_OK)
 async def detect_opportunities(
     min_score: float = Query(0.5, ge=0.0, le=1.0, description="Minimum opportunity score"),
 ):
@@ -158,7 +158,7 @@ async def detect_opportunities(
         raise HTTPException(500, f"Opportunity detection error: {e}")
 
 
-@router.get("/alerts")
+@router.get("/alerts", response_model=dict, status_code=status.HTTP_200_OK)
 async def check_market_alerts(
     appreciation_warning: Optional[float] = Query(None, description="Appreciation threshold"),
     dom_critical: Optional[float] = Query(None, description="Days-on-market threshold"),
@@ -197,7 +197,7 @@ async def check_market_alerts(
         raise HTTPException(500, f"Alert check error: {e}")
 
 
-@router.get("/comparison")
+@router.get("/comparison", response_model=dict, status_code=status.HTTP_200_OK)
 async def compare_neighborhoods():
     """Compare all Rancho Cucamonga neighborhoods side-by-side."""
     try:
@@ -209,7 +209,7 @@ async def compare_neighborhoods():
         raise HTTPException(500, f"Comparison error: {e}")
 
 
-@router.post("/price-update")
+@router.post("/price-update", response_model=dict, status_code=status.HTTP_200_OK)
 async def ingest_price_update(request: PriceUpdateRequest):
     """Ingest a new price data point for real-time tracking."""
     try:
@@ -225,7 +225,7 @@ async def ingest_price_update(request: PriceUpdateRequest):
         raise HTTPException(500, f"Price update error: {e}")
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def rc_market_health():
     """Health check for the real-time market intelligence service."""
     try:

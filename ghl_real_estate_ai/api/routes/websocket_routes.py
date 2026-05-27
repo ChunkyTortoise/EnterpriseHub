@@ -112,7 +112,7 @@ async def websocket_endpoint(websocket: WebSocket, token: Optional[str] = None):
             await websocket_manager.disconnect(connection_id)
 
 
-@router.get("/status")
+@router.get("/status", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_websocket_status(current_user=Depends(get_current_user)):
     """
     Get WebSocket service status and metrics.
@@ -157,7 +157,7 @@ async def get_websocket_status(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/connections")
+@router.get("/connections", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_active_connections(current_user=Depends(get_current_user)):
     """
     Get information about active WebSocket connections.
@@ -184,7 +184,7 @@ async def get_active_connections(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/broadcast")
+@router.post("/broadcast", response_model=dict, status_code=status.HTTP_200_OK)
 async def broadcast_event(event_data: Dict[str, Any], current_user=Depends(get_current_user)):
     """
     Broadcast a custom event to connected clients.
@@ -265,7 +265,7 @@ async def broadcast_event(event_data: Dict[str, Any], current_user=Depends(get_c
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/test-connection")
+@router.post("/test-connection", response_model=dict, status_code=status.HTTP_200_OK)
 async def test_websocket_connection(current_user=Depends(get_current_user)):
     """
     Test WebSocket connectivity and authentication.
@@ -329,7 +329,7 @@ async def test_websocket_connection(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/start-services")
+@router.post("/start-services", response_model=dict, status_code=status.HTTP_200_OK)
 async def start_websocket_services(current_user=Depends(get_current_user)):
     """
     Start WebSocket background services.
@@ -359,7 +359,7 @@ async def start_websocket_services(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/stop-services")
+@router.post("/stop-services", response_model=dict, status_code=status.HTTP_200_OK)
 async def stop_websocket_services(current_user=Depends(get_current_user)):
     """
     Stop WebSocket background services.
@@ -389,7 +389,7 @@ async def stop_websocket_services(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def websocket_health_check():
     """
     WebSocket service health check.

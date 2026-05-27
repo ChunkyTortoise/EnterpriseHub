@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.agents.claude_concierge_agent import get_claude_concierge
@@ -331,7 +331,7 @@ def generate_mock_suggestions() -> List[ProactiveSuggestion]:
 # ============================================================================
 
 
-@router.post("/chat", response_model=ConciergeResponse)
+@router.post("/chat", response_model=ConciergeResponse, status_code=status.HTTP_200_OK)
 async def send_message(request: ChatRequest, current_user=Depends(get_current_user_optional)):
     """
     Send a message to Claude Concierge and get a response.
@@ -502,7 +502,7 @@ async def send_message(request: ChatRequest, current_user=Depends(get_current_us
         raise HTTPException(status_code=500, detail="Failed to process chat message")
 
 
-@router.get("/insights", response_model=List[ConciergeInsight])
+@router.get("/insights", response_model=List[ConciergeInsight], status_code=status.HTTP_200_OK)
 async def get_realtime_insights(current_user=Depends(get_current_user_optional)):
     """
     Get real-time insights from the concierge.
@@ -567,7 +567,7 @@ async def get_realtime_insights(current_user=Depends(get_current_user_optional))
         return generate_mock_insights()
 
 
-@router.get("/suggestions", response_model=List[ProactiveSuggestion])
+@router.get("/suggestions", response_model=List[ProactiveSuggestion], status_code=status.HTTP_200_OK)
 async def get_proactive_suggestions(current_user=Depends(get_current_user_optional)):
     """
     Get proactive suggestions from the concierge.
@@ -642,7 +642,7 @@ async def get_proactive_suggestions(current_user=Depends(get_current_user_option
         return generate_mock_suggestions()
 
 
-@router.post("/suggestions/{suggestion_id}/apply")
+@router.post("/suggestions/{suggestion_id}/apply", response_model=dict, status_code=status.HTTP_200_OK)
 async def apply_suggestion(
     suggestion_id: str,
     tenant_id: str = Query(default="jorge", description="Tenant whose suggestion store to use"),
@@ -693,7 +693,7 @@ async def apply_suggestion(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/suggestions/{suggestion_id}/dismiss")
+@router.post("/suggestions/{suggestion_id}/dismiss", response_model=dict, status_code=status.HTTP_200_OK)
 async def dismiss_suggestion(
     suggestion_id: str, dismiss_reason: Dict[str, str], current_user=Depends(get_current_user_optional)
 ):
@@ -779,7 +779,7 @@ async def dismiss_suggestion(
 # ============================================================================
 
 
-@router.get("/analyze/platform")
+@router.get("/analyze/platform", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_platform_performance(current_user=Depends(get_current_user_optional)):
     """
     Analyze overall platform performance.
@@ -824,7 +824,7 @@ async def analyze_platform_performance(current_user=Depends(get_current_user_opt
         }
 
 
-@router.get("/analyze/coordination")
+@router.get("/analyze/coordination", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_agent_coordination(current_user=Depends(get_current_user_optional)):
     """
     Analyze agent coordination efficiency.
@@ -859,7 +859,7 @@ async def analyze_agent_coordination(current_user=Depends(get_current_user_optio
         raise HTTPException(status_code=500, detail="Failed to analyze agent coordination")
 
 
-@router.get("/analyze/journeys")
+@router.get("/analyze/journeys", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_customer_journeys(current_user=Depends(get_current_user_optional)):
     """
     Analyze customer journey performance.
@@ -892,7 +892,7 @@ async def analyze_customer_journeys(current_user=Depends(get_current_user_option
 # ============================================================================
 
 
-@router.put("/context")
+@router.put("/context", response_model=dict, status_code=status.HTTP_200_OK)
 async def update_context(context_update: Dict[str, Any], current_user=Depends(get_current_user_optional)):
     """
 
@@ -940,7 +940,7 @@ async def update_context(context_update: Dict[str, Any], current_user=Depends(ge
         raise HTTPException(status_code=500, detail="Failed to update context")
 
 
-@router.get("/context/{session_id}")
+@router.get("/context/{session_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_context(session_id: str, current_user=Depends(get_current_user_optional)):
     """
 
@@ -993,7 +993,7 @@ async def get_context(session_id: str, current_user=Depends(get_current_user_opt
 # ============================================================================
 
 
-@router.post("/real-time-coaching", response_model=ConciergeResponseModel)
+@router.post("/real-time-coaching", response_model=ConciergeResponseModel, status_code=status.HTTP_200_OK)
 async def provide_real_time_coaching(
     request: CoachingRequest,
     current_user=Depends(get_current_user_optional),
@@ -1013,7 +1013,7 @@ async def provide_real_time_coaching(
         raise HTTPException(status_code=500, detail="Internal server error providing coaching")
 
 
-@router.post("/bot-coordination", response_model=ConciergeResponseModel)
+@router.post("/bot-coordination", response_model=ConciergeResponseModel, status_code=status.HTTP_200_OK)
 async def coordinate_bot_ecosystem(
     request: BotHandoffRequest,
     current_user=Depends(get_current_user_optional),
@@ -1032,7 +1032,7 @@ async def coordinate_bot_ecosystem(
         raise HTTPException(status_code=500, detail="Internal server error in bot coordination")
 
 
-@router.post("/field-assistance", response_model=ConciergeResponseModel)
+@router.post("/field-assistance", response_model=ConciergeResponseModel, status_code=status.HTTP_200_OK)
 async def generate_mobile_field_assistance(
     request: FieldAssistanceRequest,
     current_user=Depends(get_current_user_optional),
@@ -1051,7 +1051,7 @@ async def generate_mobile_field_assistance(
         raise HTTPException(status_code=500, detail="Internal server error in field assistance")
 
 
-@router.post("/presentation-support", response_model=ConciergeResponseModel)
+@router.post("/presentation-support", response_model=ConciergeResponseModel, status_code=status.HTTP_200_OK)
 async def provide_client_presentation_support(
     request: PresentationSupportRequest,
     current_user=Depends(get_current_user_optional),
@@ -1071,7 +1071,7 @@ async def provide_client_presentation_support(
         raise HTTPException(status_code=500, detail="Internal server error in presentation support")
 
 
-@router.post("/learn-decision")
+@router.post("/learn-decision", response_model=dict, status_code=status.HTTP_200_OK)
 async def learn_from_user_decision(
     request: LearningRequest,
     background_tasks: BackgroundTasks,
@@ -1090,7 +1090,7 @@ async def learn_from_user_decision(
         raise HTTPException(status_code=500, detail="Internal server error in learning system")
 
 
-@router.post("/predict-preference")
+@router.post("/predict-preference", response_model=dict, status_code=status.HTTP_200_OK)
 async def predict_jorge_preference(
     situation: Dict[str, Any],
     request: PlatformContext,
@@ -1112,7 +1112,7 @@ async def predict_jorge_preference(
 # ============================================================================
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def health_check():
     """Health check for the concierge service."""
     try:
@@ -1137,7 +1137,7 @@ async def health_check():
         raise HTTPException(status_code=500, detail="Service unhealthy")
 
 
-@router.get("/capabilities")
+@router.get("/capabilities", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_capabilities():
     """Get available capabilities and configuration."""
     return {
@@ -1160,7 +1160,7 @@ async def get_capabilities():
     }
 
 
-@router.get("/metrics")
+@router.get("/metrics", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_orchestrator_metrics(current_user=Depends(get_current_user_optional)):
     """Get performance metrics -- wired to real orchestrator data."""
     try:
@@ -1182,7 +1182,7 @@ async def get_orchestrator_metrics(current_user=Depends(get_current_user_optiona
         raise HTTPException(status_code=500, detail="Internal server error getting metrics")
 
 
-@router.post("/reset-session")
+@router.post("/reset-session", response_model=dict, status_code=status.HTTP_200_OK)
 async def reset_concierge_session(
     session_id: str,
     current_user=Depends(get_current_user_optional),
@@ -1225,7 +1225,7 @@ async def websocket_concierge(websocket: WebSocket, session_id: str):
             pass
 
 
-@router.get("/suggestions/dismissal-stats")
+@router.get("/suggestions/dismissal-stats", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_dismissal_stats(current_user=Depends(get_current_user_optional)):
     """Get dismissal feedback statistics for debugging and Phase 3 integration."""
     return {"dismissal_feedback": _dismissal_feedback, "timestamp": datetime.now().isoformat()}

@@ -29,7 +29,7 @@ import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Query, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -172,7 +172,7 @@ class MarketSentimentRadarResponse(BaseModel):
 # ============================================================================
 
 
-@router.get("/markets", response_model=List[MarketInfoResponse])
+@router.get("/markets", response_model=List[MarketInfoResponse], status_code=status.HTTP_200_OK)
 async def list_available_markets():
     """Get list of all available markets with basic information."""
     try:
@@ -206,7 +206,7 @@ async def list_available_markets():
         raise HTTPException(500, f"Failed to retrieve markets: {str(e)}")
 
 
-@router.get("/markets/{market_id}/info", response_model=MarketInfoResponse)
+@router.get("/markets/{market_id}/info", response_model=MarketInfoResponse, status_code=status.HTTP_200_OK)
 async def get_market_info(market_id: str = Path(..., description="Market identifier")):
     """Get detailed information about a specific market."""
     try:
@@ -236,7 +236,7 @@ async def get_market_info(market_id: str = Path(..., description="Market identif
         raise HTTPException(500, f"Failed to retrieve market info: {str(e)}")
 
 
-@router.get("/markets/{market_id}/specializations")
+@router.get("/markets/{market_id}/specializations", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_market_specializations(market_id: str = Path(..., description="Market identifier")):
     """Get market specialization information and expertise areas."""
     try:
@@ -270,7 +270,7 @@ async def get_market_specializations(market_id: str = Path(..., description="Mar
 # ============================================================================
 
 
-@router.get("/markets/{market_id}/metrics", response_model=MarketMetricsResponse)
+@router.get("/markets/{market_id}/metrics", response_model=MarketMetricsResponse, status_code=status.HTTP_200_OK)
 async def get_market_metrics(
     market_id: str = Path(..., description="Market identifier"),
     neighborhood: Optional[str] = Query(None, description="Filter by neighborhood"),
@@ -336,7 +336,9 @@ async def get_market_metrics(
 # ============================================================================
 
 
-@router.get("/markets/{market_id}/neighborhoods", response_model=List[NeighborhoodResponse])
+@router.get(
+    "/markets/{market_id}/neighborhoods", response_model=List[NeighborhoodResponse], status_code=status.HTTP_200_OK
+)
 async def get_market_neighborhoods(market_id: str = Path(..., description="Market identifier")):
     """Get list of neighborhoods for a specific market."""
     try:
@@ -374,7 +376,11 @@ async def get_market_neighborhoods(market_id: str = Path(..., description="Marke
         raise HTTPException(500, f"Failed to retrieve neighborhoods: {str(e)}")
 
 
-@router.get("/markets/{market_id}/neighborhoods/{neighborhood_name}", response_model=NeighborhoodResponse)
+@router.get(
+    "/markets/{market_id}/neighborhoods/{neighborhood_name}",
+    response_model=NeighborhoodResponse,
+    status_code=status.HTTP_200_OK,
+)
 async def get_neighborhood_details(
     market_id: str = Path(..., description="Market identifier"),
     neighborhood_name: str = Path(..., description="Neighborhood name"),
@@ -419,7 +425,7 @@ async def get_neighborhood_details(
 # ============================================================================
 
 
-@router.get("/markets/{market_id}/employers", response_model=List[EmployerResponse])
+@router.get("/markets/{market_id}/employers", response_model=List[EmployerResponse], status_code=status.HTTP_200_OK)
 async def get_market_employers(market_id: str = Path(..., description="Market identifier")):
     """Get list of major employers for a specific market."""
     try:
@@ -455,7 +461,9 @@ async def get_market_employers(market_id: str = Path(..., description="Market id
         raise HTTPException(500, f"Failed to retrieve employers: {str(e)}")
 
 
-@router.get("/markets/{market_id}/employers/{employer_id}", response_model=EmployerResponse)
+@router.get(
+    "/markets/{market_id}/employers/{employer_id}", response_model=EmployerResponse, status_code=status.HTTP_200_OK
+)
 async def get_employer_details(
     market_id: str = Path(..., description="Market identifier"),
     employer_id: str = Path(..., description="Employer identifier"),
@@ -498,7 +506,7 @@ async def get_employer_details(
 # ============================================================================
 
 
-@router.post("/markets/{market_id}/properties/search")
+@router.post("/markets/{market_id}/properties/search", response_model=dict, status_code=status.HTTP_200_OK)
 async def search_properties(
     market_id: str = Path(..., description="Market identifier"), search_request: PropertySearchRequest = None
 ):
@@ -560,7 +568,7 @@ async def search_properties(
         raise HTTPException(500, f"Failed to search properties: {str(e)}")
 
 
-@router.post("/properties/recommendations")
+@router.post("/properties/recommendations", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_property_recommendations(request: PropertyRecommendationRequest):
     """
     Get AI-powered property recommendations for a lead in a specific market.
@@ -678,7 +686,9 @@ async def get_property_recommendations(request: PropertyRecommendationRequest):
         raise HTTPException(500, f"Failed to get recommendations: {str(e)}")
 
 
-@router.get("/markets/{market_id}/sentiment/radar", response_model=MarketSentimentRadarResponse)
+@router.get(
+    "/markets/{market_id}/sentiment/radar", response_model=MarketSentimentRadarResponse, status_code=status.HTTP_200_OK
+)
 async def get_market_sentiment_radar_profile(
     market_id: str = Path(..., description="Market identifier"),
     location: Optional[str] = Query(None, description="ZIP code or neighborhood override"),
@@ -716,7 +726,7 @@ async def get_market_sentiment_radar_profile(
         raise HTTPException(500, f"Failed to retrieve sentiment radar profile: {str(e)}")
 
 
-@router.get("/markets/{market_id}/sentiment/alerts")
+@router.get("/markets/{market_id}/sentiment/alerts", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_market_sentiment_alerts(
     market_id: str = Path(..., description="Market identifier"),
     locations: Optional[List[str]] = Query(None, description="Optional explicit list of locations"),
@@ -762,7 +772,7 @@ async def get_market_sentiment_alerts(
 # ============================================================================
 
 
-@router.get("/markets/{market_id}/analytics/appeal-metrics")
+@router.get("/markets/{market_id}/analytics/appeal-metrics", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_appeal_metrics(market_id: str = Path(..., description="Market identifier")):
     """Get available appeal metrics for a market (e.g., tech_appeal, family_appeal)."""
     try:
@@ -789,7 +799,7 @@ async def get_appeal_metrics(market_id: str = Path(..., description="Market iden
         raise HTTPException(500, f"Failed to retrieve appeal metrics: {str(e)}")
 
 
-@router.get("/markets/{market_id}/analytics/commute")
+@router.get("/markets/{market_id}/analytics/commute", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_commute_analysis(
     market_id: str = Path(..., description="Market identifier"),
     employer_id: Optional[str] = Query(None, description="Filter by specific employer"),
@@ -849,7 +859,7 @@ async def get_commute_analysis(
 # ============================================================================
 
 
-@router.get("/metrics")
+@router.get("/metrics", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_metrics_legacy(
     market_id: str = Query("rancho_cucamonga", description="Market identifier for backward compatibility"),
     neighborhood: Optional[str] = Query(None, description="Filter by neighborhood"),
@@ -880,7 +890,7 @@ class AIRecommendationRequest(BaseModel):
     max_recommendations: int = Field(5, description="Max recommendations to generate", ge=1, le=10)
 
 
-@router.post("/recommendations/ai-stream")
+@router.post("/recommendations/ai-stream", response_model=dict, status_code=status.HTTP_200_OK)
 async def stream_ai_recommendations(request: AIRecommendationRequest):
     """
     Generate AI-powered property recommendations using Claude, streamed via SSE.

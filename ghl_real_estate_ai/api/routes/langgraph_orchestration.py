@@ -9,7 +9,7 @@ Exposes the LangGraph-based lead qualification pipeline via REST endpoints:
 
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -62,7 +62,7 @@ class BatchQualifyRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-@router.post("/qualify", response_model=QualificationResponse)
+@router.post("/qualify", response_model=QualificationResponse, status_code=status.HTTP_200_OK)
 async def qualify_lead(request: QualifyLeadRequest):
     """Run a single lead through the full LangGraph qualification pipeline."""
     try:
@@ -92,7 +92,7 @@ async def qualify_lead(request: QualifyLeadRequest):
         raise HTTPException(500, f"Qualification pipeline error: {e}")
 
 
-@router.post("/qualify/batch")
+@router.post("/qualify/batch", response_model=dict, status_code=status.HTTP_200_OK)
 async def qualify_leads_batch(request: BatchQualifyRequest):
     """Qualify multiple leads in a single request."""
     try:
@@ -124,7 +124,7 @@ async def qualify_leads_batch(request: BatchQualifyRequest):
         raise HTTPException(500, f"Batch qualification error: {e}")
 
 
-@router.get("/health")
+@router.get("/health", response_model=dict, status_code=status.HTTP_200_OK)
 async def orchestration_health():
     """Health check for the orchestration pipeline."""
     try:

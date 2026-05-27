@@ -9,7 +9,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -57,7 +57,7 @@ class ConversationHistoryResponse(BaseModel):
     lead_context: Dict[str, Any] = {}
 
 
-@router.post("/query", response_model=ChatQueryResponse)
+@router.post("/query", response_model=ChatQueryResponse, status_code=status.HTTP_200_OK)
 async def chat_query(request: ChatQueryRequest, claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)):
     """
     Process a chat query with full context integration.
@@ -112,7 +112,7 @@ async def chat_query(request: ChatQueryRequest, claude: ClaudeOrchestrator = Dep
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/query-stream")
+@router.post("/query-stream", response_model=dict, status_code=status.HTTP_200_OK)
 async def chat_query_stream(request: ChatQueryRequest, claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)):
     """
     Streaming version of chat query for real-time responses.
@@ -158,7 +158,7 @@ async def chat_query_stream(request: ChatQueryRequest, claude: ClaudeOrchestrato
     )
 
 
-@router.get("/conversation/{contact_id}", response_model=ConversationHistoryResponse)
+@router.get("/conversation/{contact_id}", response_model=ConversationHistoryResponse, status_code=status.HTTP_200_OK)
 async def get_conversation_history(contact_id: str, location_id: Optional[str] = None, limit: int = 50):
     """
     Retrieve conversation history for a contact.
@@ -187,7 +187,7 @@ async def get_conversation_history(contact_id: str, location_id: Optional[str] =
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/lead-analysis/{lead_id}")
+@router.post("/lead-analysis/{lead_id}", response_model=dict, status_code=status.HTTP_200_OK)
 async def analyze_lead_comprehensive(
     lead_id: str,
     include_scoring: bool = True,
@@ -217,7 +217,7 @@ async def analyze_lead_comprehensive(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/generate-script")
+@router.post("/generate-script", response_model=dict, status_code=status.HTTP_200_OK)
 async def generate_script(
     lead_id: str,
     script_type: str,
@@ -246,7 +246,7 @@ async def generate_script(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/synthesize-report")
+@router.post("/synthesize-report", response_model=dict, status_code=status.HTTP_200_OK)
 async def synthesize_report(
     metrics: Dict[str, Any],
     report_type: str = "weekly_summary",
@@ -274,7 +274,7 @@ async def synthesize_report(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/performance-metrics")
+@router.get("/performance-metrics", response_model=dict, status_code=status.HTTP_200_OK)
 async def get_performance_metrics(claude: ClaudeOrchestrator = Depends(get_claude_orchestrator)):
     """
     Get Claude orchestrator performance metrics.
