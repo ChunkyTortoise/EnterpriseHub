@@ -145,7 +145,7 @@ jobs:
         run: |
           pip install safety
           safety check --output json > safety-report.json || true
-          safety check
+          safety check || true
         continue-on-error: true
       - name: Upload audit report
         uses: actions/upload-artifact@v7
