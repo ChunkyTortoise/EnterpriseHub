@@ -39,7 +39,6 @@ except ImportError:
 
 from ghl_real_estate_ai.services.cache_service import CacheService
 
-
 logger = logging.getLogger(__name__)
 
 

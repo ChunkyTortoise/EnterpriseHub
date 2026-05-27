@@ -328,7 +328,11 @@ async def get_campaign_content(campaign_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/marketing/campaigns/{campaign_id}/performance", response_model=CampaignPerformanceMetrics, status_code=status.HTTP_200_OK)
+@router.get(
+    "/marketing/campaigns/{campaign_id}/performance",
+    response_model=CampaignPerformanceMetrics,
+    status_code=status.HTTP_200_OK,
+)
 async def get_campaign_performance(campaign_id: str):
     """
     Get campaign performance metrics.
@@ -447,7 +451,9 @@ async def track_referral(request: ReferralTracking):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/retention/client/{client_id}/engagement", response_model=ClientEngagementSummary, status_code=status.HTTP_200_OK)
+@router.get(
+    "/retention/client/{client_id}/engagement", response_model=ClientEngagementSummary, status_code=status.HTTP_200_OK
+)
 async def get_client_engagement(client_id: str):
     """
     Get client engagement summary.

@@ -6,11 +6,11 @@ Provides login and token management endpoints
 import logging
 import os
 from datetime import timedelta
+from typing import Any, Dict
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from typing import Any, Dict
 
 from ghl_real_estate_ai.api.middleware import (
     JWTAuth,

@@ -11,7 +11,9 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
 
-@router.get("/dashboard-summary", summary="Generate Dashboard Summary PDF", status_code=status.HTTP_200_OK)  # StreamingResponse: response_model omitted
+@router.get(
+    "/dashboard-summary", summary="Generate Dashboard Summary PDF", status_code=status.HTTP_200_OK
+)  # StreamingResponse: response_model omitted
 async def generate_dashboard_summary(
     date_range: str = Query("Last 24 Hours", description="Date range for the report summary"),
     current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user),

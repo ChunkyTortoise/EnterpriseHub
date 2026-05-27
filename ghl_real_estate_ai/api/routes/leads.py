@@ -235,7 +235,9 @@ async def get_lead_property_matches(
 
 
 # --- ENDPOINT 4: GET /api/conversations/{conversation_id}/messages ---
-@router.get("/conversations/{conversation_id}/messages", response_model=List[Dict[str, Any]], status_code=status.HTTP_200_OK)
+@router.get(
+    "/conversations/{conversation_id}/messages", response_model=List[Dict[str, Any]], status_code=status.HTTP_200_OK
+)
 async def get_conversation_messages(
     conversation_id: str,
     ghl: GHLAPIClient = Depends(get_ghl_client),
