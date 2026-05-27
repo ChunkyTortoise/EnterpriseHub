@@ -14,7 +14,7 @@ from datetime import datetime
 from functools import lru_cache
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 from typing_extensions import Annotated
@@ -94,13 +94,13 @@ class DetailedHealthResponse(BaseModel):
 _service_start_time = time.time()
 
 
-@router.get("/ping", tags=["Health Checks"])
+@router.get("/ping", response_model=Dict[str, str], status_code=status.HTTP_200_OK, tags=["Health Checks"])
 async def ping() -> dict:
     """Zero-dependency liveness probe. Safe to call without DB or Redis."""
     return {"status": "ok"}
 
 
-@router.get("/", response_model=HealthResponse)
+@router.get("/", response_model=HealthResponse, status_code=status.HTTP_200_OK)
 async def basic_health(
     db: DatabaseDep,
     cache: CacheDep,
@@ -154,7 +154,7 @@ async def basic_health(
         return HealthResponse(status="critical", timestamp=datetime.utcnow().isoformat(), checks={"error": str(e)})
 
 
-@router.get("/live", response_model=HealthResponse)
+@router.get("/live", response_model=HealthResponse, status_code=status.HTTP_200_OK)
 async def liveness_probe():
     """
     Kubernetes-style liveness probe.
@@ -169,7 +169,7 @@ async def liveness_probe():
     )
 
 
-@router.get("/ready", response_model=DetailedHealthResponse)
+@router.get("/ready", response_model=DetailedHealthResponse, status_code=status.HTTP_200_OK)
 async def readiness_probe(
     current_user: UserDep,
     db: DatabaseDep,
@@ -285,7 +285,7 @@ async def readiness_probe(
         )
 
 
-@router.get("/deep", response_model=DetailedHealthResponse)
+@router.get("/deep", response_model=DetailedHealthResponse, status_code=status.HTTP_200_OK)
 async def deep_health_check(
     current_user: UserDep,
     monitoring: MonitoringDep,

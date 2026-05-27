@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import JSONResponse
 
 from portal_api.dependencies import Services, get_services, require_demo_api_key
@@ -16,6 +16,7 @@ router = APIRouter(prefix="/ghl", tags=["ghl"])
 @router.post(
     "/sync",
     response_model=GHLSyncResponse,
+    status_code=status.HTTP_200_OK,
     dependencies=[Depends(require_demo_api_key)],
     responses={
         401: {
@@ -40,7 +41,11 @@ async def sync_ghl(request: Request, services: Services = Depends(get_services))
         return JSONResponse(status_code=500, content=payload)
 
 
-@router.get("/fields", response_model=GHLFieldsResponse | GHLFieldsUnavailableResponse)
+@router.get(
+    "/fields",
+    response_model=GHLFieldsResponse | GHLFieldsUnavailableResponse,
+    status_code=status.HTTP_200_OK,
+)
 async def get_ghl_fields(
     services: Services = Depends(get_services),
 ) -> GHLFieldsResponse | GHLFieldsUnavailableResponse:
