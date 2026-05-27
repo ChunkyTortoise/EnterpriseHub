@@ -98,6 +98,26 @@ def setup_observability(
     return True
 
 
+def _build_auth_headers() -> dict[str, str]:
+    """Build auth headers for OTLP exporter.
+
+    Supports two patterns:
+    - OTEL_API_KEY: Honeycomb-style bearer token (sets x-honeycomb-team header)
+    - OTEL_AUTH_HEADER: raw "Key=value" header string for Grafana Cloud
+
+    Set OTEL_INSECURE=true only for local dev collector (default: false).
+    """
+    headers: dict[str, str] = {}
+    api_key = os.getenv("OTEL_API_KEY", "")
+    if api_key:
+        headers["x-honeycomb-team"] = api_key
+    auth_header = os.getenv("OTEL_AUTH_HEADER", "")
+    if auth_header and "=" in auth_header:
+        key, _, value = auth_header.partition("=")
+        headers[key.strip()] = value.strip()
+    return headers
+
+
 def _create_exporter(exporter_type: str, endpoint: str):
     """Create the appropriate span exporter.
 
@@ -119,7 +139,9 @@ def _create_exporter(exporter_type: str, endpoint: str):
                 OTLPSpanExporter,
             )
 
-            return OTLPSpanExporter(endpoint=endpoint, insecure=True)
+            _insecure = os.getenv("OTEL_INSECURE", "false").lower() == "true"
+            headers = _build_auth_headers()
+            return OTLPSpanExporter(endpoint=endpoint, insecure=_insecure, headers=headers)
         except ImportError:
             logger.warning("OTLP gRPC exporter not available, trying HTTP")
             try:

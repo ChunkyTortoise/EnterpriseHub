@@ -193,3 +193,24 @@ def test_noop_span_context_manager():
     span = _NoOpSpan()
     with span as s:
         assert s is span
+
+
+def test_build_auth_headers_empty_by_default():
+    import os
+    from unittest.mock import patch
+
+    from ghl_real_estate_ai.observability.otel_config import _build_auth_headers
+
+    clean_env = {k: v for k, v in os.environ.items() if k not in ("OTEL_API_KEY", "OTEL_AUTH_HEADER")}
+    with patch.dict(os.environ, clean_env, clear=True):
+        assert _build_auth_headers() == {}
+
+
+def test_build_auth_headers_honeycomb():
+    from unittest.mock import patch
+
+    from ghl_real_estate_ai.observability.otel_config import _build_auth_headers
+
+    with patch.dict(os.environ, {"OTEL_API_KEY": "test-key-123"}):
+        headers = _build_auth_headers()
+        assert headers["x-honeycomb-team"] == "test-key-123"
