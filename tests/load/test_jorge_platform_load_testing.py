@@ -382,9 +382,9 @@ class TestJorgePlatformLoadTesting:
 
         # All handoffs should be correct
         correct_count = sum(1 for r in results if r["correct"])
-        assert correct_count == 100, (
-            f"Handoff correctness: {correct_count}/100 (failures: {[r for r in results if not r['correct']]})"
-        )
+        assert (
+            correct_count == 100
+        ), f"Handoff correctness: {correct_count}/100 (failures: {[r for r in results if not r['correct']]})"
 
         # Timing check
         times = [r["elapsed"] for r in results]

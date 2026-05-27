@@ -34,12 +34,6 @@ from sklearn.preprocessing import StandardScaler
 
 warnings.filterwarnings("ignore")
 
-# Internal imports
-# from .memory_service import MemoryService  # Disabled for deployment
-# from .lead_lifecycle import LeadLifecycleTracker  # Disabled for deployment
-# from .behavioral_triggers import BehavioralTriggerEngine  # Disabled for deployment
-# from .lead_scorer import LeadScorer  # Disabled for deployment
-
 # Configure logging
 logger = logging.getLogger(__name__)
 

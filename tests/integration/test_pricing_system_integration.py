@@ -18,10 +18,10 @@ import pytest
 
 try:
     from fastapi.testclient import TestClient
-    from ghl_real_estate_ai.core.types import LeadClassification
     from httpx import AsyncClient
 
     from ghl_real_estate_ai.api.main import app
+    from ghl_real_estate_ai.core.types import LeadClassification
     from ghl_real_estate_ai.services.dynamic_pricing_optimizer import DynamicPricingOptimizer, LeadPricingResult
     from ghl_real_estate_ai.services.revenue_attribution import RevenueAttributionEngine
     from ghl_real_estate_ai.services.roi_calculator_service import ClientROIReport, ROICalculatorService

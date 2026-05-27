@@ -7,6 +7,7 @@ import time
 from uuid import uuid4
 
 import pytest
+
 from src.core.exceptions import RetrievalError
 from src.core.types import DocumentChunk
 from src.retrieval.dense.dense_retriever import DenseRetriever, _create_vector_store
@@ -46,9 +47,9 @@ class TestProductionChromaDB:
 
             # Check that vector store is ChromaVectorStore
             assert retriever._vector_store is not None
-            assert isinstance(retriever._vector_store, ChromaVectorStore), (
-                f"Expected ChromaVectorStore, got {type(retriever._vector_store).__name__}"
-            )
+            assert isinstance(
+                retriever._vector_store, ChromaVectorStore
+            ), f"Expected ChromaVectorStore, got {type(retriever._vector_store).__name__}"
 
             # Check stats report correct type
             stats = await retriever.get_stats()

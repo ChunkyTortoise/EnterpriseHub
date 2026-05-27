@@ -3,8 +3,9 @@ Property Routes for GHL Real Estate AI.
 """
 
 from functools import lru_cache
+from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.memory_service import MemoryService

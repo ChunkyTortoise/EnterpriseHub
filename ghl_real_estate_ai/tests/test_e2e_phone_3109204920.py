@@ -309,9 +309,9 @@ class TestSellerFlow:
                 pricing_result=pricing_mock,
             )
             wf_post = [a for a in actions_post if a.get("type") == "trigger_workflow"]
-            assert wf_post, (
-                f"Workflow MUST fire after scheduling_step=confirmed. Actions: {[a.get('type') for a in actions_post]}"
-            )
+            assert (
+                wf_post
+            ), f"Workflow MUST fire after scheduling_step=confirmed. Actions: {[a.get('type') for a in actions_post]}"
             assert wf_post[0]["workflow_id"] == TEST_HOT_SELLER_WORKFLOW_ID
 
     @pytest.mark.asyncio
@@ -356,9 +356,9 @@ class TestSellerFlow:
             )
 
         custom_field_actions = [a for a in actions if a.get("type") == "update_custom_field"]
-        assert custom_field_actions, (
-            f"Custom field updates must be written for HOT seller. Got actions: {[a.get('type') for a in actions]}"
-        )
+        assert (
+            custom_field_actions
+        ), f"Custom field updates must be written for HOT seller. Got actions: {[a.get('type') for a in actions]}"
 
     @pytest.mark.asyncio
     async def test_seller_temperature_classification_hot_requires_4_questions_and_timeline(self) -> None:
@@ -400,9 +400,9 @@ class TestSellerFlow:
                 "timeline_acceptable": True,
             }
         )
-        assert result_hot["temperature"] == "hot", (
-            f"Should be HOT with 4 questions + timeline. Got: {result_hot['temperature']}"
-        )
+        assert (
+            result_hot["temperature"] == "hot"
+        ), f"Should be HOT with 4 questions + timeline. Got: {result_hot['temperature']}"
 
     @pytest.mark.asyncio
     async def test_seller_ai_valuation_price_uses_sellers_price_expectation(self) -> None:
@@ -891,9 +891,9 @@ class TestWebhookSmoke:
         )
 
         primary_mode = _select_primary_mode(mode_flags)
-        assert primary_mode == "seller", (
-            f"'Needs Qualifying' tag on {TEST_PHONE} must route to seller mode. Got: {primary_mode}"
-        )
+        assert (
+            primary_mode == "seller"
+        ), f"'Needs Qualifying' tag on {TEST_PHONE} must route to seller mode. Got: {primary_mode}"
 
 
 # ---------------------------------------------------------------------------

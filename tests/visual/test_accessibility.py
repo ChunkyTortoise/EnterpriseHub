@@ -189,9 +189,9 @@ async def test_aria_labels(streamlit_app: Page):
         ]
     ]
 
-    assert len(aria_violations) == 0, (
-        f"Found {len(aria_violations)} ARIA violations: {[v['id'] for v in aria_violations]}"
-    )
+    assert (
+        len(aria_violations) == 0
+    ), f"Found {len(aria_violations)} ARIA violations: {[v['id'] for v in aria_violations]}"
 
 
 @pytest.mark.asyncio

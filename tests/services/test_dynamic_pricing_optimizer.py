@@ -17,7 +17,6 @@ import pytest
 
 try:
     from ghl_real_estate_ai.core.types import LeadClassification
-
     from ghl_real_estate_ai.services.dynamic_pricing_optimizer import (
         PRICING_TIERS,
         DynamicPricingOptimizer,

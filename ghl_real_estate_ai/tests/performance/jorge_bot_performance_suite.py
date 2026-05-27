@@ -43,6 +43,8 @@ import numpy as np
 import psutil
 import pytest
 
+from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
+
 # Jorge Bot imports
 from ghl_real_estate_ai.agents.jorge_seller_bot_enhanced import (
     EnhancedJorgeSellerBot,
@@ -50,8 +52,6 @@ from ghl_real_estate_ai.agents.jorge_seller_bot_enhanced import (
     SellerProfile,
     StallType,
 )
-
-from ghl_real_estate_ai.agents.jorge_buyer_bot import JorgeBuyerBot
 from ghl_real_estate_ai.agents.lead_bot import LeadBot
 from ghl_real_estate_ai.services.jorge_analytics_service import JorgeAnalyticsService
 from ghl_real_estate_ai.services.performance_monitor import PerformanceMonitor
@@ -848,9 +848,9 @@ class TestJorgePerformance:
         seller_bot = EnhancedJorgeSellerBot()
         accuracy = await performance_suite.accuracy_validator.validate_stall_detection_accuracy(seller_bot)
 
-        assert accuracy >= TARGET_SELLER_STALL_DETECTION, (
-            f"Stall detection accuracy {accuracy:.3f} below target {TARGET_SELLER_STALL_DETECTION:.3f}"
-        )
+        assert (
+            accuracy >= TARGET_SELLER_STALL_DETECTION
+        ), f"Stall detection accuracy {accuracy:.3f} below target {TARGET_SELLER_STALL_DETECTION:.3f}"
 
     async def test_memory_efficiency(self, performance_suite):
         """Test memory usage stays within targets"""
@@ -863,9 +863,9 @@ class TestJorgePerformance:
         end_memory = psutil.Process().memory_info().rss / 1024 / 1024
         memory_per_bot = (end_memory - start_memory) / 10
 
-        assert memory_per_bot < TARGET_MEMORY_PER_CONVERSATION_MB, (
-            f"Memory per bot {memory_per_bot:.1f}MB exceeds target"
-        )
+        assert (
+            memory_per_bot < TARGET_MEMORY_PER_CONVERSATION_MB
+        ), f"Memory per bot {memory_per_bot:.1f}MB exceeds target"
 
         # Cleanup
         del bots

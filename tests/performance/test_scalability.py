@@ -338,9 +338,9 @@ async def test_target_load_performance():
         targets = suite.validate_performance_targets(result)
 
         # Key assertions for production readiness
-        assert result.p95_response_time_ms < 30000, (
-            f"P95 response time {result.p95_response_time_ms:.0f}ms exceeds 30s target"
-        )
+        assert (
+            result.p95_response_time_ms < 30000
+        ), f"P95 response time {result.p95_response_time_ms:.0f}ms exceeds 30s target"
         assert result.error_rate < 0.01, f"Error rate {result.error_rate:.1%} exceeds 1% for production load"
         assert targets["throughput_target"], f"Throughput {result.throughput_rps:.3f} RPS below target"
 

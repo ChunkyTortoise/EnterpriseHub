@@ -39,8 +39,6 @@ except ImportError:
 
 from ghl_real_estate_ai.services.cache_service import CacheService
 
-# from ghl_real_estate_ai.ghl_utils.config import get_config_manager  # Not available
-
 
 logger = logging.getLogger(__name__)
 

@@ -4,6 +4,7 @@ from typing import List
 from uuid import uuid4
 
 import pytest
+
 from src.core.types import DocumentChunk, SearchResult
 from src.retrieval.contextual_compression import (
     AbstractiveCompressor,

@@ -335,9 +335,9 @@ class TestLeadBotE2EWithCompliance:
         if last_period > max_sms_length * 0.7:  # Keep at least 70% content
             truncated = truncated[: last_period + 1]
 
-        assert len(truncated) <= max_sms_length, (
-            f"Truncated message length {len(truncated)} should be <= {max_sms_length}"
-        )
+        assert (
+            len(truncated) <= max_sms_length
+        ), f"Truncated message length {len(truncated)} should be <= {max_sms_length}"
 
     @pytest.mark.asyncio
     async def test_temperature_tag_publishing(self, mock_analytics_service):

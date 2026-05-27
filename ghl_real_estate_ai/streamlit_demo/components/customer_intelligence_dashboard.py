@@ -38,11 +38,11 @@ try:
     sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "..", "customer-intelligence-platform", "src"))
 
     from analytics.streaming_analytics import JourneyStage, MetricType, SegmentType, get_analytics_orchestrator
+
     from core.auth_system import AuthService, Permission, UserRole, get_auth_service
     from core.tenant_middleware import get_current_tenant
-    from utils.cache_service import get_redis_client
-
     from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
+    from utils.cache_service import get_redis_client
 except ImportError as e:
     st.warning(f"Customer Intelligence Platform not fully available: {e}")
     # We'll create mock services for demonstration
