@@ -20,9 +20,6 @@ import streamlit as st
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
-# Note: Golden Lead Detector would be imported here when fully integrated
-# from ghl_real_estate_ai.services.golden_lead_detector import GoldenLeadDetector
-
 
 # Simulate Golden Lead Detection service for demonstration
 class MockGoldenLeadDetector:

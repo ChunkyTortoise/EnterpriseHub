@@ -21,9 +21,6 @@ import streamlit as st
 from ghl_real_estate_ai.streamlit_demo.async_utils import run_async
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import style_obsidian_chart
 
-# Note: Usage Analytics Engine would be imported here when available
-# from ghl_real_estate_ai.services.usage_analytics_engine import UsageAnalyticsEngine
-
 
 # Simulate Usage Analytics service for demonstration
 class MockUsageAnalyticsEngine:
