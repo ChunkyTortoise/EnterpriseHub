@@ -3,7 +3,7 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-7%2C721_collectible-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-7%2C665_collectible-brightgreen)](tests/)
 [![CI Tests](https://img.shields.io/badge/CI_verified-1%2C100+-blue)](tests/)
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
 [![Eval Gate](https://img.shields.io/badge/eval_gate-active-46E3B7)](evals/)
@@ -17,7 +17,7 @@
 
 ## Executive Summary
 
-Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots so no lead goes cold. Built for real estate brokerages and agencies; current local verification collects 7,721 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
+EnterpriseHub is an AI backend for compliant real estate lead qualification. It automates lead intake, bot handoff, follow-up scheduling, and GoHighLevel CRM sync across specialized Lead, Buyer, and Seller bot workflows. Current local verification collects 7,665 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
 
 ---
 
@@ -33,7 +33,7 @@ EnterpriseHub includes a case-study-backed production story plus modeled benchma
 | **LLM cache target** | L1 60% + L2 20% + L3 8% design target | Synthetic benchmark / architecture target |
 | **Token cost model** | 93K to 7.8K tokens per 100-query modeled workload | Projection; not quoted as live billing measurement |
 | **Eval coverage** | 50 golden cases across qualification, edge cases, and compliance | Repository artifact in `evals/` |
-| **Test collection** | 7,721 collected, 38 skipped on Apr 29, 2026 | Local `pytest --collect-only --override-ini='addopts='` |
+| **Test collection** | 7,665 collected on May 23, 2026 | Local `pytest --collect-only --override-ini='addopts=' -q` |
 
 See [CASE_STUDY.md](CASE_STUDY.md), [BENCHMARKS.md](BENCHMARKS.md), and [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md) for methodology and claim provenance.
 
@@ -46,7 +46,7 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | System | Evidence | Value | Where to inspect |
 |--------|----------|-------|------------------|
 | **3-Tier Cache** | Architecture target and synthetic benchmark | L1/L2/L3 design target: 60% / 20% / 8% | `BENCHMARKS.md`, ADR-0001 |
-| **Agent Mesh** | Registered agents | 22 | `agent_mesh_coordinator.py` registry |
+| **Agent Mesh** | Architecture scope | 22-agent mesh documented | ADR-0004 and `agent_mesh_coordinator.py` |
 | **Agent Mesh** | Routing dimensions | 4 (success 40%, load 25%, cost 20%, latency 15%) | Weighted scoring function |
 | **Agent Mesh** | Emergency shutdown | $100/hr spend threshold | `emergency_shutdown()` cancels all tasks |
 | **Model Routing** | Primary | Claude Sonnet (complex analysis) | `claude_orchestrator.py` task routing |
@@ -55,7 +55,7 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | **A/B Testing** | Method | Two-proportion z-test | `ab_testing_service.py` statistical engine |
 | **A/B Testing** | Assignment | Deterministic SHA-256 bucketing | `experiment_id + contact_id` hash |
 | **Compliance** | Pipeline stages | 7 (language, TCPA, compliance, translation, truncation) | `response_pipeline/factory.py` |
-| **Test Surface** | Current collectible count | 7,721 collected / 38 skipped | `pytest --collect-only --override-ini='addopts='` on Apr 29, 2026 |
+| **Test Surface** | Current collectible count | 7,665 collected | `pytest --collect-only --override-ini='addopts=' -q` on May 23, 2026 |
 | **ADRs** | Documented decisions | 10 | `docs/adr/0001-0010` |
 
 ---
@@ -118,7 +118,7 @@ graph TB
 
 | | |
 |--|--|
-| **Dashboard** | https://ct-enterprise-ai.streamlit.app |
+| **Dashboard** | <https://ct-enterprise-ai.streamlit.app> |
 | **API Docs** | Swagger UI (40+ routes, available on local/staging deploy) |
 | **Demo login** | `demo_user` / `Demo1234!` |
 | **Admin login** | `admin` / `Admin1234!` |
@@ -145,7 +145,7 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 
 **Pattern:** Each agent registers with a `cost_per_token` and `sla_response_time`. Task routing uses a weighted scoring function across four dimensions: success rate (40%), current load (25%), cost efficiency (20%), and average response time (15%). Emergency tasks get a 1.5x score multiplier. Four background coroutines run continuously: health monitor (30s heartbeat), cost monitor (5min), performance monitor (2min), and cleanup. If hourly spend crosses `$50`, mesh activity is throttled; at `$100`, `emergency_shutdown()` cancels all active tasks and sets every agent to `MAINTENANCE`.
 
-**Outcome:** 22 registered agents across the platform with per-agent P50/P95 tracking and automatic load rebalancing when queue time exceeds 30 seconds.
+**Outcome:** ADR-0004 documents a 22-agent mesh architecture; the coordinator implements registration, weighted routing, per-agent P50/P95 tracking, and emergency shutdown behavior.
 
 **Training foundation:** Microsoft AI & ML Engineering (75h) — agent orchestration patterns, SLA-based routing, performance monitoring.
 
@@ -158,6 +158,7 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 **Problem:** Repeated lead qualification workflows can reprocess the same property, market, and conversation context. Without caching, the modeled workload in `BENCHMARKS.md` uses roughly 93K tokens per 100 queries, so cost compounds quickly as conversation volume grows.
 
 **Pattern:**
+
 - **L1 (in-memory LRU):** `MemoryCache` with 1,000-item capacity and LRU eviction. Sub-1ms access. Handles repeated lookups within the same active qualification session.
 - **L2 (Redis):** Shared across all FastAPI workers. Under 5ms access. Default 15-minute TTL for conversation context, 1 hour for market data. Handles cross-request deduplication.
 - **L3 (PostgreSQL):** Persistent, under 20ms access. Stores historical results for analytics and A/B comparisons. Cache keys incorporate `conversation_id + message_hash + model_version` to prevent stale reads after model upgrades.
@@ -201,6 +202,7 @@ A background task promotes frequently accessed L1 keys to L2.
 **Key classes:** `JorgeHandoffService`, `HandoffDecision`, `EnrichedHandoffContext`, `HandoffRouter`
 
 **Pattern:**
+
 - **Confidence thresholds per direction:** Lead-to-Buyer/Seller at 0.7; Buyer-to-Seller at 0.8; Seller-to-Buyer at 0.6
 - **Circular prevention:** Same source-to-target pair is blocked within a 30-minute window
 - **Rate limiting:** 3 handoffs per hour, 10 per day per contact
@@ -235,15 +237,23 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 ## For Hiring Managers
 
-Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUIDE.md). For the candid audit, see [docs/HIRING_CONVERSION_AUDIT.md](docs/HIRING_CONVERSION_AUDIT.md) and the evidence map in [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md).
+Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUIDE.md). For the current roadmap, see [docs/HIRING_ROADMAP_2026-05-23.md](docs/HIRING_ROADMAP_2026-05-23.md). For the candid audit, see [docs/HIRING_CONVERSION_AUDIT.md](docs/HIRING_CONVERSION_AUDIT.md) and the evidence map in [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md).
+
+Fast local proof path:
+
+```bash
+make reviewer-smoke
+```
+
+That command runs lint, format check, compile check, eval harness, health routes, webhook signature tests, Claude orchestrator tests, and SQL-safety tests.
 
 | If you're evaluating for... | Where to look | Training behind it |
 |-----------------------------|--------------|-------------------|
 | **AI / ML Engineer** | Claude orchestrator ([`services/claude_orchestrator.py`](ghl_real_estate_ai/services/claude_orchestrator.py)), 3-tier LLM cache, multi-strategy parsing | IBM GenAI Engineering (144h), Microsoft AI & ML Engineering (75h) |
 | **Multi-Agent / Agentic AI** | Agent mesh coordinator ([`services/agent_mesh_coordinator.py`](ghl_real_estate_ai/services/agent_mesh_coordinator.py)), capability routing, governance, audit trails | Duke LLMOps (48h), Vanderbilt Prompt Engineering (18h) |
-| **Backend / Systems Engineer** | FastAPI app ([`app.py`](ghl_real_estate_ai/app.py)), Alembic migrations, Redis L1/L2/L3 cache, PostgreSQL | DeepLearning.AI Deep Learning (120h), Meta Back-End Developer (75h) |
+| **Backend / Systems Engineer** | FastAPI app ([`api/main.py`](ghl_real_estate_ai/api/main.py)), Alembic migrations, Redis L1/L2/L3 cache, PostgreSQL | DeepLearning.AI Deep Learning (120h), Meta Back-End Developer (75h) |
 | **RAG / Retrieval Engineer** | Advanced RAG system ([`advanced_rag_system/`](advanced_rag_system/)), BM25 + dense + RRF hybrid retrieval, ChromaDB | IBM RAG & Agentic AI (24h), Google Cloud GenAI (25h) |
-| **MLOps / LLMOps** | A/B testing service, experiment tracking, model routing (Haiku/Sonnet/Opus), observability ([`services/llm_observability.py`](ghl_real_estate_ai/services/llm_observability.py)) | Duke LLMOps (48h), Google Advanced Data Analytics (200h) |
+| **MLOps / LLMOps** | A/B testing service ([`services/jorge/ab_testing_service.py`](ghl_real_estate_ai/services/jorge/ab_testing_service.py)), per-bot cost tracking ([`services/jorge/cost_tracker.py`](ghl_real_estate_ai/services/jorge/cost_tracker.py)), model routing (Haiku/Sonnet/Opus). End-to-end OTel tracing is planned; see [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) for the design and current scope. | Duke LLMOps (48h), Google Advanced Data Analytics (200h) |
 
 ---
 
@@ -283,12 +293,12 @@ Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUI
 
 ## Security
 
-CI runs security scanning (bandit, pip-audit, SQL injection grep) on every push.
+Security workflows are configured for secret scanning, Bandit, Semgrep, dependency audit, and SQL-injection grep. Treat current GitHub run status as the source of truth before presenting the security badge as green.
 
 - **Parameterized SQL** — all queries use parameterized `text()` or asyncpg `$1` bindings. DDL identifiers validated and double-quoted via `utils.sql_safety.quote_identifier()`. CI gate rejects any unprotected f-string SQL patterns.
 - **Webhook authentication** — Router-level `require_ghl_webhook_signature` dependency enforces Ed25519 or HMAC-SHA256 signature verification on all GHL webhook routes. Replay protection via `X-GHL-Timestamp` with 5-minute window.
 - **JWT authentication** — 1-hour expiry tokens validated on every protected route
-- **PII encryption** — contact data encrypted at rest using Fernet symmetric encryption
+- **PII encryption** — SDR PII fields use Fernet symmetric encryption; broader tenant-secret encryption remains an explicit hardening item
 - **Input validation** — Pydantic V2 models enforce strict types on all API boundaries
 - **Rate limiting** — Redis-backed sliding window: 100 req/min per IP, 200 burst
 - **Compliance pipeline** — 7-stage response processing enforces FHA, RESPA, TCPA, CCPA, and SB-243
@@ -320,13 +330,12 @@ See [`.github/workflows/security-scan.yml`](.github/workflows/security-scan.yml)
 EnterpriseHub/
 ├── ghl_real_estate_ai/           # Main application
 │   ├── agents/                   # Bot implementations (Lead, Buyer, Seller)
-│   ├── api/routes/               # FastAPI endpoints
+│   ├── api/                      # FastAPI entry (main.py) + routes
 │   ├── services/                 # Business logic layer
 │   │   ├── claude_orchestrator.py    # Multi-LLM coordination + caching
 │   │   ├── agent_mesh_coordinator.py # Agent fleet management
-│   │   ├── llm_observability.py      # LLM cost tracking + tracing
 │   │   ├── enhanced_ghl_client.py    # CRM integration (rate-limited)
-│   │   └── jorge/                    # Bot services (handoff, A/B, metrics)
+│   │   └── jorge/                    # Bot services (handoff, A/B, cost, metrics)
 │   ├── models/                   # SQLAlchemy models, Pydantic schemas
 │   └── streamlit_demo/           # Dashboard UI components
 ├── advanced_rag_system/          # RAG pipeline (BM25, dense search, ChromaDB)
@@ -334,7 +343,7 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 7,721 tests collectible locally on Apr 29, 2026
+├── tests/                        # 7,665 tests collectible locally on May 23, 2026
 ├── conftest.py                   # Shared test fixtures
 ├── render.yaml                   # Render deployment config
 └── docker-compose.yml            # Container orchestration
@@ -400,7 +409,7 @@ See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) and [BENCHMARKS.md](BENCHMARK
 
 ## Related Projects
 
-- [jorge_real_estate_bots](https://github.com/ChunkyTortoise/jorge_real_estate_bots) — Three-bot lead qualification system (Lead, Buyer, Seller) - live production
+- [jorge_real_estate_bots](https://github.com/ChunkyTortoise/jorge_real_estate_bots) — Three-bot lead qualification system (Lead, Buyer, Seller)
 - [docextract](https://github.com/ChunkyTortoise/docextract) — Production RAG pipeline: PDF upload, async processing, pgvector hybrid search, citation-aware answers
 - [mcp-server-toolkit](https://github.com/ChunkyTortoise/mcp-server-toolkit) — 9 MCP servers for LLM tool integration, published to PyPI
 

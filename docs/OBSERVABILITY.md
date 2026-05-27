@@ -59,9 +59,9 @@ flowchart TB
 
 ## LLM Call Tracing
 
-**Service**: [`ghl_real_estate_ai/services/llm_observability.py`](../ghl_real_estate_ai/services/llm_observability.py)
+**Status: Planned.** End-to-end OTel tracing (per-call spans, cost attribution, cache-tier hits) is on the roadmap but not yet shipped in code. `otel-collector-config.yaml` is wired at repo root and `docker-compose.observability.yml` brings up Jaeger, but `services/llm_observability.py` does not exist yet. What does ship today: per-bot cost tracking in [`services/jorge/cost_tracker.py`](../ghl_real_estate_ai/services/jorge/cost_tracker.py) and structured logging via structlog (see ADR-0010). The section below documents the target design.
 
-`LLMObservabilityService` records every LLM call as an `LLMTrace` dataclass with:
+`LLMObservabilityService` (planned) will record every LLM call as an `LLMTrace` dataclass with:
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -100,9 +100,7 @@ The `ObservabilityDashboard` dataclass provides a single-call summary including 
 
 ### Agent Cost Tracker
 
-**Service**: [`ghl_real_estate_ai/services/agent_cost_tracker.py`](../ghl_real_estate_ai/services/agent_cost_tracker.py)
-
-`DecisionCostTracker` provides per-agent cost attribution:
+**Status: Planned.** Per-agent cost attribution at the orchestrator level is in design; today the closest shipped surface is [`services/jorge/cost_tracker.py`](../ghl_real_estate_ai/services/jorge/cost_tracker.py), which tracks cost per-bot rather than per-decision. The planned `DecisionCostTracker` will provide:
 
 - **`record()`** -- Records a `DecisionCost` (agent name, decision type, tokens, cost, latency).
 - **`report()`** -- Generates a `CostReport` with per-agent summaries, anomaly detection, and efficiency rankings.

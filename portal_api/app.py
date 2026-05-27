@@ -3,7 +3,7 @@ from __future__ import annotations
 from uuid import uuid4
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -57,7 +57,7 @@ def create_app() -> FastAPI:
     app.include_router(admin_router.router)
     app.include_router(accelerator_v2_router.router)
 
-    @app.get("/health", response_model=HealthResponse)
+    @app.get("/health", response_model=HealthResponse, status_code=status.HTTP_200_OK)
     async def health() -> HealthResponse:
         return HealthResponse(status="ok", service="portal-api")
 

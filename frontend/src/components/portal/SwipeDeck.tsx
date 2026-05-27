@@ -22,6 +22,9 @@ type PropertyRecord = {
   photos?: string[];
 };
 
+const FALLBACK_PROPERTY_IMAGE =
+  'https://images.unsplash.com/photo-1560184897-ae75f418493e?auto=format&fit=crop&w=1600&q=80';
+
 export interface SwipeDeckProps {
   properties?: PropertyRecord[];
   leadId?: string;
@@ -199,7 +202,11 @@ export function SwipeDeck({
     styles.propertyCard,
     exitDirection === 'left' ? styles.propertyCardExiting : '',
     exitDirection === 'right' ? styles.propertyCardExitingRight : '',
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const currentSqft = currentProperty?.sqft || currentProperty?.square_feet;
 
   return (
     <section className={styles.deckShell}>
@@ -216,7 +223,7 @@ export function SwipeDeck({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             className={styles.propertyImage}
-            src={currentProperty.image_url || currentProperty.photos?.[0] || '/placeholder-property.jpg'}
+            src={currentProperty.image_url || currentProperty.photos?.[0] || FALLBACK_PROPERTY_IMAGE}
             alt={currentProperty.address || 'Property listing'}
             loading="eager"
           />
@@ -230,7 +237,7 @@ export function SwipeDeck({
             <div className={styles.statRow}>
               <span className={styles.statChip}>{currentProperty.beds || currentProperty.bedrooms || 0} bd</span>
               <span className={styles.statChip}>{currentProperty.baths || currentProperty.bathrooms || 0} ba</span>
-              <span className={styles.statChip}>{(currentProperty.sqft || currentProperty.square_feet || 0).toLocaleString()} sqft</span>
+              {currentSqft ? <span className={styles.statChip}>{currentSqft.toLocaleString()} sqft</span> : null}
             </div>
           </div>
         </article>

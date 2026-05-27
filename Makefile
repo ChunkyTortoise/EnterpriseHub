@@ -1,6 +1,6 @@
 # Makefile for Enterprise Hub
 
-.PHONY: help install install-dev test lint format type-check clean run demo build ghl-setup ghl-setup-check ghl-setup-guide compile-check no-mock-check metrics-snapshot weekly-pilot-kpis weekly-proof-pack persist-pilot-data pilot-proof-pack pilot-proof-pack-sync revenue-ops-qa
+.PHONY: help install install-dev test lint format type-check clean run demo build ghl-setup ghl-setup-check ghl-setup-guide compile-check no-mock-check reviewer-smoke metrics-snapshot weekly-pilot-kpis weekly-proof-pack persist-pilot-data pilot-proof-pack pilot-proof-pack-sync revenue-ops-qa
 
 help:  ## Show this help message
 	@echo 'Usage: make [target]'
@@ -30,6 +30,14 @@ compile-check:  ## Parse gate for tracked production modules
 
 no-mock-check:  ## Guard v2 production routes against mock/fallback logic
 	python3 scripts/ci/no_mock_in_prod.py
+
+reviewer-smoke:  ## Run the fast hiring-review proof path
+	ruff check .
+	ruff check scripts/ci/compile_check.py scripts/generate_weekly_pilot_kpis.py scripts/generate_weekly_executive_proof_pack.py scripts/persist_revenue_pilot_data.py
+	ruff format --check .
+	ruff format --check scripts/ci/compile_check.py scripts/generate_weekly_pilot_kpis.py scripts/generate_weekly_executive_proof_pack.py scripts/persist_revenue_pilot_data.py
+	python3 scripts/ci/compile_check.py
+	python3 -m pytest tests/test_eval_harness.py tests/api/test_health_routes.py tests/security/test_webhook_signatures.py tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py --override-ini='addopts=' -q
 
 metrics-snapshot:  ## Generate weekly proof-pack metrics snapshot
 	python3 scripts/generate_metrics_snapshot.py

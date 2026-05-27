@@ -223,6 +223,12 @@ multi_market_*.json
 # Playwright MCP screenshots
 .playwright-mcp/
 
+# Editor tool directories
+.kilo/
+
+# Maintenance secrets scan output (contains secret-detection metadata)
+.maintenance/secrets.json
+
 # Obsidian vault (local knowledge base)
 .obsidian-vault/
 scripts/chrome_copy/

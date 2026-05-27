@@ -25,9 +25,9 @@ This dataset validates:
 
 | Difficulty | Count | What it tests                                                    |
 |------------|-------|------------------------------------------------------------------|
-| `easy`     | 14    | Happy-path flows where input clearly maps to a known stage       |
+| `easy`     | 16    | Happy-path flows where input clearly maps to a known stage       |
 | `medium`   | 17    | Ambiguous intent, vague responses, bilingual, spam               |
-| `hard`     | 19    | Adversarial inputs, compliance traps, sensitive situations       |
+| `hard`     | 17    | Adversarial inputs, compliance traps, sensitive situations       |
 
 ## Schema
 

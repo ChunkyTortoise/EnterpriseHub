@@ -110,9 +110,11 @@ async def test_two_simultaneous_messages_both_return_valid_responses() -> None:
         assert not isinstance(r, Exception), f"Concurrent call {i} raised an exception: {r}"
         assert _is_valid_response(r), f"Concurrent call {i} returned an invalid response dict: {r!r}"
         # Temperature must be a known value — not None or garbage
-        assert r.get("temperature") in ("hot", "warm", "cold"), (
-            f"Concurrent call {i} produced unknown temperature: {r.get('temperature')!r}"
-        )
+        assert r.get("temperature") in (
+            "hot",
+            "warm",
+            "cold",
+        ), f"Concurrent call {i} produced unknown temperature: {r.get('temperature')!r}"
 
 
 # ---------------------------------------------------------------------------

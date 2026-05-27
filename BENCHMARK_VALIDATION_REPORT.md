@@ -1,7 +1,7 @@
 # Benchmark Validation Report
 
 **Original report date:** February 11, 2026  
-**Credibility audit update:** April 29, 2026  
+**Credibility audit update:** May 23, 2026  
 **Current status:** historical benchmark artifact, not a blanket production-certification document
 
 This report used to state that all performance metrics were validated and operational. That wording is too broad for a hiring-facing hero repo. The current source of truth is:
@@ -14,15 +14,15 @@ This report used to state that all performance metrics were validated and operat
 
 | Claim area | Current evidence | Public wording guidance |
 |---|---|---|
-| Test surface | `pytest --collect-only --override-ini='addopts='` collected 7,721 tests with 38 skipped on Apr 29, 2026. | Quote the current collectible count, not older 8,212/7,678 counts. |
-| Eval harness | `pytest tests/test_eval_harness.py --override-ini='addopts=' -q` passed 14/14. | Strong claim: deterministic checks and LLM-as-judge harness exist and are tested. |
-| Orchestrator/sql safety | `pytest tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py --override-ini='addopts=' -q` passed 123/123. | Strong targeted backend/security proof. |
+| Test surface | `pytest --collect-only --override-ini='addopts=' -q` collected 7,665 tests on May 23, 2026. | Quote the current collectible count, not older 8,212/7,721 counts. |
+| Eval harness | `pytest tests/test_eval_harness.py --override-ini='addopts=' -q` passed 14/14 on May 23, 2026. | Strong claim: deterministic checks and LLM-as-judge harness exist and are tested. |
+| Orchestrator/sql safety | `pytest tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py --override-ini='addopts=' -q` passed 123/123 on May 23, 2026. | Strong targeted backend/security proof. |
 | Cache hit rate | `BENCHMARKS.md` models a 60% / 20% / 8% L1/L2/L3 distribution. | Present as synthetic benchmark/design target unless fresh live counters are published. |
 | Token savings | `BENCHMARKS.md` models a 93K to 7.8K token reduction for a synthetic workload. | Present as projection/model, not measured billing savings. |
 | Latency/throughput | Older P50/P95/P99 values in this report are not backed by a committed reproducible run. k6 scripts are in `benchmarks/`; `benchmarks/results/2026-W17/README.md` says "results pending." | Do not quote any latency/throughput number until a JSON result is committed to `benchmarks/results/`. |
-| Health routes | `pytest tests/api/test_health_routes.py --override-ini='addopts=' -q` failed 7/14 locally. | Do not headline health-check readiness until fixed. |
-| Webhook security tests | `pytest tests/security/test_webhook_signatures.py --override-ini='addopts=' -q` failed 17/36 locally. | Do not headline webhook test coverage until stale paths/fixtures are repaired. |
-| Lint/format | `ruff check .` and `ruff format --check .` failed locally. | Treat as P0 credibility work before claiming linter-clean status. |
+| Health routes | `pytest tests/api/test_health_routes.py --override-ini='addopts=' -q` passed 14/14 on May 23, 2026. | Good reviewer-smoke proof; still avoid broader uptime claims without deployed telemetry. |
+| Webhook security tests | `pytest tests/security/test_webhook_signatures.py --override-ini='addopts=' -q` passed 36/36 on May 23, 2026. | Strong targeted webhook-auth proof. |
+| Lint/format/compile | `ruff check .`, `ruff format --check .`, and `python3 scripts/ci/compile_check.py` are part of `make reviewer-smoke`. | Treat `make reviewer-smoke` as the hiring-review gate. |
 
 ## Synthetic Benchmark Methodology
 
@@ -38,9 +38,8 @@ Avoid wording like this until fresh live evidence is added:
 
 ## Next Validation Work
 
-1. Fix global lint and format blockers.
-2. Repair targeted health and webhook-signature tests.
-3. Add a command-backed benchmark output file under `reports/`.
-4. Run `benchmarks/bench_cache_live.py` (script exists; reads real L1/L2 hit/miss counters) and commit the JSON output to `benchmarks/results/` before quoting any live hit-rate numbers.
+1. Keep `make reviewer-smoke` green as the first reviewer-facing gate.
+2. Add a command-backed eval scorecard whenever the golden dataset changes.
+3. Keep synthetic cache benchmark output under `benchmarks/results/`, clearly labeled as a model.
+4. Run `benchmarks/bench_cache_live.py` against a real Redis-backed environment and commit the output before quoting any live hit-rate numbers.
 5. Update README metrics only from generated artifacts or the claim ledger.
-

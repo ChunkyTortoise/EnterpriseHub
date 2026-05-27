@@ -13,7 +13,7 @@ The core engineering bets:
 - **3-tier cache** (in-memory + Redis + Postgres) to keep LLM cost per qualification at roughly one-tenth of the naive baseline (modeled/projected: `benchmarks/bench_cache.py` synthetic simulation; no committed live billing measurement)
 - **Compliance as a pipeline**, not a check — every outbound message passes through ordered stages that can short-circuit before the LLM ever runs
 - **A versioned prompt registry** with golden-dataset evals + nightly regression — every prompt change has a reviewable diff and a quality-delta number attached
-- **An evaluation harness** with 50 hand-curated test cases, LLM-as-judge across 4 rubrics, and a CI gate that blocks PRs below a 0.85 quality threshold
+- **An evaluation harness** with 50 hand-curated test cases, deterministic checks, LLM-as-judge rubric plumbing, and a nightly regression workflow configured to compare against a baseline
 
 The system ran in production for ~3 months processing 500+ real leads in English and Spanish before the engagement ended. *(Self-reported / operator-attested; no exported CRM artifact is checked into this repo.)*
 
@@ -65,7 +65,7 @@ Every outbound message passes through:
 2. TCPA opt-out detection — short-circuits on STOP / unsubscribe before anything else runs
 3. FHA/RESPA compliance check — blocks steering, redlining, and non-compliant content
 4. Conversation repair — detects breakdown patterns, escalates to a human
-5. AI disclosure (SB-243 California requirement) — appends `[AI-assisted message]` footer
+5. AI disclosure policy hook (SB-243 California requirement) — disclosure is available when explicitly asked; no proactive footer is injected by default
 6. Translation if customer language differs from operator language
 7. SMS truncation — 320-char limit, sentence-boundary aware
 
@@ -79,7 +79,7 @@ This is the part that's harder to see from the README but matters more than the 
 
 - **`evals/golden_dataset.json`** — 50 hand-curated test cases covering seller qualification (15), buyer scheduling (10), lead intake (10), edge cases (10), and compliance scenarios (5). Every case has expected output properties (max length, no URLs, no AI disclosure leakage, persona maintained, topic boundary) that a correct response must satisfy.
 - **`evals/judge.py`** — LLM-as-judge over 4 rubrics, plus deterministic property checks. Returns a quality score per case.
-- **`evals/baseline.json`** — regression baseline. Every PR runs against it; >10% drop fails CI (`evals/compare_baseline.py:33`) and auto-creates a GitHub issue (`.github/workflows/nightly-eval.yml:64-75`).
+- **`evals/baseline.json`** — regression baseline. The nightly workflow is configured to compare pytest JSON output against it; >10% drop triggers the regression alert path (`evals/compare_baseline.py:33`, `.github/workflows/nightly-eval.yml`).
 - **`PROMPT_CHANGELOG.md`** — every prompt version is documented with rationale, the dataset run that validated it, and the quality delta.
 - **`tests/adversarial/`** — 18 prompt-injection / jailbreak / topic-boundary cases with CI integration.
 - **`.github/workflows/nightly-eval.yml`** — 2 a.m. UTC cron that re-runs the golden set against the current main branch, posts a regression report.
@@ -96,11 +96,11 @@ This is what "eval-driven AI delivery" actually looks like at the IC level. Most
 | Leads processed | 500+ | Self-reported / operator-attested (no CRM export in repo) |
 | Languages supported | EN + ES | Full bilingual flows |
 | Bot count | 3 specialized + handoff service | Lead, Buyer, Seller |
-| Tests | 7,721 collected locally on Apr 29, 2026; 38 skipped | `pytest --collect-only --override-ini='addopts='` |
+| Tests | 7,665 collected locally on May 23, 2026 | `pytest --collect-only --override-ini='addopts=' -q` |
 | Eval golden cases | 50, with regression baseline + nightly cron | `evals/` |
-| Prompt versions tracked | 31 in `PROMPT_CHANGELOG.md` | Counted: 31 `###`-headed entries as of Apr 29, 2026 |
+| Prompt versions tracked | 31 in `PROMPT_CHANGELOG.md` | Counted: 31 `###`-headed entries as of May 23, 2026 |
 | Compliance regulations covered | FHA, RESPA, TCPA, CCPA, SB-243 | 7-stage pipeline + adversarial tests |
-| ADRs documenting non-obvious tradeoffs | 10 | `docs/adr/` (0001–0010, counted Apr 29, 2026) |
+| ADRs documenting non-obvious tradeoffs | 10 | `docs/adr/` (0001–0010, counted May 23, 2026) |
 
 **What I am NOT claiming:** specific live throughput numbers (the 150 req/s figure in earlier docs was unbacked by reproducible artifacts; honest k6 load tests are pending). Specific live cache-hit measurements (see honesty caveat above). Specific dollar savings (the $93K → $7.8K figure was a workflow-projection estimate, not a measurement of the bill).
 
@@ -108,9 +108,9 @@ This is what "eval-driven AI delivery" actually looks like at the IC level. Most
 
 ## Technical Highlights
 
-- **Agent Mesh Coordinator** — 22 domain agents (per `docs/adr/0004-agent-mesh-coordinator.md:9`), weighted routing on cost / success rate / load / latency, emergency shutdown at $100/hr spend threshold (`ghl_real_estate_ai/services/agent_mesh_coordinator.py:164`; some scaling verbs are scaffolded — documented in ADR rather than dressed up).
+- **Agent Mesh Coordinator** — 22-agent mesh architecture (per `docs/adr/0004-agent-mesh-coordinator.md:9`), weighted routing on cost / success rate / load / latency, emergency shutdown at $100/hr spend threshold (`ghl_real_estate_ai/services/agent_mesh_coordinator.py:164`; runtime registry proof should be regenerated before quoting a live count).
 - **A/B testing service** — deterministic variant assignment (SHA-256 hash), z-test statistical significance, sample-size calculator. 4 prebuilt experiments.
-- **Security baseline** — parameterized SQL throughout, Ed25519 + HMAC webhook signature verification, JWT auth with fail-closed secret loading, Fernet PII encryption, Redis-backed rate limiting.
+- **Security baseline** — parameterized SQL patterns, Ed25519 + HMAC webhook signature verification, JWT auth with fail-closed secret loading, Fernet-backed SDR PII fields, and Redis-backed rate limiting.
 - **Observability** — structlog structured logging, Prometheus-shaped metrics, OTLP-instrumented (collector wiring is a Wave 1 task).
 
 ---

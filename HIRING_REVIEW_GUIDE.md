@@ -10,7 +10,7 @@ This guide is intentionally short. It points reviewers to the strongest evidence
 - **Backend system:** FastAPI services coordinate lead, buyer, and seller bot workflows with CRM persistence and webhook handling.
 - **AI system:** prompt registry, golden dataset, deterministic checks, LLM-as-judge harness, adversarial tests, and nightly eval workflow.
 - **Production judgment:** ADRs, security scanning, structured logging, health checks, Docker/Compose deploy paths, Redis/Postgres cache design, and CI gates.
-- **Current caveat:** public claims need stricter provenance. Some README/benchmark/case-study metrics mix measured results, design targets, and projections.
+- **Current caveat:** live cache hit rates, throughput, uptime, and dollar savings should not be quoted without fresh generated evidence.
 
 ## 5-Minute Review Path
 
@@ -19,6 +19,7 @@ This guide is intentionally short. It points reviewers to the strongest evidence
 3. Inspect the eval surface in [evals/README.md](evals/README.md), [evals/judge.py](evals/judge.py), and [tests/test_eval_harness.py](tests/test_eval_harness.py).
 4. Skim the architecture decisions in [docs/adr](docs/adr).
 5. Read the hiring audit findings in [docs/HIRING_CONVERSION_AUDIT.md](docs/HIRING_CONVERSION_AUDIT.md).
+6. Use [docs/HIRING_ROADMAP_2026-05-23.md](docs/HIRING_ROADMAP_2026-05-23.md) for the current ranked work plan.
 
 ## 30-Minute Technical Review Path
 
@@ -30,24 +31,19 @@ This guide is intentionally short. It points reviewers to the strongest evidence
 
 ## Local Verification Commands
 
-These commands were audited on April 29, 2026. Some fail today; that is useful signal for the next development phase.
+These commands were audited on May 23, 2026. Start with the compact smoke path, then use the individual commands if you want to inspect a specific proof area.
 
 ```bash
-ruff check .
-ruff format --check .
-mypy ghl_real_estate_ai src utils advanced_rag_system
-pytest --collect-only --override-ini='addopts='
-pytest tests/test_eval_harness.py --override-ini='addopts=' -q
-pytest tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py --override-ini='addopts=' -q
-pytest tests/api/test_health_routes.py --override-ini='addopts=' -q
-pytest tests/security/test_webhook_signatures.py --override-ini='addopts=' -q
+make reviewer-smoke
+python3 -m pytest --collect-only --override-ini='addopts=' -q
 ```
+
+`make reviewer-smoke` runs lint, format check, compile check, eval harness, health routes, webhook signatures, Claude orchestrator tests, and SQL-safety tests.
 
 ## Known Review Caveats
 
-- Global lint and format checks currently fail because of parse errors and formatting drift, concentrated heavily in `advanced_rag_system`.
-- Full-repo mypy did not complete locally during the audit; create a bounded type-check command for the flagship API/services.
-- `pytest --collect-only --override-ini='addopts='` currently collects 7,721 tests with 38 skipped; public test-count claims should use the current reproducible count.
-- FastAPI route metadata is uneven: an AST scan found 702 route decorators, 427 without `response_model`, and 677 without explicit `status_code`.
-- Some security/health targeted tests fail locally, indicating either test drift, route drift, or environment assumptions that need tightening.
+- Full-repo mypy is still too broad for a reviewer path; create a bounded type-check command for the flagship API/services before making type-safety claims.
+- `pytest --collect-only --override-ini='addopts=' -q` currently collects 7,665 tests on 2026-05-23; public test-count claims should use this reproducible count.
+- FastAPI route metadata is uneven: an AST scan found 707 route decorators, 431 without `response_model`, and 682 without explicit `status_code`.
+- Full-suite collection still emits noisy import-time logs; use `make reviewer-smoke` for the first verification pass.
 - The strongest proof is not "big repo size"; it is the combination of orchestration, compliance, eval discipline, and honest production tradeoffs.

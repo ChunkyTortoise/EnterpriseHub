@@ -5,12 +5,12 @@ from __future__ import annotations
 
 import argparse
 import py_compile
-import sys
 from pathlib import Path
 
 DEFAULT_TARGETS = [
     "ghl_real_estate_ai/api/routes/market_intelligence.py",
     "ghl_real_estate_ai/api/schemas/white_label.py",
+    "ghl_real_estate_ai/services/learning/tracking/behavior_tracker.py",
     "ghl_real_estate_ai/api/routes/revenue_v2.py",
     "ghl_real_estate_ai/api/schemas/revenue_v2.py",
     "scripts/generate_weekly_pilot_kpis.py",

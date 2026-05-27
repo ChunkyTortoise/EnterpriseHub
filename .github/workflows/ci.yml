@@ -251,7 +251,7 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY_CI }}
           GHL_API_KEY: ${{ secrets.GHL_API_KEY_CI }}
           GHL_LOCATION_ID: ${{ secrets.GHL_LOCATION_ID_CI }}
-        run: python3 -m pytest evals/ -v --tb=short
+        run: python3 -m pytest tests/test_eval_harness.py -v --tb=short --override-ini="addopts="
       - name: Generate reliability diagram
         run: python3 scripts/generate_reliability_diagram.py
       - name: Upload reliability diagram
