@@ -1,0 +1,310 @@
+- name: jorge_seller_system
+  version: "1.0"
+  date: "2026-04-07"
+  category: seller
+  file: ghl_real_estate_ai/prompts/system_prompts.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Core seller qualification prompt implementing Jorge's 4-question confrontational flow (motivation, timeline, condition, price). Includes escalation tiers for vague responses, SMS compliance (<160 chars), temperature classification (hot/warm/cold), and re-engagement breakup texts.
+
+- name: seller_qualification
+  version: "1.0"
+  date: "2026-04-07"
+  category: seller
+  file: ghl_real_estate_ai/prompts/system_prompts.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Extended seller qualification framework covering property address/type, motivation, timeline, condition, and price expectations. Used as contextual injection for the general buyer/seller system prompt.
+
+- name: seller_personality
+  version: "1.0"
+  date: "2026-04-07"
+  category: seller
+  file: ghl_real_estate_ai/agents/personalities/real_estate.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Registered BotPersonality ABC implementation for seller bot. Consultative tone, 6 intent signal categories (motivation, timeline, condition, price, valuation, prep_readiness), scoring weights summing to 1.0, handoff trigger to buyer bot at 0.7 confidence.
+
+- name: seller_response_generator
+  version: "1.0"
+  date: "2026-04-07"
+  category: seller
+  file: ghl_real_estate_ai/agents/seller/response_generator.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Runtime response generation for seller conversations. Supports psychographic persona override via get_system_prompt_override("seller").
+
+- name: seller_linguistic_adaptation
+  version: "1.0"
+  date: "2026-04-07"
+  category: seller
+  file: ghl_real_estate_ai/services/jorge/jorge_seller_engine.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Post-processing prompt that adapts seller responses for SMS compliance, used when psychographic persona override adjusts tone.
+
+- name: seller_response_quality_analyzer
+  version: "1.0"
+  date: "2026-04-07"
+  category: seller
+  file: ghl_real_estate_ai/services/jorge/jorge_seller_engine.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Evaluates seller response quality (0.0-1.0 score) to determine if answers are substantive enough to advance qualification. JSON-only output.
+
+- name: buyer_qualification
+  version: "1.0"
+  date: "2026-04-07"
+  category: buyer
+  file: ghl_real_estate_ai/prompts/system_prompts.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Buyer qualification framework covering 5 key data points: budget, location, timeline, must-haves, financing status. Includes Jorge's scoring criteria (3+ = HOT, 2 = WARM, 0-1 = COLD) and response examples for Rancho Cucamonga market.
+
+- name: buyer_personality
+  version: "1.0"
+  date: "2026-04-07"
+  category: buyer
+  file: ghl_real_estate_ai/agents/personalities/real_estate.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Registered BotPersonality for buyer bot. Supportive tone, 3 intent signal categories (urgency, financial_readiness, motivation), handoff to seller bot at 0.7 confidence for "sell before buying" scenarios.
+
+- name: buyer_response_generator
+  version: "1.0"
+  date: "2026-04-07"
+  category: buyer
+  file: ghl_real_estate_ai/agents/buyer/response_generator.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Runtime response generation for buyer conversations. Supports get_system_prompt_override("buyer") from bot_settings_store.
+
+- name: base_system_prompt
+  version: "1.0"
+  date: "2026-04-07"
+  category: lead
+  file: ghl_real_estate_ai/prompts/system_prompts.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Master system prompt defining Jorge's personality (professional, friendly, direct, curious), buyer 7-question and seller 4-question flows, SMS compliance (<160 chars), AI identity rules, re-engagement breakup texts, and tone examples from Jorge's actual messaging.
+
+- name: lead_bot_simple
+  version: "1.0"
+  date: "2026-04-07"
+  category: lead
+  file: ghl_real_estate_ai/agents/lead_bot.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Simplified lead bot system prompt for the state-machine path. Rules: SMS <160 chars, no hyphens/emojis, warm tone, one question at a time, never repeat questions, pivot to scheduling after intent and timeline captured.
+
+- name: lead_personality
+  version: "1.0"
+  date: "2026-04-07"
+  category: lead
+  file: ghl_real_estate_ai/agents/personalities/real_estate.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Registered BotPersonality for lead qualification. Consultative tone, 4 intent signal categories (motivation, timeline, condition, price), handoff triggers to buyer (0.7) and seller (0.7) bots.
+
+- name: objection_handlers
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/prompts/system_prompts.py
+  model: N/A
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Static response templates for 6 objection categories: price_too_high, need_to_think, credit_concerns, market_timing, inspection_issues, down_payment_concerns. Each handler provides 2-3 actionable alternatives and avoids dismissing lead concerns.
+
+- name: sdr_objection_classifier
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/agents/sdr/objection_handler.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Classifies inbound replies into objection types (not_interested, already_agent, timing, price, info_request, none). JSON-only output. Used as Claude fallback when pattern matching is ambiguous.
+
+- name: appointment_setting
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/prompts/system_prompts.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Appointment flow covering 3 types (property showing, buyer consultation, home valuation), buying signal detection, scheduling objection handling, GHL calendar integration, and agent notification workflow.
+
+- name: chat_assistant
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/services/claude_orchestrator.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Dashboard chat interface prompt. Positions Claude as Jorge's trusted advisor with direct, actionable, data-driven responses.
+
+- name: lead_analyzer
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/services/claude_orchestrator.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Synthesizes qualification scores (0-7 + ML), behavioral patterns, sentiment, market context, and churn risk into strategic lead profiles with specific action recommendations.
+
+- name: report_synthesizer
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/services/claude_orchestrator.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Executive reporting in Jorge's voice: direct, data-driven, action-oriented. Covers pipeline health, conversion metrics, market opportunities, and growth recommendations.
+
+- name: script_generator
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/services/claude_orchestrator.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Generates channel-appropriate (SMS/email/call) scripts with A/B test variants. Considers personality, objection history, market conditions, and urgency factors.
+
+- name: omnipotent_assistant
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/services/claude_orchestrator.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Full-context assistant with knowledge of system architecture, AI engines (15-factor scoring, lifestyle matching, swarm intelligence), business goals (85+ hrs/month automation), and GHL integration.
+
+- name: persona_optimizer
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/services/claude_orchestrator.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Tunes bot neural weights (tone, empathy, persistence) for high-conversion digital identities. Outputs optimized system prompt instructions with engagement impact analysis.
+
+- name: researcher_assistant
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/services/claude_orchestrator.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Market research prompt for neighborhood analysis, property value drivers, and competitive positioning. Provides data-backed reports with citations.
+
+- name: overseer_strategic_decision
+  version: "1.0"
+  date: "2026-04-07"
+  category: mesh
+  file: ghl_real_estate_ai/agents/jorge_overseer/overseer_agent.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Top-level strategic decision engine enforcing Jorge's core principles: 6% commission non-negotiable, 95%+ success rate, 5-min response time. Outputs JSON with ROI, implementation plan, and risk mitigation.
+
+- name: swarm_agent_generic
+  version: "1.0"
+  date: "2026-04-07"
+  category: mesh
+  file: ghl_real_estate_ai/agents/swarm_orchestrator.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Generic agent prompt template for swarm orchestrator. Dynamically populated with agent name and description for multi-agent collaboration.
+
+- name: arbitrage_specialist
+  version: "1.0"
+  date: "2026-04-07"
+  category: mesh
+  file: ghl_real_estate_ai/agents/agent_swarm_orchestrator_v2.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Specialized agent for multi-market property arbitrage analysis within swarm v2.
+
+- name: data_cleaning_specialist
+  version: "1.0"
+  date: "2026-04-07"
+  category: mesh
+  file: ghl_real_estate_ai/agents/agent_swarm_orchestrator_v2.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Specialized agent for data normalization and cleaning within swarm v2. Temperature 0 for deterministic output.
+
+- name: relocation_strategist
+  version: "1.0"
+  date: "2026-04-07"
+  category: mesh
+  file: ghl_real_estate_ai/agents/agent_swarm_orchestrator_v2.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Specialized agent for cross-market relocation analysis within swarm v2.
+
+- name: followup_linguistic_adaptation
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/services/jorge/jorge_followup_engine.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Adapts follow-up message variants for SMS compliance and Jorge's confrontational style. Low temperature (0.3) for consistent output.
+
+- name: dental_lead_personality
+  version: "1.0"
+  date: "2026-04-07"
+  category: lead
+  file: ghl_real_estate_ai/agents/personalities/dental.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Multi-tenant industry portability proof. Friendly tone, 4 intent signal categories (urgency, procedure_value, insurance_status, motivation), 3 handoff targets (cosmetic at 0.7, orthodontic at 0.7, emergency at 0.5).
+
+- name: bot_settings_store
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/services/jorge/bot_settings_store.py
+  model: N/A
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    Allows runtime persona prefix injection into Claude prompts without code changes. Supports system_prompt, jorge_phrases, and questions overrides per bot type. Retrieved via get_system_prompt_override(bot).
+
+- name: personality_config_template
+  version: "1.0"
+  date: "2026-04-07"
+  category: utility
+  file: ghl_real_estate_ai/agents/personality_config.py
+  model: claude-sonnet-4-6
+  eval_baseline_ref: evals/baseline.json
+  rationale: >
+    YAML-driven personality config schema supporting system_prompt_template with variable interpolation. Enables no-code personality creation with validated scoring weights (must sum to 1.0), intent signals, temperature thresholds, and handoff triggers.
+
