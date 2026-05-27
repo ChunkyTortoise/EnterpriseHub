@@ -26,42 +26,42 @@ lint:  ## Run all linters
 	ruff check .
 
 compile-check:  ## Parse gate for tracked production modules
-	python3 scripts/ci/compile_check.py
+	uv run python3 scripts/ci/compile_check.py
 
 no-mock-check:  ## Guard v2 production routes against mock/fallback logic
-	python3 scripts/ci/no_mock_in_prod.py
+	uv run python3 scripts/ci/no_mock_in_prod.py
 
 reviewer-smoke:  ## Run the fast hiring-review proof path
 	ruff check .
 	ruff check scripts/ci/compile_check.py scripts/generate_weekly_pilot_kpis.py scripts/generate_weekly_executive_proof_pack.py scripts/persist_revenue_pilot_data.py
 	ruff format --check .
 	ruff format --check scripts/ci/compile_check.py scripts/generate_weekly_pilot_kpis.py scripts/generate_weekly_executive_proof_pack.py scripts/persist_revenue_pilot_data.py
-	python3 scripts/ci/compile_check.py
-	python3 -m pytest tests/test_eval_harness.py tests/api/test_health_routes.py tests/security/test_webhook_signatures.py tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py --override-ini='addopts=' -q
+	uv run python3 scripts/ci/compile_check.py
+	uv run pytest tests/test_eval_harness.py tests/api/test_health_routes.py tests/security/test_webhook_signatures.py tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py --override-ini='addopts=' -q
 
 metrics-snapshot:  ## Generate weekly proof-pack metrics snapshot
-	python3 scripts/generate_metrics_snapshot.py
+	uv run python3 scripts/generate_metrics_snapshot.py
 
 weekly-pilot-kpis:  ## Aggregate weekly pilot KPI records from outcome events
-	python3 scripts/generate_weekly_pilot_kpis.py
+	uv run python3 scripts/generate_weekly_pilot_kpis.py
 
 weekly-proof-pack:  ## Render weekly executive proof-pack markdown from KPI CSV
-	python3 scripts/generate_weekly_executive_proof_pack.py --tenant-id tenant_demo
+	uv run python3 scripts/generate_weekly_executive_proof_pack.py --tenant-id tenant_demo
 
 persist-pilot-data:  ## Persist outcome events and KPI rows to database tables
-	python3 scripts/persist_revenue_pilot_data.py
+	uv run python3 scripts/persist_revenue_pilot_data.py
 
 pilot-proof-pack:  ## End-to-end weekly pipeline (KPI CSV + executive proof-pack)
-	python3 scripts/generate_weekly_pilot_kpis.py
-	python3 scripts/generate_weekly_executive_proof_pack.py --tenant-id tenant_demo
+	uv run python3 scripts/generate_weekly_pilot_kpis.py
+	uv run python3 scripts/generate_weekly_executive_proof_pack.py --tenant-id tenant_demo
 
 pilot-proof-pack-sync:  ## End-to-end weekly pipeline + DB sync (CI-safe when DB is unavailable)
-	python3 scripts/generate_weekly_pilot_kpis.py
-	python3 scripts/generate_weekly_executive_proof_pack.py --tenant-id tenant_demo
-	python3 scripts/persist_revenue_pilot_data.py --allow-db-unavailable
+	uv run python3 scripts/generate_weekly_pilot_kpis.py
+	uv run python3 scripts/generate_weekly_executive_proof_pack.py --tenant-id tenant_demo
+	uv run python3 scripts/persist_revenue_pilot_data.py --allow-db-unavailable
 
 revenue-ops-qa:  ## Validate proposal and revenue tracking artifacts
-	python3 scripts/ci/revenue_ops_qa.py
+	uv run python3 scripts/ci/revenue_ops_qa.py
 
 format:  ## Auto-format code
 	ruff check --fix .
@@ -87,17 +87,17 @@ demo:  ## Run in demo mode (no API keys, DB, or Redis required)
 	DEMO_MODE=true streamlit run ghl_real_estate_ai/streamlit_demo/app.py
 
 build:  ## Verify the app can be built/imported
-	python -c "import app; print('✓ App imported successfully')"
-	python -c "from modules import market_pulse; print('✓ market_pulse imported successfully')"
-	python -c "from utils import data_loader; print('✓ data_loader imported successfully')"
+	uv run python -c "import app; print('✓ App imported successfully')"
+	uv run python -c "from modules import market_pulse; print('✓ market_pulse imported successfully')"
+	uv run python -c "from utils import data_loader; print('✓ data_loader imported successfully')"
 
 ghl-setup:  ## Audit GHL field configuration
-	python -m ghl_real_estate_ai.ghl_utils.env_field_mapper
+	uv run python -m ghl_real_estate_ai.ghl_utils.env_field_mapper
 
 ghl-setup-check:  ## Check GHL fields (CI mode, exits 1 on missing)
-	python -m ghl_real_estate_ai.ghl_utils.env_field_mapper --check-only
+	uv run python -m ghl_real_estate_ai.ghl_utils.env_field_mapper --check-only
 
 ghl-setup-guide:  ## Print step-by-step GHL setup instructions
-	python -m ghl_real_estate_ai.ghl_utils.env_field_mapper --setup
+	uv run python -m ghl_real_estate_ai.ghl_utils.env_field_mapper --setup
 
 all: install-dev lint type-check test  ## Run complete CI pipeline locally
