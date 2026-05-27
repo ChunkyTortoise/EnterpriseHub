@@ -89,6 +89,7 @@ _endpoint_metrics = {
 @router.post(
     "/shap/waterfall",
     response_model=SHAPWaterfallResponse,
+    status_code=status.HTTP_200_OK,
     summary="Generate SHAP Waterfall Chart Data",
     description="Generate interactive waterfall chart data for SHAP explainability visualization. Optimized for <30ms response time with intelligent caching.",
     responses={
@@ -190,6 +191,7 @@ async def generate_shap_waterfall(
 @router.get(
     "/shap/feature-trends/{feature_name}",
     response_model=FeatureTrendResponse,
+    status_code=status.HTTP_200_OK,
     summary="Get Feature Value Trends Over Time",
     description="Generate time-series trend data for specific features. Optimized for <50ms response time.",
     responses={
@@ -300,6 +302,7 @@ async def get_feature_trends(
 @router.post(
     "/market/heatmap",
     response_model=MarketHeatmapResponse,
+    status_code=status.HTTP_200_OK,
     summary="Generate Market Intelligence Heatmap",
     description="Generate geospatial market intelligence heatmap for Rancho Cucamonga real estate market. Optimized for <50ms response time.",
     responses={
@@ -394,6 +397,7 @@ async def generate_market_heatmap(
 @router.get(
     "/market/metrics",
     response_model=MarketMetricsResponse,
+    status_code=status.HTTP_200_OK,
     summary="Get Comprehensive Market Metrics",
     description="Calculate comprehensive market intelligence metrics with hot zone detection. Optimized for <100ms response time.",
     responses={
@@ -476,6 +480,7 @@ async def get_comprehensive_market_metrics(
 @router.get(
     "/performance",
     response_model=List[PerformanceMetrics],
+    status_code=status.HTTP_200_OK,
     summary="Get Analytics Performance Metrics",
     description="Retrieve performance metrics for all analytics endpoints for monitoring and optimization.",
 )
@@ -527,7 +532,7 @@ async def get_analytics_performance(current_user: Dict = Depends(get_current_use
         )
 
 
-@router.post("/cache/clear")
+@router.post("/cache/clear", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def clear_analytics_cache(
     pattern: Optional[str] = Query(None, description="Cache key pattern to clear"),
     current_user: Dict = Depends(get_current_user),

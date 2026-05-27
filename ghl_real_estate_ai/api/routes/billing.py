@@ -143,7 +143,7 @@ async def retry_with_exponential_backoff(
 # ===================================================================
 
 
-@router.post("/subscriptions", response_model=SubscriptionResponse)
+@router.post("/subscriptions", response_model=SubscriptionResponse, status_code=status.HTTP_200_OK)
 async def create_subscription(
     request: CreateSubscriptionRequest,
     background_tasks: BackgroundTasks,
@@ -236,7 +236,7 @@ async def create_subscription(
         )
 
 
-@router.get("/subscriptions/{subscription_id}", response_model=SubscriptionResponse)
+@router.get("/subscriptions/{subscription_id}", response_model=SubscriptionResponse, status_code=status.HTTP_200_OK)
 async def get_subscription(
     subscription_id: int,
     location_id: str = Depends(get_billing_location),
@@ -364,7 +364,7 @@ async def get_subscription(
         )
 
 
-@router.put("/subscriptions/{subscription_id}", response_model=SubscriptionResponse)
+@router.put("/subscriptions/{subscription_id}", response_model=SubscriptionResponse, status_code=status.HTTP_200_OK)
 async def update_subscription(
     subscription_id: int,
     request: ModifySubscriptionRequest,
@@ -572,7 +572,7 @@ async def update_subscription(
         )
 
 
-@router.delete("/subscriptions/{subscription_id}", response_model=Dict[str, Any])
+@router.delete("/subscriptions/{subscription_id}", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def cancel_subscription(
     subscription_id: int,
     background_tasks: BackgroundTasks,
@@ -780,7 +780,7 @@ async def cancel_subscription(
 # ===================================================================
 
 
-@router.post("/usage", response_model=Dict[str, Any])
+@router.post("/usage", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def record_usage(
     request: UsageRecordRequest,
     background_tasks: BackgroundTasks,
@@ -922,7 +922,7 @@ async def record_usage(
         )
 
 
-@router.get("/usage/{subscription_id}", response_model=UsageSummary)
+@router.get("/usage/{subscription_id}", response_model=UsageSummary, status_code=status.HTTP_200_OK)
 async def get_usage_data(
     subscription_id: int,
     subscription_mgr: SubscriptionManager = Depends(get_subscription_manager),
@@ -982,7 +982,7 @@ async def get_usage_data(
 # ===================================================================
 
 
-@router.post("/invoices/{invoice_id}/pay", response_model=Dict[str, Any])
+@router.post("/invoices/{invoice_id}/pay", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def process_payment(invoice_id: str, background_tasks: BackgroundTasks):
     """
     Process payment for an invoice.
@@ -1075,7 +1075,7 @@ async def process_payment(invoice_id: str, background_tasks: BackgroundTasks):
         )
 
 
-@router.get("/invoices", response_model=List[InvoiceDetails])
+@router.get("/invoices", response_model=List[InvoiceDetails], status_code=status.HTTP_200_OK)
 async def list_invoices(
     customer_id: str = Query(..., description="Stripe customer ID"),
     limit: int = Query(default=10, le=100, description="Maximum number of invoices"),
@@ -1138,7 +1138,7 @@ async def list_invoices(
         )
 
 
-@router.get("/billing-history/{customer_id}", response_model=BillingHistoryResponse)
+@router.get("/billing-history/{customer_id}", response_model=BillingHistoryResponse, status_code=status.HTTP_200_OK)
 async def get_billing_history(
     customer_id: str,
     location_id: str = Depends(get_billing_location),
@@ -1254,7 +1254,7 @@ async def get_billing_history(
 # ===================================================================
 
 
-@stripe_webhook_router.post("/webhooks/stripe", response_model=WebhookProcessingResult)
+@stripe_webhook_router.post("/webhooks/stripe", response_model=WebhookProcessingResult, status_code=status.HTTP_200_OK)
 async def handle_stripe_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -1343,7 +1343,7 @@ async def handle_stripe_webhook(
 # ===================================================================
 
 
-@router.get("/analytics/revenue", response_model=RevenueAnalytics)
+@router.get("/analytics/revenue", response_model=RevenueAnalytics, status_code=status.HTTP_200_OK)
 async def get_revenue_analytics():
     """
     Get revenue analytics dashboard data.
@@ -1467,7 +1467,7 @@ async def get_revenue_analytics():
         )
 
 
-@router.get("/analytics/tiers", response_model=TierDistribution)
+@router.get("/analytics/tiers", response_model=TierDistribution, status_code=status.HTTP_200_OK)
 async def get_tier_distribution(
     subscription_mgr: SubscriptionManager = Depends(get_subscription_manager),
 ):

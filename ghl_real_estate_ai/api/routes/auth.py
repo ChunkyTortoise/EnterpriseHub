@@ -10,6 +10,7 @@ from datetime import timedelta
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+from typing import Any, Dict
 
 from ghl_real_estate_ai.api.middleware import (
     JWTAuth,
@@ -63,7 +64,7 @@ USERS_DB = {
 }
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse, status_code=status.HTTP_200_OK)
 async def login(credentials: LoginRequest):
     """
     Authenticate user and return JWT token.
@@ -91,7 +92,7 @@ async def login(credentials: LoginRequest):
     return TokenResponse(access_token=access_token, token_type="bearer", expires_in=1800)
 
 
-@router.post("/token", response_model=TokenResponse)
+@router.post("/token", response_model=TokenResponse, status_code=status.HTTP_200_OK)
 async def get_token(credentials: LoginRequest):
     """
     Alternative token endpoint (OAuth2 compatible).
@@ -99,7 +100,7 @@ async def get_token(credentials: LoginRequest):
     return await login(credentials)
 
 
-@router.get("/me")
+@router.get("/me", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """
     Get current authenticated user information.

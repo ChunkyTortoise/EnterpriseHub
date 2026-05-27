@@ -7,7 +7,7 @@ import asyncio
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
 from ghl_real_estate_ai.ghl_utils.config import settings
 from ghl_real_estate_ai.ghl_utils.ghl_api_client import GHLAPIClient
@@ -45,7 +45,7 @@ def get_ghl_client() -> GHLAPIClient:
 
 
 # --- ENDPOINT 1: GET /api/leads ---
-@router.get("/leads")
+@router.get("/leads", response_model=List[Dict[str, Any]], status_code=status.HTTP_200_OK)
 async def list_leads(
     status: Optional[str] = None,
     limit: int = Query(default=20, ge=1, le=100),
@@ -124,7 +124,7 @@ async def list_leads(
 
 
 # --- ENDPOINT 2: PATCH /api/leads/{lead_id}/status ---
-@router.patch("/leads/{lead_id}/status")
+@router.patch("/leads/{lead_id}/status", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def update_lead_status(
     lead_id: str, status_update: Dict[str, Any] = Body(...), ghl: GHLAPIClient = Depends(get_ghl_client)
 ):
@@ -188,7 +188,7 @@ async def update_lead_status(
 
 
 # --- ENDPOINT 3: GET /api/leads/{lead_id}/property-matches ---
-@router.get("/leads/{lead_id}/property-matches")
+@router.get("/leads/{lead_id}/property-matches", response_model=List[Dict[str, Any]], status_code=status.HTTP_200_OK)
 async def get_lead_property_matches(
     lead_id: str,
     limit: int = 5,
@@ -235,7 +235,7 @@ async def get_lead_property_matches(
 
 
 # --- ENDPOINT 4: GET /api/conversations/{conversation_id}/messages ---
-@router.get("/conversations/{conversation_id}/messages")
+@router.get("/conversations/{conversation_id}/messages", response_model=List[Dict[str, Any]], status_code=status.HTTP_200_OK)
 async def get_conversation_messages(
     conversation_id: str,
     ghl: GHLAPIClient = Depends(get_ghl_client),

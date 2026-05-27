@@ -13,7 +13,7 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ghl_real_estate_ai.agents.sdr.sdr_agent import SDRAgent
@@ -49,7 +49,7 @@ _sdr_agent = SDRAgent(ghl_client=_ghl_client)
 # ===========================================================================
 
 
-@router.post("/webhook/reply")
+@router.post("/webhook/reply", response_model=Dict[str, str], status_code=status.HTTP_200_OK)
 async def webhook_contact_reply(
     payload: SDRWebhookPayload,
     background_tasks: BackgroundTasks,
@@ -78,7 +78,7 @@ async def webhook_contact_reply(
     return {"status": "accepted", "message": "Reply processing initiated"}
 
 
-@router.post("/webhook/opt-out")
+@router.post("/webhook/opt-out", response_model=Dict[str, str], status_code=status.HTTP_200_OK)
 async def webhook_opt_out(
     payload: SDRWebhookPayload,
     background_tasks: BackgroundTasks,
@@ -101,7 +101,7 @@ async def webhook_opt_out(
     return {"status": "accepted", "message": "Opt-out processing initiated"}
 
 
-@router.post("/webhook/booking-confirmed")
+@router.post("/webhook/booking-confirmed", response_model=Dict[str, str], status_code=status.HTTP_200_OK)
 async def webhook_booking_confirmed(
     payload: SDRWebhookPayload,
     background_tasks: BackgroundTasks,
@@ -125,7 +125,7 @@ async def webhook_booking_confirmed(
     return {"status": "accepted", "message": "Booking evaluation initiated"}
 
 
-@router.post("/webhook/stage-change")
+@router.post("/webhook/stage-change", response_model=Dict[str, str], status_code=status.HTTP_200_OK)
 async def webhook_stage_change(
     payload: SDRWebhookPayload,
     background_tasks: BackgroundTasks,
@@ -156,7 +156,7 @@ async def webhook_stage_change(
 # ===========================================================================
 
 
-@router.post("/prospects/source")
+@router.post("/prospects/source", response_model=Dict[str, str], status_code=status.HTTP_200_OK)
 async def trigger_prospecting_cycle(
     location_id: str,
     background_tasks: BackgroundTasks,
@@ -179,7 +179,7 @@ async def trigger_prospecting_cycle(
     return {"status": "accepted", "message": "Prospecting cycle initiated"}
 
 
-@router.post("/prospects/enroll")
+@router.post("/prospects/enroll", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def enroll_prospects(
     request: SDREnrollRequest,
     background_tasks: BackgroundTasks,
@@ -212,7 +212,7 @@ async def enroll_prospects(
     }
 
 
-@router.get("/prospects/{contact_id}")
+@router.get("/prospects/{contact_id}", response_model=SDRProspectResponse, status_code=status.HTTP_200_OK)
 async def get_prospect(
     contact_id: str,
     location_id: str = Query(...),
@@ -244,7 +244,7 @@ async def get_prospect(
 # ===========================================================================
 
 
-@router.get("/sequences/{contact_id}")
+@router.get("/sequences/{contact_id}", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_sequence(
     contact_id: str,
     location_id: str = Query(...),
@@ -279,7 +279,7 @@ async def get_sequence(
     }
 
 
-@router.delete("/sequences/{contact_id}")
+@router.delete("/sequences/{contact_id}", response_model=Dict[str, str], status_code=status.HTTP_200_OK)
 async def disenroll_contact(contact_id: str, location_id: str) -> Dict[str, str]:
     """
     Manually disenroll a contact from their active SDR sequence.
@@ -304,7 +304,7 @@ async def disenroll_contact(contact_id: str, location_id: str) -> Dict[str, str]
 # ===========================================================================
 
 
-@router.post("/sequences/process-batch")
+@router.post("/sequences/process-batch", response_model=SDRBatchProcessResult, status_code=status.HTTP_200_OK)
 async def process_batch(
     batch_size: int = Query(default=50, ge=1, le=200),
     location_id: Optional[str] = None,
@@ -338,7 +338,7 @@ async def process_batch(
 # ===========================================================================
 
 
-@router.get("/stats", response_model=SDRStatsResponse)
+@router.get("/stats", response_model=SDRStatsResponse, status_code=status.HTTP_200_OK)
 async def get_stats(
     location_id: Optional[str] = None,
     days: int = Query(default=30, ge=1, le=90),
@@ -350,7 +350,7 @@ async def get_stats(
     return await tracker.get_stats(location_id=location_id, days=days)
 
 
-@router.get("/stats/sequences")
+@router.get("/stats/sequences", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_sequence_stats(
     location_id: Optional[str] = None,
     days: int = Query(default=30, ge=1, le=90),
@@ -363,7 +363,7 @@ async def get_sequence_stats(
     return {"location_id": location_id, "days": days, "funnel": funnel}
 
 
-@router.get("/stats/objections")
+@router.get("/stats/objections", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_objection_stats(
     location_id: Optional[str] = None,
     days: int = Query(default=30, ge=1, le=90),

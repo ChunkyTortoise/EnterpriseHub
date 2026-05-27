@@ -16,7 +16,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
@@ -98,7 +98,7 @@ class ComplianceReportRequest(BaseModel):
 
 
 # Compliance Status Monitoring
-@router.get("/status")
+@router.get("/status", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_compliance_status(
     regulation: Optional[str] = Query(None), current_user: Dict = Depends(get_current_user)
 ):
@@ -189,7 +189,7 @@ async def get_compliance_status(
 
 
 # Security Event Management
-@router.get("/security/events")
+@router.get("/security/events", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_security_events(
     severity: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
@@ -277,7 +277,7 @@ async def get_security_events(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/security/events")
+@router.post("/security/events", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def create_security_event(event: SecurityEventRequest, current_user: Dict = Depends(get_current_user)):
     """
     Create new security event
@@ -326,7 +326,7 @@ async def create_security_event(event: SecurityEventRequest, current_user: Dict 
 
 
 # Audit Trail Management
-@router.post("/audit/search")
+@router.post("/audit/search", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def search_audit_records(search: AuditSearchRequest, current_user: Dict = Depends(get_current_user)):
     """
     Search audit records with comprehensive filtering
@@ -400,7 +400,7 @@ async def search_audit_records(search: AuditSearchRequest, current_user: Dict = 
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/audit/integrity")
+@router.get("/audit/integrity", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def verify_audit_integrity(current_user: Dict = Depends(get_current_user)):
     """
     Verify audit trail integrity for tamper detection
@@ -436,7 +436,7 @@ async def verify_audit_integrity(current_user: Dict = Depends(get_current_user))
 
 
 # Privacy Rights Management
-@router.post("/privacy/request")
+@router.post("/privacy/request", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def submit_privacy_request(request: PrivacyRequestSubmission, current_user: Dict = Depends(get_current_user)):
     """
     Submit data subject privacy rights request
@@ -485,7 +485,7 @@ async def submit_privacy_request(request: PrivacyRequestSubmission, current_user
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/privacy/requests/{request_id}")
+@router.get("/privacy/requests/{request_id}", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_privacy_request_status(request_id: str, current_user: Dict = Depends(get_current_user)):
     """
     Get privacy request status and details
@@ -532,7 +532,7 @@ async def get_privacy_request_status(request_id: str, current_user: Dict = Depen
 
 
 # Compliance Reporting
-@router.post("/reports/generate")
+@router.post("/reports/generate", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def generate_compliance_report(
     report_request: ComplianceReportRequest,
     background_tasks: BackgroundTasks,
@@ -587,7 +587,7 @@ async def generate_compliance_report(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/reports/{report_id}")
+@router.get("/reports/{report_id}", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_compliance_report(report_id: str, current_user: Dict = Depends(get_current_user)):
     """
     Get compliance report details
@@ -644,7 +644,7 @@ async def get_compliance_report(report_id: str, current_user: Dict = Depends(get
 
 
 # Document Management
-@router.post("/documents")
+@router.post("/documents", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def create_compliance_document(
     document_request: DocumentCreationRequest, current_user: Dict = Depends(get_current_user)
 ):
@@ -680,7 +680,7 @@ async def create_compliance_document(
 
 
 # Export and Archive
-@router.get("/export/audit")
+@router.get("/export/audit", status_code=status.HTTP_200_OK)  # FileResponse: response_model omitted
 async def export_audit_data(
     format: str = Query("csv", pattern="^(Union[csv, json]|Union[pdf, zip])$"),
     start_date: datetime = Query(...),
@@ -740,7 +740,7 @@ async def compliance_monitoring_websocket(websocket):
 
 
 # Health check endpoint
-@router.get("/health")
+@router.get("/health", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def compliance_health_check():
     """
     Health check for compliance and security systems

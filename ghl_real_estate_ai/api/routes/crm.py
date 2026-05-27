@@ -2,9 +2,9 @@
 CRM API Routes for GHL Real Estate AI.
 """
 
-from typing import Optional
+from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -22,14 +22,14 @@ class CRMConfigUpdate(BaseModel):
     redirect_uri: Optional[str] = None
 
 
-@router.get("/{location_id}/config")
+@router.get("/{location_id}/config", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_crm_config(location_id: str):
     """Get CRM configuration for a location."""
     service = CRMService(location_id)
     return service.config
 
 
-@router.post("/{location_id}/config/{platform}")
+@router.post("/{location_id}/config/{platform}", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def update_crm_config(location_id: str, platform: str, config: CRMConfigUpdate):
     """Update CRM configuration for a platform."""
     service = CRMService(location_id)
@@ -41,7 +41,7 @@ async def update_crm_config(location_id: str, platform: str, config: CRMConfigUp
         raise HTTPException(status_code=400, detail="Invalid configuration")
 
 
-@router.post("/{location_id}/sync/{contact_id}")
+@router.post("/{location_id}/sync/{contact_id}", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def sync_lead(location_id: str, contact_id: str):
     """Manually trigger lead sync to external CRMs."""
     service = CRMService(location_id)
@@ -55,7 +55,7 @@ async def sync_lead(location_id: str, contact_id: str):
     return {"contact_id": contact_id, "results": results}
 
 
-@router.get("/ghl/fields")
+@router.get("/ghl/fields", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_ghl_fields():
     """
     Fetches custom fields from GHL to help developers map the field IDs.

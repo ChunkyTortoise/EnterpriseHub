@@ -29,7 +29,7 @@ def _get_memory_service() -> MemoryService:
     return MemoryService()
 
 
-@router.get("/match/{location_id}/{contact_id}")
+@router.get("/match/{location_id}/{contact_id}", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def match_properties(
     location_id: str,
     contact_id: str,
@@ -67,7 +67,7 @@ async def match_properties(
     }
 
 
-@router.get("/all")
+@router.get("/all", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def list_all_properties(property_matcher: PropertyMatcher = Depends(_get_property_matcher)):
     """List all available property listings."""
     return {

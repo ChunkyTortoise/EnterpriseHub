@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
 from ghl_real_estate_ai.api.enterprise.auth import enterprise_auth_service
@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/reports", tags=["Reports"])
 
 
-@router.get("/dashboard-summary", summary="Generate Dashboard Summary PDF")
+@router.get("/dashboard-summary", summary="Generate Dashboard Summary PDF", status_code=status.HTTP_200_OK)  # StreamingResponse: response_model omitted
 async def generate_dashboard_summary(
     date_range: str = Query("Last 24 Hours", description="Date range for the report summary"),
     current_user: dict = Depends(enterprise_auth_service.get_current_enterprise_user),

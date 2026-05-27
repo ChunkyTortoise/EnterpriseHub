@@ -13,7 +13,7 @@ These endpoints expose the advanced functionality through the dashboard interfac
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Body, HTTPException, Query
+from fastapi import APIRouter, Body, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -182,7 +182,7 @@ class ModuleHealthStatus(BaseModel):
 # ================== VOICE AI ENDPOINTS ==================
 
 
-@router.post("/voice/start-call", response_model=Dict[str, str])
+@router.post("/voice/start-call", response_model=Dict[str, str], status_code=status.HTTP_200_OK)
 async def start_voice_call(request: VoiceCallStartRequest):
     """
     Start a new voice AI call session.
@@ -205,7 +205,7 @@ async def start_voice_call(request: VoiceCallStartRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/voice/process-input", response_model=VoiceResponse)
+@router.post("/voice/process-input", response_model=VoiceResponse, status_code=status.HTTP_200_OK)
 async def process_voice_input(request: VoiceInputRequest):
     """
     Process voice input from active call.
@@ -226,7 +226,7 @@ async def process_voice_input(request: VoiceInputRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/voice/end-call/{call_id}", response_model=VoiceCallAnalytics)
+@router.post("/voice/end-call/{call_id}", response_model=VoiceCallAnalytics, status_code=status.HTTP_200_OK)
 async def end_voice_call(call_id: str):
     """
     End voice call and generate analytics.
@@ -253,7 +253,7 @@ async def end_voice_call(call_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/voice/analytics")
+@router.get("/voice/analytics", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_voice_analytics(days: int = Query(default=7, description="Number of days to analyze")):
     """
     Get voice AI system analytics.
@@ -274,7 +274,7 @@ async def get_voice_analytics(days: int = Query(default=7, description="Number o
 # ================== MARKETING AUTOMATION ENDPOINTS ==================
 
 
-@router.post("/marketing/create-campaign", response_model=CampaignBrief)
+@router.post("/marketing/create-campaign", response_model=CampaignBrief, status_code=status.HTTP_200_OK)
 async def create_automated_campaign(request: CampaignCreationRequest):
     """
     Create automated marketing campaign.
@@ -304,7 +304,7 @@ async def create_automated_campaign(request: CampaignCreationRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/marketing/campaigns/{campaign_id}/content")
+@router.get("/marketing/campaigns/{campaign_id}/content", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_campaign_content(campaign_id: str):
     """
     Get generated content for a campaign.
@@ -328,7 +328,7 @@ async def get_campaign_content(campaign_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/marketing/campaigns/{campaign_id}/performance")
+@router.get("/marketing/campaigns/{campaign_id}/performance", response_model=CampaignPerformanceMetrics, status_code=status.HTTP_200_OK)
 async def get_campaign_performance(campaign_id: str):
     """
     Get campaign performance metrics.
@@ -362,7 +362,7 @@ async def get_campaign_performance(campaign_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/marketing/ab-test/{campaign_id}")
+@router.post("/marketing/ab-test/{campaign_id}", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def start_ab_test(campaign_id: str, test_config: Dict[str, Any] = Body(...)):
     """
     Start A/B test for campaign.
@@ -389,7 +389,7 @@ async def start_ab_test(campaign_id: str, test_config: Dict[str, Any] = Body(...
 # ================== CLIENT RETENTION ENDPOINTS ==================
 
 
-@router.post("/retention/update-lifecycle")
+@router.post("/retention/update-lifecycle", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def update_client_lifecycle(request: ClientLifecycleUpdate):
     """
     Update client lifecycle information.
@@ -417,7 +417,7 @@ async def update_client_lifecycle(request: ClientLifecycleUpdate):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/retention/track-referral")
+@router.post("/retention/track-referral", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def track_referral(request: ReferralTracking):
     """
     Track new referral opportunity.
@@ -447,7 +447,7 @@ async def track_referral(request: ReferralTracking):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/retention/client/{client_id}/engagement")
+@router.get("/retention/client/{client_id}/engagement", response_model=ClientEngagementSummary, status_code=status.HTTP_200_OK)
 async def get_client_engagement(client_id: str):
     """
     Get client engagement summary.
@@ -480,7 +480,7 @@ async def get_client_engagement(client_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/retention/analytics")
+@router.get("/retention/analytics", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_retention_analytics(days: int = Query(default=30, description="Number of days to analyze")):
     """
     Get retention system analytics.
@@ -501,7 +501,7 @@ async def get_retention_analytics(days: int = Query(default=30, description="Num
 # ================== MARKET PREDICTION ENDPOINTS ==================
 
 
-@router.post("/market/analyze", response_model=PredictionResult)
+@router.post("/market/analyze", response_model=PredictionResult, status_code=status.HTTP_200_OK)
 async def analyze_market(request: MarketAnalysisRequest):
     """
     Analyze market trends and predictions.
@@ -524,7 +524,7 @@ async def analyze_market(request: MarketAnalysisRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/market/investment-opportunities")
+@router.post("/market/investment-opportunities", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def find_investment_opportunities(request: InvestmentOpportunityRequest):
     """
     Find investment opportunities.
@@ -557,7 +557,7 @@ async def find_investment_opportunities(request: InvestmentOpportunityRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/market/trends/{neighborhood}")
+@router.get("/market/trends/{neighborhood}", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_market_trends(
     neighborhood: str, months: int = Query(default=12, description="Number of months of trend data")
 ):
@@ -586,7 +586,7 @@ async def get_market_trends(
 # ================== INTEGRATION & DASHBOARD ENDPOINTS ==================
 
 
-@router.get("/dashboard/metrics", response_model=DashboardMetrics)
+@router.get("/dashboard/metrics", response_model=DashboardMetrics, status_code=status.HTTP_200_OK)
 async def get_dashboard_metrics():
     """
     Get unified dashboard metrics from all modules.
@@ -612,7 +612,7 @@ async def get_dashboard_metrics():
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.get("/health/modules")
+@router.get("/health/modules", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_module_health():
     """
     Get health status of all advanced modules.
@@ -644,7 +644,7 @@ async def get_module_health():
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.post("/integration/trigger-event")
+@router.post("/integration/trigger-event", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def trigger_integration_event(event_type: EventType, event_data: Dict[str, Any] = Body(...)):
     """
     Trigger cross-module integration event.
@@ -674,7 +674,7 @@ async def trigger_integration_event(event_type: EventType, event_data: Dict[str,
 # ================== SYSTEM ENDPOINTS ==================
 
 
-@router.get("/health")
+@router.get("/health", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def advanced_features_health():
     """Health check for Jorge's advanced features."""
     return {
@@ -685,7 +685,7 @@ async def advanced_features_health():
     }
 
 
-@router.get("/config")
+@router.get("/config", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_configuration():
     """Get configuration information for advanced modules."""
     return {
