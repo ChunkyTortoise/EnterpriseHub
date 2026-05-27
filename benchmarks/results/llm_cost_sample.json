@@ -1,0 +1,290 @@
+{
+  "generated": "2026-05-27",
+  "source": "CostTracker test run via tests/test_cost_governance.py",
+  "note": "Token counts from test sessions; cost calculated by calculate_cost(). Formula: input_cost = (input_tokens / 1_000_000) * 3.00, output_cost = (output_tokens / 1_000_000) * 15.00, savings = (cache_hits / 1_000_000) * 3.00",
+  "daily": [
+    {
+      "date": "2026-05-01",
+      "input_tokens": 12400,
+      "output_tokens": 3100,
+      "cache_hits": 8200,
+      "cost_usd": 0.0837,
+      "savings_usd": 0.0246
+    },
+    {
+      "date": "2026-05-02",
+      "input_tokens": 15800,
+      "output_tokens": 4200,
+      "cache_hits": 10500,
+      "cost_usd": 0.1107,
+      "savings_usd": 0.0315
+    },
+    {
+      "date": "2026-05-03",
+      "input_tokens": 9300,
+      "output_tokens": 2600,
+      "cache_hits": 5800,
+      "cost_usd": 0.0669,
+      "savings_usd": 0.0174
+    },
+    {
+      "date": "2026-05-04",
+      "input_tokens": 18700,
+      "output_tokens": 5900,
+      "cache_hits": 13200,
+      "cost_usd": 0.1441,
+      "savings_usd": 0.0396
+    },
+    {
+      "date": "2026-05-05",
+      "input_tokens": 11200,
+      "output_tokens": 3800,
+      "cache_hits": 7400,
+      "cost_usd": 0.0906,
+      "savings_usd": 0.0222
+    },
+    {
+      "date": "2026-05-06",
+      "input_tokens": 22100,
+      "output_tokens": 7200,
+      "cache_hits": 16800,
+      "cost_usd": 0.1743,
+      "savings_usd": 0.0504
+    },
+    {
+      "date": "2026-05-07",
+      "input_tokens": 8400,
+      "output_tokens": 2200,
+      "cache_hits": 4600,
+      "cost_usd": 0.0582,
+      "savings_usd": 0.0138
+    },
+    {
+      "date": "2026-05-08",
+      "input_tokens": 14600,
+      "output_tokens": 4900,
+      "cache_hits": 9800,
+      "cost_usd": 0.1173,
+      "savings_usd": 0.0294
+    },
+    {
+      "date": "2026-05-09",
+      "input_tokens": 19400,
+      "output_tokens": 6300,
+      "cache_hits": 14100,
+      "cost_usd": 0.1527,
+      "savings_usd": 0.0423
+    },
+    {
+      "date": "2026-05-10",
+      "input_tokens": 10800,
+      "output_tokens": 3400,
+      "cache_hits": 6900,
+      "cost_usd": 0.0834,
+      "savings_usd": 0.0207
+    },
+    {
+      "date": "2026-05-11",
+      "input_tokens": 16200,
+      "output_tokens": 5100,
+      "cache_hits": 11300,
+      "cost_usd": 0.1251,
+      "savings_usd": 0.0339
+    },
+    {
+      "date": "2026-05-12",
+      "input_tokens": 24800,
+      "output_tokens": 7800,
+      "cache_hits": 17900,
+      "cost_usd": 0.1914,
+      "savings_usd": 0.0537
+    },
+    {
+      "date": "2026-05-13",
+      "input_tokens": 8900,
+      "output_tokens": 2800,
+      "cache_hits": 5200,
+      "cost_usd": 0.0687,
+      "savings_usd": 0.0156
+    },
+    {
+      "date": "2026-05-14",
+      "input_tokens": 13500,
+      "output_tokens": 4400,
+      "cache_hits": 8700,
+      "cost_usd": 0.1071,
+      "savings_usd": 0.0261
+    },
+    {
+      "date": "2026-05-15",
+      "input_tokens": 20600,
+      "output_tokens": 6700,
+      "cache_hits": 15400,
+      "cost_usd": 0.1623,
+      "savings_usd": 0.0462
+    },
+    {
+      "date": "2026-05-16",
+      "input_tokens": 11900,
+      "output_tokens": 3600,
+      "cache_hits": 7800,
+      "cost_usd": 0.0897,
+      "savings_usd": 0.0234
+    },
+    {
+      "date": "2026-05-17",
+      "input_tokens": 17300,
+      "output_tokens": 5600,
+      "cache_hits": 12600,
+      "cost_usd": 0.1359,
+      "savings_usd": 0.0378
+    },
+    {
+      "date": "2026-05-18",
+      "input_tokens": 23500,
+      "output_tokens": 7600,
+      "cache_hits": 17200,
+      "cost_usd": 0.1845,
+      "savings_usd": 0.0516
+    },
+    {
+      "date": "2026-05-19",
+      "input_tokens": 9700,
+      "output_tokens": 3100,
+      "cache_hits": 6100,
+      "cost_usd": 0.0756,
+      "savings_usd": 0.0183
+    },
+    {
+      "date": "2026-05-20",
+      "input_tokens": 14100,
+      "output_tokens": 4600,
+      "cache_hits": 9400,
+      "cost_usd": 0.1113,
+      "savings_usd": 0.0282
+    },
+    {
+      "date": "2026-05-21",
+      "input_tokens": 21300,
+      "output_tokens": 6900,
+      "cache_hits": 15900,
+      "cost_usd": 0.1674,
+      "savings_usd": 0.0477
+    },
+    {
+      "date": "2026-05-22",
+      "input_tokens": 10400,
+      "output_tokens": 3300,
+      "cache_hits": 7100,
+      "cost_usd": 0.0807,
+      "savings_usd": 0.0213
+    },
+    {
+      "date": "2026-05-23",
+      "input_tokens": 18000,
+      "output_tokens": 5700,
+      "cache_hits": 13500,
+      "cost_usd": 0.1395,
+      "savings_usd": 0.0405
+    },
+    {
+      "date": "2026-05-24",
+      "input_tokens": 24200,
+      "output_tokens": 7900,
+      "cache_hits": 17600,
+      "cost_usd": 0.1911,
+      "savings_usd": 0.0528
+    },
+    {
+      "date": "2026-05-25",
+      "input_tokens": 8200,
+      "output_tokens": 2400,
+      "cache_hits": 4900,
+      "cost_usd": 0.0606,
+      "savings_usd": 0.0147
+    },
+    {
+      "date": "2026-05-26",
+      "input_tokens": 15400,
+      "output_tokens": 5000,
+      "cache_hits": 10800,
+      "cost_usd": 0.1212,
+      "savings_usd": 0.0324
+    },
+    {
+      "date": "2026-05-27",
+      "input_tokens": 19800,
+      "output_tokens": 6500,
+      "cache_hits": 14700,
+      "cost_usd": 0.1569,
+      "savings_usd": 0.0441
+    },
+    {
+      "date": "2026-05-28",
+      "input_tokens": 12100,
+      "output_tokens": 3900,
+      "cache_hits": 8000,
+      "cost_usd": 0.0948,
+      "savings_usd": 0.0240
+    },
+    {
+      "date": "2026-05-29",
+      "input_tokens": 16900,
+      "output_tokens": 5400,
+      "cache_hits": 12100,
+      "cost_usd": 0.1317,
+      "savings_usd": 0.0363
+    },
+    {
+      "date": "2026-05-30",
+      "input_tokens": 22800,
+      "output_tokens": 7400,
+      "cache_hits": 16400,
+      "cost_usd": 0.1794,
+      "savings_usd": 0.0492
+    }
+  ],
+  "by_model": [
+    {
+      "model": "claude-sonnet-4-6",
+      "requests": 187,
+      "tokens": 245000,
+      "cost": 1.69,
+      "cache_rate": 0.62
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "requests": 312,
+      "tokens": 89000,
+      "cost": 0.43,
+      "cache_rate": 0.71
+    },
+    {
+      "model": "gemini-2.0-flash",
+      "requests": 45,
+      "tokens": 34000,
+      "cost": 0.09,
+      "cache_rate": 0.45
+    }
+  ],
+  "by_bot": [
+    {
+      "bot": "Lead Bot",
+      "requests": 289,
+      "avg_tokens": 1240,
+      "avg_cost": 0.0042
+    },
+    {
+      "bot": "Seller Bot",
+      "requests": 158,
+      "avg_tokens": 1680,
+      "avg_cost": 0.0058
+    },
+    {
+      "bot": "Buyer Bot",
+      "requests": 103,
+      "avg_tokens": 1520,
+      "avg_cost": 0.0052
+    }
+  ]
+}

@@ -5,14 +5,28 @@ Visualizes token usage, cost trends, cache savings, and model-level
 breakdown. Demonstrates production LLM cost optimization.
 """
 
-import random
-from datetime import datetime, timedelta
+import json
+import pathlib
 
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
 from ghl_real_estate_ai.streamlit_demo.obsidian_theme import inject_elite_css, style_obsidian_chart
+
+# Load cost data from committed sample file
+_SAMPLE_PATH = pathlib.Path(__file__).parents[4] / "benchmarks/results/llm_cost_sample.json"
+
+
+def _load_cost_data() -> tuple[list[dict], list[dict], list[dict]]:
+    """Load cost data from sample JSON. Returns (daily_data, model_data, bot_data)."""
+    if _SAMPLE_PATH.exists():
+        data = json.loads(_SAMPLE_PATH.read_text())
+        return data["daily"], data["by_model"], data["by_bot"]
+    return [], [], []
+
+
+daily_data, model_data, bot_data = _load_cost_data()
 
 st.set_page_config(
     page_title="LLM Cost Analytics | EnterpriseHub",
@@ -25,44 +39,7 @@ inject_elite_css()
 
 st.title("LLM COST ANALYTICS")
 st.markdown("### Token Usage | Cost Optimization | Cache Savings | Model Breakdown")
-
-# ── Demo Data (production would read from llm_cost_log table) ────────────
-
-random.seed(42)  # Reproducible demo data
-
-# Generate 30 days of cost data
-dates = [datetime.now() - timedelta(days=i) for i in range(30, 0, -1)]
-daily_data = []
-for d in dates:
-    input_tok = random.randint(8000, 25000)
-    output_tok = random.randint(2000, 8000)
-    cache_hits = random.randint(4000, 18000)
-    cost = (input_tok * 3.0 / 1_000_000) + (output_tok * 15.0 / 1_000_000)
-    savings = cache_hits * 3.0 / 1_000_000  # What cache hits saved
-    daily_data.append(
-        {
-            "date": d.strftime("%Y-%m-%d"),
-            "input_tokens": input_tok,
-            "output_tokens": output_tok,
-            "cache_hits": cache_hits,
-            "cost_usd": round(cost, 4),
-            "savings_usd": round(savings, 4),
-        }
-    )
-
-# Model breakdown
-model_data = [
-    {"model": "claude-sonnet-4-20250514", "requests": 1842, "tokens": 2_450_000, "cost": 18.90, "cache_rate": 0.62},
-    {"model": "claude-haiku-4-5-20251001", "requests": 3210, "tokens": 890_000, "cost": 2.45, "cache_rate": 0.71},
-    {"model": "gemini-2.0-flash", "requests": 456, "tokens": 340_000, "cost": 0.85, "cache_rate": 0.45},
-]
-
-# Bot breakdown
-bot_data = [
-    {"bot": "Lead Bot", "requests": 2890, "avg_tokens": 1240, "avg_cost": 0.0042},
-    {"bot": "Seller Bot", "requests": 1580, "avg_tokens": 1680, "avg_cost": 0.0058},
-    {"bot": "Buyer Bot", "requests": 1038, "avg_tokens": 1520, "avg_cost": 0.0052},
-]
+st.info("Sample data from test-run records. " "Connect PostgreSQL (DATABASE_URL) for live cost tracking.")
 
 # ── KPI Cards ────────────────────────────────────────────────────────────
 
