@@ -17,7 +17,7 @@
 
 ## Executive Summary
 
-Real estate teams lose 40% of leads when response time exceeds the 5-minute SLA. EnterpriseHub automates lead qualification, follow-up scheduling, and CRM sync across three specialized AI bots so no lead goes cold. Built for real estate brokerages and agencies; current local verification collects 7,665 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
+EnterpriseHub is an AI backend for compliant real estate lead qualification. It automates lead intake, bot handoff, follow-up scheduling, and GoHighLevel CRM sync across specialized Lead, Buyer, and Seller bot workflows. Current local verification collects 7,665 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
 
 ---
 
@@ -33,7 +33,7 @@ EnterpriseHub includes a case-study-backed production story plus modeled benchma
 | **LLM cache target** | L1 60% + L2 20% + L3 8% design target | Synthetic benchmark / architecture target |
 | **Token cost model** | 93K to 7.8K tokens per 100-query modeled workload | Projection; not quoted as live billing measurement |
 | **Eval coverage** | 50 golden cases across qualification, edge cases, and compliance | Repository artifact in `evals/` |
-| **Test collection** | 7,665 collected on May 19, 2026 | Local `pytest --collect-only --override-ini='addopts='` |
+| **Test collection** | 7,665 collected on May 23, 2026 | Local `pytest --collect-only --override-ini='addopts=' -q` |
 
 See [CASE_STUDY.md](CASE_STUDY.md), [BENCHMARKS.md](BENCHMARKS.md), and [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md) for methodology and claim provenance.
 
@@ -46,7 +46,7 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | System | Evidence | Value | Where to inspect |
 |--------|----------|-------|------------------|
 | **3-Tier Cache** | Architecture target and synthetic benchmark | L1/L2/L3 design target: 60% / 20% / 8% | `BENCHMARKS.md`, ADR-0001 |
-| **Agent Mesh** | Registered agents | 22 | `agent_mesh_coordinator.py` registry |
+| **Agent Mesh** | Architecture scope | 22-agent mesh documented | ADR-0004 and `agent_mesh_coordinator.py` |
 | **Agent Mesh** | Routing dimensions | 4 (success 40%, load 25%, cost 20%, latency 15%) | Weighted scoring function |
 | **Agent Mesh** | Emergency shutdown | $100/hr spend threshold | `emergency_shutdown()` cancels all tasks |
 | **Model Routing** | Primary | Claude Sonnet (complex analysis) | `claude_orchestrator.py` task routing |
@@ -55,7 +55,7 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | **A/B Testing** | Method | Two-proportion z-test | `ab_testing_service.py` statistical engine |
 | **A/B Testing** | Assignment | Deterministic SHA-256 bucketing | `experiment_id + contact_id` hash |
 | **Compliance** | Pipeline stages | 7 (language, TCPA, compliance, translation, truncation) | `response_pipeline/factory.py` |
-| **Test Surface** | Current collectible count | 7,665 collected | `pytest --collect-only --override-ini='addopts='` on May 19, 2026 |
+| **Test Surface** | Current collectible count | 7,665 collected | `pytest --collect-only --override-ini='addopts=' -q` on May 23, 2026 |
 | **ADRs** | Documented decisions | 10 | `docs/adr/0001-0010` |
 
 ---
@@ -145,7 +145,7 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 
 **Pattern:** Each agent registers with a `cost_per_token` and `sla_response_time`. Task routing uses a weighted scoring function across four dimensions: success rate (40%), current load (25%), cost efficiency (20%), and average response time (15%). Emergency tasks get a 1.5x score multiplier. Four background coroutines run continuously: health monitor (30s heartbeat), cost monitor (5min), performance monitor (2min), and cleanup. If hourly spend crosses `$50`, mesh activity is throttled; at `$100`, `emergency_shutdown()` cancels all active tasks and sets every agent to `MAINTENANCE`.
 
-**Outcome:** 22 registered agents across the platform with per-agent P50/P95 tracking and automatic load rebalancing when queue time exceeds 30 seconds.
+**Outcome:** ADR-0004 documents a 22-agent mesh architecture; the coordinator implements registration, weighted routing, per-agent P50/P95 tracking, and emergency shutdown behavior.
 
 **Training foundation:** Microsoft AI & ML Engineering (75h) — agent orchestration patterns, SLA-based routing, performance monitoring.
 
@@ -237,7 +237,15 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 ## For Hiring Managers
 
-Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUIDE.md). For the candid audit, see [docs/HIRING_CONVERSION_AUDIT.md](docs/HIRING_CONVERSION_AUDIT.md) and the evidence map in [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md).
+Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUIDE.md). For the current roadmap, see [docs/HIRING_ROADMAP_2026-05-23.md](docs/HIRING_ROADMAP_2026-05-23.md). For the candid audit, see [docs/HIRING_CONVERSION_AUDIT.md](docs/HIRING_CONVERSION_AUDIT.md) and the evidence map in [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md).
+
+Fast local proof path:
+
+```bash
+make reviewer-smoke
+```
+
+That command runs lint, format check, compile check, eval harness, health routes, webhook signature tests, Claude orchestrator tests, and SQL-safety tests.
 
 | If you're evaluating for... | Where to look | Training behind it |
 |-----------------------------|--------------|-------------------|
@@ -285,12 +293,12 @@ Start with the compact reviewer path: [HIRING_REVIEW_GUIDE.md](HIRING_REVIEW_GUI
 
 ## Security
 
-CI runs security scanning (bandit, pip-audit, SQL injection grep) on every push.
+Security workflows are configured for secret scanning, Bandit, Semgrep, dependency audit, and SQL-injection grep. Treat current GitHub run status as the source of truth before presenting the security badge as green.
 
 - **Parameterized SQL** — all queries use parameterized `text()` or asyncpg `$1` bindings. DDL identifiers validated and double-quoted via `utils.sql_safety.quote_identifier()`. CI gate rejects any unprotected f-string SQL patterns.
 - **Webhook authentication** — Router-level `require_ghl_webhook_signature` dependency enforces Ed25519 or HMAC-SHA256 signature verification on all GHL webhook routes. Replay protection via `X-GHL-Timestamp` with 5-minute window.
 - **JWT authentication** — 1-hour expiry tokens validated on every protected route
-- **PII encryption** — contact data encrypted at rest using Fernet symmetric encryption
+- **PII encryption** — SDR PII fields use Fernet symmetric encryption; broader tenant-secret encryption remains an explicit hardening item
 - **Input validation** — Pydantic V2 models enforce strict types on all API boundaries
 - **Rate limiting** — Redis-backed sliding window: 100 req/min per IP, 200 burst
 - **Compliance pipeline** — 7-stage response processing enforces FHA, RESPA, TCPA, CCPA, and SB-243
@@ -335,7 +343,7 @@ EnterpriseHub/
 ├── docs/                         # Documentation
 │   ├── adr/                      # Architecture Decision Records
 │   └── templates/                # Reusable templates for other repos
-├── tests/                        # 7,665 tests collectible locally on May 19, 2026
+├── tests/                        # 7,665 tests collectible locally on May 23, 2026
 ├── conftest.py                   # Shared test fixtures
 ├── render.yaml                   # Render deployment config
 └── docker-compose.yml            # Container orchestration
@@ -401,7 +409,7 @@ See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) and [BENCHMARKS.md](BENCHMARK
 
 ## Related Projects
 
-- [jorge_real_estate_bots](https://github.com/ChunkyTortoise/jorge_real_estate_bots) — Three-bot lead qualification system (Lead, Buyer, Seller) - live production
+- [jorge_real_estate_bots](https://github.com/ChunkyTortoise/jorge_real_estate_bots) — Three-bot lead qualification system (Lead, Buyer, Seller)
 - [docextract](https://github.com/ChunkyTortoise/docextract) — Production RAG pipeline: PDF upload, async processing, pgvector hybrid search, citation-aware answers
 - [mcp-server-toolkit](https://github.com/ChunkyTortoise/mcp-server-toolkit) — 9 MCP servers for LLM tool integration, published to PyPI
 

@@ -1,33 +1,33 @@
 # EnterpriseHub Hiring Conversion Audit
 
-Last audited: 2026-04-29
+Last audited: 2026-05-23
 
 ## Executive Read
 
 EnterpriseHub has the raw material for a strong AI Backend Engineer hero repo: FastAPI APIs, real CRM/webhook boundaries, multi-bot orchestration, LLM caching, compliance processing, evals, ADRs, CI, and a domain case study. The highest-leverage work is not adding another feature. It is making the existing proof tighter, more reproducible, and easier to trust.
 
-Current hiring conversion score: **70/100**.
+Current hiring conversion score: **78/100**.
 
-The repo can plausibly become an interview-generating asset, but it needs a credibility pass first. A senior reviewer will reward the eval discipline and architecture depth, then hesitate when metrics conflict or local verification fails.
+The repo can plausibly become an interview-generating asset. The May 23 credibility pass closed several older verification gaps; the remaining work is to keep the reviewer path green, reduce route-metadata drift, and publish fresh evidence before quoting live cache or throughput claims.
 
 ## Scorecard
 
 | Area | Score | Hiring read |
 |---|---:|---|
 | Hiring Story | 11/15 | Strong vertical-AI story, but the monorepo breadth competes with the flagship real estate platform narrative. |
-| Credibility & Claim Provenance | 12/20 | Improved by the Apr 29 claim-provenance pass. README and benchmark validation language now label projections/models more honestly, but fresh generated evidence is still needed for cache, health, and webhook claims. |
+| Credibility & Claim Provenance | 15/20 | README, claim ledger, case study, and benchmark report now point to dated verification and label cache/savings claims carefully. Fresh live cache/throughput evidence is still needed. |
 | Backend Engineering Signal | 14/20 | Substantial FastAPI/service surface. Route metadata and god-class/service-boundary cleanup would make it feel more senior. |
 | AI Engineering Signal | 17/20 | Strongest category: golden dataset, deterministic checks, LLM-as-judge harness, prompt changelog, adversarial tests, nightly eval workflow. |
-| Production Readiness | 9/15 | CI/Docker/security/observability artifacts exist, but global checks and targeted health/security tests fail locally. |
+| Production Readiness | 11/15 | CI/Docker/security/observability artifacts exist, and targeted health/webhook suites now pass locally. Broader endpoint metadata and live telemetry proof remain the main gaps. |
 | Portfolio Experience | 7/10 | Good screenshots, docs, and reviewer sections. Needs a cleaner hero path and less document sprawl in the primary review path. |
 
 ## Hiring Conversion Report
 
 **Recruiter lens:** The repo sounds impressive fast: production AI platform, real estate vertical, CRM, compliance, evals, and business impact. The risk is over-density. A recruiter may not know what to remember unless the README and guide keep repeating one crisp claim: "I built a production AI backend for compliant real estate lead qualification."
 
-**Hiring manager lens:** The strongest signals are eval-driven AI delivery, compliance as a deterministic pipeline, cache/cost awareness, and GoHighLevel integration. The weakest signals are conflicting metrics and global checks that do not pass cleanly. Hiring managers forgive unfinished work; they do not forgive inflated proof.
+**Hiring manager lens:** The strongest signals are eval-driven AI delivery, compliance as a deterministic pipeline, cache/cost awareness, and GoHighLevel integration. The weakest signals are broad route metadata drift and any claim that sounds live-measured without a committed artifact. Hiring managers forgive unfinished work; they do not forgive inflated proof.
 
-**Senior engineer lens:** The repo has serious engineering work, but a reviewer will inspect reproducibility. Passing targeted tests help. Failing lint, parse errors, route metadata gaps, and stale webhook tests create doubt. The fix is to publish a brutally honest verification table and make the flagship API/eval path clean.
+**Senior engineer lens:** The repo has serious engineering work, and the targeted reviewer proof path is now much stronger. The remaining doubt comes from breadth: 707 FastAPI routes with uneven metadata, noisy full-suite collection output, and benchmark artifacts that must stay clearly labeled as synthetic.
 
 ## Top Reasons This Helps Cayman Get Hired
 
@@ -40,25 +40,25 @@ The repo can plausibly become an interview-generating asset, but it needs a cred
 
 - Some historical docs and older badges may still need periodic claim-ledger checks as the repo evolves.
 - Fresh generated artifacts are still needed before quoting live cache hit rates, throughput, uptime, or dollar savings.
-- Global `ruff check .` and `ruff format --check .` fail today.
-- Local targeted health and webhook security suites fail, even though those areas are highlighted as production strengths.
+- FastAPI endpoint metadata is uneven outside the reviewer path.
+- Full-suite collection is noisy enough that reviewers should use `make reviewer-smoke` first.
 - The repo is large enough that stale docs and side projects can dilute the strongest proof.
 
 ## Verification Snapshot
 
-Commands run locally on 2026-04-29:
+Commands run locally on 2026-05-23:
 
 | Command | Result | Hiring implication |
 |---|---|---|
-| `ruff check .` | Failed: 62 errors, including parse errors in `advanced_rag_system` tests and import-order issues. | P0 credibility issue for "linter clean" claims. |
-| `ruff format --check .` | Failed: parse errors plus 59 files would be reformatted. | P0/P1 formatting drift. |
-| `mypy ghl_real_estate_ai src utils advanced_rag_system` | Did not complete locally; process was killed after extended no-output runtime. | Needs a bounded type-check target for reviewer verification. |
-| `pytest --collect-only --override-ini='addopts='` | Passed: 7,721 tests collected, 38 skipped. | Strong test-surface signal; README counts should be updated to match current collection. |
+| `ruff check . --statistics` | Passed. | Lint-clean status is now credible. |
+| `ruff format --check .` | Passed after formatting 4 drifted files. | Formatting drift is closed for the reviewer path. |
+| `python3 scripts/ci/compile_check.py` | Passed after replacing a stale missing target. | Compile gate is usable again. |
+| `pytest --collect-only --override-ini='addopts=' -q` | Passed: 7,665 tests collected. | Strong test-surface signal; collection output is still noisy. |
 | `pytest tests/test_eval_harness.py --override-ini='addopts=' -q` | Passed: 14/14. | Strong AI-eval proof. |
 | `pytest tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py --override-ini='addopts=' -q` | Passed: 123/123. | Strong targeted backend/security proof. |
-| `pytest tests/api/test_health_routes.py --override-ini='addopts=' -q` | Failed: 7/14. | Health route behavior/test fixtures need repair. |
-| `pytest tests/security/test_webhook_signatures.py --override-ini='addopts=' -q` | Failed: 17/36. | Webhook security proof needs repair before headline use. |
-| FastAPI AST route scan | 702 routes; 427 missing `response_model`; 677 missing explicit `status_code`. | Focus cleanup on flagship routes first. |
+| `pytest tests/api/test_health_routes.py --override-ini='addopts=' -q` | Passed: 14/14. | Health route test drift is fixed. |
+| `pytest tests/security/test_webhook_signatures.py --override-ini='addopts=' -q` | Passed: 36/36. | Webhook security proof is reviewer-ready. |
+| FastAPI AST route scan | 707 routes; 431 missing `response_model`; 682 missing explicit `status_code`. | Focus cleanup on flagship routes first. |
 
 ## Hero Path
 
@@ -72,7 +72,7 @@ Commands run locally on 2026-04-29:
 2. Agent routing/governance in `ghl_real_estate_ai/services/agent_mesh_coordinator.py`.
 3. Compliance response pipeline in `ghl_real_estate_ai/services/jorge/response_pipeline/`.
 4. Eval harness in `evals/` plus `tests/test_eval_harness.py`.
-5. Webhook/CRM integration in `ghl_real_estate_ai/api/routes/webhook.py`, after test drift is fixed.
+5. Webhook/CRM integration in `ghl_real_estate_ai/api/routes/webhook.py`, now backed by a passing 36-test signature suite.
 
 ## Ranked Development Roadmap
 
@@ -80,9 +80,9 @@ Commands run locally on 2026-04-29:
 
 - Keep README, CASE_STUDY, BENCHMARK_VALIDATION_REPORT, and the claim ledger synchronized so every metric stays labeled as measured, synthetic benchmark, design target, or projection.
 - Replace any remaining "all systems validated" style claims with dated, command-backed verification tables.
-- Fix or quarantine parse-broken `advanced_rag_system` files so `ruff check .` and `ruff format --check .` become trustworthy.
-- Repair targeted webhook signature tests or update stale test paths to match the actual implementation.
-- Repair health-route tests so unauthenticated and degraded states return expected statuses instead of 500s.
+- Keep `make reviewer-smoke` green and linked from the reviewer docs.
+- Keep claim docs synchronized whenever test counts or benchmark status changes.
+- Reduce noisy full-suite collection output so reviewers see the proof, not import-time chatter.
 
 ### P1: AI Backend Hiring Signal
 
