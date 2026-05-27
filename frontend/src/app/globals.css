@@ -1,0 +1,60 @@
+:root {
+  --lyr-color-bg: #f6f8fb;
+  --lyr-color-surface: #ffffff;
+  --lyr-color-surface-elevated: #fbfcfe;
+  --lyr-color-text: #172033;
+  --lyr-color-text-muted: #667085;
+  --lyr-color-border: #d9e0ea;
+  --lyr-color-primary: #1f5eff;
+  --lyr-color-primary-strong: #1748c7;
+  --lyr-color-success: #12805c;
+  --lyr-color-warning: #a15c00;
+  --lyr-color-error: #c2413a;
+  --lyr-space-8: 8px;
+  --lyr-space-12: 12px;
+  --lyr-space-16: 16px;
+  --lyr-space-24: 24px;
+  --lyr-radius-8: 8px;
+  --lyr-radius-12: 12px;
+  --lyr-radius-16: 16px;
+  --lyr-shadow-sm: 0 1px 2px rgb(16 24 40 / 0.08);
+  --lyr-shadow-md: 0 8px 24px rgb(16 24 40 / 0.10);
+  --lyr-shadow-lg: 0 18px 42px rgb(16 24 40 / 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--lyr-color-bg);
+  color: var(--lyr-color-text);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
