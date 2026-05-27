@@ -1,0 +1,2 @@
+{"ts":"2026-05-17T22:07:41Z","phase":5,"action":"visible_surface_scrub","detail":"CASE_STUDY/README/GEMINI/CHANGELOG client-id scrub + gitignore","status":"ok"}
+{"ts":"2026-05-26T17:30:00-07:00","phase":2,"action":"resume_triage_gate","detail":"Re-confirmed 5/17 recommendation = private (1449 tracked files reference jorge/acuity/rancho, ghl_real_estate_ai/ subsystem 1625 files intact); user chose to SKIP this batch pending deep de-id spec","status":"skipped"}
