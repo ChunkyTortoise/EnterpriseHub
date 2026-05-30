@@ -118,6 +118,7 @@ Desktop.ini
 $RECYCLE.BIN/
 
 # Backup files
+AGENTS.md.bak-*
 *.bak
 *.tmp
 *.temp
