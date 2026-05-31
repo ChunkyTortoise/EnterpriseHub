@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 
 # SPEC DATA
 ACCOUNT = "caymanroden@gmail.com"
-ZIP_DIR = "/Users/cave/Documents/GitHub/EnterpriseHub/content/gumroad/zips/"
+ZIP_DIR = "/Users/cave/Documents/GitHub/clients/EnterpriseHub/content/gumroad/zips/"
 
 UPDATES = [
     {"old_name": "Prompt Engineering Toolkit", "new_name": "Prompt Engineering Toolkit - Starter", "new_price": "29"},

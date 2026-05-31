@@ -70,7 +70,7 @@
       "enabled": true,
       "config": {
         "command": "python3",
-        "args": ["/Users/cave/Documents/GitHub/EnterpriseHub/.claude/mcp-servers/ghl/server.py"]
+        "args": ["/Users/cave/Documents/GitHub/clients/EnterpriseHub/.claude/mcp-servers/ghl/server.py"]
       },
       "tools": [
         "create_ghl_contact",

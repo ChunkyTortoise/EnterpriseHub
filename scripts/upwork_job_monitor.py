@@ -11,7 +11,7 @@ Setup:
     3. Make executable: chmod +x scripts/upwork_job_monitor.py
     4. Run manually: ./scripts/upwork_job_monitor.py
     5. Add to crontab for auto-monitoring:
-       */15 * * * * cd /Users/cave/Documents/GitHub/EnterpriseHub && python3 scripts/upwork_job_monitor.py >> jobs/monitor.log 2>&1
+       */15 * * * * cd /Users/cave/Documents/GitHub/clients/EnterpriseHub && python3 scripts/upwork_job_monitor.py >> jobs/monitor.log 2>&1
 
 Features:
     - Parses Upwork RSS feeds for AI/ML jobs

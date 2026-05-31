@@ -7,7 +7,7 @@
 DB_NAME="enterprise_hub"
 DB_HOST="localhost"
 DB_USER="cave"
-BACKUP_DIR="/Users/cave/Documents/GitHub/EnterpriseHub/infrastructure/backups"
+BACKUP_DIR="/Users/cave/Documents/GitHub/clients/EnterpriseHub/infrastructure/backups"
 DATE=$(date +"%Y%m%d_%H%M%S")
 RETENTION_DAYS=30
 

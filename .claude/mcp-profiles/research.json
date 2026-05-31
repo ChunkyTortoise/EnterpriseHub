@@ -24,8 +24,8 @@
     },
     "perplexity": {
       "enabled": true,
-      "command": "/Users/cave/Documents/GitHub/EnterpriseHub/.venv/bin/python",
-      "args": ["/Users/cave/Documents/GitHub/EnterpriseHub/.claude/mcp-servers/perplexity/server.py"],
+      "command": "/Users/cave/Documents/GitHub/clients/EnterpriseHub/.venv/bin/python",
+      "args": ["/Users/cave/Documents/GitHub/clients/EnterpriseHub/.claude/mcp-servers/perplexity/server.py"],
       "description": "Real-time web search and research with Perplexity Pro",
       "token_overhead": "~2000 tokens",
       "justification": "Real-time information, current events, and comparative research"

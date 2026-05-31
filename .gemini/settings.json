@@ -56,24 +56,24 @@
   },
   "mcpServers": {
     "notebooklm": {
-      "command": "/Users/cave/Projects/EnterpriseHub/.venv/bin/python",
+      "command": "/Users/cave/Projects/clients/EnterpriseHub/.venv/bin/python",
       "args": [
         ".claude/mcp-servers/notebooklm/server.py"
       ],
       "env": {
-        "VIRTUAL_ENV": "/Users/cave/Projects/EnterpriseHub/.venv",
-        "PYTHONPATH": "/Users/cave/Projects/EnterpriseHub/.venv/lib/python3.14/site-packages"
+        "VIRTUAL_ENV": "/Users/cave/Projects/clients/EnterpriseHub/.venv",
+        "PYTHONPATH": "/Users/cave/Projects/clients/EnterpriseHub/.venv/lib/python3.14/site-packages"
       }
     },
     "obsidian": {
-      "command": "/Users/cave/Projects/EnterpriseHub/.venv/bin/python",
+      "command": "/Users/cave/Projects/clients/EnterpriseHub/.venv/bin/python",
       "args": [
         ".claude/mcp-servers/obsidian/server.py"
       ],
       "env": {
-        "VIRTUAL_ENV": "/Users/cave/Projects/EnterpriseHub/.venv",
-        "PYTHONPATH": "/Users/cave/Projects/EnterpriseHub/.venv/lib/python3.14/site-packages",
-        "OBSIDIAN_VAULT_PATH": "/Users/cave/Projects/EnterpriseHub/.obsidian-vault"
+        "VIRTUAL_ENV": "/Users/cave/Projects/clients/EnterpriseHub/.venv",
+        "PYTHONPATH": "/Users/cave/Projects/clients/EnterpriseHub/.venv/lib/python3.14/site-packages",
+        "OBSIDIAN_VAULT_PATH": "/Users/cave/Projects/clients/EnterpriseHub/.obsidian-vault"
       }
     }
   },
