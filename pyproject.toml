@@ -206,7 +206,7 @@ exclude_lines = [
 line-length = 120
 target-version = "py312"
 exclude = [
-    ".agent", ".git", ".venv", "build", "dist",
+    ".agents", ".codex", ".gemini", ".git", ".venv", "build", "dist",
     ".claude", "auto-claude", "scripts", "mcp-servers", "node_modules",
 ]
 

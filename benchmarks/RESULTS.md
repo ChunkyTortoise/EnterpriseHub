@@ -7,6 +7,14 @@
 
 ## Summary: 8/8 PASSED ✅
 
+> **Synthetic, not live.** The cache-tier table below is a Monte Carlo simulation
+> of the cache design target (seed 42, sampled from a configured distribution in
+> `bench_cache.py`), not a production measurement. See
+> [`results/2026-05-23-cache-simulation.md`](results/2026-05-23-cache-simulation.md)
+> for methodology and `benchmarks/bench_cache_live.py` for the live-measurement
+> path (result artifact pending). Do not quote these as measured production hit
+> rates.
+
 ## Cache Tier Performance (10K iterations)
 
 | Tier | P50 (ms) | P95 (ms) | P99 (ms) | Hits | Hit Rate | Target P99 | Status |
