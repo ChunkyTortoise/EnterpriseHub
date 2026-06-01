@@ -37,7 +37,7 @@ reviewer-smoke:  ## Run the fast hiring-review proof path
 	ruff format --check .
 	ruff format --check scripts/ci/compile_check.py scripts/generate_weekly_pilot_kpis.py scripts/generate_weekly_executive_proof_pack.py scripts/persist_revenue_pilot_data.py
 	uv run python3 scripts/ci/compile_check.py
-	uv run pytest tests/test_eval_harness.py tests/api/test_health_routes.py tests/security/test_webhook_signatures.py tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py --override-ini='addopts=' -q
+	uv run pytest tests/test_eval_harness.py tests/api/test_health_routes.py tests/security/test_webhook_signatures.py tests/unit/test_claude_orchestrator.py tests/unit/test_sql_safety.py ghl_real_estate_ai/tests/test_bots_stub_isolation.py --override-ini='addopts=' -q
 
 metrics-snapshot:  ## Generate weekly proof-pack metrics snapshot
 	uv run python3 scripts/generate_metrics_snapshot.py
