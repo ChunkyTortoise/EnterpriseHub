@@ -84,3 +84,15 @@ When ending a session, complete ALL steps in order:
    ```
 
 Work is NOT complete until `git push` succeeds. Stranded local commits = incomplete work.
+
+## Code Review
+
+For any PR whose diff crosses a service boundary, pass the adjacent service directories the diff does NOT touch as explicit `/code-review` context. Cross-boundary bugs (wrong key shapes, dropped fields, changed response envelopes) are invisible to a reviewer that sees only the changed files, and per-service unit tests miss them too.
+
+How to apply:
+1. Identify the boundary the diff crosses (an API/route shape a UI consumes, a schema in `models/` that multiple services read, a cache-key or message contract several services share).
+2. Run `git diff --name-only` to see the touched dirs, then pass the sibling consumer/producer dirs (the ones NOT in that list) as additional context.
+
+Verify the adjacent dirs against the current tree before relying on a fixed list (the layout changes). As of this writing the shared-contract surfaces are `models/`, `shared/`, and `shared-schemas/`; common boundary pairs are `backend/` <-> `frontend/` / `portal_api/`, and any `*_integration/` dir against its caller.
+
+Reused tools: `/code-review` built-in (with `--fix` or `--comment`); `feature-dev:code-reviewer` subagent for diffs over 100 lines.
