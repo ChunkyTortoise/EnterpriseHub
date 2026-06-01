@@ -1,0 +1,35 @@
+{
+  "schema_version": "1",
+  "run_date": "2026-06-01",
+  "method": "live-measured (limited)",
+  "notes": "L1 in-memory cache exercised against real TieredCacheService code paths. Redis/L2 was unavailable (not configured), so the L2 tier was not exercised and L2 stats are absent. Workload is synthetic (hot/cold key access, fixed seed), not production traffic. Overall hit rate equals L1 hit rate when L2 is disabled.",
+  "workload": {
+    "ops": 2000,
+    "hot_keys": 20,
+    "cold_keys": 200,
+    "hot_ratio": 0.7,
+    "seed": 42
+  },
+  "results": {
+    "ops_measured": 2000,
+    "wall_time_s": 0.0017,
+    "ops_per_second": 1191599,
+    "l1_hits": 1816,
+    "l1_misses": 184,
+    "l1_hit_rate": 0.908,
+    "l2_enabled": false,
+    "l2_hits": null,
+    "l2_misses": null,
+    "l2_hit_rate": null,
+    "overall_hit_rate": 0.908
+  },
+  "targets": {
+    "l1_hit_rate_threshold": 0.6,
+    "overall_hit_rate_threshold": 0.85
+  },
+  "targets_met": {
+    "l1_hit_rate": true,
+    "overall_hit_rate": true
+  },
+  "all_targets_met": true
+}
