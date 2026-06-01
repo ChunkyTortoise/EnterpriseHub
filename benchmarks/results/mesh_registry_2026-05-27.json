@@ -1,0 +1,77 @@
+{
+  "snapshot_at": "2026-06-01T22:01:48.236370+00:00",
+  "method": "import-and-init",
+  "source": "ghl_real_estate_ai/services/agent_mesh_coordinator.py",
+  "count": 0,
+  "agents": [],
+  "capability_schema": [
+    {
+      "name": "LEAD_QUALIFICATION",
+      "value": "lead_qualification"
+    },
+    {
+      "name": "PROPERTY_MATCHING",
+      "value": "property_matching"
+    },
+    {
+      "name": "CMA_GENERATION",
+      "value": "cma_generation"
+    },
+    {
+      "name": "CONVERSATION_ANALYSIS",
+      "value": "conversation_analysis"
+    },
+    {
+      "name": "FOLLOWUP_AUTOMATION",
+      "value": "followup_automation"
+    },
+    {
+      "name": "MARKET_INTELLIGENCE",
+      "value": "market_intelligence"
+    },
+    {
+      "name": "DOCUMENT_PROCESSING",
+      "value": "document_processing"
+    },
+    {
+      "name": "VOICE_INTERACTION",
+      "value": "voice_interaction"
+    }
+  ],
+  "status_schema": [
+    "idle",
+    "active",
+    "busy",
+    "error",
+    "maintenance"
+  ],
+  "priority_schema": [
+    {
+      "name": "LOW",
+      "level": 1
+    },
+    {
+      "name": "NORMAL",
+      "level": 2
+    },
+    {
+      "name": "HIGH",
+      "level": 3
+    },
+    {
+      "name": "CRITICAL",
+      "level": 4
+    },
+    {
+      "name": "EMERGENCY",
+      "level": 5
+    }
+  ],
+  "governance": {
+    "max_total_cost_per_hour_usd": 50.0,
+    "max_tasks_per_user_per_hour": 20,
+    "emergency_shutdown_threshold_usd": 100.0,
+    "health_check_interval_seconds": 30
+  },
+  "notes": "No live services were attached at snapshot time. AgentMeshCoordinator.__init__() sets self.agents = {} and populates it only via register_agent() calls from external service handlers. count=0 is the correct observed value for a cold, unattached init. capability_schema, status_schema, and governance reflect static definitions embedded in the source at the time of this snapshot."
+}
