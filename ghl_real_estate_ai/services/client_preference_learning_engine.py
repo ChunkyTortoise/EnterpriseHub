@@ -190,7 +190,17 @@ class ClientPreferenceLearningEngine:
         # Core services
         self.cache = get_cache_service()
         self.event_publisher = get_event_publisher()
+        # get_ml_analytics_engine() returns the real engine when the bots.shared
+        # package is vendored, otherwise the no-op stub. Record which one we got
+        # via the is_stub detection contract (see docs/adr/0012) so degraded
+        # behavior is visible in logs rather than silent.
         self.ml_engine = get_ml_analytics_engine()
+        self.ml_engine_is_stub = bool(getattr(self.ml_engine, "is_stub", False))
+        if self.ml_engine_is_stub:
+            logger.warning(
+                "ClientPreferenceLearningEngine using stub ML analytics engine "
+                "(bots.shared not vendored); ML-derived preference signals are unavailable"
+            )
 
         # Lazy loading for other services (avoid circular dependencies)
         self._behavior_service = None
@@ -1399,6 +1409,7 @@ async def health_check() -> Dict[str, Any]:
     try:
         engine = get_client_preference_learning_engine()
         metrics = engine.get_metrics()
+        ml_engine_status = "stub" if engine.ml_engine_is_stub else "connected"
 
         return {
             "service": "ClientPreferenceLearningEngine",
@@ -1408,7 +1419,7 @@ async def health_check() -> Dict[str, Any]:
             "dependencies": {
                 "cache_service": "connected",
                 "event_publisher": "connected",
-                "ml_analytics_engine": "connected",
+                "ml_analytics_engine": ml_engine_status,
                 "predictive_behavior_service": "lazy_loaded",
                 "advanced_property_matcher": "lazy_loaded",
                 "conversation_intelligence": "lazy_loaded",

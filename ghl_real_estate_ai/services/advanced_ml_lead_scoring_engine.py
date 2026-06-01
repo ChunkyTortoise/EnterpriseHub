@@ -417,6 +417,10 @@ class TimeSeriesIntentModel(BaseMLModel):
 class FeatureEngineeringPipeline:
     """Advanced feature engineering for lead scoring"""
 
+    # Detection contract: marks this as the real implementation, not the no-op
+    # stub in ghl_real_estate_ai/stubs/bots_stub.py. See docs/adr/0012.
+    is_stub = False
+
     def __init__(self):
         self.cache = CacheService()
         self.memory = MemoryService()
@@ -893,6 +897,11 @@ class FeatureEngineeringPipeline:
 
 class AdvancedMLLeadScoringEngine:
     """Main orchestrator for advanced ML lead scoring"""
+
+    # Detection contract: marks this as the real ML engine, not the no-op
+    # MLAnalyticsEngine stub in ghl_real_estate_ai/stubs/bots_stub.py. See
+    # docs/adr/0012.
+    is_stub = False
 
     def __init__(self):
         self.models = {
