@@ -7,6 +7,8 @@
 - `.claude/reference/quality-standards.md` (perf targets, testing, KPIs)
 - [`AGENTS.md`](AGENTS.md) (human agent personas and workflows)
 
+**On entry**: run `bd list`; priorities P0: ichh, qnef; P1: az91, ja6d.
+
 ---
 
 ## Architecture
