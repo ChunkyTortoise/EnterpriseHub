@@ -48,6 +48,7 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | **Agent Mesh** | Architecture scope | 22-agent mesh documented | ADR-0004 and `agent_mesh_coordinator.py` |
 | **Agent Mesh** | Routing dimensions | 4 (success 40%, load 25%, cost 20%, latency 15%) | Weighted scoring function |
 | **Agent Mesh** | Emergency shutdown | $100/hr spend threshold | `emergency_shutdown()` cancels all tasks |
+| **Agent Mesh** | Runtime maturity | Routing, budget checks, and emergency shutdown run on real calls; backpressure and auto-scaling are log-only scaffolds; cold-init registry snapshot shows 0 registered agents | ADR-0011, `benchmarks/results/mesh_registry_2026-05-27.json` |
 | **Model Routing** | Primary | Claude Sonnet (complex analysis) | `claude_orchestrator.py` task routing |
 | **Model Routing** | Batch/cheap | Gemini (analysis), Haiku (routine) | Provider-specific routing logic |
 | **Model Routing** | Fallback | OpenRouter (automatic on 429/503) | HTTP status code retry handler |
@@ -55,7 +56,7 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | **A/B Testing** | Assignment | Deterministic SHA-256 bucketing | `experiment_id + contact_id` hash |
 | **Compliance** | Pipeline stages | 7 (language, TCPA, compliance, translation, truncation) | `response_pipeline/factory.py` |
 | **Test Surface** | Current collectible count | 7,665 collected | `pytest --collect-only --override-ini='addopts=' -q` on May 23, 2026 |
-| **ADRs** | Documented decisions | 10 | `docs/adr/0001-0010` |
+| **ADRs** | Documented decisions | 12 | `docs/adr/0001-0012` |
 
 ---
 
@@ -142,9 +143,9 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 
 **Key classes:** `AgentMeshCoordinator`, `MeshAgent`, `AgentTask`, `AgentMetrics`
 
-**Pattern:** Each agent registers with a `cost_per_token` and `sla_response_time`. Task routing uses a weighted scoring function across four dimensions: success rate (40%), current load (25%), cost efficiency (20%), and average response time (15%). Emergency tasks get a 1.5x score multiplier. Four background coroutines run continuously: health monitor (30s heartbeat), cost monitor (5min), performance monitor (2min), and cleanup. If hourly spend crosses `$50`, mesh activity is throttled; at `$100`, `emergency_shutdown()` cancels all active tasks and sets every agent to `MAINTENANCE`.
+**Pattern:** Each agent registers with a `cost_per_token` and `sla_response_time`. Task routing uses a weighted scoring function across four dimensions: success rate (40%), current load (25%), cost efficiency (20%), and average response time (15%). Emergency tasks get a 1.5x score multiplier. Four background coroutines run continuously: health monitor (30s heartbeat), cost monitor (5min), performance monitor (2min), and cleanup. If hourly spend crosses `$50`, a throttling hook fires that is currently log-only (see ADR-0011); at `$100`, `emergency_shutdown()` cancels all active tasks and sets every agent to `MAINTENANCE`.
 
-**Outcome:** ADR-0004 documents a 22-agent mesh architecture; the coordinator implements registration, weighted routing, per-agent P50/P95 tracking, and emergency shutdown behavior.
+**Outcome:** ADR-0004 documents a 22-agent mesh architecture; the coordinator implements registration, weighted routing, per-agent P50/P95 tracking, and emergency shutdown behavior. ADR-0011 separates what runs from what is scaffold: auto-scaling, rebalancing, and activity throttling are log-only. A cold-init registry snapshot, `benchmarks/results/mesh_registry_2026-05-27.json`, shows 0 agents registered; agents attach at runtime via `register_agent()`.
 
 **Training foundation:** Microsoft AI & ML Engineering (75h) — agent orchestration patterns, SLA-based routing, performance monitoring.
 
@@ -164,7 +165,7 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 
 A background task promotes frequently accessed L1 keys to L2.
 
-**Outcome:** The synthetic benchmark models a 60% / 20% / 8% L1/L2/L3 hit distribution and a roughly 89% token reduction for that workload. Treat this as an architecture target until fresh live cache counters are published.
+**Outcome:** The synthetic benchmark models a 60% / 20% / 8% L1/L2/L3 hit distribution and a roughly 89% token reduction for that workload. A 2026-06-01 live counter snapshot, `benchmarks/results/cache_live_2026-05-27.json`, measured a 90.8% L1 hit rate on a synthetic 2,000-operation workload (seed 42); Redis L2 was not exercised, so this is an L1-only result, not production traffic. Treat the 3-tier distribution as an architecture target.
 
 **Training foundation:** Duke LLMOps (48h) — multi-tier caching, cost optimization, token budgeting. IBM GenAI Engineering (144h) — LangChain orchestration, model strategy patterns.
 
@@ -320,6 +321,8 @@ See [`.github/workflows/security-scan.yml`](.github/workflows/security-scan.yml)
 | [ADR-0008](docs/adr/0008-multi-llm-orchestration.md) | Multi-LLM Orchestration Strategy | Accepted |
 | [ADR-0009](docs/adr/0009-webhook-signature-verification.md) | Dual-Mode Webhook Signature Verification | Accepted |
 | [ADR-0010](docs/adr/0010-structured-logging-structlog.md) | Structured Logging with structlog | Accepted |
+| [ADR-0011](docs/adr/0011-mesh-coordinator-scaffold-status.md) | AgentMeshCoordinator Scaffold Status | Accepted |
+| [ADR-0012](docs/adr/0012-ml-engine-stub-cross-repo-dependency.md) | ML Engine Stubs and the bots.shared Cross-Repo Dependency | Accepted |
 
 ---
 
@@ -399,7 +402,7 @@ pytest --tb=short
 | **Token Cost Optimization** | 3-tier cache (L1 memory, L2 Redis, L3 PostgreSQL) + model routing | Synthetic 93K → 7.8K token model |
 | **Latency Monitoring** | `PerformanceTracker` — P50/P95/P99 percentiles, SLA compliance | Lead Bot P95 < 2,000ms |
 | **Alerting** | `AlertingService` — 7 default rules, configurable cooldowns | Error rate, latency, cache, handoff, tokens |
-| **Per-Bot Metrics** | `BotMetricsCollector` — throughput, cache hits, error categorization | Needs fresh live counter snapshot before quoting hit rate |
+| **Per-Bot Metrics** | `BotMetricsCollector`: throughput, cache hits, error categorization | First live L1 counter snapshot published 2026-06-01 (90.8% L1, synthetic, L2 not exercised); see `cache_live_2026-05-27.json` |
 | **Health Checks** | `/health/aggregate` endpoint checks all services | Bot + DB + Redis + CRM status |
 
 See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) and [BENCHMARKS.md](BENCHMARKS.md) for details.
