@@ -33,11 +33,8 @@ DEFAULT_OUT = "benchmarks/results/cache_live_2026-05-27.json"
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Run live cache benchmark and write JSON artifact"
-    )
-    parser.add_argument("--out", default=DEFAULT_OUT, metavar="PATH",
-                        help=f"Output JSON path (default: {DEFAULT_OUT})")
+    parser = argparse.ArgumentParser(description="Run live cache benchmark and write JSON artifact")
+    parser.add_argument("--out", default=DEFAULT_OUT, metavar="PATH", help=f"Output JSON path (default: {DEFAULT_OUT})")
     parser.add_argument("--ops", type=int, default=2_000)
     parser.add_argument("--hot-keys", type=int, default=20)
     parser.add_argument("--cold-keys", type=int, default=200)

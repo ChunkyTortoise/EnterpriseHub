@@ -49,6 +49,8 @@ def test_real_engines_are_flagged_not_stub():
     try:
         from ghl_real_estate_ai.services.advanced_ml_lead_scoring_engine import (
             AdvancedMLLeadScoringEngine,
+        )
+        from ghl_real_estate_ai.services.advanced_ml_lead_scoring_engine import (
             FeatureEngineeringPipeline as RealFeatureEngineeringPipeline,
         )
     except (ImportError, SystemExit) as exc:
