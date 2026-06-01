@@ -57,6 +57,10 @@ class TouchpointOptimization:
 class MLAnalyticsEngine:
     """No-op stub for MLAnalyticsEngine."""
 
+    # Detection contract: production code checks this attribute to tell a real
+    # engine apart from this no-op stand-in. See docs/adr/0012.
+    is_stub = True
+
     def __init__(self, *args, **kwargs) -> None:
         pass
 
@@ -103,6 +107,10 @@ class LeadFeatures:
 
 class FeatureEngineeringPipeline:
     """No-op stub for FeatureEngineeringPipeline."""
+
+    # Detection contract: production code checks this attribute to tell a real
+    # pipeline apart from this no-op stand-in. See docs/adr/0012.
+    is_stub = True
 
     def transform(self, data: Dict[str, Any]) -> LeadFeatures:
         return LeadFeatures(features=data)

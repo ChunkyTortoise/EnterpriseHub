@@ -292,8 +292,20 @@ class PredictiveLeadBot(LeadBotWorkflow):
         self.personality_adapter = PersonalityAdapter()
         self.temperature_engine = TemperaturePredictionEngine()
 
-        # Track 3.1: ML Analytics Engine for market timing intelligence
+        # Track 3.1: ML Analytics Engine for market timing intelligence.
+        # MLAnalyticsEngine resolves to the real bots.shared engine when that
+        # package is vendored, otherwise the no-op stub. The stub does not
+        # implement the Track 3.1 predict_* methods, so detect it up front via
+        # the is_stub contract (see docs/adr/0012) and skip the doomed calls
+        # instead of relying on an AttributeError caught downstream.
         self.ml_analytics = MLAnalyticsEngine(tenant_id="jorge_lead_bot")
+        self.ml_analytics_is_stub = bool(getattr(self.ml_analytics, "is_stub", False))
+        if self.ml_analytics_is_stub:
+            logger.warning(
+                "PredictiveLeadBot using stub ML analytics engine (bots.shared not vendored); "
+                "Track 3.1 market-timing intelligence is disabled, nurture falls back to "
+                "behavioral sequence optimization"
+            )
 
         # Add bot coordination capability to event publisher
         self.event_publisher.publish_bot_coordination_request = lambda **kwargs: publish_bot_coordination_request(
@@ -432,7 +444,23 @@ class PredictiveLeadBot(LeadBotWorkflow):
         - Lead journey progression and bottlenecks
         - Stage-specific conversion probability
         - Optimal touchpoint timing and channels
+
+        When the ML engine is the no-op stub (bots.shared not vendored), the
+        predict_* methods this step depends on do not exist. Skip the calls and
+        return the same fallback shape as the exception path so downstream nodes
+        continue on the behavioral sequence optimization unchanged.
         """
+        if self.ml_analytics_is_stub:
+            logger.info(
+                f"Track 3.1 skipped for lead {state['lead_id']}: ML engine is a stub, "
+                "using behavioral sequence optimization"
+            )
+            return {
+                "track3_applied": False,
+                "fallback_reason": "ml_analytics_engine_is_stub",
+                "enhanced_optimization": state["sequence_optimization"],
+            }
+
         logger.info(f"Applying Track 3.1 market intelligence for lead {state['lead_id']}")
 
         await self.event_publisher.publish_bot_status_update(
