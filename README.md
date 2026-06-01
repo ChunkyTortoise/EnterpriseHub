@@ -3,8 +3,7 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-7%2C665_collectible-brightgreen)](tests/)
-[![CI Tests](https://img.shields.io/badge/CI_verified-1%2C100+-blue)](tests/)
+[![Tests](https://img.shields.io/badge/tests-7%2C665_collected-brightgreen)](tests/)
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
 [![Eval Gate](https://img.shields.io/badge/eval_gate-active-46E3B7)](evals/)
 [![Security](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/security-scan.yml?label=security)](https://github.com/ChunkyTortoise/EnterpriseHub/actions/workflows/security-scan.yml)

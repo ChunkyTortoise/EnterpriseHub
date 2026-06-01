@@ -31,6 +31,24 @@ Implement a centralized `AgentMeshCoordinator` that provides:
 
 **Health Monitoring**: Periodic heartbeat checks detect unresponsive agents. Failed agents are removed from the routing table and their queued tasks are redistributed to capable peers.
 
+## Implementation Status
+
+This ADR describes the target design. As of 2026-05-31 the code in
+`ghl_real_estate_ai/services/agent_mesh_coordinator.py` implements a subset:
+
+**Built and exercised by tests:**
+- Capability-based routing with multi-criteria scoring (40/25/20/15 weights, lines 299-328) and candidate filtering by capability, cost, and SLA
+- Cost monitoring and `emergency_shutdown` (cancels in-flight tasks, sets agents to maintenance)
+- Audit logging of dispatch, completion, and failure events
+
+**Designed, not yet implemented (current code is log-only or no-op):**
+- Auto-scaling triggers and rebalancing (`_auto_scale_mesh`, `_rebalance_agents`, `_reduce_mesh_activity`, `_send_emergency_alert` are stubs at lines 566-580); there is no Kubernetes HPA or Docker Compose scaling integration in code
+- Approval workflows for sensitive operations (no approval-gate code exists yet)
+- Real health probes: `_health_check_agent` sets `last_heartbeat` and returns `True` without an actual liveness check
+- `_execute_generic_task` returns a fixed completed result rather than running a task
+
+Treat the unbuilt items as roadmap, not shipped behavior.
+
 ## Consequences
 
 ### Positive

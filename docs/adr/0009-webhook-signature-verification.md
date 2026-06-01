@@ -18,15 +18,15 @@ An escape hatch for local development is required: developers cannot easily obta
 
 ## Decision
 
-Implement dual-mode verification in `services/security_framework.py` (`_verify_ghl_signature`):
+Implement dual-mode verification in `ghl_real_estate_ai/services/security_framework.py` (`_verify_ghl_signature`):
 
 1. **Ed25519 mode** (activated when `GHL_WEBHOOK_PUBLIC_KEY` is set): Parse the Ed25519 public key from env, verify the request body signature from the `X-GHL-Signature` header. This is the production mode for Marketplace deployments.
 
 2. **HMAC-SHA256 mode** (default fallback): Compute `HMAC-SHA256(secret, body)` using `GHL_WEBHOOK_SECRET`, compare against the `X-GHL-Signature` header using `hmac.compare_digest` (constant-time comparison to prevent timing attacks).
 
-3. **Replay protection**: Verify `X-GHL-Timestamp` header is within a 5-minute window of server time. Requests outside this window are rejected with 401 regardless of signature validity.
+3. **Replay protection**: When the `X-GHL-Timestamp` header is present, requests outside a 5-minute window of server time are rejected with HTTP 403. Known gap: if the header is absent, replay protection is currently skipped and the request proceeds (`security_framework.py:379-385`), so the timestamp is not yet mandatory on protected routes. Making it required is a tracked hardening item.
 
-4. **Development bypass**: `GHL_ALLOW_UNSIGNED_WEBHOOKS=true` skips verification. The startup check in `api/main.py` prevents this flag from being active when `ENVIRONMENT` matches any production variant (`production`, `prod`, `PRODUCTION`, `PROD`, or any case-insensitive match).
+4. **Development bypass**: `GHL_ALLOW_UNSIGNED_WEBHOOKS=true` skips verification. The startup check in `ghl_real_estate_ai/api/main.py` prevents this flag from being active when `ENVIRONMENT` matches any production variant (`production`, `prod`, `PRODUCTION`, `PROD`, or any case-insensitive match).
 
 Applied as `@verify_webhook("ghl")` decorator on each protected route. The decorator is not a FastAPI `Depends()` — it wraps the route function directly and locates the `Request` object from the function's arguments.
 
