@@ -30,7 +30,7 @@ Persona 1 (FAANG) verdict is clear: EnterpriseHub as a vehicle is **not wrong** 
 
 **Q2 — Top 3 objections (brutal):**
 
-1. **No eval harness = no evidence of AI engineering judgment.** The evals/ directory is empty. Every serious AI engineering team at an AI lab runs some form of golden dataset + regression eval. Without it, the codebase is a FastAPI integration project with LLM calls — well-built, but not what AI labs hire for. The 7,678 test count is a software engineering signal, not an AI engineering signal. These are different jobs.
+1. **No eval harness = no evidence of AI engineering judgment.** The evals/ directory is empty. Every serious AI engineering team at an AI lab runs some form of golden dataset + regression eval. Without it, the codebase is a FastAPI integration project with LLM calls — well-built, but not what AI labs hire for. The 7,665 test count (2026-05-23) is a software engineering signal, not an AI engineering signal. These are different jobs.
 
 2. **Benchmarks are self-certified by an AI model.** The BENCHMARK_VALIDATION_REPORT.md states "Validated By: Claude (AI Systems Analysis)." This is a fatal credibility problem for a hiring manager who reads benchmark reports for a living. It signals either naivety about what constitutes a credible benchmark or a deliberate attempt to paper over the gap. Neither reads well. No k6/locust scripts, synthetic traffic only, local Docker Compose hardware. This does not compare to production load at any meaningful scale.
 

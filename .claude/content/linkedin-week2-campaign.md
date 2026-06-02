@@ -2,7 +2,7 @@
 
 ## Post 1: Monday - Technical Deep-Dive
 
-### Topic: "How I Reduced AI Costs by 89% Using L1/L2/L3 Caching"
+### Topic: "How I Reduced AI Costs by ~89% (synthetic 2,000-op model, seed 42) Using L1/L2/L3 Caching"
 
 ---
 
@@ -12,7 +12,7 @@ Most AI applications waste 70%+ of their budget on redundant API calls.
 
 I was spending thousands per month on Claude API costs for a real estate lead qualification system. Same questions, same contexts, same responses -- billed every single time.
 
-So I built a 3-layer caching architecture that cut costs by 89%:
+So I built a 3-layer caching architecture that modeled an ~89% cost cut (synthetic 2,000-op model, seed 42):
 
 **L1 - In-Memory (Instant)**
 Hash the prompt + context. If we've seen this exact query before, return the cached response in <1ms. Hit rate: ~40% for repeat qualification patterns.
@@ -48,7 +48,7 @@ Request --> [L1: Memory] --miss--> [L2: Redis] --miss--> [L3: Persistent] --miss
             40% hit               +30% hit                 +20% hit
             <1ms                   <5ms                     <10ms
                                                                               Total: 90%+ hit rate
-                                                                              89% cost reduction
+                                                                              89% cost reduction (synthetic, seed 42)
 ```
 Use Excalidraw, Figma, or draw.io. Clean, minimal, dark background preferred for LinkedIn.
 
@@ -87,7 +87,7 @@ So I built a system that does it in milliseconds. Here's the before and after:
 - Qualification consistency: 90%+ accuracy
 - Follow-up rate: 100% (automated)
 - Working hours: 24/7/365
-- Cost per qualified lead: reduced 89%
+- Cost per qualified lead: reduced ~89% (synthetic 2,000-op model, seed 42)
 
 The architecture:
 
@@ -161,7 +161,7 @@ Fix: Intent classification before retrieval. Route queries to the right index wi
 
 Every query hit the embedding model + vector store + LLM. Same question from different users? Full pipeline every time. Costs exploded.
 
-Fix: 3-layer caching (L1 memory, L2 Redis, L3 persistent). 90%+ of queries are variations of common patterns. Cache the retrieval results AND the generated responses. My API costs dropped 89%.
+Fix: 3-layer caching (L1 memory, L2 Redis, L3 persistent). 90%+ of queries are variations of common patterns. Cache the retrieval results AND the generated responses. My modeled API costs dropped ~89% (synthetic 2,000-op model, seed 42).
 
 **Bonus mistake**: Not testing. RAG systems are notoriously hard to evaluate, so most people skip it. I wrote a large suite (7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194) including retrieval accuracy, response quality, and edge cases. It's the only way to ship with confidence.
 
@@ -179,7 +179,7 @@ Simple numbered list graphic:
 
 1. Character-based chunking    --> Semantic chunking
 2. One-size-fits-all retrieval --> Intent-based routing
-3. No caching                  --> L1/L2/L3 = 89% savings
+3. No caching                  --> L1/L2/L3 = ~89% savings (synthetic, seed 42)
 
 Bonus: No tests               --> 7,665 tests collected locally 2026-05-23
 ```

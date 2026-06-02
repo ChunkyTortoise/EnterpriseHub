@@ -24,7 +24,7 @@
 - Other — 503h (Marketing 273h, Python for Everybody 60h, Linux/OSS 60h, Anthropic Claude Code 3h, plus Vanderbilt GenAI Strategy 40h, Google Cloud GenAI 25h, Vanderbilt ChatGPT 30h, etc.)
 
 **Repo evidence (current):**
-- EnterpriseHub: hero 39/50 (Cycle 1), 7,678 tests, multi-tier cache validated, agent mesh, compliance pipeline, ADRs ×10, public Streamlit demo
+- EnterpriseHub: hero 39/50 (Cycle 1), 7,665 tests (2026-05-23), multi-tier cache validated, agent mesh, compliance pipeline, ADRs ×10, public Streamlit demo
 - mcp-server-toolkit: hero 42/50 (Cycle 2), PyPI published, 6 MCP servers
 - docextract: hero 39/50 (Cycle 1), RAG/document AI
 - 15+ supporting repos with 3,100+ tests across portfolio
@@ -50,7 +50,7 @@ Using the rubric from the spec's Phase 3 (0–100 scale, weighted components). T
 | **AI/LLM Engineer (mid)** | **78** | High | Cert match strong (411h AI stack), repo evidence strong (3 hero repos), market demand high. Interview-readiness held back by missing eval harness + unverified load tests. |
 | **AI/LLM Engineer (senior)** | **52** | Medium | Strong system-design depth (mesh, cache, handoff) and ADRs. Held back hard by: no public technical leadership, no eval/calibration evidence, no conference-grade write-up, cert tier (Coursera, not university grad-level). Senior is reachable with Wave 1+5 deliverables. |
 | **Python Developer** | **74** | High | Repo breadth 18+ repos, deep test culture, OSS PRs, PyPI package. Cert match thinner than AI track but Python for Everybody + Linux/OSS provides foundation. Wide funnel, lower ceiling. |
-| **QA/SDET (LLM eval niche)** | **70** | Medium-High | Test count is the leading number (12k+ across portfolio, 7,678 in EnterpriseHub alone) — that's a rare signal. Held back by *empty* `evals/` directory: the niche credential is missing the niche artifact. Wave 1 closes this completely. |
+| **QA/SDET (LLM eval niche)** | **70** | Medium-High | Test count is the leading number (12k+ across portfolio, 7,665 in EnterpriseHub alone) — that's a rare signal. Held back by *empty* `evals/` directory: the niche credential is missing the niche artifact. Wave 1 closes this completely. |
 | **Solutions Engineer** | **62** | Medium | Multi-CRM evidence strong, demo polish medium, case studies exist but only the SE one is discoverable. Public speaking/content gap is structural; Wave 5 closes it. |
 
 **Strawman verdict (provisional, NOT binding):**

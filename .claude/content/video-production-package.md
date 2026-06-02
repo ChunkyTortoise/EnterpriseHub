@@ -94,7 +94,7 @@
 **VISUAL**: Metrics dashboard / results slide
 
 **SCRIPT**:
-> "Let me share the numbers. 89% cost reduction in AI operations through intelligent caching. Under 200 milliseconds overhead for the orchestration layer. 4,900+ operations per second under enterprise load. And the test suite? 7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194."
+> "Let me share the numbers. ~89% cost reduction (synthetic 2,000-op model, seed 42) in AI operations through intelligent caching. Under 200 milliseconds overhead for the orchestration layer. 4,900+ operations per second under enterprise load. And the test suite? 7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194."
 >
 > "On the business side: API response times under 200ms average, bot accuracy above 90%, escalation rate below 15%, and 99.9% uptime target. The system handles 500+ concurrent conversations without breaking a sweat."
 
@@ -225,7 +225,7 @@ Create a clean diagram showing:
 
 ### Description
 ```
-How I built an AI-powered real estate platform that manages $50M+ in pipeline, qualifies leads in under 500ms, and reduced AI costs by 89%.
+How I built an AI-powered real estate platform that manages $50M+ in pipeline, qualifies leads in under 500ms, and reduced AI costs by ~89% (synthetic 2,000-op model, seed 42).
 
 In this video, I walk through EnterpriseHub -- a production system featuring:
 - Jorge Bot Family (Lead, Buyer, Seller) for 24/7 lead qualification
@@ -276,7 +276,7 @@ ai real estate, fastapi tutorial, claude ai, llm application, real estate ai, le
 - "Just published a full walkthrough of the AI system I built..."
 
 ### Day 2-3: Cross-Post
-- Share on Twitter/X with key metric (89% cost reduction)
+- Share on Twitter/X with key metric (~89% cost reduction, synthetic 2,000-op model, seed 42)
 - Post in relevant subreddits (r/Python, r/FastAPI, r/MachineLearning)
 - Share in Discord communities (Python, AI/ML, Real Estate Tech)
 

@@ -78,7 +78,7 @@ Weaknesses:
 - The broken demo badge actively undermines the hero. A hiring manager who clicks it immediately loses trust — a "live" badge that goes nowhere is worse than no badge.
 - `platform-overview.png` (1440x900, Ember-themed) is not in the hero position. It is buried below the Architecture section in a two-column table.
 - The banner is a generated graphic with text overlay, not a real dashboard screenshot. It signals "this is a project" not "this is a product."
-- "7,678 collectible tests" in the badge reads oddly — "collectible" sounds like a marketing qualifier that invites skepticism. "7,678 test functions" is used in the footer, which is more precise.
+- "7,665 collectible tests (2026-05-23)" in the badge reads oddly — "collectible" sounds like a marketing qualifier that invites skepticism. "7,665 test functions" is used in the footer, which is more precise.
 
 ### 3. Visual Consistency Across Surfaces — 4/10
 
@@ -145,7 +145,7 @@ The auth gate resolving (P0-E1) unblocks the ability to record a demo video with
 
 **Scene 5 — Chatbot live (1:25-1:50):** Navigate to the Chatbot Demo page. Type "I'm looking to buy a house in Rancho Cucamonga, budget around $650K." Show the qualification scores updating in real time.
 
-**Scene 6 — Close (1:50-2:00):** Return to Executive Dashboard. Show GitHub badge, test count badge. Narrate: "7,678 test functions, full observability stack, zero external dependencies in demo mode."
+**Scene 6 — Close (1:50-2:00):** Return to Executive Dashboard. Show GitHub badge, test count badge. Narrate: "7,665 test functions, full observability stack, zero external dependencies in demo mode."
 
 **Key requirement:** Record AFTER P0-E1 is fixed and AFTER the February screenshots are re-captured with Ember palette (see Wave 4).
 

@@ -133,7 +133,7 @@ class CostTracker:
 {
   "id": "EH-P0",
   "subject": "Document business metrics in EnterpriseHub README",
-  "description": "Add a '## Production Metrics' section to README.md documenting: 89% token cost reduction (93K to 7.8K tokens/workflow via 3-tier cache), agent mesh routing effectiveness (weighted scoring across 7 configured agents (~10 with auto-discovery)), A/B testing results, cache hit rates (L1 59%, L2 21%, L3 8%). Include before/after data. Reference ADR-0001 for methodology.",
+  "description": "Add a '## Production Metrics' section to README.md documenting: ~89% token cost reduction (synthetic 2,000-op model, seed 42; 93K to 7.8K tokens/workflow via 3-tier cache), agent mesh routing effectiveness (weighted scoring across 7 configured agents (~10 with auto-discovery)), A/B testing results, cache hit rates (L1 59%, L2 21%, L3 8%). Include before/after data. Reference ADR-0001 for methodology.",
   "activeForm": "Documenting business metrics",
   "effort": "S",
   "repo": "EnterpriseHub",
@@ -389,7 +389,7 @@ class CostTracker:
 ## 6. Interview Talking Points (per enhancement)
 
 ### Business Metrics (P0)
-> "Our 3-tier cache reduced token costs by 89% -- from 93K to 7.8K tokens per workflow. I can show you the before/after data and explain the cache key design that makes this work without stale reads."
+> "Our 3-tier cache reduced token costs by ~89% (synthetic 2,000-op model, seed 42) from 93K to 7.8K tokens per workflow. I can show you the before/after data and explain the cache key design that makes this work without stale reads."
 
 ### Eval Framework (P1)
 > "We run 50 golden test cases in CI on every PR. The LLM-as-judge scores on correctness, tone, safety, and compliance. We caught a prompt regression where a tone change dropped qualification accuracy by 12% -- the CI gate blocked the merge."

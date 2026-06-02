@@ -212,7 +212,7 @@ comparison_data = {
         f"+{conversion_improvement:.0f}%",
         f"+{additional_deals:.1f}",
         f"+${new_monthly_revenue - current_monthly_revenue:,.0f}",
-        "-89%",
+        "-89% (synthetic, seed 42)",
         f"-{time_reduction:.0f}%",
     ],
 }
