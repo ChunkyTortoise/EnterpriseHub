@@ -218,6 +218,8 @@ class EnterpriseAuthService:
                 ],
             }
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Failed to create enterprise tenant: {e}")
             raise EnterpriseAuthError(
@@ -244,6 +246,8 @@ class EnterpriseAuthService:
             tenant_config = await self.cache_service.get(f"enterprise_tenant:{tenant_id}")
             return tenant_config
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Error retrieving tenant for ontario_mills {ontario_mills}: {e}")
             return None
@@ -280,6 +284,8 @@ class EnterpriseAuthService:
             logger.info(f"Tenant {tenant_id} configuration updated")
             return tenant_config
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Failed to update tenant {tenant_id}: {e}")
             raise EnterpriseAuthError(
@@ -344,6 +350,8 @@ class EnterpriseAuthService:
                 "provider": sso_provider,
             }
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Failed to initiate SSO login for ontario_mills {ontario_mills}: {e}")
             raise EnterpriseAuthError(f"SSO initiation failed: {str(e)}", error_code="SSO_INITIATION_FAILED")
@@ -410,6 +418,8 @@ class EnterpriseAuthService:
                 "tenant_id": tenant_id,
             }
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"SSO callback handling failed: {e}")
             raise EnterpriseAuthError(f"SSO authentication failed: {str(e)}", error_code="SSO_AUTHENTICATION_FAILED")
@@ -453,9 +463,15 @@ class EnterpriseAuthService:
                 "permissions": user_session.get("permissions", []),
             }
 
+        except jwt.ExpiredSignatureError:
+            # jwt.decode() verifies exp itself and raises this before the manual
+            # check above is reached, so map it explicitly to the granular code.
+            raise EnterpriseAuthError("Token expired", error_code="TOKEN_EXPIRED")
         except jwt.InvalidTokenError as e:
             logger.error(f"Invalid JWT token: {e}")
             raise EnterpriseAuthError("Invalid token", error_code="INVALID_TOKEN")
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Token validation failed: {e}")
             raise EnterpriseAuthError(f"Token validation failed: {str(e)}", error_code="TOKEN_VALIDATION_FAILED")
@@ -524,6 +540,8 @@ class EnterpriseAuthService:
 
             return enterprise_user
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Failed to provision user {user_email} for tenant {tenant_id}: {e}")
             raise EnterpriseAuthError(
@@ -570,6 +588,8 @@ class EnterpriseAuthService:
 
             return user_data
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Failed to update user roles for {user_email}: {e}")
             raise EnterpriseAuthError(
@@ -960,6 +980,8 @@ class EnterpriseAuthService:
                 "expires_in": self.enterprise_token_expiry,
             }
 
+        except EnterpriseAuthError:
+            raise
         except Exception as e:
             logger.error(f"Token refresh failed: {e}")
             raise EnterpriseAuthError(f"Token refresh failed: {str(e)}", error_code="TOKEN_REFRESH_FAILED")
