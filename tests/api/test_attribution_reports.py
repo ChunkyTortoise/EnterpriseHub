@@ -9,6 +9,7 @@ Comprehensive test suite for attribution reporting API endpoints and dashboard i
 """
 
 import asyncio
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -16,8 +17,33 @@ import pytest
 from fastapi.testclient import TestClient
 
 from ghl_real_estate_ai.api.main import app
-from ghl_real_estate_ai.services.attribution_analytics import AlertType, AttributionReport, PerformanceAlert
-from ghl_real_estate_ai.services.lead_source_tracker import LeadSource, SourcePerformance, SourceQuality
+from ghl_real_estate_ai.services.attribution_analytics import (
+    AlertType,
+    AttributionReport,
+    PerformanceAlert,
+    get_attribution_analytics,
+)
+from ghl_real_estate_ai.services.lead_source_tracker import (
+    LeadSource,
+    SourcePerformance,
+    SourceQuality,
+    get_lead_source_tracker,
+)
+
+
+@contextmanager
+def override_dep(provider, mock):
+    """Override a FastAPI dependency for the duration of the block.
+
+    The route migrated from module-global service singletons to DI
+    (``Depends(get_lead_source_tracker)`` / ``Depends(get_attribution_analytics)``),
+    so tests inject mocks via ``app.dependency_overrides`` instead of ``patch``.
+    """
+    app.dependency_overrides[provider] = lambda: mock
+    try:
+        yield mock
+    finally:
+        app.dependency_overrides.pop(provider, None)
 
 
 class TestAttributionReportsAPI:
@@ -27,6 +53,10 @@ class TestAttributionReportsAPI:
         """Setup test fixtures."""
         self.client = TestClient(app)
         self.base_url = "/api/attribution"
+
+    def teardown_method(self):
+        """Clear any dependency overrides leaked into the shared app instance."""
+        app.dependency_overrides.clear()
 
     def test_get_source_performance_success(self):
         """Test successful source performance retrieval."""
@@ -68,10 +98,8 @@ class TestAttributionReportsAPI:
             ),
         ]
 
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_performances)()
-            )
+        with override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker:
+            mock_tracker.get_all_source_performance.return_value = mock_performances
 
             response = self.client.get(f"{self.base_url}/performance")
 
@@ -94,10 +122,8 @@ class TestAttributionReportsAPI:
             roi=2.5,
         )
 
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_performance)()
-            )
+        with override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker:
+            mock_tracker.get_source_performance.return_value = mock_performance
 
             # Test single source filter
             response = self.client.get(
@@ -122,7 +148,9 @@ class TestAttributionReportsAPI:
         response = self.client.get(f"{self.base_url}/performance", params={"source": "invalid_source"})
 
         assert response.status_code == 400
-        assert "Invalid source" in response.json()["detail"]
+        data = response.json()
+        assert data["success"] is False
+        assert data["error"]["type"] == "bad_request"
 
     def test_generate_attribution_report_success(self):
         """Test successful attribution report generation."""
@@ -171,10 +199,8 @@ class TestAttributionReportsAPI:
             ],
         )
 
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
-            mock_analytics.generate_attribution_report.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_report)()
-            )
+        with override_dep(get_attribution_analytics, AsyncMock()) as mock_analytics:
+            mock_analytics.generate_attribution_report.return_value = mock_report
 
             response = self.client.get(f"{self.base_url}/report")
 
@@ -198,10 +224,8 @@ class TestAttributionReportsAPI:
             total_qualified_leads=10,
         )
 
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
-            mock_analytics.generate_attribution_report.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_report)()
-            )
+        with override_dep(get_attribution_analytics, AsyncMock()) as mock_analytics:
+            mock_analytics.generate_attribution_report.return_value = mock_report
 
             response = self.client.get(
                 f"{self.base_url}/report",
@@ -237,10 +261,8 @@ class TestAttributionReportsAPI:
             "alerts_count": 2,
         }
 
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
-            mock_analytics.get_weekly_summary.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_summary)()
-            )
+        with override_dep(get_attribution_analytics, AsyncMock()) as mock_analytics:
+            mock_analytics.get_weekly_summary.return_value = mock_summary
 
             response = self.client.get(f"{self.base_url}/weekly-summary")
 
@@ -262,10 +284,8 @@ class TestAttributionReportsAPI:
             "alerts_count": 0,
         }
 
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
-            mock_analytics.get_weekly_summary.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_summary)()
-            )
+        with override_dep(get_attribution_analytics, AsyncMock()) as mock_analytics:
+            mock_analytics.get_weekly_summary.return_value = mock_summary
 
             response = self.client.get(f"{self.base_url}/weekly-summary", params={"location_id": "test_location_123"})
 
@@ -286,10 +306,8 @@ class TestAttributionReportsAPI:
             },
         }
 
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
-            mock_analytics.get_monthly_trends.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_trends)()
-            )
+        with override_dep(get_attribution_analytics, AsyncMock()) as mock_analytics:
+            mock_analytics.get_monthly_trends.return_value = mock_trends
 
             response = self.client.get(f"{self.base_url}/trends")
 
@@ -334,13 +352,11 @@ class TestAttributionReportsAPI:
 
         # Mock performance data and alert generation
         with (
-            patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker,
-            patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics,
+            override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker,
+            override_dep(get_attribution_analytics, AsyncMock()) as mock_analytics,
         ):
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
-            mock_analytics._generate_performance_alerts.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_alerts)()
-            )
+            mock_tracker.get_all_source_performance.return_value = []
+            mock_analytics._generate_performance_alerts.return_value = mock_alerts
 
             response = self.client.get(f"{self.base_url}/alerts")
 
@@ -371,13 +387,11 @@ class TestAttributionReportsAPI:
         ]
 
         with (
-            patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker,
-            patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics,
+            override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker,
+            override_dep(get_attribution_analytics, AsyncMock()) as mock_analytics,
         ):
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
-            mock_analytics._generate_performance_alerts.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_alerts)()
-            )
+            mock_tracker.get_all_source_performance.return_value = []
+            mock_analytics._generate_performance_alerts.return_value = mock_alerts
 
             # Test severity filter
             response = self.client.get(f"{self.base_url}/alerts", params={"severity": "high", "limit": 5})
@@ -417,10 +431,8 @@ class TestAttributionReportsAPI:
             ],
         }
 
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_source_recommendations.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_recommendations)()
-            )
+        with override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker:
+            mock_tracker.get_source_recommendations.return_value = mock_recommendations
 
             response = self.client.get(f"{self.base_url}/recommendations")
 
@@ -455,8 +467,8 @@ class TestAttributionReportsAPI:
 
     def test_track_attribution_event_success(self):
         """Test manual event tracking endpoint."""
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.track_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: None)())
+        with override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker:
+            mock_tracker.track_source_performance.return_value = None
 
             response = self.client.post(
                 f"{self.base_url}/track-event",
@@ -477,7 +489,9 @@ class TestAttributionReportsAPI:
         )
 
         assert response.status_code == 400
-        assert "Invalid source" in response.json()["detail"]
+        data = response.json()
+        assert data["success"] is False
+        assert data["error"]["type"] == "bad_request"
 
     def test_export_performance_csv_success(self):
         """Test CSV export functionality."""
@@ -501,10 +515,8 @@ class TestAttributionReportsAPI:
             )
         ]
 
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_performances)()
-            )
+        with override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker:
+            mock_tracker.get_all_source_performance.return_value = mock_performances
 
             response = self.client.get(f"{self.base_url}/export/csv")
 
@@ -538,10 +550,8 @@ class TestAttributionReportsAPI:
             )
         ]
 
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: mock_performances)()
-            )
+        with override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker:
+            mock_tracker.get_all_source_performance.return_value = mock_performances
 
             response = self.client.get(
                 f"{self.base_url}/export/csv",
@@ -557,27 +567,27 @@ class TestAttributionReportsAPI:
     def test_error_handling_500_errors(self):
         """Test handling of internal server errors."""
         # Test report generation failure
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics:
+        with override_dep(get_attribution_analytics, AsyncMock()) as mock_analytics:
             mock_analytics.generate_attribution_report.side_effect = Exception("Database error")
 
             response = self.client.get(f"{self.base_url}/report")
 
             assert response.status_code == 500
-            assert "Failed to generate report" in response.json()["detail"]
+            assert response.json()["error"]["type"] == "server_error"
 
         # Test performance data failure
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
+        with override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker:
             mock_tracker.get_all_source_performance.side_effect = Exception("Cache error")
 
             response = self.client.get(f"{self.base_url}/performance")
 
             assert response.status_code == 500
-            assert "Failed to retrieve performance data" in response.json()["detail"]
+            assert response.json()["error"]["type"] == "server_error"
 
     def test_date_parsing_edge_cases(self):
         """Test date parsing with various formats."""
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
+        with override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker:
+            mock_tracker.get_all_source_performance.return_value = []
 
             # Test valid ISO date format
             response = self.client.get(
@@ -597,7 +607,7 @@ class TestAttributionReportsAPI:
         # Test that endpoints properly handle async operations
         mock_performances = []
 
-        with patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker:
+        with override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker:
             # Mock async method
             async def mock_get_performance(*args, **kwargs):
                 await asyncio.sleep(0.01)  # Simulate async operation
@@ -630,13 +640,11 @@ class TestAttributionReportsAPI:
         ]
 
         with (
-            patch("ghl_real_estate_ai.api.routes.attribution_reports.lead_source_tracker") as mock_tracker,
-            patch("ghl_real_estate_ai.api.routes.attribution_reports.attribution_analytics") as mock_analytics,
+            override_dep(get_lead_source_tracker, AsyncMock()) as mock_tracker,
+            override_dep(get_attribution_analytics, AsyncMock()) as mock_analytics,
         ):
-            mock_tracker.get_all_source_performance.return_value = asyncio.create_task(asyncio.coroutine(lambda: [])())
-            mock_analytics._generate_performance_alerts.return_value = asyncio.create_task(
-                asyncio.coroutine(lambda: many_alerts)()
-            )
+            mock_tracker.get_all_source_performance.return_value = []
+            mock_analytics._generate_performance_alerts.return_value = many_alerts
 
             # Test default limit
             response = self.client.get(f"{self.base_url}/alerts")
