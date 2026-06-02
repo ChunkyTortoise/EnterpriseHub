@@ -25,6 +25,7 @@ from ghl_real_estate_ai.models.orchestrator_types import (
 logger = structlog.get_logger(__name__)
 
 from ghl_real_estate_ai.core.llm_client import LLMClient, LLMProvider, TaskComplexity
+from ghl_real_estate_ai.observability.prometheus_exporter import get_prometheus_exporter
 from ghl_real_estate_ai.services.market_context_injector import MarketContextInjector
 from ghl_real_estate_ai.services.memory_service import MemoryService
 from ghl_real_estate_ai.services.psychographic_segmentation_engine import PsychographicSegmentationEngine
@@ -332,7 +333,8 @@ class ClaudeOrchestrator:
             tool_executions = []
 
             # Multi-turn tool orchestration loop (max 5 turns)
-            for turn in range(5):
+            max_tool_turns = 5
+            for turn in range(max_tool_turns):
                 # Specialist Handoff Logic: Adjust system prompt based on previous tool categories
                 current_system_prompt = system_prompt
                 if tool_executions and turn > 0:
@@ -420,6 +422,19 @@ class ClaudeOrchestrator:
                 user_tool_message = {"role": "user", "content": tool_results_content}
                 messages.append(user_tool_message)
                 tool_executions.append(user_tool_message)
+            else:
+                # Loop finished without an early break, meaning the final turn
+                # still requested tool calls: the max-turn budget was exhausted
+                # before Claude produced a tool-free answer.
+                pending_tool_names = [c.get("name") for c in (llm_response.tool_calls or []) if isinstance(c, dict)]
+                get_prometheus_exporter().inc_tool_loop_max_turns_reached()
+                logger.warning(
+                    "tool_loop_max_turns_reached",
+                    max_turns=max_tool_turns,
+                    task_type=request.task_type.value,
+                    tenant_id=request.tenant_id,
+                    pending_tool_calls=pending_tool_names,
+                )
 
             # Final response from the last LLM turn
             structured_response = self._parse_response(llm_response.content, request.task_type)

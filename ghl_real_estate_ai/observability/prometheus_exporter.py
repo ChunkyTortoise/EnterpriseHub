@@ -143,6 +143,13 @@ class JorgePrometheusExporter:
             **reg_kwargs,
         )
 
+        # -- Orchestration metrics ----------------------------------------------
+        self.tool_loop_max_turns_reached_total = Counter(
+            "tool_loop_max_turns_reached_total",
+            "Times the orchestrator tool loop exhausted its max-turn budget with tool calls still pending",
+            **reg_kwargs,
+        )
+
         logger.info("JorgePrometheusExporter initialized")
 
     # -- Convenience methods -------------------------------------------------
@@ -189,6 +196,11 @@ class JorgePrometheusExporter:
                 method=method, endpoint=endpoint, status_code=str(status_code)
             ).observe(duration_seconds)
             self.http_requests_total.labels(method=method, endpoint=endpoint, status_code=str(status_code)).inc()
+
+    def inc_tool_loop_max_turns_reached(self) -> None:
+        """Increment the orchestrator tool-loop max-turn exhaustion counter."""
+        if self._enabled:
+            self.tool_loop_max_turns_reached_total.inc()
 
     def observe_llm_usage(
         self, model: str, input_tokens: int, output_tokens: int, cost_usd: float, status: str = "success"

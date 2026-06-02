@@ -713,3 +713,131 @@ class TestGetPerformanceMetrics:
         metrics = orchestrator.get_performance_metrics()
         metrics["requests_processed"] = 999
         assert orchestrator.performance_metrics["requests_processed"] == 0
+
+
+# ---------------------------------------------------------------------------
+# Tool-loop max-turn exhaustion (REQ-W5-3)
+# ---------------------------------------------------------------------------
+
+
+class TestToolLoopMaxTurns:
+    @pytest.mark.asyncio
+    async def test_max_turns_exhaustion_increments_counter_and_warns(self):
+        """When every turn keeps requesting tools, the loop hits its 5-turn cap.
+
+        The Prometheus counter must increment exactly once and a structured
+        warning must fire. (REQ-W5-3 / audit A P1-1.)
+        """
+        import structlog
+        from prometheus_client import CollectorRegistry
+
+        from ghl_real_estate_ai.observability.prometheus_exporter import JorgePrometheusExporter
+
+        orch, ClaudeRequest, _, ClaudeTaskType = _make_full_orchestrator()
+
+        # Every LLM turn keeps asking for a tool, so the loop never breaks early.
+        always_tool_resp = _make_mock_llm_response(
+            "Still working...",
+            tool_calls=[{"id": "tc_x", "name": "analyze_lead", "args": {}}],
+        )
+        orch.llm.agenerate = AsyncMock(return_value=always_tool_resp)
+        orch.memory.get_context = AsyncMock(return_value={})
+        orch._get_tools_for_request = AsyncMock(return_value=[{"name": "analyze_lead"}])
+        orch._execute_tool_call = AsyncMock(return_value="tool output")
+
+        # Isolated registry so the assertion is deterministic.
+        registry = CollectorRegistry()
+        exporter = JorgePrometheusExporter(registry=registry)
+
+        def _counter_value():
+            # Assert against the exact exposed sample name the spec mandates
+            # (REQ-W5-3); get_sample_value returns None if the name is wrong.
+            return registry.get_sample_value("tool_loop_max_turns_reached_total")
+
+        assert _counter_value() == 0.0
+
+        request = ClaudeRequest(
+            task_type=ClaudeTaskType.LEAD_ANALYSIS,
+            context={},
+            prompt="Analyze lead",
+            use_tools=True,
+            tenant_id="tenant-1",
+        )
+
+        mock_registry = MagicMock()
+        mock_registry.get_category_for_tool.return_value = None
+
+        # capture_logs is independent of the project's structlog configuration.
+        with (
+            patch(
+                "ghl_real_estate_ai.services.claude_orchestrator.get_prometheus_exporter",
+                return_value=exporter,
+            ),
+            patch(
+                "ghl_real_estate_ai.services.claude_orchestrator.skill_registry",
+                mock_registry,
+            ),
+            structlog.testing.capture_logs() as captured,
+        ):
+            response = await orch.process_request(request)
+
+        # Counter incremented exactly once on exhaustion.
+        assert _counter_value() == 1.0
+        # LLM was called once per turn for all 5 turns.
+        assert orch.llm.agenerate.await_count == 5
+        # Structured warning fired with the event name and context.
+        warnings = [
+            e for e in captured if e.get("event") == "tool_loop_max_turns_reached" and e.get("log_level") == "warning"
+        ]
+        assert len(warnings) == 1
+        assert warnings[0]["max_turns"] == 5
+        assert warnings[0]["task_type"] == ClaudeTaskType.LEAD_ANALYSIS.value
+        # Request still returns a response rather than raising.
+        assert response is not None
+
+    @pytest.mark.asyncio
+    async def test_early_finish_does_not_increment_counter(self):
+        """A tool-free answer before the cap must NOT trip the exhaustion path."""
+        from prometheus_client import CollectorRegistry
+
+        from ghl_real_estate_ai.observability.prometheus_exporter import JorgePrometheusExporter
+
+        orch, ClaudeRequest, _, ClaudeTaskType = _make_full_orchestrator()
+
+        # One tool turn, then a tool-free final answer -> loop breaks early.
+        tool_resp = _make_mock_llm_response(
+            "Working...",
+            tool_calls=[{"id": "tc_1", "name": "analyze_lead", "args": {}}],
+        )
+        final_resp = _make_mock_llm_response("Done.", tool_calls=None)
+        orch.llm.agenerate = AsyncMock(side_effect=[tool_resp, final_resp])
+        orch.memory.get_context = AsyncMock(return_value={})
+        orch._get_tools_for_request = AsyncMock(return_value=[{"name": "analyze_lead"}])
+        orch._execute_tool_call = AsyncMock(return_value="tool output")
+
+        registry = CollectorRegistry()
+        exporter = JorgePrometheusExporter(registry=registry)
+
+        mock_registry = MagicMock()
+        mock_registry.get_category_for_tool.return_value = None
+
+        request = ClaudeRequest(
+            task_type=ClaudeTaskType.LEAD_ANALYSIS,
+            context={},
+            prompt="Analyze lead",
+            use_tools=True,
+        )
+
+        with (
+            patch(
+                "ghl_real_estate_ai.services.claude_orchestrator.get_prometheus_exporter",
+                return_value=exporter,
+            ),
+            patch(
+                "ghl_real_estate_ai.services.claude_orchestrator.skill_registry",
+                mock_registry,
+            ),
+        ):
+            await orch.process_request(request)
+
+        assert registry.get_sample_value("tool_loop_max_turns_reached_total") == 0.0
