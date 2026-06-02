@@ -174,7 +174,7 @@ Break-Even:                16 days
 ### Risk Mitigation
 - **30-Day Pilot Program**: Test before annual commitment
 - **Money-Back Guarantee**: 90-day satisfaction guarantee
-- **Upgrade Path**: Seamless upgrade to PROFESSIONAL tier if outgrowing STARTER
+- **Upgrade Path**: Direct upgrade to PROFESSIONAL tier if outgrowing STARTER
 - **No Lock-In**: Cancel with 30-day notice after initial 90 days
 
 ---
@@ -334,7 +334,7 @@ A: We have a 90-day satisfaction guarantee. If you're not seeing meaningful time
 A: Most clients see positive cash flow within the first month. Full ROI is typically realized within 60-90 days as lead conversion improvements materialize.
 
 **Q: Can we upgrade to PROFESSIONAL later?**
-A: Yes! Upgrades are seamless with prorated credit for your remaining STARTER term. No data migration costs or disruption.
+A: Yes! Upgrades are straightforward with prorated credit for your remaining STARTER term. No data migration costs or disruption.
 
 **Q: What's included in the setup fee?**
 A: Setup fee covers data migration, CRM integration, initial configuration, and 1-hour onboarding training. It's waived if you prepay annually.

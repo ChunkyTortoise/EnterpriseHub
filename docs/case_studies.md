@@ -83,7 +83,7 @@ Within 90 days of implementation, Pacific Coast Realty achieved dramatic improve
 - Zero leads lost to slow response times
 - Consistent qualification process across all agents
 - 87% cache hit rate reduced AI costs significantly
-- P95 latency under 2 seconds ensured seamless user experience
+- P95 latency under 2 seconds ensured a smooth user experience
 - Agents now focus on high-value activities instead of manual qualification
 
 ### Client Testimonial
