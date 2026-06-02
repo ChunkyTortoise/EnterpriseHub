@@ -313,7 +313,7 @@ def format_markdown_report(
 
 - **Current rate (${rate}/hr)** is competitive for senior/expert work
 - Focus on high-value projects: enterprise, compliance, optimization
-- Justify rate with portfolio metrics (8,500+ tests, 89% cost reduction, 4.3M dispatches/sec)
+- Justify rate with portfolio metrics (7,665 tests collected locally; ~89% token reduction on a synthetic 2,000-op model; <200ms orchestration overhead)
 
 ### Upsell Opportunities
 

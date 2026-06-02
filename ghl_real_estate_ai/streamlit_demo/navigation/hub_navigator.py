@@ -111,7 +111,7 @@ COUNSEL_MESSAGES = {
     "Ops & Optimization": "System health is optimal. Recommend scaling to the Miami market next month.",
     "Deep Research": "Perplexity-powered search is active. Ask me to research any market or property.",
     "Services Portfolio": "31 production-grade AI services with transparent pricing and ROI models. 19 certifications, 1,768 training hours.",
-    "Case Studies": "EnterpriseHub: 87% reduction in manual review, $240K savings. Revenue-Sprint: 3x qualified leads, 99% faster proposals. Advanced RAG: 85% accuracy, 70% faster response.",
+    "Case Studies": "EnterpriseHub: projected ~87% reduction in manual review (workflow estimate), projected ~$240K savings (estimate, not measured). Revenue-Sprint: 3x qualified leads, 99% faster proposals. Advanced RAG: 85% accuracy, 70% faster response.",
     "Revenue-Sprint Case Study": "Marketing automation platform: 3x qualified leads, 45% reply rate improvement, 99% faster proposal generation (45min→3-7sec).",
     "Advanced RAG Case Study": "Hybrid retrieval system: 85% query accuracy improvement, 70% faster response (5-10min→<50ms), 95% cache hit rate.",
     "DocQA Engine Case Study": "Document Q&A platform: Multi-format support, citation tracking, prompt engineering lab for optimization.",

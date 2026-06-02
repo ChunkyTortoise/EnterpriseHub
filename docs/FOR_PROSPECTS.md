@@ -40,7 +40,7 @@ These are not projections. These are measured results from the production system
 |--------|--------|-------|-------------|
 | **Lead Response Time** | 45 minutes | 2 minutes | 95% faster |
 | **Lead-to-Customer Conversion** | 12% | 28% | 133% increase |
-| **AI Operating Cost** | Baseline | 89% reduction | 3-tier caching |
+| **AI Operating Cost** | Baseline | ~89% reduction (synthetic 2,000-op model, seed 42) | 3-tier caching |
 | **Lead Score Accuracy** | Manual guesswork | 92% precision | Q0-Q4 framework |
 | **System Uptime** | N/A | 99.9%+ | Production-grade |
 
@@ -74,7 +74,7 @@ Real-time analytics show your pipeline health: how many leads came in, where the
 
 **It is not a prototype.** The platform is backed by:
 
-- **8,500+ automated tests** across the full portfolio
+- **7,665 tests collected locally 2026-05-23** (make reviewer-smoke passes 194 targeted tests) across the full portfolio
 - **Benchmark-validated performance** (P95 response under 300ms)
 - **Enterprise security** (encrypted data, JWT authentication, CCPA compliant)
 - **Docker deployment** for on-premise or cloud hosting
@@ -126,6 +126,6 @@ The demo uses realistic mock data so you can explore the full platform: lead qua
 
 ---
 
-*Built by Cayman Roden -- Senior AI Automation Engineer specializing in production AI systems for real estate and enterprise teams. 20+ years of software engineering experience. 11 production repositories, 8,500+ tests, all CI green.*
+*Built by Cayman Roden -- Senior AI Automation Engineer specializing in production AI systems for real estate and enterprise teams. 20+ years of software engineering experience. 11 production repositories, 7,665 tests collected locally 2026-05-23 (make reviewer-smoke passes 194 targeted tests), all CI green.*
 
 *[LinkedIn](https://linkedin.com/in/caymanroden) | [GitHub](https://github.com/ChunkyTortoise) | [Portfolio](https://chunkytortoise.github.io)*

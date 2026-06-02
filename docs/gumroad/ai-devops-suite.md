@@ -104,5 +104,5 @@ Everything in Pro, plus:
 
 - 123 automated tests, all passing
 - P50/P95/P99 latency tracking verified via benchmarks
-- Part of a portfolio with 89% LLM cost reduction and 4.3M dispatches/sec
+- Part of a portfolio with ~89% LLM cost reduction (synthetic 2,000-op model, seed 42) and FastAPI async orchestration with <200ms overhead
 - Built by an engineer with 20+ years shipping production systems

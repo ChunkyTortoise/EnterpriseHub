@@ -1,5 +1,5 @@
 """
-AgentForge Demo - Streamlit Cloud Deployment
+Multi-LLM Orchestrator Demo - Streamlit Cloud Deployment
 Agent selection, chat interface, and handoff simulation
 Mock data - no real API calls needed
 """
@@ -12,7 +12,9 @@ import pandas as pd
 import streamlit as st
 
 # Page configuration
-st.set_page_config(page_title="AgentForge Demo", page_icon="🤖", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(
+    page_title="Multi-LLM Orchestrator Demo", page_icon="🤖", layout="wide", initial_sidebar_state="expanded"
+)
 
 # Custom CSS
 st.markdown(
@@ -196,7 +198,7 @@ def main():
     initialize_session_state()
 
     # Header
-    st.markdown('<div class="agent-header">🤖 AgentForge Demo</div>', unsafe_allow_html=True)
+    st.markdown('<div class="agent-header">🤖 Multi-LLM Orchestrator Demo</div>', unsafe_allow_html=True)
     st.markdown("**Multi-Agent Real Estate AI System** | Jorge Bot Network")
 
     # Sidebar

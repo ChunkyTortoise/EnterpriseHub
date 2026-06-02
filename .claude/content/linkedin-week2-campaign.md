@@ -31,7 +31,7 @@ Combined result:
 
 The key insight: AI responses are far more repetitive than we think. In real estate, there are maybe 50-100 common qualification patterns. Cache those, and you only call the API for genuinely novel conversations.
 
-The full system handles $50M+ in pipeline with 8,500+ automated tests. Built with FastAPI + Claude + Redis.
+The full system handles $50M+ in pipeline with 7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194. Built with FastAPI + Claude + Redis.
 
 What's your biggest AI cost challenge? Drop it in the comments -- I've probably solved it.
 
@@ -102,7 +102,7 @@ The stack: FastAPI (async), Claude AI orchestration, PostgreSQL, Redis (3-layer 
 
 Production stats:
 - 4,900+ ops/sec under load
-- 8,500+ automated tests
+- 7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194
 - <200ms API response times
 - 99.9% uptime target
 
@@ -163,7 +163,7 @@ Every query hit the embedding model + vector store + LLM. Same question from dif
 
 Fix: 3-layer caching (L1 memory, L2 Redis, L3 persistent). 90%+ of queries are variations of common patterns. Cache the retrieval results AND the generated responses. My API costs dropped 89%.
 
-**Bonus mistake**: Not testing. RAG systems are notoriously hard to evaluate, so most people skip it. I wrote 8,500+ tests including retrieval accuracy, response quality, and edge cases. It's the only way to ship with confidence.
+**Bonus mistake**: Not testing. RAG systems are notoriously hard to evaluate, so most people skip it. I wrote a large suite (7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194) including retrieval accuracy, response quality, and edge cases. It's the only way to ship with confidence.
 
 Which of these mistakes have you made? I bet it's number 3. Comment below.
 
@@ -181,7 +181,7 @@ Simple numbered list graphic:
 2. One-size-fits-all retrieval --> Intent-based routing
 3. No caching                  --> L1/L2/L3 = 89% savings
 
-Bonus: No tests               --> 8,500+ automated tests
+Bonus: No tests               --> 7,665 tests collected locally 2026-05-23
 ```
 Clean, bold text on a solid background. LinkedIn carousel format also works well for this.
 

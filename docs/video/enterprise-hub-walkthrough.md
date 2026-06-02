@@ -10,7 +10,7 @@
 
 **[SCREEN: Terminal with test suite running, green checkmarks scrolling]**
 
-"Most AI repositories on GitHub have zero tests. This one has 8,500. I am Cayman Roden, a senior AI automation engineer, and I am going to walk you through the 5 production AI products I built that can save your team 2-4 months of infrastructure work."
+"Most AI repositories on GitHub have zero tests. This portfolio has 7,665 tests collected locally on 2026-05-23, and make reviewer-smoke passes 194 targeted tests. I am Cayman Roden, a senior AI automation engineer, and I am going to walk you through the 5 production AI products I built that can save your team 2-4 months of infrastructure work."
 
 **[SCREEN: Split view -- all 5 product READMEs side by side]**
 
@@ -54,7 +54,7 @@
 
 **[SCREEN: Benchmark results]**
 
-"We achieved 89% LLM cost reduction in production with 3-tier caching. 120 tests, 90%+ coverage."
+"We measured ~89% LLM cost reduction on a synthetic 2,000-op model (seed 42) with 3-tier caching. 120 tests, 90%+ coverage."
 
 ---
 
@@ -120,7 +120,7 @@
 
 "Let me give you the full picture."
 
-"568 automated tests across these 5 products. 8,500+ tests across my full portfolio of 11 repos. 89% LLM cost reduction. 4.3 million tool dispatches per second. P99 orchestration overhead under one-tenth of a millisecond."
+"568 automated tests across these 5 products. 7,665 tests collected locally 2026-05-23 across my full portfolio of 11 repos, with make reviewer-smoke passing 194 targeted tests. ~89% LLM cost reduction on a synthetic 2,000-op model, seed 42. FastAPI async orchestration with under 200ms overhead. P99 orchestration overhead under one-tenth of a millisecond."
 
 **[SCREEN: Docker compose up -- all services starting]**
 

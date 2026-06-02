@@ -10,7 +10,7 @@
 
 Real estate teams considering AI-powered lead qualification face a fundamental decision: build a custom solution or deploy a proven platform. This analysis compares EnterpriseHub against a typical DIY implementation across 18 criteria, covering cost, timeline, quality, and ongoing maintenance.
 
-**Bottom line**: A DIY build requires 6-12 months and $150K-$400K+ in engineering costs to reach production parity with EnterpriseHub. The platform deploys in 1-4 weeks for $5K-$15K, with proven 133% conversion improvement and 89% cost reduction.
+**Bottom line**: A DIY build requires 6-12 months and $150K-$400K+ in engineering costs to reach production parity with EnterpriseHub. The platform deploys in 1-4 weeks for $5K-$15K, with proven 133% conversion improvement and ~89% (synthetic 2,000-op model, seed 42) cost reduction.
 
 ---
 
@@ -25,8 +25,8 @@ Real estate teams considering AI-powered lead qualification face a fundamental d
 | 5 | **Lead Qualification** | Q0-Q4 framework, 92% accuracy, validated | Must design + validate framework | EnterpriseHub |
 | 6 | **CRM Integration** | GoHighLevel, HubSpot, Salesforce native | Each integration: 2-4 weeks dev | EnterpriseHub |
 | 7 | **Response Time** | 2 minutes (enforced 5-min SLA) | Depends on implementation quality | EnterpriseHub |
-| 8 | **Cost Optimization** | 89% token reduction via 3-tier cache | Must implement caching layer | EnterpriseHub |
-| 9 | **Test Coverage** | 8,340 automated tests | Typical DIY: 0-50% coverage | EnterpriseHub |
+| 8 | **Cost Optimization** | ~89% token reduction (synthetic 2,000-op model, seed 42) via 3-tier cache | Must implement caching layer | EnterpriseHub |
+| 9 | **Test Coverage** | 7,665 tests collected locally 2026-05-23 (make reviewer-smoke passes 194 targeted tests) | Typical DIY: 0-50% coverage | EnterpriseHub |
 | 10 | **BI Dashboards** | Streamlit dashboards (Monte Carlo, sentiment, churn) | Build from scratch: 4-8 weeks | EnterpriseHub |
 | 11 | **Handoff Logic** | Confidence-based with circular prevention | Complex to implement correctly | EnterpriseHub |
 | 12 | **Compliance** | DRE, Fair Housing, CCPA, CAN-SPAM built-in | Must research + implement each | EnterpriseHub |
@@ -52,7 +52,7 @@ Real estate teams considering AI-powered lead qualification face a fundamental d
 | CRM integration | Included | $30,000 (2 integrations) |
 | BI dashboards | Included | $40,000 (data engineer, 2 months) |
 | AI bot development | Included | $60,000 (ML engineer, 3 months) |
-| Testing + QA | Included (8,340 tests) | $20,000 (1 month QA) |
+| Testing + QA | Included (7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194 targeted tests) | $20,000 (1 month QA) |
 | **Subtotal (Setup)** | **$10,000** | **$350,000** |
 | | | |
 | **Ongoing (Annual)** | | |
@@ -65,7 +65,7 @@ Real estate teams considering AI-powered lead qualification face a fundamental d
 | **12-Month TCO** | **$22,200** | **$484,200** |
 | **Cost Savings** | **95% cheaper** | Baseline |
 
-*LLM API cost difference due to EnterpriseHub's 3-tier caching (89% token reduction).*
+*LLM API cost difference due to EnterpriseHub's 3-tier caching (~89% token reduction, synthetic 2,000-op model, seed 42).*
 
 ---
 
@@ -171,7 +171,7 @@ DIY is the better choice in these specific scenarios:
 | **Revenue Engine** | $15,000 | 4 weeks | Complete platform + strategy |
 
 All packages include:
-- Production-ready code with 8,340 automated tests
+- Production-ready code with 7,665 tests collected locally 2026-05-23 (make reviewer-smoke passes 194 targeted tests)
 - 30-day post-delivery support
 - CI/CD pipeline configuration
 - Documentation and deployment guides
@@ -187,7 +187,7 @@ All packages include:
 ## Source References
 
 - EnterpriseHub benchmark validation: [BENCHMARK_VALIDATION_REPORT.md](../BENCHMARK_VALIDATION_REPORT.md)
-- Test suite: 8,340 automated tests across 11 repositories
+- Test suite: 7,665 tests collected locally 2026-05-23 (make reviewer-smoke passes 194 targeted tests) across 11 repositories
 - Cost metrics: Validated February 11, 2026
 - Conversion data: Production deployment case study (CS001)
 - Industry benchmarks: NAR statistics, Zillow research, real estate CRM vendor reports

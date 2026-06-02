@@ -34,7 +34,7 @@
 2. **431/707 routes missing `response_model`** (per CLAIM_LEDGER AST scan). The curated reviewer path files have it, but broader endpoint metadata does not meet stated portfolio standards.
 3. **No committed live cache counter artifact** - `benchmarks/bench_cache_live.py` exists but no JSON output in `benchmarks/results/`. Cache claims must still be labeled projections.
 4. **LLM judge not human-calibrated** - EVAL_SCORECARD says so explicitly. Acceptable at this stage, but an HM will probe it.
-5. **22-agent claim lacks a runtime registry snapshot** - the HIRING_ROADMAP correctly flags this; use "22-agent mesh architecture" not "22 live registered agents."
+5. **22-agent claim lacks a runtime registry snapshot** - the HIRING_ROADMAP correctly flags this; use "22-agent mesh architecture" not "22 live registered agents." [RESOLVED 2026-06-01: corrected to 7 configured agents (~10 with auto-discovery)]
 
 ---
 

@@ -19,7 +19,7 @@ def parse_spec(file_path):
         product = {"spec_name": name}
 
         # Parse table fields
-        # | **Title** | AgentForge Starter — Multi-LLM Orchestration Framework |
+        # | **Title** | Multi-LLM Orchestrator Starter — Multi-LLM Orchestration Framework |
         table_matches = re.findall(r"\| \*\*([^*]+)\*\* \| ([^|]+) \|", section)
         for field, value in table_matches:
             product[field.lower().replace(" ", "_")] = value.strip()

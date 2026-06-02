@@ -12,7 +12,7 @@ Deploy a production RAG system with tenant isolation, hybrid search (semantic + 
 
 Building multi-tenant RAG is hard. Tenant isolation, hybrid retrieval, billing metering, PII compliance -- most teams spend months on infrastructure before they write a single query handler. This platform ships all of it with 120 tests and 90%+ coverage.
 
-Used in production to achieve 89% LLM cost reduction via 3-tier caching.
+Models ~89% LLM token reduction on a synthetic 2,000-op workload (seed 42) via 3-tier caching.
 
 ---
 
@@ -66,7 +66,7 @@ Everything in Starter, plus:
 - **Production deployment guide** (PostgreSQL + pgvector + Redis setup)
 - **Tenant onboarding playbook** (API key provisioning, schema creation)
 - **Embedding model comparison guide** (OpenAI vs Cohere vs local)
-- **Cost optimization guide** (caching strategies that achieved 89% reduction)
+- **Cost optimization guide** (caching strategies modeling ~89% token reduction on a synthetic workload)
 - **1-hour setup call** via Zoom
 - Priority email support (48hr response)
 
@@ -122,5 +122,5 @@ A: pgvector handles millions of vectors. Add read replicas for horizontal scalin
 
 - 120 automated tests, 90%+ coverage
 - Hybrid search (semantic + BM25) with RRF fusion -- not just vector similarity
-- 89% LLM cost reduction achieved in production via 3-tier caching
-- Part of an 8,500+ test portfolio across 11 production repos
+- ~89% LLM token reduction on a synthetic 2,000-op model (seed 42) via 3-tier caching
+- Part of an 11-repo production portfolio (EnterpriseHub flagship: 7,665 tests collected locally 2026-05-23)

@@ -33,7 +33,7 @@ Target: <200ms total P99 — **PASS** (0.012ms actual)
 
 ## Test Coverage
 
-- **Total tests**: 8,500+ (across all repositories in portfolio)
+- **Total tests**: 7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194
 - **EnterpriseHub tests**: Per pytest collection at time of benchmark
 
 ## Important Disclaimers

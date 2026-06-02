@@ -1690,7 +1690,7 @@ OPENAI_API_KEY=sk-... (for embeddings/backup LLM)
 - [ ] CMA generation success rate (>95%)
 - [ ] GHL bi-directional sync (real-time validation)
 - [ ] Whisper Mode coaching latency (<2 sec UI update)
-- [ ] PDF injection in chat (seamless UX)
+- [ ] PDF injection in chat (smooth UX)
 - [ ] War Room heat map performance (50+ properties, <1 sec query)
 - [ ] Lyrio.io API contract compliance
 - [ ] Security: PII encryption, API key rotation, RBAC

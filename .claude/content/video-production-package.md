@@ -59,7 +59,7 @@
 **SCREEN**: Show Buyer Bot dashboard with property matching, financial readiness score
 
 **3c. Seller Bot (2:30 - 3:00)**
-> "For sellers, Jorge provides CMAs, pricing recommendations, and marketing strategy. It handles objections and uses confrontational qualification to get honest answers about timeline and pricing expectations. The handoff between bots is seamless -- with circular prevention and rate limiting built in."
+> "For sellers, Jorge provides CMAs, pricing recommendations, and marketing strategy. It handles objections and uses confrontational qualification to get honest answers about timeline and pricing expectations. The handoff between bots is automatic, with circular prevention and rate limiting built in."
 
 **SCREEN**: Show Seller Bot with FRS/PCS scores, handoff flow diagram
 
@@ -94,7 +94,7 @@
 **VISUAL**: Metrics dashboard / results slide
 
 **SCRIPT**:
-> "Let me share the numbers. 89% cost reduction in AI operations through intelligent caching. Under 200 milliseconds overhead for the orchestration layer. 4,900+ operations per second under enterprise load. And the test suite? Over 8,500 tests covering every critical path."
+> "Let me share the numbers. 89% cost reduction in AI operations through intelligent caching. Under 200 milliseconds overhead for the orchestration layer. 4,900+ operations per second under enterprise load. And the test suite? 7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194."
 >
 > "On the business side: API response times under 200ms average, bot accuracy above 90%, escalation rate below 15%, and 99.9% uptime target. The system handles 500+ concurrent conversations without breaking a sweat."
 
@@ -102,7 +102,7 @@
 - 89% AI cost reduction (L1/L2/L3 caching)
 - <200ms orchestration overhead
 - 4,900+ ops/sec under load
-- 8,500+ automated tests
+- 7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194
 - 90%+ bot accuracy
 - <15% escalation rate
 - 90%+ cache hit rate
@@ -137,7 +137,7 @@
 2. **Lead Bot conversation** - Example qualification flow with temperature tags
 3. **Performance ROI dashboard** - Key metrics visible
 4. **Architecture diagram** - System overview (create in draw.io or Excalidraw)
-5. **Test suite output** - Terminal showing 8,500+ tests passing
+5. **Test suite output** - Terminal showing 7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194
 6. **Claude Orchestrator code** - ClaudeTaskType enum + cache logic
 
 ### Priority 2 (Nice to Have)
@@ -232,7 +232,7 @@ In this video, I walk through EnterpriseHub -- a production system featuring:
 - Claude AI orchestration with L1/L2/L3 caching
 - FastAPI async backend with <200ms response times
 - GoHighLevel CRM integration with real-time sync
-- 8,500+ automated tests for production reliability
+- 7,665 tests collected locally 2026-05-23 (make reviewer-smoke passes 194) for production reliability
 
 TIMESTAMPS:
 0:00 - Hook

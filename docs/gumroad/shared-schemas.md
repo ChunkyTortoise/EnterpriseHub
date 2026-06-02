@@ -115,4 +115,4 @@ This package is included **free** with the Enterprise AI Toolkit bundle ($499-$7
 - 69 automated tests, all passing
 - Extracted from production systems managing $50M+ pipeline
 - Pydantic v2 with full type safety
-- Part of an 8,500+ test portfolio across 11 production repos
+- Part of an 11-repo production portfolio (EnterpriseHub flagship: 7,665 tests collected locally 2026-05-23)

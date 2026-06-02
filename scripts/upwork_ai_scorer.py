@@ -65,10 +65,10 @@ TECH_STACK = [
 ]
 
 PORTFOLIO_PROOF_POINTS = """
-- EnterpriseHub: Real estate AI platform with 8,500+ tests, 89% cost reduction, $50M+ pipeline managed
+- EnterpriseHub: Real estate AI platform with 7,665 tests collected locally, ~89% token reduction (synthetic 2,000-op model), $50M+ pipeline managed
 - Jorge Bots: 3 AI chatbots (lead/buyer/seller) with handoff orchestration, 157 passing tests
-- RAG Pipeline: 4.3M dispatches/sec, L1/L2/L3 caching, <200ms overhead
-- AgentForge: Multi-agent orchestration framework
+- RAG Pipeline: L1/L2/L3 caching, <200ms overhead
+- Multi-LLM Orchestrator: multi-agent orchestration framework
 - DocQA Engine: Production RAG system for document Q&A
 - Data Dashboard: Streamlit BI with Monte Carlo simulations, sentiment analysis
 """
@@ -134,7 +134,7 @@ PROPOSAL_PROMPT = """You are writing a winning Upwork proposal for an AI/ML engi
 
 Paragraph 1: Acknowledge the client's specific need. Show you read the posting carefully. Reference their domain/problem.
 
-Paragraph 2: Provide ONE concrete proof point from the portfolio that directly maps to their need. Include a specific metric (e.g., "89% cost reduction", "8,500+ tests", "4.3M dispatches/sec").
+Paragraph 2: Provide ONE concrete proof point from the portfolio that directly maps to their need. Include a specific metric (e.g., "~89% token reduction on a synthetic 2,000-op model", "7,665 tests collected locally").
 
 Paragraph 3: Propose a clear next step (15-min call, quick architecture sketch, or POC outline). Be specific about what you'd discuss.
 

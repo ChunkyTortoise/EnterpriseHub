@@ -31,7 +31,7 @@ Senior AI Automation Engineer | RAG, Multi-Agent Systems, GoHighLevel
 ```
 I build production AI systems — not prototypes, not demos, production code with automated tests, CI/CD pipelines, and real deployment history.
 
-My portfolio includes 11 repositories with 8,500+ automated tests, 33 Architecture Decision Records, and benchmark suites with P50/P95/P99 latency metrics in every project. The flagship system manages a $50M+ real estate pipeline in Southern California with three AI chatbots, real-time CRM sync, and an 89% reduction in LLM costs through a 3-tier Redis caching layer.
+My portfolio includes 11 repositories with 7,665 tests collected locally 2026-05-23 (make reviewer-smoke passes 194 targeted tests), 33 Architecture Decision Records, and benchmark suites with P50/P95/P99 latency metrics in every project. The flagship system manages a $50M+ real estate pipeline in Southern California with three AI chatbots, real-time CRM sync, and ~89% (synthetic 2,000-op model, seed 42) reduction in LLM costs through a 3-tier Redis caching layer.
 
 What I specialize in:
 
@@ -42,7 +42,7 @@ Multi-tenant retrieval-augmented generation with pgvector, schema-per-tenant iso
 Real-time voice pipelines using Twilio + Deepgram STT + ElevenLabs TTS with sub-second latency. The system handles inbound/outbound calls, qualifies leads, books appointments, and syncs to GoHighLevel. Barge-in support means callers can interrupt the bot mid-sentence — it actually listens, unlike most voice bots.
 
 **Multi-Agent Orchestration**
-Agent coordination with governance, routing, auto-scaling, and audit trails. I've built handoff systems with circular prevention, rate limiting, pattern learning from outcomes, and performance-based routing. The core engine handles 4.3M tool dispatches per second.
+Agent coordination with governance, routing, auto-scaling, and audit trails. I've built handoff systems with circular prevention, rate limiting, pattern learning from outcomes, and performance-based routing. The core engine uses FastAPI async orchestration with <200ms overhead.
 
 **GoHighLevel Integration**
 Native GHL integration across CRM sync, workflow triggers, temperature tagging, calendar booking, and custom field mapping. I've also built an MCP server specifically for GHL so AI assistants like Claude can interact with GHL contacts, pipelines, and fields directly.

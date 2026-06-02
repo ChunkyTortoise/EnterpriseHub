@@ -73,7 +73,7 @@ Deployed a multi-agent team to execute a comprehensive portfolio optimization in
 
 **LinkedIn Week 2 Campaign** (230 lines):
 - `.claude/content/linkedin-week2-campaign.md`
-- Post 1 (Monday): "How I Reduced AI Costs by 89%" (technical deep-dive)
+- Post 1 (Monday): "How I Reduced AI Costs by ~89%" (synthetic 2,000-op model, seed 42; technical deep-dive)
 - Post 2 (Wednesday): "$50M Pipeline Manager" (case study)
 - Post 3 (Friday): "3 RAG Mistakes to Avoid" (quick tips)
 - Full engagement strategy + hashtags
@@ -149,8 +149,8 @@ Deployed a multi-agent team to execute a comprehensive portfolio optimization in
 - Upwork custom RAG: $100-$300/hour
 
 **Our Differentiators**:
-- 8,500+ automated tests (rare in marketplace)
-- Verified metrics (89% cost reduction, 4.3M dispatches/sec)
+- 7,665 tests collected locally 2026-05-23 (make reviewer-smoke passes 194 targeted tests; rare in marketplace)
+- Benchmark metrics (~89% cost reduction, synthetic 2,000-op model, seed 42; FastAPI async orchestration with <200ms overhead)
 - Docker-ready, CI/CD, comprehensive docs
 - Self-hosted (no vendor lock-in)
 - MIT license (commercial use allowed)

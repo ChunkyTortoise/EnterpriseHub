@@ -215,8 +215,8 @@ def render_hero_section() -> None:
             
             <div class="hero-metrics">
                 <div class="hero-metric-badge">✅ 4,500+ Automated Tests</div>
-                <div class="hero-metric-badge">⚡ 87% Efficiency Gains</div>
-                <div class="hero-metric-badge">💰 $240K Annual Savings</div>
+                <div class="hero-metric-badge">⚡ Projected ~87% Efficiency Gains (workflow estimate)</div>
+                <div class="hero-metric-badge">💰 Projected ~$240K Annual Savings (estimate, not measured)</div>
                 <div class="hero-metric-badge">🏆 Production-Ready</div>
             </div>
             
@@ -274,8 +274,8 @@ def render_key_metrics() -> None:
         st.markdown(
             """
             <div class="stat-card">
-                <div class="stat-value">87%</div>
-                <div class="stat-label">Efficiency Gains</div>
+                <div class="stat-value">~87%</div>
+                <div class="stat-label">Projected Efficiency Gains (estimate)</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -294,8 +294,8 @@ def render_case_study_highlights() -> None:
             <div class="service-category">
                 <h4>🎯 Performance Optimization</h4>
                 <ul style="color: #7F8C8D; margin: 0.5rem 0;">
-                    <li>89% token cost reduction through intelligent caching</li>
-                    <li>87% cache hit rate (L1/L2/L3 architecture)</li>
+                    <li>~89% token cost reduction (synthetic 2,000-op model, seed 42)</li>
+                    <li>~87% cache hit rate (synthetic 2,000-op model, seed 42; L1-only measured at 90.8%)</li>
                     <li>P95 latency < 2 seconds</li>
                     <li>99.9% uptime SLA achievement</li>
                 </ul>
@@ -309,7 +309,7 @@ def render_case_study_highlights() -> None:
             <div class="service-category">
                 <h4>💰 Cost Savings</h4>
                 <ul style="color: #7F8C8D; margin: 0.5rem 0;">
-                    <li>$240K annual AI infrastructure savings</li>
+                    <li>Projected ~$240K annual AI infrastructure savings (workflow-based estimate, not measured)</li>
                     <li>3,200+ hours of manual work automated</li>
                     <li>$156K/year operational efficiency gains</li>
                     <li>ROI achieved in 4.2 months</li>
@@ -558,7 +558,7 @@ def render_architecture_explorer() -> None:
             "metrics": {
                 "Cost per Qualification": "$0.032",
                 "RAG Query Cost": "$0.045",
-                "Token Reduction": "89%",
+                "Token Reduction (synthetic, seed 42)": "~89%",
                 "RAG P95 Target": "<50 ms",
             },
             "files": [
@@ -677,12 +677,12 @@ def render_navigation_tabs() -> None:
         case_studies: List[Dict[str, str]] = [
             {
                 "title": "EnterpriseHub Real Estate AI",
-                "result": "$240K annual savings, 87% efficiency gains",
+                "result": "Projected ~$240K annual savings, ~87% efficiency gains (estimates, not measured)",
                 "tech": "FastAPI, Streamlit, PostgreSQL, Claude AI",
             },
             {
                 "title": "Multi-Agent Orchestration System",
-                "result": "89% token cost reduction, 3,200+ hours automated",
+                "result": "~89% token cost reduction (synthetic 2,000-op model, seed 42), 3,200+ hours automated",
                 "tech": "Agent mesh, RAG pipeline, Redis caching",
             },
         ]
@@ -863,8 +863,8 @@ def render_technical_highlights() -> None:
 
     with col3:
         render_obsidian_metric(
-            value="89%",
-            label="Cost Reduction",
+            value="~89%",
+            label="Cost Reduction (synthetic, seed 42)",
             config=MetricConfig(variant="success", size="medium", trend="up"),
             metric_icon="dollar-sign",
         )

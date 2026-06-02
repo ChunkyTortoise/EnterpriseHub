@@ -15,7 +15,7 @@
 **Features:**
 - Professional hero section with gradient background
 - Key metrics display (19 certifications, 1,768 hours, 31 services)
-- Case study highlights ($240K savings, 87% efficiency gains)
+- Case study highlights (projected ~$240K savings, projected ~87% efficiency gains, estimates not measured)
 - Service categories (6 categories, 31 services total)
 - Technical highlights with Obsidian-themed metrics
 - Navigation tabs (certifications, services, case studies, gallery, contact)
@@ -124,18 +124,18 @@ def render_service_categories() -> None:
 ### Hero Section
 - **Headline:** "Production-Grade AI Systems & Data Infrastructure"
 - **Subtitle:** "19 Certifications | 1,768 Training Hours | 31 Services | Proven ROI"
-- **Metrics Badges:** 4,500+ Tests | 87% Efficiency | $240K Savings | Production-Ready
+- **Metrics Badges:** 4,500+ Tests | Projected ~87% Efficiency | Projected ~$240K Savings (estimates) | Production-Ready
 - **CTAs:** View Services | Request Demo | See Case Studies
 
 ### Key Metrics (4 Cards)
 1. **19** Professional Certifications
 2. **1,768** Hours Training
 3. **31** Service Offerings
-4. **87%** Efficiency Gains
+4. **~87%** Projected Efficiency Gains (estimate)
 
 ### Case Studies (4 Categories)
-1. **Performance Optimization:** 89% token reduction, 87% cache hit rate
-2. **Cost Savings:** $240K annual savings, 3,200+ hours automated
+1. **Performance Optimization:** ~89% token reduction, ~87% cache hit rate (synthetic 2,000-op model, seed 42)
+2. **Cost Savings:** projected ~$240K annual savings (estimate, not measured), 3,200+ hours automated
 3. **AI Orchestration:** Multi-LLM coordination, agent mesh (95% faster response)
 4. **Business Intelligence:** 80+ components, real-time monitoring (133% conversion increase)
 
@@ -152,7 +152,7 @@ def render_service_categories() -> None:
 - <2s P95 Latency
 - 99.9% Uptime SLA
 - 140+ Microservices
-- 89% Cost Reduction
+- ~89% Cost Reduction (synthetic, seed 42)
 - 80+ Dashboard Components
 
 ---

@@ -62,7 +62,7 @@ Screenshots available in `/Users/cave/Projects/EnterpriseHub/assets/screenshots/
 
 ### 1. Live Demo Accessibility and First Impression — 1/10
 
-The demo URL is unreachable without being on the Streamlit Cloud viewer allowlist. A hiring manager receives either an infinite redirect loop (via curl/some clients) or a Google/GitHub login screen followed by "Access denied." There is no fallback, no error message, no indication that credentials are needed. The README demo_user/Demo1234! credentials are for the FastAPI layer, not for Streamlit Cloud auth — they will not unlock the demo.
+The demo URL is unreachable without being on the Streamlit Cloud viewer allowlist. A hiring manager receives either an infinite redirect loop (via curl/some clients) or a Google/GitHub login screen followed by "Access denied." There is no fallback, no error message, no indication that credentials are needed. The README demo_user/Demo1234! credentials are for the FastAPI layer, not for Streamlit Cloud auth, so they will not open the demo.
 
 **Target score after fix: 8/10** — the app code is solid, mock data is realistic, no external dependencies.
 
@@ -135,7 +135,7 @@ This path covers: business outcomes, lead scoring with real names/budgets, multi
 
 The auth gate resolving (P0-E1) unblocks the ability to record a demo video without workarounds. Recommended screen capture flow:
 
-**Scene 1 — Hook (0:00-0:15):** Open `ct-enterprise-ai.streamlit.app`. Show the Executive Dashboard loading with the 95% faster / $240K savings / 133% conversion stat block visible above the fold.
+**Scene 1, Hook (0:00-0:15):** Open `ct-enterprise-ai.streamlit.app`. Show the Executive Dashboard loading with the 95% faster / projected ~$240K annual savings (workflow-based estimate, not measured) / 133% conversion stat block visible above the fold.
 
 **Scene 2 — Lead scoring (0:15-0:40):** Click "Lead Intelligence." Hover over a lead card (Robert Chen, score 82, Hot). Expand the Scoring Breakdown and Signals panel. Narrate: "Each lead gets a Q0-Q4 qualification score in under 2 minutes — no agent time."
 
@@ -195,4 +195,4 @@ The theme situation requires resolution before the design system can be called "
 | Visual consistency | 4/10 | Two active palettes; 5 screenshots in wrong theme |
 | Accessibility | 3/10 est. | CSS contrast, collapsed radio labels, no axe data |
 | Demo flow completeness | 5/10 | Chatbot page hidden; no guided onboarding |
-| **Overall** | **3.8/10** | **Auth gate is the single highest-leverage fix** |
+| **Overall** | **3.8/10** | **Auth gate is the single highest-impact fix** |

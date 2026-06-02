@@ -77,7 +77,7 @@ def main():
         # App 2: LLM Integration Starter
         deploy_app(page, "ChunkyTortoise/llm-integration-starter", "main", "app.py", "ct-llm-starter")
 
-        # App 3: AgentForge
+        # App 3: Multi-LLM Orchestrator
         deploy_app(page, "ChunkyTortoise/ai-orchestrator", "main", "streamlit_app.py", "ct-agentforge")
 
         browser.close()

@@ -6,7 +6,7 @@ EnterpriseHub implementation
 CASE_STUDIES = {
     "enterprisehub": {
         "title": "EnterpriseHub: Real Estate AI Transformation",
-        "subtitle": "87% reduction in manual review time, $240,000 annual savings",
+        "subtitle": "Projected ~87% reduction in manual review time (workflow estimate); projected ~$240K annual savings (estimate, not measured)",
         "client_industry": "Real Estate",
         "client_size": "Mid-market",
         "challenge": {
@@ -57,13 +57,25 @@ CASE_STUDIES = {
         "outcomes": {
             "primary_metrics": [
                 {
-                    "metric": "Manual Review Time Reduction",
+                    "metric": "Projected Manual Review Reduction",
                     "value": "87%",
-                    "detail": "From 20+ hrs/week to <3 hrs/week",
+                    "detail": "Projected ~87% (workflow estimate, not measured): 20+ hrs/week to <3 hrs/week",
                 },
-                {"metric": "Annual Cost Savings", "value": "$240,000", "detail": "Labor + token cost optimization"},
-                {"metric": "Token Cost Reduction", "value": "89%", "detail": "Through intelligent caching"},
-                {"metric": "Cache Hit Rate", "value": "87%", "detail": "L1/L2/L3 combined performance"},
+                {
+                    "metric": "Projected Annual Savings",
+                    "value": "$240,000",
+                    "detail": "Projected ~$240K (workflow-based estimate, not measured); labor + token cost",
+                },
+                {
+                    "metric": "Token Cost Reduction",
+                    "value": "89%",
+                    "detail": "~89% on synthetic 2,000-op model (seed 42), not production-measured",
+                },
+                {
+                    "metric": "Cache Hit Rate",
+                    "value": "87%",
+                    "detail": "~87% on synthetic 2,000-op model (seed 42); L1-only measured at 90.8%",
+                },
                 {"metric": "P95 Latency", "value": "<2 seconds", "detail": "AI response time"},
                 {"metric": "Qualified Lead Increase", "value": "3x", "detail": "From predictive scoring"},
             ],
