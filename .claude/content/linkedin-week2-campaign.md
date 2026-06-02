@@ -48,7 +48,7 @@ Request --> [L1: Memory] --miss--> [L2: Redis] --miss--> [L3: Persistent] --miss
             40% hit               +30% hit                 +20% hit
             <1ms                   <5ms                     <10ms
                                                                               Total: 90%+ hit rate
-                                                                              89% cost reduction (synthetic, seed 42)
+                                                                              89% cost reduction (synthetic 2,000-op model, seed 42)
 ```
 Use Excalidraw, Figma, or draw.io. Clean, minimal, dark background preferred for LinkedIn.
 
@@ -179,7 +179,7 @@ Simple numbered list graphic:
 
 1. Character-based chunking    --> Semantic chunking
 2. One-size-fits-all retrieval --> Intent-based routing
-3. No caching                  --> L1/L2/L3 = ~89% savings (synthetic, seed 42)
+3. No caching                  --> L1/L2/L3 = ~89% savings (synthetic 2,000-op model, seed 42)
 
 Bonus: No tests               --> 7,665 tests collected locally 2026-05-23
 ```

@@ -183,7 +183,7 @@ def make_service3():
         font=font_lg,
     )
 
-    metrics = ["4,937 Tests", "94% Handoff Rate", "<200ms Response"]
+    metrics = ["7,665 Tests", "94% Handoff Rate", "<200ms Response"]
     x = 80
     for m in metrics:
         x = draw_pill(draw, x, 530, m, (15, 80, 80), (100, 230, 220), get_font(22))

@@ -558,7 +558,7 @@ def render_architecture_explorer() -> None:
             "metrics": {
                 "Cost per Qualification": "$0.032",
                 "RAG Query Cost": "$0.045",
-                "Token Reduction (synthetic, seed 42)": "~89%",
+                "Token Reduction (synthetic 2,000-op model, seed 42)": "~89%",
                 "RAG P95 Target": "<50 ms",
             },
             "files": [
@@ -864,7 +864,7 @@ def render_technical_highlights() -> None:
     with col3:
         render_obsidian_metric(
             value="~89%",
-            label="Cost Reduction (synthetic, seed 42)",
+            label="Cost Reduction (synthetic 2,000-op model, seed 42)",
             config=MetricConfig(variant="success", size="medium", trend="up"),
             metric_icon="dollar-sign",
         )

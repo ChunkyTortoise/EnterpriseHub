@@ -411,7 +411,7 @@ Status Updates:
 > *"The Customer Intelligence Platform transformed how we understand our customers. We went from gut-feeling decisions to data-driven strategies that deliver real results."*  
 > — **Sarah Johnson**, VP of Analytics, TechCorp
 
-> *"Implementation was seamless, and our team was productive within the first week. The ROI exceeded our expectations by 200%."*  
+> *"Implementation was smooth, and our team was productive within the first week. The ROI exceeded our expectations by 200%."*  
 > — **Michael Chen**, CTO, GrowthCo
 
 ---
