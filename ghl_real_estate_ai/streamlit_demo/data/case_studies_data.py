@@ -1,6 +1,6 @@
 """
 Case Studies Data
-EnterpriseHub and AgentForge implementations
+EnterpriseHub implementation
 """
 
 CASE_STUDIES = {
@@ -138,115 +138,6 @@ CASE_STUDIES = {
             "Streamlit",
             "Docker",
             "Pytest",
-        ],
-    },
-    "agentforge": {
-        "title": "AgentForge: AI-Powered Lead Qualification",
-        "subtitle": "3x increase in qualified leads, 45% improvement in response rates",
-        "client_industry": "B2B SaaS",
-        "client_size": "Growth-stage startup",
-        "challenge": {
-            "title": "Low Conversion from Cold Outreach",
-            "description": "High volume of inbound leads with low conversion rates. Manual response process causing delays and inconsistent follow-up. No intelligent lead prioritization.",
-            "pain_points": [
-                "Low conversion rates from cold outreach",
-                "Delayed response times to inbound leads",
-                "Inconsistent follow-up workflows",
-                "No lead prioritization system",
-                "Manual qualification consuming sales time",
-                "Limited visibility into lead quality",
-            ],
-        },
-        "solution": {
-            "title": "AI-Powered Lead Qualification and Response Automation",
-            "description": "Intelligent multi-agent system handling lead qualification, automated responses, and intelligent follow-up workflows.",
-            "components": [
-                "Multi-agent workflow system (CrewAI)",
-                "Lead enrichment and research agents",
-                "Automated response generation",
-                "Follow-up workflow orchestration",
-                "Lead scoring ML model",
-                "CRM integration (HubSpot)",
-            ],
-        },
-        "technical_stack": {
-            "backend": ["Python 3.11", "FastAPI", "PostgreSQL"],
-            "ai_ml": ["CrewAI", "Claude API", "LangChain", "Scikit-Learn"],
-            "integrations": ["HubSpot CRM", "Zapier", "Slack"],
-            "testing": ["Pytest", "300+ automated tests"],
-        },
-        "architecture": {
-            "description": "Multi-agent workflow orchestrating lead research, qualification, and outreach",
-            "key_features": [
-                "Agent 1: Lead scraping and enrichment",
-                "Agent 2: Company research and analysis",
-                "Agent 3: Personalized outreach generation",
-                "Agent 4: Follow-up scheduling and tracking",
-                "Human-in-the-loop checkpoints for high-value leads",
-                "Full audit trail of agent decisions",
-            ],
-        },
-        "outcomes": {
-            "primary_metrics": [
-                {"metric": "Qualified Lead Increase", "value": "3x", "detail": "From 100 to 300 leads/month"},
-                {"metric": "Response Rate Improvement", "value": "45%", "detail": "Through personalization"},
-                {"metric": "Time Saved", "value": "85%", "detail": "On lead qualification"},
-                {"metric": "Follow-up Consistency", "value": "100%", "detail": "Automated workflows"},
-            ],
-            "secondary_metrics": [
-                "200 leads/day processing capacity",
-                "340 hours/week saved on manual qualification",
-                "Real-time lead quality scoring",
-                "Automated CRM field updates",
-                "Slack notifications for hot leads",
-            ],
-        },
-        "implementation": {
-            "timeline": "5-7 business days",
-            "phases": [
-                {
-                    "phase": "Phase 1: Multi-Agent Setup",
-                    "duration": "2 days",
-                    "deliverables": [
-                        "CrewAI orchestration framework",
-                        "Agent definitions and coordination",
-                        "Error handling and retry logic",
-                    ],
-                },
-                {
-                    "phase": "Phase 2: Lead Scoring Model",
-                    "duration": "2 days",
-                    "deliverables": [
-                        "Historical data analysis",
-                        "ML model training (XGBoost)",
-                        "Prediction API deployment",
-                    ],
-                },
-                {
-                    "phase": "Phase 3: Integration and Testing",
-                    "duration": "1-3 days",
-                    "deliverables": [
-                        "HubSpot CRM integration",
-                        "Slack notification system",
-                        "Automated test suite (300+ tests)",
-                    ],
-                },
-            ],
-        },
-        "testimonial": {
-            "quote": "The multi-agent system completely transformed our outbound process. We're now processing 3x more leads with the same team size, and our response rates have never been better. The ROI was immediate.",
-            "author": "Head of Sales",
-            "company": "AgentForge",
-        },
-        "technologies_used": [
-            "Python",
-            "FastAPI",
-            "CrewAI",
-            "Claude API",
-            "PostgreSQL",
-            "HubSpot",
-            "Zapier",
-            "Scikit-Learn",
         ],
     },
 }

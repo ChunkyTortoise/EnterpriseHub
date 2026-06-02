@@ -1,6 +1,6 @@
 """
 Case Studies - Detailed implementation showcases
-EnterpriseHub and AgentForge success stories
+EnterpriseHub implementation showcase
 """
 
 import plotly.graph_objects as go
@@ -22,7 +22,6 @@ def render_case_studies():
     # Case study selector
     case_study_names = {
         "enterprisehub": "EnterpriseHub: Real Estate AI Transformation",
-        "agentforge": "AgentForge: AI-Powered Lead Qualification",
     }
 
     selected = st.selectbox(
