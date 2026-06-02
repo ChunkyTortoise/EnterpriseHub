@@ -258,3 +258,9 @@ test_models/
 # Prevent backup files from being committed
 *.backup
 *.dump
+
+# personal agent tooling (canonical copies in ~/.claude)
+.agents/
+.codex/
+.gemini/
+.claude/worktrees/
