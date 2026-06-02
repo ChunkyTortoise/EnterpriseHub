@@ -484,7 +484,7 @@ def render_architecture_explorer() -> None:
             "color": "#1B4F72",
             "components": [
                 "Claude Orchestrator (multi-strategy parsing, L1/L2/L3 cache)",
-                "Agent Mesh Coordinator (22 agents, capability routing, audit trails)",
+                "Agent Mesh Coordinator (7 configured agents, capability routing, audit trails)",
                 "Handoff Service (0.7 confidence, circular prevention, rate limiting)",
             ],
             "metrics": {
