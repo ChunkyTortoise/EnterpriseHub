@@ -23,7 +23,7 @@ Cache keys incorporate `conversation_id + message_hash + model_version` to ensur
 ## Consequences
 
 ### Positive
-- 89% reduction in LLM API costs (93K to 7.8K tokens per workflow)
+- ~89% reduction in LLM API costs (93K to 7.8K tokens per workflow; synthetic 2,000-op model, seed 42)
 - P95 latency reduced from 800ms to <200ms for cached queries
 - L1 prevents Redis round-trips for active conversations, reducing median latency to <1ms
 - L3 enables historical cost analysis and optimization tracking

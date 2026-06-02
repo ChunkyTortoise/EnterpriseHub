@@ -122,7 +122,7 @@ additional_deals = new_deals_per_month - current_deals_per_month
 additional_revenue = additional_deals * avg_deal_value
 additional_commission = additional_revenue * (commission_rate / 100)
 
-# 3. API cost savings (89% reduction via 3-tier caching)
+# 3. API cost savings (~89% reduction via 3-tier caching; synthetic 2,000-op model, seed 42)
 api_savings_per_month = current_monthly_api_cost * 0.89
 
 # 4. Totals
@@ -212,7 +212,7 @@ comparison_data = {
         f"+{conversion_improvement:.0f}%",
         f"+{additional_deals:.1f}",
         f"+${new_monthly_revenue - current_monthly_revenue:,.0f}",
-        "-89%",
+        "-89% (synthetic, seed 42)",
         f"-{time_reduction:.0f}%",
     ],
 }
@@ -265,7 +265,7 @@ with cta3:
 # Footer
 st.divider()
 st.caption(
-    "Calculations based on validated EnterpriseHub benchmarks (Feb 2026): "
-    "89% token cost reduction, 133% conversion improvement, 2-minute response time. "
+    "Calculations based on synthetic EnterpriseHub benchmarks (Feb 2026): "
+    "~89% token cost reduction (synthetic 2,000-op model, seed 42), 133% conversion improvement, 2-minute response time. "
     "Actual results may vary based on implementation and market conditions."
 )

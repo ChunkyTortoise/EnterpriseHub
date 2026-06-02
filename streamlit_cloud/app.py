@@ -281,7 +281,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown(
         "[![GitHub](https://img.shields.io/badge/GitHub-Source-181717?logo=github)](https://github.com/ChunkyTortoise/EnterpriseHub) "
-        "[![Tests](https://img.shields.io/badge/tests-7678-brightgreen)](https://github.com/ChunkyTortoise/EnterpriseHub)"
+        "[![Tests](https://img.shields.io/badge/tests-7665-brightgreen)](https://github.com/ChunkyTortoise/EnterpriseHub)"
     )
 
 # ---------------------------------------------------------------------------
@@ -735,7 +735,9 @@ elif hub == "Circuit Breaker":
 
 elif hub == "Cache Performance":
     st.title("3-Tier Cache Performance")
-    st.caption("L1 Memory → L2 Redis → L3 PostgreSQL — 88.1% total hit rate, 89% cost reduction")
+    st.caption(
+        "L1 Memory → L2 Redis → L3 PostgreSQL — 88.1% total hit rate, ~89% cost reduction (synthetic 2,000-op model, seed 42)"
+    )
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -849,7 +851,9 @@ elif hub == "Cache Performance":
 
 elif hub == "AI Cost Tracking":
     st.title("AI Cost Engineering")
-    st.caption("89% token cost reduction via 3-tier caching, context optimization, and model routing")
+    st.caption(
+        "~89% token cost reduction (synthetic 2,000-op model, seed 42) via 3-tier caching, context optimization, and model routing"
+    )
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -1021,7 +1025,7 @@ st.markdown(
     "EnterpriseHub — Portfolio Demo &bull; "
     "<a href='https://github.com/ChunkyTortoise/EnterpriseHub' style='color:#6366f1'>Source Code</a> &bull; "
     "<a href='https://chunkytortoise.github.io' style='color:#6366f1'>Portfolio</a> &bull; "
-    "7,678 test functions &bull; FastAPI + Streamlit + PostgreSQL + Redis + Claude AI"
+    "7,665 test functions (2026-05-23) &bull; FastAPI + Streamlit + PostgreSQL + Redis + Claude AI"
     "</div>",
     unsafe_allow_html=True,
 )

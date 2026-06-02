@@ -20,7 +20,7 @@
 
 ## What looks impressive but isn't
 
-**7,678 tests.** Test count is a junior-diligence proxy, not a senior-judgment signal. A senior reviewer will sample 10 tests at random and ask "is this testing behavior or implementation?" If half are mocks of mocks, the count actively hurts. EnterpriseHub's parametrized TCPA tests (with Spanish keywords) are the senior-tier signal — surface those specifically. The aggregate count buries the actual evidence.
+**7,665 tests (2026-05-23).** Test count is a junior-diligence proxy, not a senior-judgment signal. A senior reviewer will sample 10 tests at random and ask "is this testing behavior or implementation?" If half are mocks of mocks, the count actively hurts. EnterpriseHub's parametrized TCPA tests (with Spanish keywords) are the senior-tier signal — surface those specifically. The aggregate count buries the actual evidence.
 
 **Cert stacking (21 certs).** Above ~7 certs, additional volume becomes a red flag. The hiring-manager mental model: "this person collects credentials instead of producing." On a senior AI resume, 3–5 named certs maximum, only the ones with technical depth (DeepLearning.AI Deep Learning Specialization, Duke LLMOps, IBM GenAI Engineering — keep these). Drop the marketing certs from the AI-track resume entirely. They're noise that signals "data analyst trying to pivot."
 

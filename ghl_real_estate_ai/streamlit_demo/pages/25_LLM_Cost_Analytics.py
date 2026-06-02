@@ -51,7 +51,7 @@ total_requests = sum(m["requests"] for m in model_data)
 avg_cost_per_request = total_cost / total_requests if total_requests else 0
 
 with col1:
-    st.metric("30-Day Cost", f"${total_cost:.2f}", delta="-89% vs. no cache")
+    st.metric("30-Day Cost", f"${total_cost:.2f}", delta="-89% vs. no cache (modeled)")
 
 with col2:
     st.metric(

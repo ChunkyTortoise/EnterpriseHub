@@ -54,7 +54,7 @@
 
 **[SCREEN: Benchmark results]**
 
-"We measured ~89% LLM cost reduction on a synthetic 2,000-op model (seed 42) with 3-tier caching. 120 tests, 90%+ coverage."
+"The 3-tier cache models ~89% LLM cost reduction on a synthetic 2,000-op model (seed 42). 120 tests, 90%+ coverage."
 
 ---
 

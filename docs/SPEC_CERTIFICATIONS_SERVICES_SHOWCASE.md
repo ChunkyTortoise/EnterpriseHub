@@ -31,7 +31,7 @@ EnterpriseHub is a production-ready AI-powered real estate platform with 7,665 t
 ### Current State Assessment
 
 **Strengths:**
-- Production-ready platform with proven metrics (89% token cost reduction, 87% cache hit rate, P95 latency <2s)
+- Production-ready platform with benchmarked metrics (~89% token cost reduction (synthetic 2,000-op model, seed 42), P95 latency <2s)
 - Comprehensive technical foundation: FastAPI, Streamlit, PostgreSQL, Redis, multi-LLM orchestration
 - Existing marketing content: Fiverr gigs, Gumroad listings, GitHub Sponsors, video walkthrough script
 - 16 service icons, 80+ screenshots (60+ unprocessed), architecture diagrams

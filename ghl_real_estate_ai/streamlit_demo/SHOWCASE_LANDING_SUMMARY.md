@@ -152,7 +152,7 @@ def render_service_categories() -> None:
 - <2s P95 Latency
 - 99.9% Uptime SLA
 - 140+ Microservices
-- ~89% Cost Reduction (synthetic, seed 42)
+- ~89% Cost Reduction (synthetic 2,000-op model, seed 42)
 - 80+ Dashboard Components
 
 ---
