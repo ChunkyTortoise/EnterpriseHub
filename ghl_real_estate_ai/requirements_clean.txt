@@ -19,7 +19,7 @@ google-generativeai>=0.8.0  # Gemini AI Studio support
 # ==============================================================================
 # Pinned for stability with onnxruntime
 chromadb==0.4.24
-sentence-transformers>=3.0.0
+sentence-transformers>=5.5.1
 faiss-cpu>=1.8.0
 
 # ==============================================================================

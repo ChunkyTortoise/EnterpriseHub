@@ -45,7 +45,7 @@ rank-bm25>=0.2.2
 scikit-learn>=1.8.0
 
 # Re-ranking
-sentence-transformers>=2.2.2
+sentence-transformers>=5.5.1
 cohere>=4.0.0
 
 # Text Processing
