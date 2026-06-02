@@ -383,7 +383,7 @@ SUCCESS_METRICS = {
 
 **Strengths**:
 - Service-oriented architecture
-- Comprehensive test coverage (8,500+ tests according to memory)
+- Comprehensive test coverage (7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194)
 - Industry-agnostic design with real estate specialization
 - Async/await throughout
 - Proper error handling

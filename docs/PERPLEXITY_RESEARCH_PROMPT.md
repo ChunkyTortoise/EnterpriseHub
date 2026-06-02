@@ -83,7 +83,7 @@ Research and provide evidence-based recommendations on:
    - Content marketing ROI for technical products
    - Platform diversification strategies (Gumroad, Fiverr, PyPI, etc.)
    - SEO optimization for developer tools and AI products
-   - Community building and open-source leverage
+   - Community building and open-source distribution
    - Video content effectiveness for technical demos
 
 6. **Customer Success & Support**
@@ -99,7 +99,7 @@ Research and provide evidence-based recommendations on:
 ### Current Portfolio
 
 **Products**:
-1. **AgentForge** - Multi-LLM orchestration system (8,500+ tests)
+1. **AgentForge** - Multi-LLM orchestration system (7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194 targeted tests)
 2. **DocQA Engine** - RAG document Q&A with hybrid retrieval
 3. **Insight Engine** - Data intelligence and analytics dashboard
 4. **Web Scraper** - Distributed scraping with price monitoring
@@ -112,12 +112,12 @@ Research and provide evidence-based recommendations on:
 - AI/ML: Claude (Anthropic), GPT (OpenAI), LangChain, LlamaIndex
 - Data: PostgreSQL, Redis (3-layer cache), Pandas, NumPy
 - Frontend: Streamlit, React (minimal)
-- Infrastructure: Docker, GitHub Actions, pytest (8,500+ tests)
+- Infrastructure: Docker, GitHub Actions, pytest (7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194 targeted tests)
 - Tools: Ruff, mypy, pre-commit hooks
 
 **Architecture Patterns**:
 - Multi-agent orchestration with handoff protocols
-- L1/L2/L3 caching (89% cost reduction achieved)
+- L1/L2/L3 caching (~89% cost reduction, synthetic 2,000-op model, seed 42)
 - Async-first API design (<200ms overhead)
 - Event-driven state machines (LangGraph)
 - Type-safe with Pydantic models

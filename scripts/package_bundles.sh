@@ -7,7 +7,7 @@ set -e
 
 GITHUB_DIR="/Users/cave/Documents/GitHub"
 ENTERPRISE_HUB="$GITHUB_DIR/EnterpriseHub"
-ZIPS_DIR="$ENTERPRISE_HUB/content/gumroad/zips"
+ZIPS_DIR="$HOME/Projects/freelance-ops/output/enterprisehub/content/gumroad/zips"
 TIMESTAMP=$(date +%Y%m%d)
 
 echo "=========================================="

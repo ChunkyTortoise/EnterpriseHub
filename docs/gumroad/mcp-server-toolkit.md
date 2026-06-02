@@ -136,5 +136,5 @@ async def limited_action(action: str) -> str:
 - 190 automated tests, all passing
 - Live on PyPI: `pip install mcp-server-toolkit`
 - 3 production-ready servers included
-- Part of an 8,500+ test portfolio across 11 production repos
-- Built by an engineer with 4.3M tool dispatches/sec in production
+- Part of a portfolio with 7,665 tests collected locally 2026-05-23 (make reviewer-smoke passes 194 targeted tests) across 11 production repos
+- Built by an engineer using FastAPI async orchestration with <200ms overhead in production

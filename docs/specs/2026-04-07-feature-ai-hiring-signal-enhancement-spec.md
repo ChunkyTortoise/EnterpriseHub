@@ -42,7 +42,7 @@ Both repos score below senior AI engineering hiring bar due to missing evaluatio
 **Status**: Proposed
 **Context**: Need eval harness for CI. Options: Braintrust (SaaS), Promptfoo (CLI), custom pytest.
 **Decision**: Custom pytest eval harness with LLM-as-judge.
-**Rationale**: (1) Open-source signals engineering judgment over vendor following (Grok research finding). (2) Integrates natively with existing 8,212-test pytest suite. (3) No SaaS dependency. (4) Promptfoo is Node.js -- adding npm to a Python project adds complexity.
+**Rationale**: (1) Open-source signals engineering judgment over vendor following (Grok research finding). (2) Integrates natively with existing pytest suite (7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194). (3) No SaaS dependency. (4) Promptfoo is Node.js -- adding npm to a Python project adds complexity.
 **Consequences**: Must maintain judge rubrics manually. No built-in tracing UI (acceptable for portfolio).
 
 ### ADR-0012: Prompt Versioning -- Git-Native over Registry Service
@@ -133,7 +133,7 @@ class CostTracker:
 {
   "id": "EH-P0",
   "subject": "Document business metrics in EnterpriseHub README",
-  "description": "Add a '## Production Metrics' section to README.md documenting: 89% token cost reduction (93K to 7.8K tokens/workflow via 3-tier cache), agent mesh routing effectiveness (weighted scoring across 22 agents), A/B testing results, cache hit rates (L1 59%, L2 21%, L3 8%). Include before/after data. Reference ADR-0001 for methodology.",
+  "description": "Add a '## Production Metrics' section to README.md documenting: 89% token cost reduction (93K to 7.8K tokens/workflow via 3-tier cache), agent mesh routing effectiveness (weighted scoring across 7 configured agents (~10 with auto-discovery)), A/B testing results, cache hit rates (L1 59%, L2 21%, L3 8%). Include before/after data. Reference ADR-0001 for methodology.",
   "activeForm": "Documenting business metrics",
   "effort": "S",
   "repo": "EnterpriseHub",

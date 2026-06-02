@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 
 # SPEC DATA
 ACCOUNT = "caymanroden@gmail.com"
-ZIP_DIR = "/Users/cave/Documents/GitHub/clients/EnterpriseHub/content/gumroad/zips/"
+ZIP_DIR = os.path.expanduser("~/Projects/freelance-ops/output/enterprisehub/content/gumroad/zips/")
 
 UPDATES = [
     {"old_name": "Prompt Engineering Toolkit", "new_name": "Prompt Engineering Toolkit - Starter", "new_price": "29"},
@@ -225,7 +225,7 @@ Perfect for junior-to-mid developers entering the AI space or building their fir
 
 What's Inside (7 Products):
 
-1. AgentForge Starter ($49) - Multi-LLM orchestration framework. Claude, GPT-4, Gemini, Perplexity unified API. 550+ tests.
+1. Multi-LLM Orchestrator Starter ($49) - Multi-LLM orchestration framework. Claude, GPT-4, Gemini, Perplexity unified API.
 2. DocQA Engine Starter ($59) - Production RAG pipeline. Hybrid retrieval, 5 chunking strategies, citation scoring. 500+ tests.
 3. Web Scraper Starter ($49) - YAML-configured web scraping toolkit. SHA-256 change detection, rate limiting. 370+ tests.
 4. Insight Engine Starter ($49) - CSV to dashboard in 30 seconds. 20+ interactive charts, attribution models, SHAP explanations. 640+ tests.
@@ -251,7 +251,7 @@ This isn't a beginner bundle. You get the Pro tier of all 7 tools plus case stud
 
 What's Inside (7 Pro-Tier Products):
 
-1. AgentForge Pro ($199) - Framework + 3 case studies ($147K savings proven) + 30-min consult + 9 advanced examples + CI/CD templates + priority support.
+1. Multi-LLM Orchestrator Pro ($199) - Framework + 3 illustrative case studies + 30-min consult + 9 advanced examples + CI/CD templates + priority support.
 2. DocQA Engine Pro ($249) - RAG pipeline + 30-page optimization guide + 3 domain case studies (94% recall) + 30-min consult + priority support.
 3. Web Scraper Pro ($149) - Toolkit + 15 production templates + proxy rotation guide + anti-detection strategies + 30-min consult.
 4. Insight Engine Pro ($199) - BI dashboards + advanced analytics guide + 3 case studies (92% forecast accuracy) + 5 PDF templates + 30-min consult.

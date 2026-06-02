@@ -376,7 +376,7 @@ Task assignment:
 Quality standards:
 - Scripts 300-500 words for 2min videos, 900-1200 for 6min videos
 - First 10 seconds must hook viewer (pain point or bold claim)
-- Include specific metrics (89% cost reduction, 8,500 tests, etc.)
+- Include specific metrics (~89% cost reduction (synthetic 2,000-op model, seed 42), 7,665 tests collected locally 2026-05-23, etc.)
 - CTA must be actionable (not "check it out" but "Deploy in 10 minutes")
 
 Output format: Markdown with YAML frontmatter (title, duration, target_audience, key_metrics)

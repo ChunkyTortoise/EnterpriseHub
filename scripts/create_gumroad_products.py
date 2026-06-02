@@ -26,7 +26,7 @@ def main():
     # And maybe we can't create via API, but we can update.
     # If the user already created some, I should update them.
 
-    # Example update for AgentForge Starter if it exists
+    # Example update for Multi-LLM Orchestrator Starter if it exists
     for p in products:
         print(f"Product: {p['name']} (ID: {p['id']})")
         # I could implement the full update logic here based on the MD spec.

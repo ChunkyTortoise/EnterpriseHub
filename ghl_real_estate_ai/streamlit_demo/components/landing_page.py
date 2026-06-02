@@ -152,8 +152,8 @@ def render_landing_page():
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <div style="font-size: 2rem; color: #10B981;">💰</div>
                         <div>
-                            <div style="font-size: 1.5rem; color: white; font-weight: 700;">$240,000 Saved</div>
-                            <div style="color: #94a3b8;">Annual reduction in manual labor costs</div>
+                            <div style="font-size: 1.5rem; color: white; font-weight: 700;">~$240,000 Projected</div>
+                            <div style="color: #94a3b8;">Projected annual labor-cost reduction (workflow estimate, not measured)</div>
                         </div>
                     </div>
                     <div style="display: flex; align-items: center; gap: 1rem;">

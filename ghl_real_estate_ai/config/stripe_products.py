@@ -38,7 +38,7 @@ def _determine_tier(spec_name: str) -> str:
 def _determine_family(spec_name: str) -> str:
     sl = spec_name.lower()
     if "agentforge" in sl:
-        return "AgentForge"
+        return "Multi-LLM Orchestrator"
     if "prompt" in sl:
         return "Prompt Toolkit"
     if "ai integration" in sl or "starter kit" in sl:

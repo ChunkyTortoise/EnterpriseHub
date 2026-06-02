@@ -3,7 +3,7 @@ LLM Provider Protocol
 
 Defines the standard interface for LLM providers across the portfolio.
 All LLM integrations (Claude, GPT, Gemini, etc.) should implement this protocol
-to ensure interoperability with AgentForge and other orchestration systems.
+to ensure interoperability across LLM providers and orchestration systems.
 
 Usage:
     from shared.contracts.llm_provider import LLMProvider, LLMMessage
@@ -91,7 +91,7 @@ class LLMProvider(Protocol):
     Protocol defining the interface for LLM providers.
 
     All LLM integrations must implement this protocol to be compatible
-    with AgentForge's orchestration system and other portfolio components.
+    with the orchestration layer and other platform components.
 
     The protocol supports both synchronous-style async completion and
     streaming responses for real-time applications.

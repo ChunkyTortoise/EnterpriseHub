@@ -17,10 +17,10 @@ The showcase landing page is the primary entry point for the EnterpriseHub profe
 ### Impact Highlights
 | Metric | Value | Context |
 |--------|-------|----------|
-| **Cost Reduction** | 89% | Token/AI cost savings vs. baseline |
+| **Cost Reduction** | ~89% | Synthetic 2,000-op model (seed 42), not production-measured |
 | **Faster Response** | 95% | Lead response time improvement |
 | **Conversion Increase** | 133% | Lead-to-deal conversion lift |
-| **Annual Savings** | $240K | EnterpriseHub case study |
+| **Annual Savings** | ~$240K (projected) | Workflow-based estimate, not measured |
 
 ### Gig Strategy (Signature Offers)
 The portfolio is organized around four premium service bundles:
@@ -46,7 +46,7 @@ The portfolio is organized around four premium service bundles:
 ### 1. Hero Section
 - **Headline:** "Production-Grade AI Systems & Data Infrastructure"
 - **Key Metrics:** 19 Certifications | 1,768 Training Hours | 31 Services
-- **Social Proof:** 87% Efficiency Gains | $240K Annual Savings
+- **Social Proof:** Projected ~87% Efficiency Gains | Projected ~$240K Annual Savings (estimates, not measured)
 - **CTAs:** View Services | Request Demo | See Case Studies
 
 ### 2. Key Metrics Display
@@ -54,12 +54,12 @@ Professional stat cards showcasing:
 - 19 Professional Certifications
 - 1,768 Hours Training
 - 31 Service Offerings
-- 87% Efficiency Gains
+- Projected ~87% Efficiency Gains (estimate)
 
 ### 3. Case Study Highlights
 EnterpriseHub results broken into 4 categories:
-- **Performance Optimization**: 89% token cost reduction
-- **Cost Savings**: $240K annual savings
+- **Performance Optimization**: ~89% token cost reduction (synthetic 2,000-op model, seed 42)
+- **Cost Savings**: projected ~$240K annual savings (estimate, not measured)
 - **AI Orchestration**: Multi-LLM coordination (95% faster response)
 - **Business Intelligence**: 80+ dashboard components (133% conversion increase)
 
@@ -78,7 +78,7 @@ Metrics using Obsidian-themed components:
 - <2s P95 Latency
 - 99.9% Uptime SLA
 - 140+ Microservices
-- 89% Cost Reduction
+- ~89% Cost Reduction (synthetic, seed 42)
 - 80+ Dashboard Components
 
 ### 6. Navigation Tabs

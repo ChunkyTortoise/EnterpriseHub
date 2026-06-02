@@ -1,4 +1,4 @@
-"""Logging utility for AgentForge with Correlation ID support."""
+"""Logging utility with Correlation ID support."""
 
 import logging
 import sys

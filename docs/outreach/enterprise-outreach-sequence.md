@@ -16,9 +16,9 @@ I have been following {Company}'s work in {industry/vertical}. {Specific_observa
 
 A pattern I see with mid-market engineering teams: they build great AI features, then spend months rebuilding infrastructure that already exists -- multi-tenant RAG, prompt versioning, agent monitoring, billing metering.
 
-I am an AI automation engineer who has built and shipped this exact infrastructure across 11 production repos with 8,500+ automated tests. The platform I built manages a $50M+ pipeline in real estate, but the patterns are industry-agnostic.
+I am an AI automation engineer who has built and shipped this exact infrastructure across 11 production repos with 7,665 tests collected locally 2026-05-23 (make reviewer-smoke passes 194 targeted tests). The platform I built manages a $50M+ pipeline in real estate, but the patterns are industry-agnostic.
 
-One specific number: 89% LLM cost reduction via 3-tier caching. Most teams I talk to are overspending on API calls by 3-5x.
+One specific number: ~89% LLM cost reduction (synthetic 2,000-op model, seed 42) via 3-tier caching. Most teams I talk to are overspending on API calls by 3-5x.
 
 Is AI infrastructure cost or velocity a priority for your team right now?
 
@@ -43,7 +43,7 @@ Wanted to share a concrete example of what production AI infrastructure looks li
 
 **What I Built**:
 - Multi-agent orchestration with 3 specialized bots (Lead, Buyer, Seller)
-- 3-tier Redis caching (L1/L2/L3) -- 89% cost reduction, 88% cache hit rate
+- 3-tier Redis caching (L1/L2/L3) -- ~89% cost reduction (synthetic 2,000-op model, seed 42), 88% cache hit rate
 - Cross-bot handoff with 0.7 confidence threshold, circular prevention, rate limiting
 - Real-time BI dashboards (Monte Carlo simulation, sentiment analysis, churn detection)
 - GoHighLevel, HubSpot, and Salesforce CRM integrations via unified protocol
@@ -51,7 +51,7 @@ Wanted to share a concrete example of what production AI infrastructure looks li
 **The Numbers**:
 - 5,100+ tests in the core platform alone
 - P99 orchestration overhead: 0.095ms
-- 4.3M tool dispatches/sec in the agent engine
+- FastAPI async orchestration with <200ms overhead
 - <200ms end-to-end response time under 10 req/sec load
 
 I have packaged the reusable infrastructure into 5 products (568 total tests) that can accelerate your team's AI development by 2-4 months.

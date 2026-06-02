@@ -16,9 +16,9 @@ I noticed {AgencyName} is doing {specific_AI_service} for your clients. Impressi
 
 Quick question -- are your clients' AI agents running with any caching layer, or are they hitting the LLM API on every single request?
 
-I ask because I built a 3-tier caching system (Redis L1/L2/L3) for a real estate AI platform that reduced LLM costs by 89%. That is not a typo -- 89% cost reduction with an 88% cache hit rate, verified by benchmarks.
+I ask because I built a 3-tier caching system (Redis L1/L2/L3) for a real estate AI platform that reduced LLM costs by ~89% (synthetic 2,000-op model, seed 42). That is not a typo: ~89% cost reduction with an 88% cache hit rate on the synthetic benchmark.
 
-The platform manages a $50M+ pipeline with AI-powered lead qualification, and I have open-sourced the patterns across 11 production repos with 8,500+ automated tests.
+The platform manages a $50M+ pipeline with AI-powered lead qualification, and I have open-sourced the patterns across 11 production repos with 7,665 tests collected locally 2026-05-23 (make reviewer-smoke passes 194 targeted tests).
 
 If cost optimization or production-grade AI infrastructure is relevant to your agency, I would be happy to share the architecture.
 
@@ -41,8 +41,7 @@ Following up with something concrete.
 
 Here is what my production AI stack delivers:
 
-- **89% LLM cost reduction** (3-tier Redis caching, 88% hit rate)
-- **4.3M tool dispatches/sec** (AgentForge orchestration engine)
+- **~89% LLM cost reduction** (synthetic 2,000-op model, seed 42; 3-tier Redis caching, 88% hit rate)
 - **<200ms orchestration overhead** (P99: 0.095ms)
 - **568 automated tests** across 5 production products
 - **Multi-tenant RAG** with pgvector hybrid search + Stripe metered billing

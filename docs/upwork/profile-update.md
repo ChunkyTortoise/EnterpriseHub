@@ -2,7 +2,7 @@
 
 ## Title
 
-**Senior AI Engineer | RAG Systems, Multi-Agent Orchestration, Voice AI, GoHighLevel | 8,500+ Tests**
+**Senior AI Engineer | RAG Systems, Multi-Agent Orchestration, Voice AI, GoHighLevel | 7,665 Tests Collected (2026-05-23)**
 
 ---
 
@@ -13,14 +13,14 @@ I build production AI infrastructure that ships with tests, documentation, and D
 **What I deliver:**
 
 - **RAG Systems**: Multi-tenant document Q&A with pgvector hybrid search, PII detection, and Stripe metered billing. 120+ tests per implementation.
-- **Multi-Agent Orchestration**: Agent coordination with 4.3M tool dispatches/sec, cross-agent handoff, and real-time monitoring. Used in production managing $50M+ pipeline.
+- **Multi-Agent Orchestration**: Agent coordination with FastAPI async orchestration (<200ms overhead), cross-agent handoff, and real-time monitoring. Used in production managing $50M+ pipeline.
 - **Voice AI**: Real-time voice agents via Twilio + Deepgram + ElevenLabs + Claude. Lead qualification, appointment booking, CRM sync.
 - **GoHighLevel Integration**: Custom field mapping, workflow triggers, calendar booking, contact tagging, cross-bot handoff -- all via GHL API.
-- **LLM Cost Optimization**: 3-tier Redis caching that achieved 89% cost reduction (88% cache hit rate, verified).
+- **LLM Cost Optimization**: 3-tier Redis caching with ~89% cost reduction (synthetic 2,000-op model, seed 42; 88% cache hit rate).
 
 **My track record:**
 
-- 11 production repositories with 8,500+ automated tests, all CI green
+- 11 production repositories with 7,665 tests collected locally 2026-05-23 (make reviewer-smoke passes 194 targeted tests), all CI green
 - 33 Architecture Decision Records documenting engineering tradeoffs
 - Benchmark suites with P50/P95/P99 metrics in every repo
 - Docker deployment across all repos (Dockerfile + docker-compose)
@@ -44,7 +44,7 @@ I build production AI infrastructure that ships with tests, documentation, and D
 
 I design and build Retrieval-Augmented Generation systems for production use. My RAG implementations include hybrid search (semantic + BM25 with RRF fusion), query expansion (HyDE, multi-query), PII detection, and multi-tenant isolation.
 
-Key project: Multi-tenant RAG-as-a-Service platform with 120 tests, Stripe metered billing, and 89% LLM cost reduction via caching.
+Key project: Multi-tenant RAG-as-a-Service platform with 120 tests, Stripe metered billing, and ~89% LLM cost reduction (synthetic 2,000-op model, seed 42) via caching.
 
 ### Specialized Profile 2: AI Agent Development
 
@@ -80,7 +80,7 @@ Key project: Real estate AI platform with 3 specialized bots, 5,100+ tests, mana
 
 ### 1. Enterprise AI Platform (EnterpriseHub)
 - Real estate AI with 3 CRM integrations, lead qualification bots, BI dashboards
-- 5,100+ tests, 89% LLM cost reduction, $50M+ pipeline managed
+- 5,100+ tests, ~89% LLM cost reduction (synthetic 2,000-op model, seed 42), $50M+ pipeline managed
 - Stack: FastAPI, PostgreSQL, Redis, Claude, Streamlit
 
 ### 2. MCP Server Toolkit (PyPI)

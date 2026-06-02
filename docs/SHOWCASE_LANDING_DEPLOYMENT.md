@@ -52,7 +52,7 @@ pandas>=2.1.0
 ### Core Requirements ✅
 - [x] Hero section with professional headline
 - [x] Key metrics display (19 certifications, 1,768 hours, 31 services)
-- [x] Case study highlights ($240K savings, 87% efficiency)
+- [x] Case study highlights: projected ~$240K annual savings (workflow-based estimate, not measured production figures); projected ~87% efficiency (workflow estimate)
 - [x] Service categories (6 categories, 31 services)
 - [x] Navigation tabs (certifications, services, case studies, gallery, contact)
 - [x] Demo request form with validation

@@ -77,8 +77,7 @@ These products are built to work together. The Shared Schemas package provides c
 568 automated tests across 5 products. Every product has Docker support, CI/CD pipelines, and architecture documentation. This is not tutorial code.
 
 ### 3. Verified Metrics
-- **89% LLM cost reduction** via 3-tier Redis caching
-- **4.3M tool dispatches/sec** in the agent engine
+- **~89% LLM cost reduction** (synthetic 2,000-op model, seed 42) via 3-tier Redis caching
 - **<200ms orchestration overhead** (P99: 0.095ms)
 - **88% cache hit rate** verified via benchmarks
 

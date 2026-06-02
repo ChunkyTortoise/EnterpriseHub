@@ -5,7 +5,7 @@ Target lane: AI Backend / LLMOps
 
 ## Executive Summary
 
-EnterpriseHub is strongest as a proof-heavy AI backend portfolio repo: FastAPI services, GoHighLevel webhooks, multi-bot orchestration, compliance post-processing, LLM caching, evals, and CI/security infrastructure. The highest-leverage work is not another feature; it is keeping the proof path reproducible and preventing older docs from making claims stronger than the evidence.
+EnterpriseHub is strongest as a proof-heavy AI backend portfolio repo: FastAPI services, GoHighLevel webhooks, multi-bot orchestration, compliance post-processing, LLM caching, evals, and CI/security infrastructure. The highest-impact work is not another feature; it is keeping the proof path reproducible and preventing older docs from making claims stronger than the evidence.
 
 Current score: 78/100 hiring readiness.
 
@@ -62,7 +62,7 @@ python3 -m pytest --collect-only --override-ini='addopts=' -q
 - Do not claim the LLM judge is human-validated; current proof is eval harness discipline, not calibrated judge validity.
 - Do not claim all FastAPI routes meet production metadata standards; the May 23 scan still found 707 route decorators with 431 missing `response_model` and 682 missing explicit `status_code`.
 - Do not claim green security posture from the badge alone; check current GitHub Security Scan status.
-- Do not claim 22 live registered agents unless a runtime registry snapshot is generated; use "22-agent mesh architecture" for now.
+- Do not claim live registered agents beyond the configured roster unless a runtime registry snapshot is generated; use "7 configured agents (~10 with auto-discovery)" for now.
 
 ## Interview Talking Points
 

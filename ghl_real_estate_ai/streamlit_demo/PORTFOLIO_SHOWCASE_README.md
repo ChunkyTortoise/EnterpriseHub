@@ -16,7 +16,7 @@ Professional services portfolio and case studies pages showcasing 31 AI/data ser
   - Core differentiators (19 certs, 1,768 hours training)
   
 - **`data/case_studies_data.py`** (12KB)
-  - EnterpriseHub case study (87% reduction, $240K savings)
+  - EnterpriseHub case study (projected ~87% reduction, projected ~$240K savings, estimates not measured)
   - AgentForge case study (3x leads, 45% response improvement)
   - Full technical stack, architecture, implementation timeline
   
@@ -78,10 +78,10 @@ Professional services portfolio and case studies pages showcasing 31 AI/data ser
 
 ### Case Studies
 1. **EnterpriseHub**
-   - 87% reduction in manual review time
-   - $240,000 annual savings
-   - 89% token cost reduction
-   - 87% cache hit rate
+   - Projected ~87% reduction in manual review time (workflow estimate)
+   - Projected ~$240K annual savings (estimate, not measured)
+   - ~89% token cost reduction (synthetic 2,000-op model, seed 42)
+   - ~87% cache hit rate (synthetic 2,000-op model, seed 42; L1-only measured at 90.8%)
    - P95 latency <2s
    - 3x increase in qualified leads
    - Technical stack: FastAPI, PostgreSQL, Redis, Claude/Gemini/Perplexity, LangChain, Streamlit

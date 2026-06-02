@@ -46,7 +46,7 @@ class VectorStore:
 
     def __init__(
         self,
-        collection_name: str = "agentforge_docs",
+        collection_name: str = "knowledge_docs",
         embedding_model: Optional[EmbeddingModel] = None,
         persist_directory: str = "./.chroma_db",
     ):

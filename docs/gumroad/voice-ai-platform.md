@@ -115,4 +115,4 @@ A: PII detection is built in. For HIPAA, you need BAAs with Twilio/Deepgram/Elev
 - 66 automated tests, all passing
 - Docker-ready deployment
 - Built by an engineer managing $50M+ real estate pipelines with AI
-- Part of an 8,500+ test portfolio across 11 production repos
+- Part of an 11-repo production portfolio (EnterpriseHub flagship: 7,665 tests collected locally 2026-05-23)
