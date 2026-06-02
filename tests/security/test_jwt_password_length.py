@@ -11,6 +11,9 @@ from fastapi import HTTPException, status
 
 from ghl_real_estate_ai.api.middleware.jwt_auth import JWTAuth
 
+# Collected by the `-m integration` CI job (see .github/workflows/ci.yml).
+pytestmark = pytest.mark.integration
+
 
 def test_hash_password_accepts_exactly_72_bytes():
     """A 72-byte password is at the limit and must hash without error."""
