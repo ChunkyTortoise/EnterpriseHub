@@ -21,8 +21,20 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from ghl_real_estate_ai.api.routes.predictive_scoring_v2 import router
+from ghl_real_estate_ai.api.routes.predictive_scoring_v2 import router, verify_jwt_token
 from ghl_real_estate_ai.services.realtime_inference_engine_v2 import InferenceResult, MarketSegment
+
+
+def override_auth(app, user):
+    """Override the JWT auth dependency on a local app instance.
+
+    The route binds ``Depends(verify_jwt_token)`` at import time, so patching
+    the module attribute is a no-op. ``verify_jwt_token`` is also not bearer
+    backed, so without an override it treats ``token`` as a required query
+    param and returns 422. Each test builds its own bare ``FastAPI()`` app, so
+    the override lives on that local app and needs no shared teardown.
+    """
+    app.dependency_overrides[verify_jwt_token] = lambda: user
 
 
 @pytest.fixture
@@ -97,17 +109,16 @@ def sample_request_data():
 class TestPredictiveScoringV2Routes:
     """Test V2 API route functionality"""
 
-    @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.verify_jwt_token")
     @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.inference_engine")
-    def test_score_lead_v2_success(self, mock_engine, mock_auth, mock_user, mock_inference_result, sample_request_data):
+    def test_score_lead_v2_success(self, mock_engine, mock_user, mock_inference_result, sample_request_data):
         """Test successful V2 lead scoring"""
-        mock_auth.return_value = mock_user
         mock_engine.predict = AsyncMock(return_value=mock_inference_result)
 
         from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(router)
+        override_auth(app, mock_user)
         client = TestClient(app)
 
         response = client.post("/api/v2/predictive-scoring/score", json=sample_request_data)
@@ -141,29 +152,31 @@ class TestPredictiveScoringV2Routes:
         assert 0 <= data["qualification_score"] <= 7
         assert 0 <= data["conversion_probability"] <= 1
 
-    @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.verify_jwt_token")
+    @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2._get_legacy_scorer")
     @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.inference_engine")
-    @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.legacy_scorer")
     def test_score_lead_v2_fallback_to_legacy(
-        self, mock_legacy, mock_engine, mock_auth, mock_user, sample_request_data
+        self, mock_engine, mock_get_legacy, mock_user, sample_request_data
     ):
         """Test fallback to legacy scorer when V2 fails"""
-        mock_auth.return_value = mock_user
         mock_engine.predict = AsyncMock(side_effect=Exception("V2 inference failed"))
 
-        # Mock legacy scorer response
+        # Mock legacy scorer response. score_lead is called synchronously
+        # (the lru_cache singleton accessor returns the scorer instance).
         mock_legacy_result = Mock()
         mock_legacy_result.score = 75.0
         mock_legacy_result.confidence = 0.7
         mock_legacy_result.tier = "warm"
         mock_legacy_result.recommendations = ["Follow up within 24 hours"]
 
+        mock_legacy = Mock()
         mock_legacy.score_lead.return_value = mock_legacy_result
+        mock_get_legacy.return_value = mock_legacy
 
         from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(router)
+        override_auth(app, mock_user)
         client = TestClient(app)
 
         response = client.post("/api/v2/predictive-scoring/score", json=sample_request_data)
@@ -177,12 +190,9 @@ class TestPredictiveScoringV2Routes:
         assert data["model_version"] == "legacy_fallback"
         assert data["market_segment"] == "general_market"
 
-    @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.verify_jwt_token")
     @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.inference_engine")
-    def test_batch_scoring_success(self, mock_engine, mock_auth, mock_user, mock_inference_result):
+    def test_batch_scoring_success(self, mock_engine, mock_user, mock_inference_result):
         """Test successful batch lead scoring"""
-        mock_auth.return_value = mock_user
-
         # Mock batch results
         batch_results = []
         for i in range(3):
@@ -221,6 +231,7 @@ class TestPredictiveScoringV2Routes:
 
         app = FastAPI()
         app.include_router(router)
+        override_auth(app, mock_user)
         client = TestClient(app)
 
         response = client.post("/api/v2/predictive-scoring/score-batch", json=batch_request)
@@ -239,11 +250,8 @@ class TestPredictiveScoringV2Routes:
         assert data["summary"]["average_score"] > 0
         assert data["summary"]["processing_mode"] == "batch_fast"
 
-    @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.verify_jwt_token")
-    def test_batch_scoring_size_limit(self, mock_auth, mock_user):
+    def test_batch_scoring_size_limit(self, mock_user):
         """Test batch scoring enforces size limits"""
-        mock_auth.return_value = mock_user
-
         # Create request with too many leads
         batch_request = {
             "leads": [
@@ -256,12 +264,18 @@ class TestPredictiveScoringV2Routes:
 
         app = FastAPI()
         app.include_router(router)
+        override_auth(app, mock_user)
         client = TestClient(app)
 
         response = client.post("/api/v2/predictive-scoring/score-batch", json=batch_request)
 
-        assert response.status_code == 400
-        assert "Maximum 100 leads" in response.json()["detail"]
+        # The 100-lead cap is enforced by the BatchScoringRequest field
+        # constraint (max_items=100), so pydantic rejects 101 leads at request
+        # validation with a 422 before the handler runs. The handler's inner
+        # 400 check is now unreachable dead code.
+        assert response.status_code == 422
+        errors = response.json()["detail"]
+        assert any(e["type"] == "too_long" and e["loc"][-1] == "leads" for e in errors)
 
     @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.verify_jwt_token")
     @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.signal_processor")
@@ -296,12 +310,9 @@ class TestPredictiveScoringV2Routes:
         assert len(mock_signals) == 5
         assert all(0 <= v <= 1 for v in mock_signals.values())
 
-    @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.verify_jwt_token")
     @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.lead_router")
-    def test_routing_recommendation_endpoint(self, mock_router, mock_auth, mock_user):
+    def test_routing_recommendation_endpoint(self, mock_router, mock_user):
         """Test routing recommendation endpoint"""
-        mock_auth.return_value = mock_user
-
         mock_recommendation = {
             "recommended_agent": "agent_001",
             "agent_name": "Sarah Mitchell",
@@ -317,17 +328,24 @@ class TestPredictiveScoringV2Routes:
 
         app = FastAPI()
         app.include_router(router)
+        override_auth(app, mock_user)
         client = TestClient(app)
 
-        request_data = {
+        # lead_id, lead_score, routing_strategy are scalar -> query params;
+        # behavioral_signals and lead_data are the JSON body.
+        params = {
             "lead_id": "test_lead",
             "lead_score": 85.5,
-            "behavioral_signals": {"tech_company_association": 1.0},
-            "lead_data": {"budget": 750000, "location": "Rancho Cucamonga"},
             "routing_strategy": "hybrid_intelligent",
         }
+        body = {
+            "behavioral_signals": {"tech_company_association": 1.0},
+            "lead_data": {"budget": 750000, "location": "Rancho Cucamonga"},
+        }
 
-        response = client.post("/api/v2/predictive-scoring/routing-recommendation", json=request_data)
+        response = client.post(
+            "/api/v2/predictive-scoring/routing-recommendation", params=params, json=body
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -336,12 +354,9 @@ class TestPredictiveScoringV2Routes:
         assert data["agent_name"] == "Sarah Mitchell"
         assert data["match_score"] == 92.5
 
-    @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.verify_jwt_token")
     @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.inference_engine")
-    def test_performance_metrics_endpoint(self, mock_engine, mock_auth, mock_user):
+    def test_performance_metrics_endpoint(self, mock_engine, mock_user):
         """Test performance metrics endpoint"""
-        mock_auth.return_value = mock_user
-
         mock_metrics = {
             "p95_latency_ms": 75.0,
             "cache_hit_rate": 0.65,
@@ -358,6 +373,7 @@ class TestPredictiveScoringV2Routes:
 
         app = FastAPI()
         app.include_router(router)
+        override_auth(app, mock_user)
         client = TestClient(app)
 
         response = client.get("/api/v2/predictive-scoring/performance-metrics")
@@ -370,16 +386,14 @@ class TestPredictiveScoringV2Routes:
         assert data["system_status"] == "healthy"
         assert "model_health" in data
 
-    @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.verify_jwt_token")
-    def test_cache_warming_admin_only(self, mock_auth, mock_user):
+    def test_cache_warming_admin_only(self, mock_user):
         """Test cache warming requires admin privileges"""
-        # Test with non-admin user
-        mock_auth.return_value = {"role": "user", "user_id": "test"}
-
         from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(router)
+        # Override with a non-admin user.
+        override_auth(app, {"role": "user", "user_id": "test"})
         client = TestClient(app)
 
         sample_leads = [{"lead_id": "test", "budget": 500000}]
@@ -388,17 +402,16 @@ class TestPredictiveScoringV2Routes:
         assert response.status_code == 403
         assert "admin or manager privileges" in response.json()["detail"]
 
-    @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.verify_jwt_token")
     @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.inference_engine")
-    def test_cache_warming_success(self, mock_engine, mock_auth, mock_user):
+    def test_cache_warming_success(self, mock_engine, mock_user):
         """Test successful cache warming"""
-        mock_auth.return_value = mock_user  # Admin user
         mock_engine.warm_cache = AsyncMock()
 
         from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(router)
+        override_auth(app, mock_user)  # Admin user
         client = TestClient(app)
 
         sample_leads = [{"lead_id": "test1", "budget": 500000}, {"lead_id": "test2", "budget": 600000}]
@@ -411,17 +424,16 @@ class TestPredictiveScoringV2Routes:
         assert data["status"] == "warming_initiated"
         assert data["sample_count"] == 2
 
-    @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.verify_jwt_token")
     @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.inference_engine")
-    def test_legacy_endpoint_compatibility(self, mock_engine, mock_auth, mock_user, mock_inference_result):
+    def test_legacy_endpoint_compatibility(self, mock_engine, mock_user, mock_inference_result):
         """Test legacy endpoint maintains backward compatibility"""
-        mock_auth.return_value = mock_user
         mock_engine.predict = AsyncMock(return_value=mock_inference_result)
 
         from fastapi import FastAPI
 
         app = FastAPI()
         app.include_router(router)
+        override_auth(app, mock_user)
         client = TestClient(app)
 
         legacy_request = {

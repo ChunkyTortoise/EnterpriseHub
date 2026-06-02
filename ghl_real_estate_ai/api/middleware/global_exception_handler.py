@@ -123,18 +123,21 @@ class GlobalExceptionHandler:
         return {
             # Business Logic Errors
             "commission_validation": {
+                "type": "commission_validation",
                 "status_code": 400,
                 "message": "Commission rate validation failed",
                 "guidance": "Commission must be between 5% and 8% for Jorge's listings",
                 "retryable": False,
             },
             "property_qualification": {
+                "type": "property_qualification",
                 "status_code": 400,
                 "message": "Property does not meet Jorge's criteria",
                 "guidance": "Properties must be residential, $100K-$2M range, in supported markets",
                 "retryable": False,
             },
             "lead_scoring_error": {
+                "type": "lead_scoring_error",
                 "status_code": 400,
                 "message": "Lead scoring validation failed",
                 "guidance": "Check lead data completeness and contact information",
@@ -142,18 +145,21 @@ class GlobalExceptionHandler:
             },
             # External Service Errors
             "ghl_api_error": {
+                "type": "ghl_api_error",
                 "status_code": 502,
                 "message": "GoHighLevel service temporarily unavailable",
                 "guidance": "CRM operations will retry automatically",
                 "retryable": True,
             },
             "claude_api_error": {
+                "type": "claude_api_error",
                 "status_code": 502,
                 "message": "AI assistant service temporarily unavailable",
                 "guidance": "AI features will be restored shortly",
                 "retryable": True,
             },
             "retell_api_error": {
+                "type": "retell_api_error",
                 "status_code": 502,
                 "message": "Voice calling service unavailable",
                 "guidance": "Voice features temporarily disabled",
@@ -161,12 +167,14 @@ class GlobalExceptionHandler:
             },
             # Database and Performance
             "database_timeout": {
+                "type": "database_timeout",
                 "status_code": 503,
                 "message": "Database operation timed out",
                 "guidance": "Please try your request again",
                 "retryable": True,
             },
             "cache_miss": {
+                "type": "cache_miss",
                 "status_code": 202,
                 "message": "Data is being processed",
                 "guidance": "Results will be available shortly",
@@ -174,12 +182,14 @@ class GlobalExceptionHandler:
             },
             # Authentication and Authorization
             "auth_token_expired": {
+                "type": "auth_token_expired",
                 "status_code": 401,
                 "message": "Authentication token has expired",
                 "guidance": "Please sign in again to continue",
                 "retryable": False,
             },
             "insufficient_permissions": {
+                "type": "insufficient_permissions",
                 "status_code": 403,
                 "message": "Insufficient permissions for this action",
                 "guidance": "Contact your administrator for access",
@@ -187,12 +197,14 @@ class GlobalExceptionHandler:
             },
             # WebSocket Specific
             "websocket_connection_failed": {
+                "type": "websocket_connection_failed",
                 "status_code": 503,
                 "message": "Real-time connection failed",
                 "guidance": "Refreshing page may restore real-time features",
                 "retryable": True,
             },
             "websocket_message_invalid": {
+                "type": "websocket_message_invalid",
                 "status_code": 400,
                 "message": "Invalid real-time message format",
                 "guidance": "Check message structure and try again",

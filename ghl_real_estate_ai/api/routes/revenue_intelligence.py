@@ -73,7 +73,8 @@ class RevenueForecastResponse(BaseModel):
     """Response for revenue forecast"""
 
     forecast: Dict[str, Any]
-    confidence_metrics: Dict[str, float]
+    # forecast_accuracy is an enum surfaced as a string, so this map is not all-float.
+    confidence_metrics: Dict[str, Any]
     strategic_insights: List[str]
     model_performance: Dict[str, float]
     generated_at: datetime

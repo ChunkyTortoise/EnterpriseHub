@@ -130,7 +130,12 @@ def _set_overrides(ghl=None, mem=None, scorer=None, matcher=None):
     """Set FastAPI dependency overrides for leads routes."""
     app = _get_app()
     get_ghl_client, get_memory_service, get_lead_scorer, get_property_matcher = _get_dep_functions()
+    # The leads router is mounted with a router-level Depends(get_current_user)
+    # auth gate, so tests must satisfy it or every request 403s before the
+    # handler runs.
+    from ghl_real_estate_ai.api.middleware.jwt_auth import get_current_user
 
+    app.dependency_overrides[get_current_user] = lambda: {"user_id": "test-user", "role": "admin"}
     app.dependency_overrides[get_ghl_client] = lambda: ghl or _mock_ghl_api_client()
     app.dependency_overrides[get_memory_service] = lambda: mem or _mock_memory_service()
     app.dependency_overrides[get_lead_scorer] = lambda: scorer or _mock_lead_scorer()

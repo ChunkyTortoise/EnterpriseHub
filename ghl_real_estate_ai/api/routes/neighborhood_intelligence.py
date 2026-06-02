@@ -22,6 +22,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, Path, Query, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
@@ -221,13 +222,13 @@ async def get_alert_system():
 def create_success_response(data: Any, message: str = "Success", execution_time: float = None) -> JSONResponse:
     """Create standardized success response."""
     response = APIResponse(success=True, data=data, message=message, execution_time_ms=execution_time)
-    return JSONResponse(status_code=status.HTTP_200_OK, content=response.dict())
+    return JSONResponse(status_code=status.HTTP_200_OK, content=jsonable_encoder(response))
 
 
 def create_error_response(error: str, message: str, status_code: int = 400) -> JSONResponse:
     """Create standardized error response."""
     response = ErrorResponse(error=error, message=message)
-    return JSONResponse(status_code=status_code, content=response.dict())
+    return JSONResponse(status_code=status_code, content=jsonable_encoder(response))
 
 
 # Main API endpoints
@@ -237,7 +238,6 @@ def create_error_response(error: str, message: str, status_code: int = 400) -> J
 async def get_neighborhood_intelligence(
     neighborhood_id: str = Path(..., description="Neighborhood identifier"),
     request: NeighborhoodIntelligenceRequest = Depends(),
-    intelligence_service: NeighborhoodIntelligenceService = Depends(get_intelligence_service),
 ):
     """
     Get comprehensive neighborhood intelligence report.
@@ -250,6 +250,11 @@ async def get_neighborhood_intelligence(
         # Validate neighborhood ID
         if len(neighborhood_id.strip()) == 0:
             return create_error_response("invalid_input", "Neighborhood ID cannot be empty", 400)
+
+        # Acquire the service inside the handler so a service-acquisition
+        # failure is returned as an enveloped 500 instead of escaping the
+        # handler during Depends() resolution.
+        intelligence_service = await get_neighborhood_intelligence_service()
 
         # Get comprehensive intelligence
         intelligence = await intelligence_service.get_neighborhood_intelligence(
