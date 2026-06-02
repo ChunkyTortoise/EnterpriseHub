@@ -124,7 +124,7 @@ def render_service_categories() -> None:
 ### Hero Section
 - **Headline:** "Production-Grade AI Systems & Data Infrastructure"
 - **Subtitle:** "19 Certifications | 1,768 Training Hours | 31 Services | Proven ROI"
-- **Metrics Badges:** 4,500+ Tests | Projected ~87% Efficiency | Projected ~$240K Savings (estimates) | Production-Ready
+- **Metrics Badges:** 7,665 Tests Collected | Projected ~87% Efficiency | Projected ~$240K Savings (estimates) | Production-Ready
 - **CTAs:** View Services | Request Demo | See Case Studies
 
 ### Key Metrics (4 Cards)
@@ -148,7 +148,7 @@ def render_service_categories() -> None:
 6. **Performance Engineering** (5 services)
 
 ### Technical Highlights (6 Metrics)
-- 4,500+ Automated Tests
+- 7,665 Tests Collected (2026-05-23)
 - <2s P95 Latency
 - 99.9% Uptime SLA
 - 140+ Microservices

@@ -108,7 +108,7 @@ SERVICES: Dict[str, Dict] = {
             "JWT authentication & rate limiting",
             "3-tier Redis caching (87% hit rate)",
             "OpenAPI documentation",
-            "4,937 automated tests",
+            "Comprehensive automated test suite",
             "CI/CD pipeline",
         ],
         "roi_model": {
@@ -240,7 +240,7 @@ SERVICES: Dict[str, Dict] = {
             "Runbooks & SOPs",
             "Training materials & videos",
             "Knowledge base & wiki",
-            "4,937 test documentation",
+            "Test suite documentation",
         ],
         "roi_model": {
             "typical_savings": "$30K-$80K annually",
