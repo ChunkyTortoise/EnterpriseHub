@@ -246,7 +246,8 @@ class JWTAuth:
     def hash_password(password: str) -> str:
         """Hash a password using bcrypt.
 
-        Note: bcrypt has a 72-byte limit. For security, we truncate long passwords.
+        Note: bcrypt has a 72-byte limit. Passwords longer than 72 bytes are
+        rejected with HTTP 422 (REQ-W4-3) rather than silently truncated.
         """
         try:
             import bcrypt

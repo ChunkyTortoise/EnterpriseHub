@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 import pytest
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from fastapi.testclient import TestClient
 
 from ghl_real_estate_ai.api.middleware.input_validation import InputValidationMiddleware
@@ -303,10 +303,12 @@ class TestJWTSecurity:
         assert JWTAuth.verify_password(password, hashed)
         assert not JWTAuth.verify_password("wrong_password", hashed)
 
-        # Test long password handling (bcrypt 72-byte limit)
+        # Passwords over bcrypt's 72-byte limit are rejected with 422,
+        # not silently truncated (REQ-W4-3 / audit D P1-6).
         long_password = "a" * 100
-        long_hashed = JWTAuth.hash_password(long_password)
-        assert JWTAuth.verify_password(long_password, long_hashed)
+        with pytest.raises(HTTPException) as excinfo:
+            JWTAuth.hash_password(long_password)
+        assert excinfo.value.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 class TestWebSocketSecurity:
