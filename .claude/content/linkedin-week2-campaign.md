@@ -26,7 +26,7 @@ Long-term pattern storage. When the system learns that "first-time buyer, $500K 
 Combined result:
 - 90%+ overall cache hit rate
 - <200ms orchestration overhead
-- 89% reduction in API costs
+- ~89% reduction in API costs (synthetic 2,000-op model, seed 42)
 - 4,900+ ops/sec under enterprise load
 
 The key insight: AI responses are far more repetitive than we think. In real estate, there are maybe 50-100 common qualification patterns. Cache those, and you only call the API for genuinely novel conversations.

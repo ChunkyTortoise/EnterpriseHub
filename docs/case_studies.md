@@ -70,7 +70,7 @@ Within 90 days of implementation, Pacific Coast Realty achieved dramatic improve
 | Conversion to Appointment | 8.5% | 24.3% | **186% increase** |
 | Monthly Revenue from New Leads | $127,500 | $365,400 | **187% increase** |
 | Agent Time on Lead Qualification | 25 hours/week | 4 hours/week | **84% reduction** |
-| Monthly AI Token Costs | N/A | $342 | **89% cost reduction vs. competitors** |
+| Monthly AI Token Costs | N/A | $342 | **~89% cost reduction (synthetic 2,000-op model, seed 42)** |
 
 **Financial Impact:**
 - Additional monthly revenue: $237,900

@@ -99,7 +99,7 @@
 > "On the business side: API response times under 200ms average, bot accuracy above 90%, escalation rate below 15%, and 99.9% uptime target. The system handles 500+ concurrent conversations without breaking a sweat."
 
 **TALKING POINTS** (show as on-screen metrics):
-- 89% AI cost reduction (L1/L2/L3 caching)
+- ~89% AI cost reduction (L1/L2/L3 caching; synthetic 2,000-op model, seed 42)
 - <200ms orchestration overhead
 - 4,900+ ops/sec under load
 - 7,665 tests collected locally 2026-05-23; make reviewer-smoke passes 194
