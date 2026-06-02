@@ -735,7 +735,9 @@ elif hub == "Circuit Breaker":
 
 elif hub == "Cache Performance":
     st.title("3-Tier Cache Performance")
-    st.caption("L1 Memory → L2 Redis → L3 PostgreSQL — 88.1% total hit rate, ~89% cost reduction (synthetic 2,000-op model, seed 42)")
+    st.caption(
+        "L1 Memory → L2 Redis → L3 PostgreSQL — 88.1% total hit rate, ~89% cost reduction (synthetic 2,000-op model, seed 42)"
+    )
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -849,7 +851,9 @@ elif hub == "Cache Performance":
 
 elif hub == "AI Cost Tracking":
     st.title("AI Cost Engineering")
-    st.caption("~89% token cost reduction (synthetic 2,000-op model, seed 42) via 3-tier caching, context optimization, and model routing")
+    st.caption(
+        "~89% token cost reduction (synthetic 2,000-op model, seed 42) via 3-tier caching, context optimization, and model routing"
+    )
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
