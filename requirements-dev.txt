@@ -18,6 +18,7 @@ pytest-html>=4.1.0
 pytest-xdist>=3.3.0
 pytest-mock>=3.12.0
 pytest-benchmark>=4.0.0
+pytest-timeout>=2.3.1
 
 # ==============================================================================
 # Property-based & Advanced Testing
@@ -84,7 +85,9 @@ shapely>=2.0.0
 # ==============================================================================
 # Code Quality & Linting
 # ==============================================================================
-ruff>=0.1.8
+# Pinned: CI runs `ruff check .` + `ruff format --check .`; an unbounded `>=`
+# pulls newer ruff with stricter default rules that fail CI while local passes.
+ruff==0.6.9
 mypy>=1.7.0
 coverage[toml]>=7.3.0
 
