@@ -23,7 +23,7 @@
 
 ## 1. Context
 
-A freelance AI engineer with 21 certifications (1,831 hrs), 18+ portfolio repos, 12,000+ aggregate tests, one published PyPI MCP package, and one production GHL real-estate-AI client is pivoting from contract/freelance into FTE-eligible AI/LLM Engineer roles. The funnel was broken (50+ Indeed apps in 90 days → 0 phone screens; root cause was Data Analyst resume ATS poisoning, fixed 2026-04-07). EnterpriseHub is the largest demonstrable surface in the portfolio (7,678 tests, multi-tier cache, agent mesh, Jorge bots, GHL integration, public Streamlit demo).
+A freelance AI engineer with 21 certifications (1,831 hrs), 18+ portfolio repos, 12,000+ aggregate tests, one published PyPI MCP package, and one production GHL real-estate-AI client is pivoting from contract/freelance into FTE-eligible AI/LLM Engineer roles. The funnel was broken (50+ Indeed apps in 90 days → 0 phone screens; root cause was Data Analyst resume ATS poisoning, fixed 2026-04-07). EnterpriseHub is the largest demonstrable surface in the portfolio (7,665 tests collected locally 2026-05-23, multi-tier cache, agent mesh, Jorge bots, GHL integration, public Streamlit demo).
 
 A 6-agent parallel audit + abbreviated 6-stage research pipeline (run 2026-04-27) produced binding findings:
 

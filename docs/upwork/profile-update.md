@@ -52,7 +52,7 @@ Key project: Multi-tenant RAG-as-a-Service platform with 120 tests, Stripe meter
 
 I build multi-agent AI systems with coordination, handoff, monitoring, and CRM integration. Specialties include voice AI (Twilio/Deepgram/ElevenLabs), GoHighLevel automation, and agent fleet monitoring.
 
-Key project: Real estate AI platform with 3 specialized bots, 5,100+ tests, managing $50M+ pipeline.
+Key project: Real estate AI platform with 3 specialized bots, 7,665 tests collected locally 2026-05-23, managing $50M+ pipeline.
 
 ---
 
@@ -80,7 +80,7 @@ Key project: Real estate AI platform with 3 specialized bots, 5,100+ tests, mana
 
 ### 1. Enterprise AI Platform (EnterpriseHub)
 - Real estate AI with 3 CRM integrations, lead qualification bots, BI dashboards
-- 5,100+ tests, ~89% LLM cost reduction (synthetic 2,000-op model, seed 42), $50M+ pipeline managed
+- 7,665 tests collected locally 2026-05-23, ~89% LLM cost reduction (synthetic 2,000-op model, seed 42), $50M+ pipeline managed
 - Stack: FastAPI, PostgreSQL, Redis, Claude, Streamlit
 
 ### 2. MCP Server Toolkit (PyPI)
