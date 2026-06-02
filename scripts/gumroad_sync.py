@@ -77,7 +77,7 @@ def parse_prompt_for_products(filepath):
 def run_sync():
     print("🚀 Starting Gumroad Product Sync...")
     existing = get_existing_products()
-    manifest = parse_prompt_for_products("content/gumroad/GEMINI_UPLOAD_PROMPT.md")
+    manifest = parse_prompt_for_products(os.path.expanduser("~/Projects/freelance-ops/output/enterprisehub/content/gumroad/GEMINI_UPLOAD_PROMPT.md"))
 
     print(f"Found {len(existing)} existing products.")
     print(f"Found {len(manifest)} products in manifest.")

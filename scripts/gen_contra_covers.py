@@ -4,7 +4,7 @@
 from PIL import Image, ImageDraw, ImageFont
 import os
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "../content/contra/covers")
+OUTPUT_DIR = os.path.expanduser("~/Projects/freelance-ops/output/enterprisehub/content/contra/covers")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 W, H = 1600, 900

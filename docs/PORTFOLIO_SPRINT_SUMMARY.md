@@ -79,7 +79,7 @@ Deployed a multi-agent team to execute a comprehensive portfolio optimization in
 - Full engagement strategy + hashtags
 
 **Cold Outreach Batch 1**:
-- `.claude/outreach/cold-outreach-batch-1.md`
+- Cold outreach batch 1 (relocated out of repo to freelance-ops/output/enterprisehub/outreach/)
 - 10 high-value prospects ($400M+ total funding)
 - 3 email templates (Real Estate Tech, SaaS Startup, Agency)
 - 10 personalized emails ready to send
@@ -90,7 +90,7 @@ Deployed a multi-agent team to execute a comprehensive portfolio optimization in
 ### Platform Guides (1 file)
 
 **PyPI Publishing**:
-- `content/pypi/PYPI_PUBLISHING_GUIDE.md`
+- PyPI publishing guide (relocated out of repo to freelance-ops/output/enterprisehub/)
 - Step-by-step for docqa-engine and insight-engine
 - Account creation, build tools, verification
 - LinkedIn announcement copy

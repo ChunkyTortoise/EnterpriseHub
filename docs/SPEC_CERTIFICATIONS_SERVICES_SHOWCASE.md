@@ -182,11 +182,7 @@ EnterpriseHub/
 │   │       └── showcase.py            # NEW: Showcase API endpoints
 │   └── models/
 │       └── showcase.py                # NEW: Showcase data models
-└── content/
-    └── showcase/                      # NEW: Showcase content
-        ├── certifications/
-        ├── services/
-        └── case_studies/
+└── (showcase content area: relocated out of repo to freelance-ops/output/enterprisehub/)
 ```
 
 ### Data Models
@@ -2382,7 +2378,7 @@ class GitHubSponsorsIntegration:
     
     def get_sponsor_tiers(self) -> list:
         """Get sponsorship tiers."""
-        # Read from content/github-sponsors/TIERS.md
+        # Read sponsor tiers from relocated assets (freelance-ops/output/enterprisehub/, github-sponsors/TIERS.md)
         pass
 ```
 

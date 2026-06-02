@@ -73,7 +73,7 @@ PORTFOLIO_PROOF_POINTS = """
 - Data Dashboard: Streamlit BI with Monte Carlo simulations, sentiment analysis
 """
 
-PROPOSALS_DIR = Path(__file__).parent.parent / "content" / "upwork" / "proposals"
+PROPOSALS_DIR = Path(os.path.expanduser("~/Projects/freelance-ops/output/enterprisehub/content/upwork/proposals"))
 PROOF_POINTS_FILE = Path(__file__).parent.parent / "content" / "upwork-proposal-system" / "PROOF_POINTS.md"
 
 # ---------------------------------------------------------------------------
