@@ -1,7 +1,7 @@
 # Portfolio Showcase Implementation
 
 ## Overview
-Professional services portfolio and case studies pages showcasing 31 AI/data services and 2 detailed implementation case studies (EnterpriseHub and AgentForge).
+Professional services portfolio and case studies pages showcasing 31 AI/data services and 1 detailed implementation case study (EnterpriseHub).
 
 **Status**: ✅ Complete (beads EnterpriseHub-99fn, EnterpriseHub-oe4c closed)
 
@@ -17,7 +17,6 @@ Professional services portfolio and case studies pages showcasing 31 AI/data ser
   
 - **`data/case_studies_data.py`** (12KB)
   - EnterpriseHub case study (projected ~87% reduction, projected ~$240K savings, estimates not measured)
-  - AgentForge case study (3x leads, 45% response improvement)
   - Full technical stack, architecture, implementation timeline
   
 - **`data/__init__.py`**
@@ -85,16 +84,9 @@ Professional services portfolio and case studies pages showcasing 31 AI/data ser
    - P95 latency <2s
    - 3x increase in qualified leads
    - Technical stack: FastAPI, PostgreSQL, Redis, Claude/Gemini/Perplexity, LangChain, Streamlit
-   - Architecture: 140+ services, 4,500+ tests, 80+ dashboard components
+   - Architecture: 140+ services, 7,665 tests collected (2026-05-23), 80+ dashboard components
 
-2. **AgentForge**
-   - 3x increase in qualified leads
-   - 45% improvement in response rates
-   - 85% time saved on qualification
-   - 100% follow-up consistency
-   - Technical stack: CrewAI, Claude API, FastAPI, PostgreSQL, HubSpot
-
-3. **Visualizations**
+2. **Visualizations**
    - Implementation timeline (Gantt-style bar chart)
    - Metrics bar charts (2 charts for primary outcomes)
    - Technology badges

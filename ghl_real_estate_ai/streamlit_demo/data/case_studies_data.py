@@ -40,7 +40,7 @@ CASE_STUDIES = {
             "infrastructure": ["Docker Compose", "Vector database (Chroma)", "Three-tier cache (L1/L2/L3)"],
             "integrations": ["GoHighLevel CRM", "Stripe", "Webhook system", "REST APIs"],
             "bi_dashboards": ["Streamlit", "Plotly", "80+ dashboard components"],
-            "testing": ["Pytest", "4,500+ automated tests", "95%+ code coverage"],
+            "testing": ["Pytest", "7,665 automated tests collected (2026-05-23)", "95%+ code coverage"],
         },
         "architecture": {
             "description": "Microservices-based architecture with async processing and intelligent caching",
@@ -80,7 +80,7 @@ CASE_STUDIES = {
                 {"metric": "Qualified Lead Increase", "value": "3x", "detail": "From predictive scoring"},
             ],
             "secondary_metrics": [
-                "95%+ code coverage with 4,500+ automated tests",
+                "95%+ code coverage with 7,665 automated tests collected (2026-05-23)",
                 "140+ services orchestrated via agent mesh",
                 "80+ BI dashboard components for real-time insights",
                 "Zero-downtime deployments with Docker Compose",
@@ -128,7 +128,7 @@ CASE_STUDIES = {
                         "80+ Streamlit dashboard components",
                         "Performance monitoring system",
                         "Alerting and analytics",
-                        "Testing suite (4,500+ tests)",
+                        "Testing suite (7,665 tests collected, 2026-05-23)",
                     ],
                 },
             ],

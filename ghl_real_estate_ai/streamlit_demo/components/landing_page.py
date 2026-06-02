@@ -332,7 +332,7 @@ def render_landing_page():
         """
     <div style="text-align: center; padding: 4rem 0; border-top: 1px solid rgba(255,255,255,0.05);">
         <p style="color: #94a3b8; font-size: 1.1rem; margin-bottom: 2rem;">
-            © 2026 EnterpriseHub | 4,937 Tests Passing | Built with LangGraph & GHL
+            © 2026 EnterpriseHub | 7,665 Tests Collected | Built with LangGraph & GHL
         </p>
         <div style="display: flex; justify-content: center; gap: 2rem;">
             <a href="https://github.com/ChunkyTortoise/EnterpriseHub" style="color: #6366F1; text-decoration: none;">GitHub Repository</a>

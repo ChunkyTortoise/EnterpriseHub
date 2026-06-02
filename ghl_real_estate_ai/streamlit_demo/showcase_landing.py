@@ -214,7 +214,7 @@ def render_hero_section() -> None:
             </p>
             
             <div class="hero-metrics">
-                <div class="hero-metric-badge">✅ 4,500+ Automated Tests</div>
+                <div class="hero-metric-badge">✅ 7,665 Tests Collected</div>
                 <div class="hero-metric-badge">⚡ Projected ~87% Efficiency Gains (workflow estimate)</div>
                 <div class="hero-metric-badge">💰 Projected ~$240K Annual Savings (estimate, not measured)</div>
                 <div class="hero-metric-badge">🏆 Production-Ready</div>
@@ -833,8 +833,8 @@ def render_technical_highlights() -> None:
 
     with col1:
         render_obsidian_metric(
-            value="4,500+",
-            label="Automated Tests",
+            value="7,665",
+            label="Tests Collected",
             config=MetricConfig(variant="success", size="medium"),
             metric_icon="check-circle",
         )
