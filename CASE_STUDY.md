@@ -108,7 +108,7 @@ This is what "eval-driven AI delivery" actually looks like at the IC level. Most
 
 ## Technical Highlights
 
-- **Agent Mesh Coordinator** — 22-agent mesh architecture (per `docs/adr/0004-agent-mesh-coordinator.md:9`), weighted routing on cost / success rate / load / latency, emergency shutdown at $100/hr spend threshold (`ghl_real_estate_ai/services/agent_mesh_coordinator.py:164`; runtime registry proof should be regenerated before quoting a live count).
+- **Agent Mesh Coordinator**: 7-agent roster configured in `.claude/agent-mesh/mesh-config.json` (around 10 with auto-discovery; ADR-0004), weighted routing on cost / success rate / load / latency, emergency shutdown at $100/hr spend threshold (`ghl_real_estate_ai/services/agent_mesh_coordinator.py:164`). Cold-init registry snapshot: `benchmarks/results/mesh_registry_2026-05-27.json`.
 - **A/B testing service** — deterministic variant assignment (SHA-256 hash), z-test statistical significance, sample-size calculator. 4 prebuilt experiments.
 - **Security baseline** — parameterized SQL patterns, Ed25519 + HMAC webhook signature verification, JWT auth with fail-closed secret loading, Fernet-backed SDR PII fields, and Redis-backed rate limiting.
 - **Observability** — structlog structured logging, Prometheus-shaped metrics, OTLP-instrumented (collector wiring is a Wave 1 task).

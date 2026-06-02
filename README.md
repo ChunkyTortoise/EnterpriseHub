@@ -45,7 +45,7 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | System | Evidence | Value | Where to inspect |
 |--------|----------|-------|------------------|
 | **3-Tier Cache** | Architecture target and synthetic benchmark | L1/L2/L3 design target: 60% / 20% / 8% | `BENCHMARKS.md`, ADR-0001 |
-| **Agent Mesh** | Architecture scope | 22-agent mesh documented | ADR-0004 and `agent_mesh_coordinator.py` |
+| **Agent Mesh** | Configured roster | 7 agents in `.claude/agent-mesh/mesh-config.json` (~10 with auto-discovery) | ADR-0004, `mesh-config.json` |
 | **Agent Mesh** | Routing dimensions | 4 (success 40%, load 25%, cost 20%, latency 15%) | Weighted scoring function |
 | **Agent Mesh** | Emergency shutdown | $100/hr spend threshold | `emergency_shutdown()` cancels all tasks |
 | **Agent Mesh** | Runtime maturity | Routing, budget checks, and emergency shutdown run on real calls; backpressure and auto-scaling are log-only scaffolds; cold-init registry snapshot shows 0 registered agents | ADR-0011, `benchmarks/results/mesh_registry_2026-05-27.json` |
@@ -73,7 +73,7 @@ graph TB
 
     subgraph Core["FastAPI Core — Orchestration Layer"]
         CO["Claude Orchestrator<br/><small>Multi-strategy parsing, L1/L2/L3 cache</small>"]
-        AMC["Agent Mesh Coordinator<br/><small>22 agents, capability routing, audit trails</small>"]
+        AMC["Agent Mesh Coordinator<br/><small>7 configured agents, capability routing, audit trails</small>"]
         HO["Handoff Service<br/><small>0.7 confidence, circular prevention</small>"]
     end
 
@@ -145,7 +145,7 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 
 **Pattern:** Each agent registers with a `cost_per_token` and `sla_response_time`. Task routing uses a weighted scoring function across four dimensions: success rate (40%), current load (25%), cost efficiency (20%), and average response time (15%). Emergency tasks get a 1.5x score multiplier. Four background coroutines run continuously: health monitor (30s heartbeat), cost monitor (5min), performance monitor (2min), and cleanup. If hourly spend crosses `$50`, a throttling hook fires that is currently log-only (see ADR-0011); at `$100`, `emergency_shutdown()` cancels all active tasks and sets every agent to `MAINTENANCE`.
 
-**Outcome:** ADR-0004 documents a 22-agent mesh architecture; the coordinator implements registration, weighted routing, per-agent P50/P95 tracking, and emergency shutdown behavior. ADR-0011 separates what runs from what is scaffold: auto-scaling, rebalancing, and activity throttling are log-only. A cold-init registry snapshot, `benchmarks/results/mesh_registry_2026-05-27.json`, shows 0 agents registered; agents attach at runtime via `register_agent()`.
+**Outcome:** ADR-0004 documents the mesh coordinator design; the coordinator implements registration, weighted routing, per-agent P50/P95 tracking, and emergency shutdown behavior. ADR-0011 separates what runs from what is scaffold: auto-scaling, rebalancing, and activity throttling are log-only. A cold-init registry snapshot, `benchmarks/results/mesh_registry_2026-05-27.json`, shows 0 agents registered; agents attach at runtime via `register_agent()` from a 7-agent roster configured in `.claude/agent-mesh/mesh-config.json` (around 10 with auto-discovery).
 
 **Training foundation:** Microsoft AI & ML Engineering (75h) — agent orchestration patterns, SLA-based routing, performance monitoring.
 

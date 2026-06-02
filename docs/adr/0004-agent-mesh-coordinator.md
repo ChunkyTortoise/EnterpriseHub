@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-The platform relies on 22 specialized agents for tasks ranging from security auditing to performance optimization and compliance monitoring. Initially, agent dispatch was handled by direct imports and manual routing — the calling code needed to know which agent to invoke for each task type.
+The platform coordinates a roster of specialized agents (7 configured today in `.claude/agent-mesh/mesh-config.json`, around 10 with auto-discovery enabled) for tasks such as lead qualification, property matching, conversation analysis, and CRM/MLS data access. Initially, agent dispatch was handled by direct imports and manual routing, where the calling code needed to know which agent to invoke for each task type.
 
 This created several scaling problems:
 - Adding a new agent required updating routing logic in every service that might use it
