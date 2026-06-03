@@ -1,11 +1,10 @@
 name: Deploy Jorge Bot to Render
-
+# Auto-deploy disabled 2026-06-02: Jorge offboarded as a client and the Render
+# service is being decommissioned. The push trigger was removed so merges to main
+# no longer ship to a dead prod target. Retained as a portfolio reference of a
+# health-gated container CD pipeline; manual dispatch only (the Render service no
+# longer exists, so a manual run would fail at the deploy step).
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'ghl_real_estate_ai/**'
-      - '.github/workflows/deploy-jorge.yml'
   workflow_dispatch:
     inputs:
       force_deploy:
@@ -13,11 +12,9 @@ on:
         required: false
         type: boolean
         default: false
-
 concurrency:
   group: deploy-jorge
   cancel-in-progress: true
-
 jobs:
   build-and-deploy:
     name: Build Docker image — Deploy to Render
@@ -25,16 +22,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Compute image tag
         id: meta
         run: |
@@ -43,7 +37,6 @@ jobs:
           echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
           echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
           echo "Tagged as: ${IMAGE}"
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
@@ -55,7 +48,6 @@ jobs:
             chunktort/jorge-realty-ai:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
       - name: Trigger Render deploy
         id: render
         env:
@@ -73,7 +65,6 @@ jobs:
           DEPLOY_ID=$(echo "${RESPONSE}" | python3 -c "import sys,json; d=sys.stdin.read().strip(); print(json.loads(d).get('id','') if d else '')" 2>/dev/null || echo "")
           echo "deploy_id=${DEPLOY_ID}" >> "$GITHUB_OUTPUT"
           echo "Deploy triggered. ID=${DEPLOY_ID}"
-
       - name: Wait for deploy to go live
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
