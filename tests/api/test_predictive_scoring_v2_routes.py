@@ -154,9 +154,7 @@ class TestPredictiveScoringV2Routes:
 
     @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2._get_legacy_scorer")
     @patch("ghl_real_estate_ai.api.routes.predictive_scoring_v2.inference_engine")
-    def test_score_lead_v2_fallback_to_legacy(
-        self, mock_engine, mock_get_legacy, mock_user, sample_request_data
-    ):
+    def test_score_lead_v2_fallback_to_legacy(self, mock_engine, mock_get_legacy, mock_user, sample_request_data):
         """Test fallback to legacy scorer when V2 fails"""
         mock_engine.predict = AsyncMock(side_effect=Exception("V2 inference failed"))
 
@@ -343,9 +341,7 @@ class TestPredictiveScoringV2Routes:
             "lead_data": {"budget": 750000, "location": "Rancho Cucamonga"},
         }
 
-        response = client.post(
-            "/api/v2/predictive-scoring/routing-recommendation", params=params, json=body
-        )
+        response = client.post("/api/v2/predictive-scoring/routing-recommendation", params=params, json=body)
 
         assert response.status_code == 200
         data = response.json()

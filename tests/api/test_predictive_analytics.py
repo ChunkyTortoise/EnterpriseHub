@@ -163,9 +163,10 @@ class TestPredictiveAnalyticsAPI:
         self, client, auth_headers, sample_conversation_request, mock_predictive_score
     ):
         """Test successful predictive score retrieval."""
-        with override_auth(), patch(
-            "ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer", AsyncMock()
-        ) as mock_scorer:
+        with (
+            override_auth(),
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer", AsyncMock()) as mock_scorer,
+        ):
             mock_scorer.calculate_predictive_score.return_value = mock_predictive_score
 
             response = client.post("/api/v1/predictive/score", json=sample_conversation_request, headers=auth_headers)
@@ -205,9 +206,10 @@ class TestPredictiveAnalyticsAPI:
         self, client, auth_headers, sample_conversation_request, mock_lead_insights
     ):
         """Test successful lead insights retrieval."""
-        with override_auth(), patch(
-            "ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer", AsyncMock()
-        ) as mock_scorer:
+        with (
+            override_auth(),
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer", AsyncMock()) as mock_scorer,
+        ):
             mock_scorer.generate_lead_insights.return_value = mock_lead_insights
 
             response = client.post(
@@ -228,9 +230,10 @@ class TestPredictiveAnalyticsAPI:
         self, client, auth_headers, sample_conversation_request, mock_action_recommendation
     ):
         """Test successful action recommendations retrieval."""
-        with override_auth(), patch(
-            "ghl_real_estate_ai.api.routes.predictive_analytics.action_engine", AsyncMock()
-        ) as mock_engine:
+        with (
+            override_auth(),
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.action_engine", AsyncMock()) as mock_engine,
+        ):
             mock_engine.generate_action_recommendations.return_value = [mock_action_recommendation]
 
             response = client.post("/api/v1/predictive/actions", json=sample_conversation_request, headers=auth_headers)
@@ -253,9 +256,10 @@ class TestPredictiveAnalyticsAPI:
         self, client, auth_headers, sample_conversation_request, mock_action_recommendation
     ):
         """Test action recommendations with limit parameter."""
-        with override_auth(), patch(
-            "ghl_real_estate_ai.api.routes.predictive_analytics.action_engine", AsyncMock()
-        ) as mock_engine:
+        with (
+            override_auth(),
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.action_engine", AsyncMock()) as mock_engine,
+        ):
             # Return multiple recommendations
             mock_engine.generate_action_recommendations.return_value = [
                 mock_action_recommendation,
@@ -287,9 +291,10 @@ class TestPredictiveAnalyticsAPI:
             long_term_actions=[],
         )
 
-        with override_auth(), patch(
-            "ghl_real_estate_ai.api.routes.predictive_analytics.action_engine", AsyncMock()
-        ) as mock_engine:
+        with (
+            override_auth(),
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.action_engine", AsyncMock()) as mock_engine,
+        ):
             mock_engine.generate_action_sequence.return_value = mock_sequence
 
             response = client.post(
@@ -316,9 +321,10 @@ class TestPredictiveAnalyticsAPI:
             competitive_timing="Competitive market - respond within 2 hours",
         )
 
-        with override_auth(), patch(
-            "ghl_real_estate_ai.api.routes.predictive_analytics.action_engine", AsyncMock()
-        ) as mock_engine:
+        with (
+            override_auth(),
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.action_engine", AsyncMock()) as mock_engine,
+        ):
             mock_engine.optimize_timing.return_value = mock_timing
 
             response = client.post(
@@ -361,9 +367,10 @@ class TestPredictiveAnalyticsAPI:
             validation_date=datetime.now(),
         )
 
-        with override_auth(), patch(
-            "ghl_real_estate_ai.api.routes.predictive_analytics.ml_model", AsyncMock()
-        ) as mock_model:
+        with (
+            override_auth(),
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.ml_model", AsyncMock()) as mock_model,
+        ):
             mock_model.get_model_performance.return_value = mock_metrics
             mock_model.needs_retraining.return_value = False
 
@@ -381,9 +388,10 @@ class TestPredictiveAnalyticsAPI:
     @pytest.mark.asyncio
     async def test_get_model_performance_no_model(self, client, auth_headers):
         """Test model performance when no model is trained."""
-        with override_auth(), patch(
-            "ghl_real_estate_ai.api.routes.predictive_analytics.ml_model", AsyncMock()
-        ) as mock_model:
+        with (
+            override_auth(),
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.ml_model", AsyncMock()) as mock_model,
+        ):
             mock_model.get_model_performance.return_value = None
 
             response = client.get("/api/v1/predictive/model-performance", headers=auth_headers)
@@ -428,9 +436,10 @@ class TestPredictiveAnalyticsAPI:
             validation_date=datetime.now(),
         )
 
-        with override_auth(), patch(
-            "ghl_real_estate_ai.api.routes.predictive_analytics.ml_model", AsyncMock()
-        ) as mock_model:
+        with (
+            override_auth(),
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.ml_model", AsyncMock()) as mock_model,
+        ):
             mock_model.get_model_performance.return_value = mock_metrics
             mock_model.needs_retraining.return_value = False
             mock_model.last_training_date = datetime.now()
@@ -462,9 +471,10 @@ class TestPredictiveAnalyticsAPI:
             },
         ]
 
-        with override_auth(), patch(
-            "ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer", AsyncMock()
-        ) as mock_scorer:
+        with (
+            override_auth(),
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer", AsyncMock()) as mock_scorer,
+        ):
             mock_scorer.calculate_predictive_score.return_value = mock_predictive_score
 
             response = client.post("/api/v1/predictive/batch-score", json=batch_request, headers=auth_headers)
@@ -499,9 +509,10 @@ class TestPredictiveAnalyticsAPI:
     @pytest.mark.asyncio
     async def test_error_handling_in_endpoints(self, client, auth_headers, sample_conversation_request):
         """Test error handling in API endpoints."""
-        with override_auth(), patch(
-            "ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer", AsyncMock()
-        ) as mock_scorer:
+        with (
+            override_auth(),
+            patch("ghl_real_estate_ai.api.routes.predictive_analytics.predictive_scorer", AsyncMock()) as mock_scorer,
+        ):
             # Simulate an error in the scoring service
             mock_scorer.calculate_predictive_score.side_effect = Exception("Service error")
 

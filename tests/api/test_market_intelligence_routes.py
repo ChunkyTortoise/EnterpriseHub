@@ -339,7 +339,9 @@ class TestMarketTimingEndpoints:
 
         assert data["transaction_type"] == "sell"
 
-    @pytest.mark.skip(reason="blocked by service gap (bd EnterpriseHub-yybm): rancho_cucamonga_ai_assistant lacks generate_market_timing_advice / analyze_lead_with_rancho_cucamonga_context; stubbing would be a no-op")
+    @pytest.mark.skip(
+        reason="blocked by service gap (bd EnterpriseHub-yybm): rancho_cucamonga_ai_assistant lacks generate_market_timing_advice / analyze_lead_with_rancho_cucamonga_context; stubbing would be a no-op"
+    )
     def test_get_market_timing_advice_with_lead_context(self):
         """Test market timing advice with lead context."""
         timing_request = {
@@ -446,7 +448,9 @@ class TestPropertyAlertsEndpoints:
 class TestAIInsightsEndpoints:
     """Test AI-powered insights endpoints."""
 
-    @pytest.mark.skip(reason="blocked by service gap (bd EnterpriseHub-yybm): rancho_cucamonga_ai_assistant lacks generate_market_timing_advice / analyze_lead_with_rancho_cucamonga_context; stubbing would be a no-op")
+    @pytest.mark.skip(
+        reason="blocked by service gap (bd EnterpriseHub-yybm): rancho_cucamonga_ai_assistant lacks generate_market_timing_advice / analyze_lead_with_rancho_cucamonga_context; stubbing would be a no-op"
+    )
     def test_get_ai_lead_analysis(self):
         """Test AI lead analysis endpoint."""
         lead_data = {
@@ -602,7 +606,9 @@ class TestMarketIntelligenceIntegration:
 
         assert alert_response.status_code == status.HTTP_201_CREATED
 
-    @pytest.mark.skip(reason="blocked by service gap (bd EnterpriseHub-yybm): rancho_cucamonga_ai_assistant lacks generate_market_timing_advice / analyze_lead_with_rancho_cucamonga_context; stubbing would be a no-op")
+    @pytest.mark.skip(
+        reason="blocked by service gap (bd EnterpriseHub-yybm): rancho_cucamonga_ai_assistant lacks generate_market_timing_advice / analyze_lead_with_rancho_cucamonga_context; stubbing would be a no-op"
+    )
     def test_corporate_relocation_workflow(self):
         """Test corporate relocation analysis workflow."""
         # Step 1: Get corporate insights
