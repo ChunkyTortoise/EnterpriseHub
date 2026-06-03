@@ -1,9 +1,9 @@
 name: Jorge Bot Live Monitor
-
+# Scheduled monitor disabled 2026-06-02: Jorge offboarded as a client; the live
+# service at jorge-realty-ai.onrender.com is being decommissioned. Removing the
+# cron stops the every-30-minute failures and the auto-opened monitor-alert issues.
+# Retained as a portfolio reference of live endpoint smoke + compliance checks.
 on:
-  schedule:
-    # Every 30 minutes -- keeps the Render free-tier warm AND alerts on regressions
-    - cron: '*/30 * * * *'
   workflow_dispatch:
     inputs:
       verbose:
@@ -11,18 +11,15 @@ on:
         required: false
         type: boolean
         default: false
-
 concurrency:
   group: monitor-jorge
   cancel-in-progress: true
-
 jobs:
   health-check:
     name: Live endpoint smoke tests
     runs-on: ubuntu-latest
     env:
       BASE_URL: https://jorge-realty-ai.onrender.com
-
     steps:
       - name: Wake service (free-tier spin-up)
         id: wake
@@ -40,7 +37,6 @@ jobs:
           if [ "$STATUS" != "200" ]; then
             echo "awake=false" >> "$GITHUB_OUTPUT"
           fi
-
       - name: Health check detail
         if: steps.wake.outputs.awake == 'true'
         run: |
@@ -50,7 +46,6 @@ jobs:
           assert d.get('status') == 'healthy', f'Unexpected status: {d}'
           print('PASS health check -- status:', d.get('status'), 'rt:', d.get('response_time_ms'), 'ms')
           "
-
       - name: Verify OpenAPI has required routes
         if: steps.wake.outputs.awake == 'true'
         run: |
@@ -64,7 +59,6 @@ jobs:
               print('FAIL missing routes:', missing); sys.exit(1)
           print('PASS all required routes present')
           "
-
       - name: H-02 TCPA STOP (seller)
         if: steps.wake.outputs.awake == 'true'
         run: |
@@ -78,7 +72,6 @@ jobs:
           assert 'TCPA-Opt-Out' in tags and 'AI-Off' in tags, f'Missing tags: {tags}'
           print('PASS H-02 TCPA STOP')
           "
-
       - name: H-03 FHA violation (seller)
         if: steps.wake.outputs.awake == 'true'
         run: |
@@ -92,7 +85,6 @@ jobs:
           assert 'Fair-Housing-Alert' in tags, f'Missing tag: {tags}'
           print('PASS H-03 FHA violation')
           "
-
       - name: H-06 CCPA deletion (seller)
         if: steps.wake.outputs.awake == 'true'
         run: |
@@ -106,7 +98,6 @@ jobs:
           assert 'CCPA-Deletion-Request' in tags, f'Missing tag: {tags}'
           print('PASS H-06 CCPA deletion')
           "
-
       - name: H-07 Bot-identity SB 1001 (seller)
         if: steps.wake.outputs.awake == 'true'
         run: |
@@ -119,7 +110,6 @@ jobs:
           assert 'ai assistant' in resp.lower(), f'Bot-identity not disclosed: {resp}'
           print('PASS H-07 Bot-identity SB 1001')
           "
-
       - name: H-02 TCPA STOP (buyer compliance layer)
         if: steps.wake.outputs.awake == 'true'
         run: |
@@ -133,7 +123,6 @@ jobs:
           assert 'TCPA-Opt-Out' in tags, f'Missing tag: {tags}'
           print('PASS H-02 TCPA STOP (buyer compliance layer)')
           "
-
       - name: Hot buyer path (pre-approved + 60-day timeline → appointment step)
         if: steps.wake.outputs.awake == 'true'
         run: |
@@ -155,7 +144,6 @@ jobs:
           assert resp, f'Empty response on hot path'
           print('PASS hot buyer path -- temp:', temp, 'step:', step, 'frs:', frs, 'bms:', bms)
           "
-
       - name: Appointment confirmation round-trip (turn 1→2, step appointment→appointment_confirmed)
         if: steps.wake.outputs.awake == 'true'
         run: |
@@ -184,13 +172,11 @@ jobs:
           print('Turn 2 PASS -- step:', step, '| response contains reach out')
           print('PASS appointment confirmation round-trip')
           "
-
       - name: Service unreachable
         if: steps.wake.outputs.awake != 'true'
         run: |
           echo "FAIL: $BASE_URL unreachable after 3 wake attempts"
           exit 1
-
       - name: Open GitHub issue on failure
         if: failure()
         uses: actions/github-script@v9
@@ -219,7 +205,6 @@ jobs:
                 title, body, labels: ['monitor-alert', 'bug'],
               });
             }
-
       - name: Close alert issue on recovery
         if: success()
         uses: actions/github-script@v9
