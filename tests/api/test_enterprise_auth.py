@@ -257,8 +257,10 @@ class TestEnterpriseAuthService:
                 return_value={"user_id": "user_123", "email": "john.doe@techcorp.com", "roles": [TenantRole.EMPLOYEE]}
             )
 
-            # Mock token generation
-            auth_service._generate_enterprise_token = AsyncMock(return_value="jwt_token_123")
+            # Mock token generation (service returns an access/refresh token dict)
+            auth_service._generate_enterprise_tokens = AsyncMock(
+                return_value={"access_token": "jwt_token_123", "refresh_token": "refresh_token_123"}
+            )
 
             result = await auth_service.handle_sso_callback(code, state)
 
@@ -283,9 +285,18 @@ class TestEnterpriseAuthService:
         self, auth_service, mock_cache_service, valid_user_info
     ):
         """Test SSO callback with unauthorized user ontario_mills."""
-        sso_session = {"tenant_id": "tenant_123", "provider": SSOProvider.AZURE_AD}
+        sso_session = {
+            "tenant_id": "tenant_123",
+            "provider": SSOProvider.AZURE_AD,
+            "redirect_uri": "https://app.example.com/callback",
+        }
 
-        tenant_config = {"tenant_id": "tenant_123", "allowed_ontario_millss": ["techcorp.com"]}
+        tenant_config = {
+            "tenant_id": "tenant_123",
+            "sso_provider": SSOProvider.AZURE_AD,
+            "sso_config": {"client_id": "azure-client-456"},
+            "allowed_ontario_millss": ["techcorp.com"],
+        }
 
         # User from unauthorized ontario_mills
         valid_user_info["email"] = "attacker@evil.com"
@@ -387,12 +398,13 @@ class TestEnterpriseAuthService:
 
             assert exc_info.value.error_code == "TENANT_NOT_ACTIVE"
 
-    def test_validate_enterprise_token_invalid_token(self, auth_service):
+    @pytest.mark.asyncio
+    async def test_validate_enterprise_token_invalid_token(self, auth_service):
         """Test token validation with malformed token."""
         invalid_token = "invalid.jwt.token"
 
         with pytest.raises(EnterpriseAuthError) as exc_info:
-            asyncio.run(auth_service.validate_enterprise_token(invalid_token))
+            await auth_service.validate_enterprise_token(invalid_token)
 
         assert exc_info.value.error_code == "INVALID_TOKEN"
 
@@ -534,17 +546,20 @@ class TestEnterpriseAuthService:
         tenant_config = {"session_timeout_hours": 8}
 
         with patch.object(auth_service, "cache_service", mock_cache_service):
-            token = await auth_service._generate_enterprise_token(user, tenant_config)
+            tokens = await auth_service._generate_enterprise_tokens(user, tenant_config)
 
-            # Decode and verify token
-            payload = jwt.decode(token, auth_service.jwt_secret, algorithms=[auth_service.jwt_algorithm])
+            # Decode and verify the access token
+            payload = jwt.decode(
+                tokens["access_token"], auth_service.jwt_secret, algorithms=[auth_service.jwt_algorithm]
+            )
 
             assert payload["sub"] == "user_123"
             assert payload["email"] == "john.doe@techcorp.com"
             assert payload["tenant_id"] == "tenant_123"
             assert "session_id" in payload
 
-    def test_build_authorization_url_azure_ad(self, auth_service):
+    @pytest.mark.asyncio
+    async def test_build_authorization_url_azure_ad(self, auth_service):
         """Test building authorization URL for Azure AD."""
         provider = SSOProvider.AZURE_AD
         sso_config = {"tenant_id": "azure-tenant-123", "client_id": "azure-client-456"}
@@ -552,7 +567,7 @@ class TestEnterpriseAuthService:
         nonce = "nonce_value"
         redirect_uri = "https://app.example.com/callback"
 
-        url = asyncio.run(auth_service._build_authorization_url(provider, sso_config, state, nonce, redirect_uri))
+        url = await auth_service._build_authorization_url(provider, sso_config, state, nonce, redirect_uri)
 
         assert "login.microsoftonline.com" in url
         assert "azure-tenant-123" in url
@@ -560,7 +575,8 @@ class TestEnterpriseAuthService:
         assert f"state={state}" in url
         assert f"nonce={nonce}" in url
 
-    def test_build_authorization_url_okta(self, auth_service):
+    @pytest.mark.asyncio
+    async def test_build_authorization_url_okta(self, auth_service):
         """Test building authorization URL for Okta."""
         provider = SSOProvider.OKTA
         sso_config = {"ontario_mills": "company", "client_id": "okta-client-789"}
@@ -568,7 +584,7 @@ class TestEnterpriseAuthService:
         nonce = "nonce_value"
         redirect_uri = "https://app.example.com/callback"
 
-        url = asyncio.run(auth_service._build_authorization_url(provider, sso_config, state, nonce, redirect_uri))
+        url = await auth_service._build_authorization_url(provider, sso_config, state, nonce, redirect_uri)
 
         assert "company.okta.com" in url
         assert f"client_id={sso_config['client_id']}" in url

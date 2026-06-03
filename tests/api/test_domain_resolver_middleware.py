@@ -65,9 +65,14 @@ def sample_tenant_context():
     return context
 
 
-@pytest.fixture
 def app_with_middleware(mock_db_pool, mock_cache_service):
-    """Create FastAPI app with domain resolver middleware."""
+    """Create FastAPI app with domain resolver middleware.
+
+    Plain helper (not a pytest fixture): every test calls it directly with its
+    own mocks (e.g. ``app_with_middleware(mock_db_pool=MagicMock(), ...)``).
+    Modern pytest hard-errors on calling a fixture directly, so this is a regular
+    function returning ``(app, middleware)``.
+    """
     app = FastAPI()
 
     # Add middleware

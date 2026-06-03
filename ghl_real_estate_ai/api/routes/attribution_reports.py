@@ -177,6 +177,8 @@ async def get_source_performance(
         logger.info(f"Retrieved performance data for {len(response_data)} sources")
         return response_data
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting source performance: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to retrieve performance data")
@@ -281,6 +283,8 @@ async def generate_attribution_report(
         logger.info(f"Generated attribution report with {len(source_performances)} sources")
         return response
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error generating attribution report: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to generate report")
@@ -423,6 +427,8 @@ async def get_optimization_recommendations(lead_source_tracker: LeadSourceTracke
         logger.info(f"Generated {len(recommendations.get('recommendations', []))} optimization recommendations")
         return recommendations
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting recommendations: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to generate recommendations")
@@ -460,6 +466,8 @@ async def get_available_sources():
             ],
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting sources: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to get sources")
@@ -567,6 +575,8 @@ async def export_performance_csv(
             "content_type": "text/csv",
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error exporting CSV: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to export CSV")

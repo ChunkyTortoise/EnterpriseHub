@@ -52,12 +52,12 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.db_pool = db_pool
         self.cache = cache_service
-        self.default_agency_id = default_agency_id or settings.get("DEFAULT_AGENCY_ID")
+        self.default_agency_id = default_agency_id or getattr(settings, "DEFAULT_AGENCY_ID", None)
 
         # Configuration
-        self.primary_domain = settings.get("PRIMARY_DOMAIN", "app.enterprisehub.com")
-        self.enable_subdomain_routing = settings.get("ENABLE_SUBDOMAIN_ROUTING", True)
-        self.force_https = settings.get("FORCE_HTTPS", True)
+        self.primary_domain = getattr(settings, "PRIMARY_DOMAIN", "app.enterprisehub.com")
+        self.enable_subdomain_routing = getattr(settings, "ENABLE_SUBDOMAIN_ROUTING", True)
+        self.force_https = getattr(settings, "FORCE_HTTPS", True)
 
         # Performance settings
         self.cache_ttl = 3600  # 1 hour cache for domain resolution
@@ -86,7 +86,7 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
             request.state.tenant = tenant_context
 
             # Add custom headers for debugging
-            if settings.get("DEBUG", False):
+            if getattr(settings, "DEBUG", False):
                 request.state.debug_info = {
                     "agency_id": tenant_context.agency_id,
                     "client_id": tenant_context.client_id,
@@ -242,15 +242,23 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
     async def _resolve_subdomain_routing(self, domain_name: str) -> TenantContext:
         """Resolve subdomain-based routing (e.g., agency.app.com or client.agency.app.com)."""
 
-        parts = domain_name.split(".")
-        if len(parts) < 3:  # Minimum: subdomain.app.com
+        # Count subdomain labels relative to the configured primary domain
+        # (e.g. with primary_domain "app.enterprisehub.com":
+        #   agency.app.enterprisehub.com        -> ["agency"]            agency level
+        #   client.agency.app.enterprisehub.com -> ["client", "agency"]  client level)
+        suffix = f".{self.primary_domain}"
+        if not domain_name.endswith(suffix):
+            return await self._get_default_context()
+
+        subdomain_labels = domain_name[: -len(suffix)].split(".")
+        if not subdomain_labels or subdomain_labels == [""]:
             return await self._get_default_context()
 
         try:
             async with self.db_pool.acquire() as conn:
-                if len(parts) == 3:
-                    # Format: agency.app.com
-                    agency_slug = parts[0]
+                if len(subdomain_labels) == 1:
+                    # Format: agency.<primary_domain>
+                    agency_slug = subdomain_labels[0]
 
                     agency_info = await conn.fetchrow(
                         """
@@ -268,10 +276,10 @@ class DomainResolverMiddleware(BaseHTTPMiddleware):
                         context.primary_domain = False
                         return context
 
-                elif len(parts) == 4:
-                    # Format: client.agency.app.com
-                    client_slug = parts[0]
-                    agency_slug = parts[1]
+                elif len(subdomain_labels) == 2:
+                    # Format: client.agency.<primary_domain>
+                    client_slug = subdomain_labels[0]
+                    agency_slug = subdomain_labels[1]
 
                     client_info = await conn.fetchrow(
                         """

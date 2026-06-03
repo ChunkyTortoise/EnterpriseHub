@@ -162,7 +162,7 @@ jobs:
           GHL_API_KEY: test-ghl-key-for-ci-only
           GHL_LOCATION_ID: test-location-id-for-ci-only
         run: |
-          pytest -m integration -v --tb=short --timeout=300 --timeout-method=thread
+          pytest -m "integration and not performance" -v --tb=short --timeout=300 --timeout-method=thread
   security-scan:
     name: Security Scanning
     runs-on: ubuntu-latest

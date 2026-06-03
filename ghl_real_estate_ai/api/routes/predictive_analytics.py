@@ -412,6 +412,8 @@ async def optimize_timing(
 
         return JSONResponse(content=response)
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error optimizing timing: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -512,6 +514,8 @@ async def train_model(
             "timestamp": datetime.now().isoformat(),
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error starting model training: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -577,7 +581,7 @@ async def batch_score_leads(leads: List[ConversationContextRequest], current_use
 
         # Limit batch size
         if len(leads) > 50:
-            raise HTTPException(status_code=400, detail="Batch size limited to 50 leads per request")
+            raise HTTPException(status_code=400, detail="Batch size limited to 50 records per request")
 
         results = []
 
@@ -631,6 +635,8 @@ async def batch_score_leads(leads: List[ConversationContextRequest], current_use
 
         return JSONResponse(content=response)
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error in batch scoring: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")

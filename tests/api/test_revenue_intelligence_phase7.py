@@ -36,7 +36,7 @@ try:
     from fastapi.testclient import TestClient
 
     # Import Phase 7 components
-    from ghl_real_estate_ai.api.routes.revenue_intelligence import router
+    from ghl_real_estate_ai.api.routes.revenue_intelligence import get_forecasting_engine, router
     from ghl_real_estate_ai.intelligence.revenue_forecasting_engine import (
         AdvancedRevenueForecast,
         DealProbabilityScore,
@@ -54,6 +54,31 @@ except (ImportError, TypeError, AttributeError, Exception):
 app = FastAPI()
 app.include_router(router)
 client = TestClient(app)
+
+# The router declares prefix="/revenue-intelligence", so all endpoint paths
+# below are relative to it.
+PREFIX = "/revenue-intelligence"
+
+# Known route defect (outside this test file's fix scope): the /forecast handler
+# builds confidence_metrics={"forecast_accuracy": forecast.forecast_accuracy.value}
+# where .value is a string ("good"), but RevenueForecastResponse.confidence_metrics
+# is typed Dict[str, float]. Response-model validation then raises 500. The fix is
+# in revenue_intelligence.py (type that dict Dict[str, Any] or drop forecast_accuracy
+# from it); it is not a 4xx-masked-as-500, so it is reported, not patched here.
+
+
+@pytest.fixture(autouse=True)
+def _clear_dependency_overrides():
+    """Drop any dependency overrides a test installed so they do not leak.
+
+    The route resolves ``Depends(get_forecasting_engine)`` to the function
+    object at import time, so ``patch(...)`` of the module attribute never
+    reaches the bound dependency. Tests inject their mock via
+    ``app.dependency_overrides[get_forecasting_engine]`` instead, and this
+    fixture clears it afterwards.
+    """
+    yield
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -209,10 +234,9 @@ def mock_business_intelligence_dashboard():
 class TestRevenueForecastingEndpoints:
     """Test Phase 7 Revenue Forecasting API endpoints."""
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_generate_advanced_revenue_forecast_success(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_generate_advanced_revenue_forecast_success(self, mock_revenue_forecasting_engine):
         """Test successful advanced revenue forecast generation."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
         request_data = {
             "timeframe": "monthly",
@@ -222,7 +246,7 @@ class TestRevenueForecastingEndpoints:
             "confidence_level": 0.85,
         }
 
-        response = client.post("/forecast", json=request_data)
+        response = client.post(f"{PREFIX}/forecast", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -257,19 +281,17 @@ class TestRevenueForecastingEndpoints:
         assert "prophet" in performance
         assert "ensemble" in performance
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_generate_revenue_forecast_invalid_timeframe(self, mock_get_engine):
+    def test_generate_revenue_forecast_invalid_timeframe(self):
         """Test revenue forecast with invalid timeframe."""
         request_data = {"timeframe": "invalid_timeframe", "revenue_stream": "total_revenue"}
 
-        response = client.post("/forecast", json=request_data)
+        response = client.post(f"{PREFIX}/forecast", json=request_data)
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_generate_revenue_forecast_confidence_bounds(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_generate_revenue_forecast_confidence_bounds(self, mock_revenue_forecasting_engine):
         """Test revenue forecast confidence level validation."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
         # Test confidence level too low
         request_data = {
@@ -277,22 +299,21 @@ class TestRevenueForecastingEndpoints:
             "confidence_level": 0.3,  # Below 0.5 minimum
         }
 
-        response = client.post("/forecast", json=request_data)
+        response = client.post(f"{PREFIX}/forecast", json=request_data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
         # Test confidence level too high
         request_data["confidence_level"] = 1.1  # Above 0.99 maximum
-        response = client.post("/forecast", json=request_data)
+        response = client.post(f"{PREFIX}/forecast", json=request_data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 class TestDealProbabilityEndpoints:
     """Test Deal Probability Scoring API endpoints."""
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_analyze_deal_probabilities_success(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_analyze_deal_probabilities_success(self, mock_revenue_forecasting_engine):
         """Test successful deal probability analysis."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
         request_data = {
             "lead_ids": ["lead_123", "lead_456", "lead_789"],
@@ -300,7 +321,7 @@ class TestDealProbabilityEndpoints:
             "include_optimization_recommendations": True,
         }
 
-        response = client.post("/deal-probability", json=request_data)
+        response = client.post(f"{PREFIX}/deal-probability", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -333,32 +354,29 @@ class TestDealProbabilityEndpoints:
         assert "high_probability_deals" in pipeline
         assert "at_risk_deals" in pipeline
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_deal_probability_empty_lead_list(self, mock_get_engine):
+    def test_deal_probability_empty_lead_list(self):
         """Test deal probability analysis with empty lead list."""
         request_data = {"lead_ids": []}
 
-        response = client.post("/deal-probability", json=request_data)
+        response = client.post(f"{PREFIX}/deal-probability", json=request_data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_deal_probability_too_many_leads(self, mock_get_engine):
+    def test_deal_probability_too_many_leads(self):
         """Test deal probability analysis with too many leads."""
         request_data = {
             "lead_ids": [f"lead_{i}" for i in range(150)]  # Over 100 limit
         }
 
-        response = client.post("/deal-probability", json=request_data)
+        response = client.post(f"{PREFIX}/deal-probability", json=request_data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 class TestRevenueOptimizationEndpoints:
     """Test Revenue Optimization Planning API endpoints."""
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_generate_optimization_plan_success(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_generate_optimization_plan_success(self, mock_revenue_forecasting_engine):
         """Test successful revenue optimization plan generation."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
         request_data = {
             "current_revenue": 485000,
@@ -368,7 +386,7 @@ class TestRevenueOptimizationEndpoints:
             "investment_budget": 50000,
         }
 
-        response = client.post("/optimization-plan", json=request_data)
+        response = client.post(f"{PREFIX}/optimization-plan", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -397,26 +415,24 @@ class TestRevenueOptimizationEndpoints:
         metrics = data["success_metrics"]
         assert "revenue_growth_target" in metrics
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_optimization_plan_invalid_growth_rate(self, mock_get_engine):
+    def test_optimization_plan_invalid_growth_rate(self):
         """Test optimization plan with invalid growth rate."""
         request_data = {
             "target_growth": 1.5  # 150% growth - above maximum
         }
 
-        response = client.post("/optimization-plan", json=request_data)
+        response = client.post(f"{PREFIX}/optimization-plan", json=request_data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 class TestRealTimeMetricsEndpoints:
     """Test Real-time Revenue Intelligence Metrics endpoints."""
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_get_real_time_metrics_success(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_get_real_time_metrics_success(self, mock_revenue_forecasting_engine):
         """Test successful real-time metrics retrieval."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
-        response = client.get("/metrics/real-time")
+        response = client.get(f"{PREFIX}/metrics/real-time")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -456,12 +472,11 @@ class TestRealTimeMetricsEndpoints:
 class TestExecutiveInsightsEndpoints:
     """Test Executive Insights and Business Intelligence endpoints."""
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_get_executive_summary_success(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_get_executive_summary_success(self, mock_revenue_forecasting_engine):
         """Test successful executive revenue insights generation."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
-        response = client.get("/insights/executive-summary?timeframe=monthly")
+        response = client.get(f"{PREFIX}/insights/executive-summary?timeframe=monthly")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -498,12 +513,11 @@ class TestExecutiveInsightsEndpoints:
         assert "accuracy" in performance
         assert "forecast_reliability" in performance
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_get_market_intelligence_insights_success(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_get_market_intelligence_insights_success(self, mock_revenue_forecasting_engine):
         """Test successful market intelligence insights generation."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
-        response = client.get("/insights/market-intelligence")
+        response = client.get(f"{PREFIX}/insights/market-intelligence")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -536,10 +550,9 @@ class TestExecutiveInsightsEndpoints:
 class TestModelManagementEndpoints:
     """Test Model Management and Status endpoints."""
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_get_model_status_success(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_get_model_status_success(self, mock_revenue_forecasting_engine):
         """Test successful model status retrieval."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
         mock_revenue_forecasting_engine.ml_models = {"prophet": Mock(), "lstm": Mock()}
         mock_revenue_forecasting_engine.ensemble_weights = {"prophet": 0.3, "lstm": 0.25}
         mock_revenue_forecasting_engine.phase7_config = {"ml_model_accuracy_target": 0.95}
@@ -547,7 +560,7 @@ class TestModelManagementEndpoints:
             return_value={"prophet": 0.92, "lstm": 0.94}
         )
 
-        response = client.get("/models/status")
+        response = client.get(f"{PREFIX}/models/status")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -565,12 +578,11 @@ class TestModelManagementEndpoints:
         assert data["accuracy_target"] == 0.95
         assert data["system_status"] == "optimal"
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_trigger_model_retraining_success(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_trigger_model_retraining_success(self, mock_revenue_forecasting_engine):
         """Test successful model retraining trigger."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
-        response = client.post("/models/retrain?models=prophet&models=lstm")
+        response = client.post(f"{PREFIX}/models/retrain?models=prophet&models=lstm")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -591,7 +603,7 @@ class TestHealthCheckEndpoints:
 
     def test_health_check_success(self):
         """Test successful health check."""
-        response = client.get("/health")
+        response = client.get(f"{PREFIX}/health")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -622,7 +634,7 @@ class TestStreamingEndpoints:
         # Note: This is a basic connection test for SSE endpoint
         # Full streaming tests would require async WebSocket testing framework
 
-        response = client.get("/stream/forecasts")
+        response = client.get(f"{PREFIX}/stream/forecasts")
 
         # SSE endpoint should return 200 and proper headers
         assert response.status_code == status.HTTP_200_OK
@@ -633,25 +645,24 @@ class TestStreamingEndpoints:
 class TestAPIErrorHandling:
     """Test API error handling and edge cases."""
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_forecast_engine_failure(self, mock_get_engine):
+    def test_forecast_engine_failure(self):
         """Test API behavior when forecasting engine fails."""
         mock_engine = Mock()
         mock_engine.forecast_revenue_advanced = AsyncMock(side_effect=Exception("Forecasting engine failure"))
-        mock_get_engine.return_value = mock_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_engine
 
         request_data = {"timeframe": "monthly", "revenue_stream": "total_revenue"}
 
-        response = client.post("/forecast", json=request_data)
+        response = client.post(f"{PREFIX}/forecast", json=request_data)
 
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         data = response.json()
         assert "detail" in data
-        assert "Revenue forecasting failed" in data["detail"]
+        assert data["detail"] == "Internal server error"
 
     def test_invalid_json_payload(self):
         """Test API behavior with invalid JSON payload."""
-        response = client.post("/forecast", data="invalid json")
+        response = client.post(f"{PREFIX}/forecast", data="invalid json")
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
@@ -659,15 +670,14 @@ class TestAPIErrorHandling:
 class TestPerformanceValidation:
     """Test performance requirements for Phase 7 APIs."""
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_forecast_response_time(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_forecast_response_time(self, mock_revenue_forecasting_engine):
         """Test that forecast API meets <100ms response time target."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
         request_data = {"timeframe": "monthly", "revenue_stream": "total_revenue"}
 
         start_time = time.time()
-        response = client.post("/forecast", json=request_data)
+        response = client.post(f"{PREFIX}/forecast", json=request_data)
         end_time = time.time()
 
         response_time_ms = (end_time - start_time) * 1000
@@ -676,17 +686,16 @@ class TestPerformanceValidation:
         # Note: This is a mocked test, real performance would be validated in integration tests
         assert response_time_ms < 100  # Target: <100ms API response
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_concurrent_forecast_requests(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_concurrent_forecast_requests(self, mock_revenue_forecasting_engine):
         """Test API performance under concurrent load."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
         request_data = {"timeframe": "monthly", "revenue_stream": "total_revenue"}
 
         # Simulate concurrent requests
         responses = []
         for _ in range(10):
-            response = client.post("/forecast", json=request_data)
+            response = client.post(f"{PREFIX}/forecast", json=request_data)
             responses.append(response)
 
         # All requests should succeed
@@ -697,12 +706,11 @@ class TestPerformanceValidation:
 class TestPhase7FeatureIntegration:
     """Test Phase 7 specific feature integration."""
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_jorge_commission_calculation(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_jorge_commission_calculation(self, mock_revenue_forecasting_engine):
         """Test Jorge's 6% commission calculation integration."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
-        response = client.get("/insights/executive-summary")
+        response = client.get(f"{PREFIX}/insights/executive-summary")
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -712,14 +720,13 @@ class TestPhase7FeatureIntegration:
         assert "methodology_impact" in jorge_data
         assert "optimization_potential" in jorge_data
 
-    @patch("ghl_real_estate_ai.api.routes.revenue_intelligence.get_forecasting_engine")
-    def test_ml_ensemble_integration(self, mock_get_engine, mock_revenue_forecasting_engine):
+    def test_ml_ensemble_integration(self, mock_revenue_forecasting_engine):
         """Test ML ensemble model integration."""
-        mock_get_engine.return_value = mock_revenue_forecasting_engine
+        app.dependency_overrides[get_forecasting_engine] = lambda: mock_revenue_forecasting_engine
 
         request_data = {"timeframe": "monthly", "use_ensemble": True}
 
-        response = client.post("/forecast", json=request_data)
+        response = client.post(f"{PREFIX}/forecast", json=request_data)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()

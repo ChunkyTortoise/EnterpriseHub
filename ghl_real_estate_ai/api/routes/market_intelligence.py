@@ -17,7 +17,10 @@ from pydantic import BaseModel, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
 from ghl_real_estate_ai.services.property_alerts import AlertCriteria, get_property_alert_system
-from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import RanchoCucamongaConversationContext
+from ghl_real_estate_ai.services.rancho_cucamonga_ai_assistant import (
+    RanchoCucamongaConversationContext,
+    get_rancho_cucamonga_ai_assistant,
+)
 from ghl_real_estate_ai.services.rancho_cucamonga_market_service import (
     PropertyType,
     get_rancho_cucamonga_market_service,
@@ -141,6 +144,8 @@ async def get_market_metrics(
             last_updated=datetime.now(),
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error getting market metrics: {e}")
         raise HTTPException(500, f"Failed to retrieve market metrics: {str(e)}")
@@ -173,7 +178,7 @@ async def get_neighborhood_list():
                         {
                             "median_price": analysis.median_price,
                             "school_rating": analysis.school_rating,
-                            "tech_worker_appeal": analysis.tech_worker_appeal,
+                            "tech_worker_appeal": analysis.logistics_healthcare_appeal,
                             "market_condition": analysis.market_condition.value,
                         }
                     )
@@ -205,7 +210,7 @@ async def get_neighborhood_analysis(neighborhood_name: str):
             "lifestyle_score": {
                 "walkability": analysis.walkability_score,
                 "school_rating": analysis.school_rating,
-                "tech_appeal": analysis.tech_worker_appeal,
+                "tech_appeal": analysis.logistics_healthcare_appeal,
             },
         }
 
@@ -547,7 +552,7 @@ async def get_market_trends(
             neighborhood_analysis = await market_service.get_neighborhood_analysis(neighborhood)
             if neighborhood_analysis:
                 trends["neighborhood_insights"] = {
-                    "tech_worker_appeal": neighborhood_analysis.tech_worker_appeal,
+                    "tech_worker_appeal": neighborhood_analysis.logistics_healthcare_appeal,
                     "school_rating": neighborhood_analysis.school_rating,
                     "walkability": neighborhood_analysis.walkability_score,
                 }
@@ -652,7 +657,7 @@ async def get_ai_conversation_response(
             conversation_stage=lead_context.get("conversation_stage", "discovery"),
         )
 
-        response = await ai_assistant.generate_rancho_cucamonga_response(query, context, conversation_history)
+        response = await ai_assistant.generate_market_response(context, query, conversation_history)
 
         return {"query": query, "ai_response": response, "generated_at": datetime.now().isoformat()}
 

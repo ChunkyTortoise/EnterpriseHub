@@ -14,6 +14,32 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
+def _protect_tracked_model_artifacts():
+    """Restore tracked ML model files after each API test.
+
+    Some endpoints (e.g. POST /train-model) kick off real training in a
+    BackgroundTask, which TestClient runs synchronously and which overwrites
+    the tracked models/ensemble_model.joblib. A polluted artifact then breaks
+    the predictive-lead-scorer service tests that load it later in the run.
+    Snapshot the tracked artifacts and restore them so no API test leaks a
+    retrained model into the shared tree.
+    """
+    import pathlib
+    import shutil
+
+    root = pathlib.Path(__file__).resolve().parents[2]
+    tracked = root / "models" / "ensemble_model.joblib"
+    snapshot = tracked.read_bytes() if tracked.exists() else None
+    try:
+        yield
+    finally:
+        if snapshot is not None:
+            tracked.write_bytes(snapshot)
+        # Untracked per-run training artifacts.
+        shutil.rmtree(root / "data" / "models", ignore_errors=True)
+
+
+@pytest.fixture(autouse=True)
 def _bypass_rate_limiter_for_api_tests():
     """Bypass rate limiter for all API tests to prevent cross-test pollution.
 

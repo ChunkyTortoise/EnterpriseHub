@@ -394,10 +394,10 @@ class TestNeighborhoodIntelligenceRoutes:
 
         response = client.post("/api/v1/market/alerts/rules", json=request_data)
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-
-        data = response.json()
-        assert data["success"] is False
+        # The alert_type field_validator rejects unknown types during request
+        # parsing, so FastAPI returns 422 before the handler's ValueError->400
+        # path can run. 422 is the honest result for this malformed body.
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_get_investment_opportunities_success(self):
         """Test successful investment opportunities analysis."""

@@ -648,6 +648,8 @@ async def warm_cache(
             "initiated_at": datetime.now().isoformat(),
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Cache warming failed: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
