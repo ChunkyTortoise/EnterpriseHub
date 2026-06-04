@@ -16,7 +16,7 @@ numpy<2  # Required for ChromaDB compatibility with NumPy 2.0 API changes
 redis>=5.0.0
 
 # Async Support
-aiohttp>=3.13.5
+aiohttp>=3.14.0
 
 # Type Hints & Validation
 typing-extensions>=4.9.0
