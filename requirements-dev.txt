@@ -87,7 +87,7 @@ shapely>=2.0.0
 # ==============================================================================
 # Pinned: CI runs `ruff check .` + `ruff format --check .`; an unbounded `>=`
 # pulls newer ruff with stricter default rules that fail CI while local passes.
-ruff==0.6.9
+ruff==0.15.16
 mypy>=1.7.0
 coverage[toml]>=7.3.0
 
