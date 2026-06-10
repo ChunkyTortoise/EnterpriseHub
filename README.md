@@ -71,7 +71,7 @@ graph TB
         BI["Streamlit BI Dashboard :8501"]
     end
 
-    subgraph Core["FastAPI Core — Orchestration Layer"]
+    subgraph Core["FastAPI Core, Orchestration Layer"]
         CO["Claude Orchestrator<br/><small>Multi-strategy parsing, L1/L2/L3 cache</small>"]
         AMC["Agent Mesh Coordinator<br/><small>7 configured agents, capability routing, audit trails</small>"]
         HO["Handoff Service<br/><small>0.7 confidence, circular prevention</small>"]
@@ -147,7 +147,7 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 
 **Outcome:** ADR-0004 documents the mesh coordinator design; the coordinator implements registration, weighted routing, per-agent P50/P95 tracking, and emergency shutdown behavior. ADR-0011 separates what runs from what is scaffold: auto-scaling, rebalancing, and activity throttling are log-only. A cold-init registry snapshot, `benchmarks/results/mesh_registry_2026-05-27.json`, shows 0 agents registered; agents attach at runtime via `register_agent()` from a 7-agent roster configured in `.claude/agent-mesh/mesh-config.json` (around 10 with auto-discovery).
 
-**Training foundation:** Microsoft AI & ML Engineering (75h) — agent orchestration patterns, SLA-based routing, performance monitoring.
+**Training foundation:** Microsoft AI & ML Engineering (75h), agent orchestration patterns, SLA-based routing, performance monitoring.
 
 ---
 
@@ -167,7 +167,7 @@ A background task promotes frequently accessed L1 keys to L2.
 
 **Outcome:** The synthetic benchmark models a 60% / 20% / 8% L1/L2/L3 hit distribution and a roughly 89% token reduction for that workload. A 2026-06-01 live counter snapshot, `benchmarks/results/cache_live_2026-05-27.json`, measured a 90.8% L1 hit rate on a synthetic 2,000-operation workload (seed 42); Redis L2 was not exercised, so this is an L1-only result, not production traffic. Treat the 3-tier distribution as an architecture target.
 
-**Training foundation:** Duke LLMOps (48h) — multi-tier caching, cost optimization, token budgeting. IBM GenAI Engineering (144h) — LangChain orchestration, model strategy patterns.
+**Training foundation:** Duke LLMOps (48h), multi-tier caching, cost optimization, token budgeting. IBM GenAI Engineering (144h), LangChain orchestration, model strategy patterns.
 
 ---
 
@@ -179,17 +179,17 @@ A background task promotes frequently accessed L1 keys to L2.
 
 **Pattern:** `ResponsePostProcessor` chains `ResponseProcessorStage` instances. Each stage receives a `ProcessedResponse` and returns one with an updated `action`. If any stage sets `ProcessingAction.SHORT_CIRCUIT`, the remaining stages are skipped. The default pipeline (created by `create_default_pipeline()`) runs 7 stages in order:
 
-1. `LanguageMirrorProcessor` — detects contact language, sets `context.detected_language`
-2. `TCPAOptOutProcessor` — pattern-matches opt-out phrases, short-circuits with acknowledgment, applies `TCPA-Opt-Out` and `AI-Off` GHL tags
-3. `ConversationRepairProcessor` — detects conversation breakdown, graduated repair ladder
-4. `ComplianceCheckProcessor` — FHA/RESPA enforcement via `ComplianceMiddleware.enforce()`, replaces blocked response with a safe fallback
-5. `AIDisclosureProcessor` — no-op stub; disclosure triggers only when a lead explicitly asks
-6. `ResponseTranslationProcessor` — mirrors user language for fixed qualification and scheduling messages
-7. `SMSTruncationProcessor` — enforces 320-character SMS limit, truncates at sentence boundaries
+1. `LanguageMirrorProcessor`, detects contact language, sets `context.detected_language`
+2. `TCPAOptOutProcessor`, pattern-matches opt-out phrases, short-circuits with acknowledgment, applies `TCPA-Opt-Out` and `AI-Off` GHL tags
+3. `ConversationRepairProcessor`, detects conversation breakdown, graduated repair ladder
+4. `ComplianceCheckProcessor`, FHA/RESPA enforcement via `ComplianceMiddleware.enforce()`, replaces blocked response with a safe fallback
+5. `AIDisclosureProcessor`, no-op stub; disclosure triggers only when a lead explicitly asks
+6. `ResponseTranslationProcessor`, mirrors user language for fixed qualification and scheduling messages
+7. `SMSTruncationProcessor`, enforces 320-character SMS limit, truncates at sentence boundaries
 
 **Outcome:** Every bot message is compliance-checked before delivery. Stage failures are caught per-stage and logged without dropping the message.
 
-**Training foundation:** IBM RAG & Agentic AI (24h) — agentic pipeline design, safety constraints. Vanderbilt Generative AI Strategic Leader (40h) — responsible agent behavior patterns.
+**Training foundation:** IBM RAG & Agentic AI (24h), agentic pipeline design, safety constraints. Vanderbilt Generative AI Strategic Leader (40h), responsible agent behavior patterns.
 
 ---
 
@@ -213,7 +213,7 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 **Outcome:** `blocked_by_performance` and `blocked_by_circular` tracked as named analytics fields. Handoff success rate and processing time are available via `get_analytics_summary()`.
 
-**Training foundation:** Microsoft AI & ML Engineering (75h) — confidence scoring, performance routing. IBM GenAI Engineering (144h) — conversation context design, multi-agent coordination.
+**Training foundation:** Microsoft AI & ML Engineering (75h), confidence scoring, performance routing. IBM GenAI Engineering (144h), conversation context design, multi-agent coordination.
 
 ---
 
@@ -229,7 +229,7 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 **Outcome:** Experiments run with no risk of variant drift per contact. Results surface `is_significant`, `p_value`, and `winner` in `ExperimentResult`.
 
-**Training foundation:** Duke LLMOps (48h) — model A/B testing with statistical significance, prompt variant evaluation. Google Advanced Data Analytics (200h) — z-test methodology, power analysis.
+**Training foundation:** Duke LLMOps (48h), model A/B testing with statistical significance, prompt variant evaluation. Google Advanced Data Analytics (200h), z-test methodology, power analysis.
 
 → Full cert-to-code mapping: [`docs/certifications.md`](docs/certifications.md) (1,398h across 15 certifications)
 
@@ -245,7 +245,7 @@ Fast local proof path:
 make reviewer-smoke
 ```
 
-That command runs lint, format check, compile check, eval harness, health routes, webhook signature tests, Claude orchestrator tests, and SQL-safety tests.
+That command runs lint, format check, compile check, eval suite, health routes, webhook signature tests, Claude orchestrator tests, and SQL-safety tests.
 
 | If you're evaluating for... | Where to look | Training behind it |
 |-----------------------------|--------------|-------------------|
@@ -263,15 +263,15 @@ That command runs lint, format check, compile check, eval harness, health routes
 |--------------------------|------------------|
 | ![Platform Overview](assets/screenshots/platform-overview.png) | ![Lead Intelligence](assets/screenshots/lead-intelligence.png) |
 
-**3-Tier Cache Performance — synthetic 89% token-reduction model**
+**3-Tier Cache Performance, synthetic 89% token-reduction model**
 
 ![Cache Performance](assets/screenshots/cache-performance.png)
 
-**Eval Reliability Baseline — 50 golden cases, 4 LLM-as-judge rubrics**
+**Eval Reliability Baseline, 50 golden cases, 4 LLM-as-judge rubrics**
 
 ![Reliability Diagram](assets/screenshots/reliability-diagram.png)
 
-→ [Eval harness details](evals/README.md) · [Prompt changelog](PROMPT_CHANGELOG.md)
+→ [Eval suite details](evals/README.md) · [Prompt changelog](PROMPT_CHANGELOG.md)
 
 ---
 
@@ -295,13 +295,13 @@ That command runs lint, format check, compile check, eval harness, health routes
 
 Security workflows are configured for secret scanning, Bandit, Semgrep, dependency audit, and SQL-injection grep. Treat current GitHub run status as the source of truth before presenting the security badge as green.
 
-- **Parameterized SQL** — all queries use parameterized `text()` or asyncpg `$1` bindings. DDL identifiers validated and double-quoted via `utils.sql_safety.quote_identifier()`. CI gate rejects any unprotected f-string SQL patterns.
-- **Webhook authentication** — Router-level `require_ghl_webhook_signature` dependency enforces Ed25519 or HMAC-SHA256 signature verification on all GHL webhook routes. Replay protection via `X-GHL-Timestamp` with 5-minute window.
-- **JWT authentication** — 1-hour expiry tokens validated on every protected route
-- **PII encryption** — SDR PII fields use Fernet symmetric encryption; broader tenant-secret encryption remains an explicit hardening item
-- **Input validation** — Pydantic V2 models enforce strict types on all API boundaries
-- **Rate limiting** — Redis-backed sliding window: 100 req/min per IP, 200 burst
-- **Compliance pipeline** — 7-stage response processing enforces FHA, RESPA, TCPA, CCPA, and SB-243
+- **Parameterized SQL**: all queries use parameterized `text()` or asyncpg `$1` bindings. DDL identifiers validated and double-quoted via `utils.sql_safety.quote_identifier()`. CI gate rejects any unprotected f-string SQL patterns.
+- **Webhook authentication**: Router-level `require_ghl_webhook_signature` dependency enforces Ed25519 or HMAC-SHA256 signature verification on all GHL webhook routes. Replay protection via `X-GHL-Timestamp` with 5-minute window.
+- **JWT authentication**: 1-hour expiry tokens validated on every protected route
+- **PII encryption**: SDR PII fields use Fernet symmetric encryption; broader tenant-secret encryption remains an explicit hardening item
+- **Input validation**: Pydantic V2 models enforce strict types on all API boundaries
+- **Rate limiting**: Redis-backed sliding window: 100 req/min per IP, 200 burst
+- **Compliance pipeline**: 7-stage response processing enforces FHA, RESPA, TCPA, CCPA, and SB-243
 
 See [`.github/workflows/security-scan.yml`](.github/workflows/security-scan.yml) for the full pipeline.
 
@@ -382,7 +382,7 @@ After setup completes:
 | Redis | `localhost:6379` |
 
 ```bash
-# Quick start (demo mode — no API keys, no database)
+# Quick start (demo mode, no API keys, no database)
 make demo
 
 # Stop all services
@@ -400,8 +400,8 @@ pytest --tb=short
 | Capability | Implementation | Key Metric |
 |-----------|----------------|------------|
 | **Token Cost Optimization** | 3-tier cache (L1 memory, L2 Redis, L3 PostgreSQL) + model routing | Synthetic 93K → 7.8K token model |
-| **Latency Monitoring** | `PerformanceTracker` — P50/P95/P99 percentiles, SLA compliance | Lead Bot P95 < 2,000ms |
-| **Alerting** | `AlertingService` — 7 default rules, configurable cooldowns | Error rate, latency, cache, handoff, tokens |
+| **Latency Monitoring** | `PerformanceTracker`, P50/P95/P99 percentiles, SLA compliance | Lead Bot P95 < 2,000ms |
+| **Alerting** | `AlertingService`, 7 default rules, configurable cooldowns | Error rate, latency, cache, handoff, tokens |
 | **Per-Bot Metrics** | `BotMetricsCollector`: throughput, cache hits, error categorization | First live L1 counter snapshot published 2026-06-01 (90.8% L1, synthetic, L2 not exercised); see `cache_live_2026-05-27.json` |
 | **Health Checks** | `/health/aggregate` endpoint checks all services | Bot + DB + Redis + CRM status |
 
@@ -411,9 +411,9 @@ See [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) and [BENCHMARKS.md](BENCHMARK
 
 ## Related Projects
 
-- [jorge_real_estate_bots](https://github.com/ChunkyTortoise/jorge_real_estate_bots) — Three-bot lead qualification system (Lead, Buyer, Seller)
-- [docextract](https://github.com/ChunkyTortoise/docextract) — Production RAG pipeline: PDF upload, async processing, pgvector hybrid search, citation-aware answers
-- [mcp-server-toolkit](https://github.com/ChunkyTortoise/mcp-server-toolkit) — 9 MCP servers for LLM tool integration, published to PyPI
+- [jorge_real_estate_bots](https://github.com/ChunkyTortoise/jorge_real_estate_bots), Three-bot lead qualification system (Lead, Buyer, Seller)
+- [docextract](https://github.com/ChunkyTortoise/docextract), Production RAG pipeline: PDF upload, async processing, pgvector hybrid search, citation-aware answers
+- [mcp-server-toolkit](https://github.com/ChunkyTortoise/mcp-server-toolkit), 9 MCP servers for LLM tool integration, published to PyPI
 
 ---
 
@@ -433,4 +433,4 @@ python -m benchmarks.run_all
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT, see [LICENSE](LICENSE) for details.
