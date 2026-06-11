@@ -1,0 +1,209 @@
+.streamBody {
+  margin-top: var(--lyr-space-12);
+  overflow-y: auto;
+  display: grid;
+  gap: var(--lyr-space-12);
+  padding-right: 2px;
+  scroll-behavior: smooth;
+}
+
+.messageCard {
+  padding: var(--lyr-space-12);
+  animation: fadeSlideIn 0.35s ease both;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.messageCardBot {
+  border-color: rgba(31, 94, 255, 0.2);
+  background: linear-gradient(165deg, rgba(31, 94, 255, 0.08), var(--lyr-color-surface) 50%);
+}
+
+.messageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--lyr-space-8);
+}
+
+.messageTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--lyr-space-8);
+}
+
+.messageTitle {
+  font-size: 14px;
+}
+
+.messageText {
+  margin: var(--lyr-space-8) 0 0;
+  color: var(--lyr-color-text);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.cursor {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--lyr-color-primary);
+  animation: blink 0.9s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.telemetryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--lyr-space-8);
+}
+
+.telemetryChip {
+  font-size: 11px;
+  font-weight: 700;
+  font-family: ui-monospace, 'JetBrains Mono', SFMono-Regular, Menlo, monospace;
+  border: 1px solid var(--lyr-color-border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: var(--lyr-color-text-muted);
+  background: var(--lyr-color-surface-elevated);
+}
+
+.telemetryChipHit {
+  border-color: rgba(18, 128, 92, 0.3);
+  background: rgba(18, 128, 92, 0.08);
+  color: var(--lyr-color-success);
+}
+
+.telemetryChipMiss {
+  border-color: rgba(161, 92, 0, 0.3);
+  background: rgba(161, 92, 0, 0.08);
+  color: var(--lyr-color-warning);
+}
+
+.handoffCard {
+  border: 1px dashed rgba(31, 94, 255, 0.45);
+  border-radius: var(--lyr-radius-12);
+  background: rgba(31, 94, 255, 0.05);
+  padding: var(--lyr-space-12);
+  animation: fadeSlideIn 0.35s ease both;
+}
+
+.handoffHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--lyr-space-8);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--lyr-color-primary-strong);
+}
+
+.handoffArrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: var(--lyr-space-8);
+}
+
+.handoffReason {
+  margin: var(--lyr-space-8) 0 0;
+  font-size: 13px;
+  color: var(--lyr-color-text-muted);
+}
+
+.handoffContext {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--lyr-space-8);
+}
+
+.confidenceTrack {
+  margin-top: var(--lyr-space-8);
+  height: 6px;
+  border-radius: 999px;
+  background: var(--lyr-color-border);
+  position: relative;
+  overflow: hidden;
+}
+
+.confidenceFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--lyr-color-primary);
+  transition: width 0.6s ease;
+}
+
+.confidenceThreshold {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 2px;
+  background: var(--lyr-color-warning);
+}
+
+.confidenceLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--lyr-color-text-muted);
+}
+
+.composer {
+  margin-top: var(--lyr-space-12);
+  position: sticky;
+  bottom: 0;
+  border-radius: var(--lyr-radius-16);
+  background: var(--lyr-color-surface-elevated);
+  border: 1px solid var(--lyr-color-border);
+  box-shadow: var(--lyr-shadow-md);
+  padding: var(--lyr-space-12);
+  display: grid;
+  gap: var(--lyr-space-8);
+}
+
+.composerHint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--lyr-color-text-muted);
+}
+
+.quickActionRow {
+  display: flex;
+  gap: var(--lyr-space-8);
+  flex-wrap: wrap;
+}
+
+.quickActionBadge {
+  cursor: pointer;
+  border: 0;
+  background: none;
+  padding: 0;
+}
+
+.commandRow {
+  display: flex;
+  gap: var(--lyr-space-8);
+  align-items: center;
+}

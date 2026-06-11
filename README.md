@@ -12,6 +12,10 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Demo](https://img.shields.io/badge/demo-in_progress-lightgrey.svg)](#live-demo)
 
+![Lyrio Operator Console demo: a recorded seller-qualification session streams in with bot handoff and cache/cost telemetry](assets/lyrio-console-demo.gif)
+
+*The Lyrio Operator Console: a seller lead gets qualified, handed from the Lead Intake Bot to the Seller Bot at 91% confidence, with per-message cache tier, token, and cost telemetry. Replay of a recorded session; live SSE mode wakes a free-tier backend.*
+
 ---
 
 ## Executive Summary

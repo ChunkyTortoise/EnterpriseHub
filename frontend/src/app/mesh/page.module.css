@@ -1,0 +1,164 @@
+.shell {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--lyr-space-16);
+  display: grid;
+  gap: var(--lyr-space-16);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--lyr-space-12);
+}
+
+.logoBadge {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--lyr-radius-12);
+  background: linear-gradient(145deg, var(--lyr-color-primary), color-mix(in srgb, var(--lyr-color-primary) 66%, white));
+  color: var(--lyr-color-surface);
+  display: grid;
+  place-items: center;
+}
+
+.brandTitle {
+  margin: 0;
+  font-size: 20px;
+}
+
+.brandSubtitle {
+  margin: 0;
+  font-size: 12px;
+  color: var(--lyr-color-text-muted);
+}
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: var(--lyr-space-8);
+  flex-wrap: wrap;
+}
+
+.section {
+  padding: var(--lyr-space-16);
+}
+
+.agentGrid {
+  margin-top: var(--lyr-space-12);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--lyr-space-12);
+}
+
+.agentCard {
+  padding: var(--lyr-space-12);
+  display: grid;
+  gap: var(--lyr-space-8);
+}
+
+.agentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--lyr-space-8);
+  font-size: 14px;
+}
+
+.capabilityRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.agentStats {
+  display: flex;
+  gap: var(--lyr-space-12);
+  font-size: 12px;
+  color: var(--lyr-color-text-muted);
+  font-weight: 600;
+}
+
+.twoColumn {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--lyr-space-16);
+}
+
+.cacheList {
+  margin-top: var(--lyr-space-12);
+  display: grid;
+  gap: var(--lyr-space-12);
+}
+
+.cacheRow {
+  display: grid;
+  gap: 6px;
+}
+
+.cacheLabel {
+  display: flex;
+  align-items: baseline;
+  gap: var(--lyr-space-8);
+  font-size: 13px;
+}
+
+.cacheLabel span {
+  color: var(--lyr-color-text-muted);
+  font-size: 12px;
+}
+
+.cacheBarTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--lyr-color-border);
+  overflow: hidden;
+}
+
+.cacheBarFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--lyr-color-primary);
+}
+
+.cacheMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--lyr-space-12);
+  font-size: 12px;
+  color: var(--lyr-color-text-muted);
+  font-weight: 600;
+}
+
+.governanceList {
+  margin-top: var(--lyr-space-12);
+  display: grid;
+  gap: var(--lyr-space-8);
+}
+
+.governanceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  padding: var(--lyr-space-8) 0;
+  border-bottom: 1px solid var(--lyr-color-border);
+}
+
+.governanceRow:last-child {
+  border-bottom: 0;
+}
+
+.footnote {
+  margin: var(--lyr-space-12) 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--lyr-color-text-muted);
+}
+
+@media (max-width: 900px) {
+  .twoColumn {
+    grid-template-columns: 1fr;
+  }
+}
