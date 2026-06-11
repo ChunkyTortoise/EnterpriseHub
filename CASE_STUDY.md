@@ -148,4 +148,4 @@ If you're running a brokerage, agency, or vertical-AI shop and have a lead-quali
 
 ---
 
-*Source repo: [github.com/ChunkyTortoise/EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) · Live demo: [ct-enterprise-ai.streamlit.app](https://ct-enterprise-ai.streamlit.app)*
+*Source repo: [github.com/ChunkyTortoise/EnterpriseHub](https://github.com/ChunkyTortoise/EnterpriseHub) · Local demo: `make demo`*

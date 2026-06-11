@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Demo](https://img.shields.io/badge/demo-live-FF4B4B.svg?logo=streamlit&logoColor=white)](https://ct-enterprise-ai.streamlit.app)
+[![Demo](https://img.shields.io/badge/demo-in_progress-lightgrey.svg)](#live-demo)
 
 ---
 
@@ -116,16 +116,14 @@ graph TB
 
 ## Live Demo
 
+A new interactive operator-console demo is being deployed; until the link lands here, see [`assets/screenshots/`](assets/screenshots/) and run the local demo:
+
 | | |
 |--|--|
-| **Dashboard** | <https://ct-enterprise-ai.streamlit.app> |
+| **Local demo** | `make demo` (no API keys required) |
 | **API Docs** | Swagger UI (40+ routes, available on local/staging deploy) |
-| **Demo login** | `demo_user` / `Demo1234!` |
-| **Admin login** | `admin` / `Admin1234!` |
 
-> These credentials are for the public demo instance only. They access synthetic data and are not production secrets.
-
-> **Deploying your own instance?** See [Deployment](#deployment) below. Run `python scripts/seed_demo.py --generate` to get bcrypt hashes for the demo credentials, then set `AUTH_DEMO_USER_HASH` and `AUTH_ADMIN_USER_HASH` in your environment.
+> **Deploying your own instance?** See [Deployment](#deployment) below. Run `python scripts/seed_demo.py --generate` to generate bcrypt hashes for your own demo credentials, then set `AUTH_DEMO_USER_HASH` and `AUTH_ADMIN_USER_HASH` in your environment.
 
 ---
 
@@ -147,8 +145,6 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 
 **Outcome:** ADR-0004 documents the mesh coordinator design; the coordinator implements registration, weighted routing, per-agent P50/P95 tracking, and emergency shutdown behavior. ADR-0011 separates what runs from what is scaffold: auto-scaling, rebalancing, and activity throttling are log-only. A cold-init registry snapshot, `benchmarks/results/mesh_registry_2026-05-27.json`, shows 0 agents registered; agents attach at runtime via `register_agent()` from a 7-agent roster configured in `.claude/agent-mesh/mesh-config.json` (around 10 with auto-discovery).
 
-**Training foundation:** Microsoft AI & ML Engineering (75h), agent orchestration patterns, SLA-based routing, performance monitoring.
-
 ---
 
 ### 2. 3-Tier LLM Cache
@@ -166,8 +162,6 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 A background task promotes frequently accessed L1 keys to L2.
 
 **Outcome:** The synthetic benchmark models a 60% / 20% / 8% L1/L2/L3 hit distribution and a roughly 89% token reduction for that workload. A 2026-06-01 live counter snapshot, `benchmarks/results/cache_live_2026-05-27.json`, measured a 90.8% L1 hit rate on a synthetic 2,000-operation workload (seed 42); Redis L2 was not exercised, so this is an L1-only result, not production traffic. Treat the 3-tier distribution as an architecture target.
-
-**Training foundation:** Duke LLMOps (48h), multi-tier caching, cost optimization, token budgeting. IBM GenAI Engineering (144h), LangChain orchestration, model strategy patterns.
 
 ---
 
@@ -188,8 +182,6 @@ A background task promotes frequently accessed L1 keys to L2.
 7. `SMSTruncationProcessor`, enforces 320-character SMS limit, truncates at sentence boundaries
 
 **Outcome:** Every bot message is compliance-checked before delivery. Stage failures are caught per-stage and logged without dropping the message.
-
-**Training foundation:** IBM RAG & Agentic AI (24h), agentic pipeline design, safety constraints. Vanderbilt Generative AI Strategic Leader (40h), responsible agent behavior patterns.
 
 ---
 
@@ -213,8 +205,6 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 **Outcome:** `blocked_by_performance` and `blocked_by_circular` tracked as named analytics fields. Handoff success rate and processing time are available via `get_analytics_summary()`.
 
-**Training foundation:** Microsoft AI & ML Engineering (75h), confidence scoring, performance routing. IBM GenAI Engineering (144h), conversation context design, multi-agent coordination.
-
 ---
 
 ### 5. A/B Testing Service
@@ -229,9 +219,7 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 **Outcome:** Experiments run with no risk of variant drift per contact. Results surface `is_significant`, `p_value`, and `winner` in `ExperimentResult`.
 
-**Training foundation:** Duke LLMOps (48h), model A/B testing with statistical significance, prompt variant evaluation. Google Advanced Data Analytics (200h), z-test methodology, power analysis.
-
-→ Full cert-to-code mapping: [`docs/certifications.md`](docs/certifications.md) (1,398h across 15 certifications)
+→ Cert-to-code mapping: [`docs/certifications.md`](docs/certifications.md)
 
 ---
 
