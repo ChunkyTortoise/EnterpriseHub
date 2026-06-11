@@ -1,3 +1,8 @@
+# Demo deployment: one lean FastAPI service + key-value cache, all free tier.
+# Postgres is intentionally absent: the public demo surface (/demo namespace)
+# touches no database, and Render free Postgres expires after ~30 days, which
+# would silently break the demo. The Vercel frontend runs in replay mode until
+# this service wakes (~50s cold start), so nothing user-facing depends on it.
 services:
   - type: web
     name: enterprisehub-api
@@ -6,8 +11,8 @@ services:
     plan: free
     branch: main
     buildCommand: pip install -r requirements.txt
-    startCommand: alembic upgrade head && python scripts/validate_env.py && uvicorn ghl_real_estate_ai.api.main:app --host 0.0.0.0 --port $PORT
-    healthCheckPath: /health
+    startCommand: uvicorn ghl_real_estate_ai.api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /demo/warm
     envVars:
       - key: ENVIRONMENT
         value: production
@@ -15,66 +20,28 @@ services:
         sync: false
       - key: JWT_SECRET_KEY
         sync: false
-      - key: AUTH_DEMO_USER_HASH
-        sync: false
-      - key: AUTH_ADMIN_USER_HASH
-        sync: false
-      - key: DATABASE_URL
-        fromDatabase:
-          name: enterprisehub-db
-          property: connectionString
       - key: REDIS_URL
         fromService:
           name: enterprisehub-redis
-          type: redis
+          type: keyvalue
           property: connectionString
-      - key: STRIPE_SECRET_KEY
-        sync: false
       - key: DEMO_MODE
         value: "true"
+      - key: DEMO_LIVE_AI
+        value: "false"
       - key: TEST_MODE
         value: "true"
+      - key: FRONTEND_URL
+        value: "https://enterprisehub-frontend.vercel.app"
       - key: GHL_API_KEY
         value: "demo_mode"
       - key: GHL_LOCATION_ID
         value: "demo_location"
       - key: PYTHON_VERSION
         value: "3.12"
-
-  - type: web
-    name: enterprisehub-dashboard
-    env: python
+  - type: keyvalue
+    name: enterprisehub-redis
     region: oregon
     plan: free
-    branch: main
-    buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run ghl_real_estate_ai/streamlit_demo/app.py --server.port $PORT --server.address 0.0.0.0
-    envVars:
-      - key: ENVIRONMENT
-        value: production
-      - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: DATABASE_URL
-        fromDatabase:
-          name: enterprisehub-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          name: enterprisehub-redis
-          type: redis
-          property: connectionString
-      - key: DEMO_MODE
-        value: "true"
-      - key: TEST_MODE
-        value: "true"
-      - key: PYTHON_VERSION
-        value: "3.12"
-
-databases:
-  - name: enterprisehub-db
-    databaseName: enterprisehub
-    plan: free
-
-  - type: redis
-    name: enterprisehub-redis
-    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []

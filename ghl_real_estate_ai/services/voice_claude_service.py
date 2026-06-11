@@ -10,7 +10,12 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-import speech_recognition as sr
+# SpeechRecognition is not in requirements.txt (deploys run without voice);
+# degrade to text-only instead of crashing the whole app at import time.
+try:
+    import speech_recognition as sr
+except ImportError:
+    sr = None
 from pydantic import BaseModel, ConfigDict, Field
 
 from ghl_real_estate_ai.ghl_utils.logger import get_logger
@@ -100,8 +105,8 @@ class VoiceClaudeService:
         self.market_id = market_id
         self.cache = None
 
-        # Initialize speech recognition
-        self.recognizer = sr.Recognizer()
+        # Initialize speech recognition (None when SpeechRecognition not installed)
+        self.recognizer = sr.Recognizer() if sr is not None else None
 
         # Voice processing configuration
         self.supported_languages = ["en-US", "en-GB", "es-ES", "es-MX", "fr-FR", "de-DE", "it-IT", "pt-BR"]
@@ -244,6 +249,13 @@ class VoiceClaudeService:
         self, audio_data: str, audio_format: AudioFormat, language: str, sample_rate: Optional[int]
     ) -> Dict[str, Any]:
         """Convert speech to text using speech recognition."""
+        if self.recognizer is None:
+            return {
+                "success": False,
+                "error": "Speech recognition unavailable: SpeechRecognition not installed",
+                "text": "",
+                "confidence": 0.0,
+            }
         try:
             # Decode base64 audio data
             audio_bytes = base64.b64decode(audio_data)

@@ -209,6 +209,25 @@
   line-height: 1.6;
 }
 
+.howItWorks {
+  margin-top: var(--lyr-space-16);
+  padding: var(--lyr-space-16);
+}
+
+.howItWorksText {
+  margin: var(--lyr-space-8) 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--lyr-color-text-muted);
+  max-width: 980px;
+}
+
+.howItWorksLink {
+  color: var(--lyr-color-primary-strong);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 @media (max-width: 1200px) {
   .layout {
     grid-template-columns: 1fr;

@@ -94,6 +94,7 @@ from ghl_real_estate_ai.api.routes import (
     leads,  # NEW: Leads Management API for frontend integration
     ml_scoring,  # Real-time ML lead scoring
     portal,
+    portfolio_telemetry,  # Read-only portfolio telemetry aggregation
     predictive_analytics,
     pricing_optimization,
     propensity_scoring,
@@ -647,7 +648,7 @@ def _verify_admin_api_key():
 def _setup_routers(app: FastAPI):
     """Initialize all routers for the application."""
     from ghl_real_estate_ai.api.jorge_alerting import router as jorge_alerting_router
-    from ghl_real_estate_ai.api.routes import demo
+    from ghl_real_estate_ai.api.routes import demo, demo_chat
 
     admin_guard = _verify_admin_api_key()
 
@@ -665,10 +666,14 @@ def _setup_routers(app: FastAPI):
     app.include_router(error_monitoring.router)
     app.include_router(security.router)
     app.include_router(demo.router)
+    app.include_router(demo_chat.router)
+    app.include_router(portfolio_telemetry.router)  # no auth - aggregate metrics only
     app.include_router(webhook.router, prefix="/api")
     app.include_router(analytics.router)
     app.include_router(bulk_operations.router, prefix="/api", dependencies=[admin_guard])
-    app.include_router(claude_chat.router, prefix="/api")
+    # Admin-gated: claude_chat touches the full orchestrator and memory surface;
+    # the unauthenticated public demo surface is the /demo namespace only.
+    app.include_router(claude_chat.router, prefix="/api", dependencies=[admin_guard])
     app.include_router(leads.router, prefix="/api", dependencies=[Depends(get_current_user)])
     app.include_router(lead_lifecycle.router, prefix="/api")
     app.include_router(health.router, prefix="/api")

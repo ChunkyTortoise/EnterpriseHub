@@ -3,20 +3,24 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-7%2C665_collected-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-7%2C000_collected-brightgreen)](tests/)
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
-[![Eval Gate](https://img.shields.io/badge/eval_gate-active-46E3B7)](evals/)
+[![Nightly Eval](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FChunkyTortoise%2FEnterpriseHub%2Fmain%2Fevals%2Fbadge.json)](evals/)
 [![Security](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/security-scan.yml?label=security)](https://github.com/ChunkyTortoise/EnterpriseHub/actions/workflows/security-scan.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Demo](https://img.shields.io/badge/demo-live-FF4B4B.svg?logo=streamlit&logoColor=white)](https://ct-enterprise-ai.streamlit.app)
+[![Demo](https://img.shields.io/badge/demo-in_progress-lightgrey.svg)](#live-demo)
+
+![Lyrio Operator Console demo: a recorded seller-qualification session streams in with bot handoff and cache/cost telemetry](assets/lyrio-console-demo.gif)
+
+*The Lyrio Operator Console: a seller lead gets qualified, handed from the Lead Intake Bot to the Seller Bot at 91% confidence, with per-message cache tier, token, and cost telemetry. Replay of a recorded session; live SSE mode wakes a free-tier backend.*
 
 ---
 
 ## Executive Summary
 
-EnterpriseHub is an AI backend for compliant real estate lead qualification. It automates lead intake, bot handoff, follow-up scheduling, and GoHighLevel CRM sync across specialized Lead, Buyer, and Seller bot workflows. Current local verification collects 7,665 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
+EnterpriseHub is an AI backend for compliant real estate lead qualification. It automates lead intake, bot handoff, follow-up scheduling, and GoHighLevel CRM sync across specialized Lead, Buyer, and Seller bot workflows. Current local verification collects 7,000 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
 
 ---
 
@@ -32,9 +36,13 @@ EnterpriseHub includes a case-study-backed production story plus modeled benchma
 | **LLM cache target** | L1 60% + L2 20% + L3 8% design target | Synthetic benchmark / architecture target |
 | **Token cost model** | 93K to 7.8K tokens per 100-query modeled workload | Projection; not quoted as live billing measurement |
 | **Eval coverage** | 50 golden cases across qualification, edge cases, and compliance | Repository artifact in `evals/` |
-| **Test collection** | 7,665 collected on May 23, 2026 | Local `pytest --collect-only --override-ini='addopts=' -q` |
+| **Test collection** | 7,000 collected on June 11, 2026 (after archiving unused dashboard modules) | Local `pytest --collect-only --override-ini='addopts=' -q` |
 
-See [CASE_STUDY.md](CASE_STUDY.md), [BENCHMARKS.md](BENCHMARKS.md), and [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md) for methodology and claim provenance.
+See [CASE_STUDY.md](CASE_STUDY.md), [BENCHMARKS.md](BENCHMARKS.md), [docs/RECEIPTS.md](docs/RECEIPTS.md), and [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md) for methodology and claim provenance. For the narrative version, read [docs/WRITEUP.md](docs/WRITEUP.md).
+
+<!-- EVAL-RESULTS:START -->
+**Nightly eval:** results table is auto-published here by the nightly workflow after its next run. Baseline LLM-judge rubric scores on the 50-case golden dataset: correctness 90%, tone 90%, safety 100%, compliance 95%.
+<!-- EVAL-RESULTS:END -->
 
 ---
 
@@ -55,8 +63,8 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | **A/B Testing** | Method | Two-proportion z-test | `ab_testing_service.py` statistical engine |
 | **A/B Testing** | Assignment | Deterministic SHA-256 bucketing | `experiment_id + contact_id` hash |
 | **Compliance** | Pipeline stages | 7 (language, TCPA, compliance, translation, truncation) | `response_pipeline/factory.py` |
-| **Test Surface** | Current collectible count | 7,665 collected | `pytest --collect-only --override-ini='addopts=' -q` on May 23, 2026 |
-| **ADRs** | Documented decisions | 12 | `docs/adr/0001-0012` |
+| **Test Surface** | Current collectible count | 7,000 collected | `pytest --collect-only --override-ini='addopts=' -q` on June 11, 2026 |
+| **ADRs** | Documented decisions | 13 | `docs/adr/0001-0013` |
 
 ---
 
@@ -116,16 +124,14 @@ graph TB
 
 ## Live Demo
 
+A new interactive operator-console demo is being deployed; until the link lands here, see [`assets/screenshots/`](assets/screenshots/) and run the local demo:
+
 | | |
 |--|--|
-| **Dashboard** | <https://ct-enterprise-ai.streamlit.app> |
+| **Local demo** | `make demo` (no API keys required) |
 | **API Docs** | Swagger UI (40+ routes, available on local/staging deploy) |
-| **Demo login** | `demo_user` / `Demo1234!` |
-| **Admin login** | `admin` / `Admin1234!` |
 
-> These credentials are for the public demo instance only. They access synthetic data and are not production secrets.
-
-> **Deploying your own instance?** See [Deployment](#deployment) below. Run `python scripts/seed_demo.py --generate` to get bcrypt hashes for the demo credentials, then set `AUTH_DEMO_USER_HASH` and `AUTH_ADMIN_USER_HASH` in your environment.
+> **Deploying your own instance?** See [Deployment](#deployment) below. Run `python scripts/seed_demo.py --generate` to generate bcrypt hashes for your own demo credentials, then set `AUTH_DEMO_USER_HASH` and `AUTH_ADMIN_USER_HASH` in your environment.
 
 ---
 
@@ -147,8 +153,6 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 
 **Outcome:** ADR-0004 documents the mesh coordinator design; the coordinator implements registration, weighted routing, per-agent P50/P95 tracking, and emergency shutdown behavior. ADR-0011 separates what runs from what is scaffold: auto-scaling, rebalancing, and activity throttling are log-only. A cold-init registry snapshot, `benchmarks/results/mesh_registry_2026-05-27.json`, shows 0 agents registered; agents attach at runtime via `register_agent()` from a 7-agent roster configured in `.claude/agent-mesh/mesh-config.json` (around 10 with auto-discovery).
 
-**Training foundation:** Microsoft AI & ML Engineering (75h), agent orchestration patterns, SLA-based routing, performance monitoring.
-
 ---
 
 ### 2. 3-Tier LLM Cache
@@ -166,8 +170,6 @@ A guide for technical reviewers with 5 minutes. Each entry names the file, expla
 A background task promotes frequently accessed L1 keys to L2.
 
 **Outcome:** The synthetic benchmark models a 60% / 20% / 8% L1/L2/L3 hit distribution and a roughly 89% token reduction for that workload. A 2026-06-01 live counter snapshot, `benchmarks/results/cache_live_2026-05-27.json`, measured a 90.8% L1 hit rate on a synthetic 2,000-operation workload (seed 42); Redis L2 was not exercised, so this is an L1-only result, not production traffic. Treat the 3-tier distribution as an architecture target.
-
-**Training foundation:** Duke LLMOps (48h), multi-tier caching, cost optimization, token budgeting. IBM GenAI Engineering (144h), LangChain orchestration, model strategy patterns.
 
 ---
 
@@ -188,8 +190,6 @@ A background task promotes frequently accessed L1 keys to L2.
 7. `SMSTruncationProcessor`, enforces 320-character SMS limit, truncates at sentence boundaries
 
 **Outcome:** Every bot message is compliance-checked before delivery. Stage failures are caught per-stage and logged without dropping the message.
-
-**Training foundation:** IBM RAG & Agentic AI (24h), agentic pipeline design, safety constraints. Vanderbilt Generative AI Strategic Leader (40h), responsible agent behavior patterns.
 
 ---
 
@@ -213,8 +213,6 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 **Outcome:** `blocked_by_performance` and `blocked_by_circular` tracked as named analytics fields. Handoff success rate and processing time are available via `get_analytics_summary()`.
 
-**Training foundation:** Microsoft AI & ML Engineering (75h), confidence scoring, performance routing. IBM GenAI Engineering (144h), conversation context design, multi-agent coordination.
-
 ---
 
 ### 5. A/B Testing Service
@@ -229,9 +227,7 @@ The `EnrichedHandoffContext` dataclass carries qualification score, budget range
 
 **Outcome:** Experiments run with no risk of variant drift per contact. Results surface `is_significant`, `p_value`, and `winner` in `ExperimentResult`.
 
-**Training foundation:** Duke LLMOps (48h), model A/B testing with statistical significance, prompt variant evaluation. Google Advanced Data Analytics (200h), z-test methodology, power analysis.
-
-→ Full cert-to-code mapping: [`docs/certifications.md`](docs/certifications.md) (1,398h across 15 certifications)
+→ Cert-to-code mapping: [`docs/certifications.md`](docs/certifications.md)
 
 ---
 

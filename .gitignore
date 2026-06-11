@@ -264,3 +264,8 @@ test_models/
 .codex/
 .gemini/
 .claude/worktrees/
+
+# Re-include frontend TS sources (lib/ above targets Python build dirs)
+!frontend/src/lib/
+!frontend/src/lib/**
+.repo-health-ok
