@@ -8,3 +8,6 @@ Read order on session start:
 ## Mistakes (agent failure log)
 
 <!-- One line per corrected bad behavior. Format: YYYY-MM-DD: what went wrong -> fix applied -->
+<!-- Agents: add a new entry whenever you correct a repeated mistake in this repo -->
+2026-06-02: Integration tests were masking 4xx client errors as 500s -> checked response.status_code before raising HTTPError; affected endpoints returned correct 4xx to callers (PR #90)
+

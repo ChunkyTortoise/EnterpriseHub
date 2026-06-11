@@ -12,7 +12,6 @@
 # When true, bd will use .beads/issues.jsonl as the source of truth
 # instead of SQLite database
 no-db: true
-
 # Disable daemon for RPC communication (forces direct database access)
 # no-daemon: false
 
@@ -47,6 +46,7 @@ no-db: true
 # This setting persists across clones (unlike database config which is gitignored).
 # Can also use BEADS_SYNC_BRANCH env var for local override.
 # If not set, bd sync will require you to run 'bd config set sync.branch <branch>'.
+# Set below as sync.branch (beads state rides on main alongside code here).
 # sync-branch: "beads-sync"
 
 # Multi-repo configuration (experimental - bd-307)
@@ -65,3 +65,4 @@ no-db: true
 # - linear.api-key
 # - github.org
 # - github.repo
+sync.branch: "main"

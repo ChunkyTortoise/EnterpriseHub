@@ -2,6 +2,14 @@
 dolt/
 dolt-access.lock
 
+# Dolt server-mode artifacts (bd >= 1.0 embedded dolt server; machine-specific)
+embeddeddolt/
+dolt-server.lock
+dolt-server.pid
+dolt-server.port
+backup/
+.auto-import-issues.jsonl
+
 # Runtime files
 bd.sock
 bd.sock.startlock
