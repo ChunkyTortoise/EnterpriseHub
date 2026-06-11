@@ -268,3 +268,4 @@ test_models/
 # Re-include frontend TS sources (lib/ above targets Python build dirs)
 !frontend/src/lib/
 !frontend/src/lib/**
+.repo-health-ok

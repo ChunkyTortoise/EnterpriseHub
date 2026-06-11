@@ -94,6 +94,7 @@ from ghl_real_estate_ai.api.routes import (
     leads,  # NEW: Leads Management API for frontend integration
     ml_scoring,  # Real-time ML lead scoring
     portal,
+    portfolio_telemetry,  # Read-only portfolio telemetry aggregation
     predictive_analytics,
     pricing_optimization,
     propensity_scoring,
@@ -666,6 +667,7 @@ def _setup_routers(app: FastAPI):
     app.include_router(security.router)
     app.include_router(demo.router)
     app.include_router(demo_chat.router)
+    app.include_router(portfolio_telemetry.router)  # no auth - aggregate metrics only
     app.include_router(webhook.router, prefix="/api")
     app.include_router(analytics.router)
     app.include_router(bulk_operations.router, prefix="/api", dependencies=[admin_guard])

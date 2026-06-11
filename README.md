@@ -3,9 +3,9 @@
 # EnterpriseHub
 
 [![CI](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/ci.yml?label=CI)](https://github.com/ChunkyTortoise/EnterpriseHub/actions)
-[![Tests](https://img.shields.io/badge/tests-7%2C665_collected-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-7%2C000_collected-brightgreen)](tests/)
 [![Coverage](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub/branch/main/graph/badge.svg)](https://codecov.io/gh/ChunkyTortoise/EnterpriseHub)
-[![Eval Gate](https://img.shields.io/badge/eval_gate-active-46E3B7)](evals/)
+[![Nightly Eval](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2FChunkyTortoise%2FEnterpriseHub%2Fmain%2Fevals%2Fbadge.json)](evals/)
 [![Security](https://img.shields.io/github/actions/workflow/status/ChunkyTortoise/EnterpriseHub/security-scan.yml?label=security)](https://github.com/ChunkyTortoise/EnterpriseHub/actions/workflows/security-scan.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F1C40F.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/)
@@ -20,7 +20,7 @@
 
 ## Executive Summary
 
-EnterpriseHub is an AI backend for compliant real estate lead qualification. It automates lead intake, bot handoff, follow-up scheduling, and GoHighLevel CRM sync across specialized Lead, Buyer, and Seller bot workflows. Current local verification collects 7,665 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
+EnterpriseHub is an AI backend for compliant real estate lead qualification. It automates lead intake, bot handoff, follow-up scheduling, and GoHighLevel CRM sync across specialized Lead, Buyer, and Seller bot workflows. Current local verification collects 7,000 tests, and the repo includes evals, ADRs, CI, security checks, and observability-oriented infrastructure.
 
 ---
 
@@ -36,9 +36,13 @@ EnterpriseHub includes a case-study-backed production story plus modeled benchma
 | **LLM cache target** | L1 60% + L2 20% + L3 8% design target | Synthetic benchmark / architecture target |
 | **Token cost model** | 93K to 7.8K tokens per 100-query modeled workload | Projection; not quoted as live billing measurement |
 | **Eval coverage** | 50 golden cases across qualification, edge cases, and compliance | Repository artifact in `evals/` |
-| **Test collection** | 7,665 collected on May 23, 2026 | Local `pytest --collect-only --override-ini='addopts=' -q` |
+| **Test collection** | 7,000 collected on June 11, 2026 (after archiving unused dashboard modules) | Local `pytest --collect-only --override-ini='addopts=' -q` |
 
-See [CASE_STUDY.md](CASE_STUDY.md), [BENCHMARKS.md](BENCHMARKS.md), and [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md) for methodology and claim provenance.
+See [CASE_STUDY.md](CASE_STUDY.md), [BENCHMARKS.md](BENCHMARKS.md), [docs/RECEIPTS.md](docs/RECEIPTS.md), and [docs/CLAIM_LEDGER.md](docs/CLAIM_LEDGER.md) for methodology and claim provenance. For the narrative version, read [docs/WRITEUP.md](docs/WRITEUP.md).
+
+<!-- EVAL-RESULTS:START -->
+**Nightly eval:** results table is auto-published here by the nightly workflow after its next run. Baseline LLM-judge rubric scores on the 50-case golden dataset: correctness 90%, tone 90%, safety 100%, compliance 95%.
+<!-- EVAL-RESULTS:END -->
 
 ---
 
@@ -59,8 +63,8 @@ The strongest evidence is architectural and reproducible. Some older benchmark d
 | **A/B Testing** | Method | Two-proportion z-test | `ab_testing_service.py` statistical engine |
 | **A/B Testing** | Assignment | Deterministic SHA-256 bucketing | `experiment_id + contact_id` hash |
 | **Compliance** | Pipeline stages | 7 (language, TCPA, compliance, translation, truncation) | `response_pipeline/factory.py` |
-| **Test Surface** | Current collectible count | 7,665 collected | `pytest --collect-only --override-ini='addopts=' -q` on May 23, 2026 |
-| **ADRs** | Documented decisions | 12 | `docs/adr/0001-0012` |
+| **Test Surface** | Current collectible count | 7,000 collected | `pytest --collect-only --override-ini='addopts=' -q` on June 11, 2026 |
+| **ADRs** | Documented decisions | 13 | `docs/adr/0001-0013` |
 
 ---
 

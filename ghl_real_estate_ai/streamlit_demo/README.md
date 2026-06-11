@@ -27,6 +27,19 @@ streamlit run streamlit_demo/app.py
 
 The app will open at `http://localhost:8501`
 
+Alternative launch from this directory:
+
+```bash
+cd ghl_real_estate_ai/streamlit_demo
+streamlit run app.py --server.port 8501
+```
+
+### Portfolio Showcase Pages
+
+The app includes a "Portfolio Showcase" sidebar category with two pages:
+- **Services Portfolio** (`services_portfolio.py`): service catalog with category/industry/price/timeline filters, backed by `data/services_data.py`
+- **Case Studies** (`case_studies.py`): EnterpriseHub case study with metrics and timeline, backed by `data/case_studies_data.py`
+
 ### Try These Examples
 
 **Cold Lead (Score: ~30)**
